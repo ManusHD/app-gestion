@@ -1,0 +1,46 @@
+<button (click)="mostrarDetalles()">Ver detalles</button>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+        <span class="close" (click)="cerrarModal()">&times;</span>
+        <h2>Productos del origen: <span class="nombre-origen">{{entrada.origen}}</span></h2>
+        <div id="contenedor-ep">
+            <table>
+                <thead>
+                    <tr>
+                        <th>DCS</th>
+                        <th>Ref</th>
+                        <th>Descripción</th>
+                        <th>Unidades</th>
+                        <th>Fecha recepción</th>
+                        <th>Ubicación</th>
+                        <th>Palets</th>
+                        <th>Bultos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let producto of entrada.productos; let i = index">
+                        <td>{{producto.dcs}}</td>
+                        <td>{{producto.ref}}</td>
+                        <td>{{producto.description}}</td>
+                        <ng-container *ngIf="!enRecibidas; else estoyRecibida">
+                            <td><input [(ngModel)]="producto.unidades" type="number" /></td>
+                            <td><input [(ngModel)]="producto.fechaRecepcion" (change)="actualizarFecha(producto.fechaRecepcion!)" type="date" /></td>
+                            <td><input [(ngModel)]="producto.ubicacion" type="text" /></td>
+                            <td><input [(ngModel)]="producto.palets" type="number" /></td>
+                            <td><input [(ngModel)]="producto.bultos" type="number" /></td>
+                        </ng-container>
+                        <ng-template #estoyRecibida>
+                            <td>{{producto.unidades}} </td>
+                            <td>{{producto.fechaRecepcion | date: "dd/MM/yyyy"}} </td>
+                            <td>{{producto.ubicacion}} </td>
+                            <td>{{producto.palets}} </td>
+                            <td>{{producto.bultos}} </td>
+                        </ng-template>
+                    </tr>
+                </tbody>
+            </table>
+            <button *ngIf="!enRecibidas" (click)="modificarEntrada()">Guardar</button>
+        </div>
+    </div>
+</div>

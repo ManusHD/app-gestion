@@ -1,0 +1,32 @@
+<app-cabecera-entradas></app-cabecera-entradas>
+
+<div id="contenedor-tabla">
+    <table>
+        <thead>
+            <tr>
+                <th>Origen</th>
+                <th>Detalles</th>
+                <th>Marcar como recibido</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let entrada of entradas">
+                <tr *ngIf="!entrada.estado">
+                    <td>{{ entrada.origen }}</td>
+                    <td><app-detalles-entradas [entrada]="entrada" (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
+                    <td>
+                        <div class="flotar-medio">
+                            <button 
+                                [disabled]="!entrada.rellena" 
+                                (click)="setRecibida(entrada.id!)" 
+                                >
+                                <img [ngClass]="{'no-relleno': !entrada.rellena}" src="../../../assets/icons/check-verde.svg" />
+                                <img [ngClass]="{'relleno': entrada.rellena}" src="../../../assets/icons/no-check-gris.svg" />
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+</div>

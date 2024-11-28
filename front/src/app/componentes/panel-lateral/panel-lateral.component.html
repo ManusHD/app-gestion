@@ -1,0 +1,23 @@
+<div id="panel-lateral">
+    <a routerLink="">
+        <img src="../../../assets/imagenes/delim.jpg" />
+    </a>
+    <h1>Juan_Carlos</h1>
+    <ul>
+        <li id="entradas">
+            <a routerLinkActive="active" 
+               [routerLinkActiveOptions]="{exact: false}"
+               routerLink="entradas">
+              Entradas
+            </a>
+          </li>
+        <li id="salidas">
+            <a routerLinkActive="active" 
+            [routerLinkActiveOptions]="{exact: false}"
+            routerLink="salidas">
+            Salidas
+            </a>
+        </li>
+        <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">Inventario</a></li>
+    </ul>
+</div>

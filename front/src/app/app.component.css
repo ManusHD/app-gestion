@@ -1,0 +1,24 @@
+#contenedor-html {
+    display: flex;
+}
+
+app-panel-lateral {
+    max-width: 170px;
+}
+
+router-outlet{
+    width: 100% - 170px;
+}
+
+#contenedor-html {
+    display: flex;
+}
+
+app-panel-lateral {
+    max-width: 170px;
+}
+
+#router-outlet {
+    flex: 1;
+    display: block; /* Para que los subelementos no tengan el display-flex heredado*/
+}
