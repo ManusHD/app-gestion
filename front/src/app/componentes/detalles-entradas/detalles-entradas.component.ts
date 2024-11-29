@@ -37,6 +37,7 @@ export class DetallesEntradasComponent implements OnInit {
           duration: 3000,
           panelClass: 'exito'
         });
+        this.cerrarModal();
       },
       error: (err) => {
         console.error('Error al actualizar la entrada:', err);
