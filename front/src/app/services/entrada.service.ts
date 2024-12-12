@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Entrada } from "../models/entradas.model";
+import { Entrada } from "../models/entrada.model";
 import { HttpClient } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { from, Observable } from "rxjs";
@@ -15,12 +15,22 @@ export class EntradaServices {
     return this.httpClient.get<Entrada[]>(`${this.apiUrl}`);
   }
 
+  getEntradasByEstado(estado: boolean): Observable<Entrada[]> {
+    return this.httpClient.get<Entrada[]>(`${this.apiUrl}/estado/${estado}`);
+  }
+
   setRecibida(id: number): Observable<Entrada> {
     return this.httpClient.put<Entrada>(`${this.apiUrl}/${id}/recibir`, null);
   }
 
   updateEntrada(id: number, entrada: Entrada): Observable<Entrada> {
     return this.httpClient.put<Entrada>(`${this.apiUrl}/${id}`, entrada);
+  }
+
+  newEntrada(entrada: Entrada): Observable<Entrada> {
+    console.log("Entrada enviada");
+    console.log(entrada);
+    return this.httpClient.post<Entrada>(`${this.apiUrl}`, entrada);
   }
 
 }

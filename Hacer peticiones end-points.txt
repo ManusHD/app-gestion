@@ -1,0 +1,23 @@
+---- PRODUCTOS -----
+
+curl -X GET http://localhost:8091/productos
+
+curl -X GET http://localhost:8091/productos/4
+
+curl -X GET http://localhost:8091/productos/referencia/8354456
+
+
+
+
+
+
+
+
+
+
+---- ENTRADAS -----
+
+
+curl -X GET http://localhost:8092/entradas
+
+curl -X GET http://localhost:8092/entradas/4

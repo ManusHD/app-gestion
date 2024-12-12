@@ -1,6 +1,8 @@
 package com.manushd.app.productos.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
 
-
+@Controller
 @RestController
+@CrossOrigin(value = "http://localhost:4200")
 public class ProductosController {
     
     @Autowired
@@ -28,6 +31,11 @@ public class ProductosController {
     @GetMapping("/productos/{id}")
     public Producto getProductoById(@PathVariable Long id) {
         return productosRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/productos/referencia/{referencia}")
+    public Producto obtenerProductoPorReferencia(@PathVariable String referencia) {
+        return productosRepository.findByReferencia(referencia).orElse(null);
     }
 
     @PostMapping("/productos")

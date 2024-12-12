@@ -8,4 +8,6 @@ import com.manushd.app.entradas.models.Entrada;
 @RestResource(path="entradas", rel="entrada")
 public interface EntradaRepository extends CrudRepository<Entrada, Long>{
     
+    Iterable<Entrada> findAllByEstado(boolean estado);
+
 }

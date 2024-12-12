@@ -32,6 +32,11 @@ public class EntradaController {
     public Entrada getEntradaById(@PathVariable Long id) {
         return entradasRepository.findById(id).orElse(null);
     }
+    
+    @GetMapping("/entradas/estado/{estado}")
+    public Iterable<Entrada> getEntradasByEstado(@PathVariable boolean estado) {
+        return entradasRepository.findAllByEstado(estado);
+    }
 
     @PostMapping("/entradas")
     public Entrada addEntrada(@RequestBody Entrada entrada) {

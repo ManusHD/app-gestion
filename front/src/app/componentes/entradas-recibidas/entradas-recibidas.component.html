@@ -11,7 +11,7 @@
         </thead>
         <tbody>
             <ng-container *ngFor="let entrada of entradas">
-                <tr *ngIf="entrada.estado">
+                <tr>
                     <td>{{entrada.origen}} </td>
                     <td>{{entrada.productos?.at(0)?.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
                     <td><app-detalles-entradas [enRecibidas]="true" [entrada]="entrada" (entradaRellena)="entrada.rellena=$event"></app-detalles-entradas></td>

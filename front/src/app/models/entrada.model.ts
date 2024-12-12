@@ -1,4 +1,5 @@
-import { ProductoEntrada } from "./productoEntrada";
+import { ProductoEntrada } from "./productoEntrada.model";
+
 
 export class Entrada {
     id?: number;

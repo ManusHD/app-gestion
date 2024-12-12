@@ -1,11 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
-import { MatIconRegistry } from '@angular/material/icon';
 import { MatSnackBar  } from '@angular/material/snack-bar';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { Entrada } from 'src/app/models/entradas.model';
-import { ProductoEntrada } from 'src/app/models/productoEntrada';
-import { EntradaServices } from 'src/app/services/entradas.service';
+import { Entrada } from 'src/app/models/entrada.model';
+import { EntradaServices } from 'src/app/services/entrada.service';
 
 @Component({
   selector: 'app-detalles-entradas',
@@ -33,15 +29,15 @@ export class DetallesEntradasComponent implements OnInit {
       next: (updatedEntrada) => {
         console.log('Entrada actualizada:', updatedEntrada);
         this.entradaRellena.emit(this.todosLosCamposRellenos());
-        this.snackBar.open('Entrada guardada correctamente', '✖', {
+        this.snackBar.open('Entrada creada correctamente', '✖', {
           duration: 3000,
           panelClass: 'exito'
         });
         this.cerrarModal();
       },
-      error: (err) => {
-        console.error('Error al actualizar la entrada:', err);
-        this.snackBar.open('Error al guardar la entrada: ' + err, '✖', {
+      error: (error) => {
+        console.error('Error al actualizar la entrada:', error);
+        this.snackBar.open('Error al guardar la entrada: ' + error, '✖', {
           duration: 3000,
           panelClass: 'error'
         });

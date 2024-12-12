@@ -1,0 +1,14 @@
+#contenedor-tabla {
+    display: block;
+}
+
+#botones {
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 20px;
+}
+
+#contenedores-botones {
+    display: flex;
+    justify-content: center;
+}

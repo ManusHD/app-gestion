@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Entrada } from 'src/app/models/entradas.model';
-import { EntradaServices } from 'src/app/services/entradas.service';
+import { Entrada } from 'src/app/models/entrada.model';
+import { EntradaServices } from 'src/app/services/entrada.service';
 
 @Component({
   selector: 'app-entradas-recibidas',
@@ -18,7 +18,7 @@ export class EntradasRecibidasComponent implements OnInit{
   }
 
   cargarEntradas() {
-    this.entradaServices.getEntradas().subscribe((data: Entrada[]) => {
+    this.entradaServices.getEntradasByEstado(true).subscribe((data: Entrada[]) => {
       this.entradas = data.map(entrada => ({ ...entrada, rellena: false }));
       console.log(this.entradas);
     });

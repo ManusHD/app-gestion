@@ -26,10 +26,12 @@ import { MatSnackBarModule  } from '@angular/material/snack-bar';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { ToastrModule } from 'ngx-toastr';
+import { MatTableModule } from '@angular/material/table';
 
 import { HttpClientModule } from '@angular/common/http';
-import { EntradaServices } from './services/entradas.service';
-import { FormsModule } from '@angular/forms';
+import { EntradaServices } from './services/entrada.service';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ProductoService } from './services/producto.service';
 
 @NgModule({
   declarations: [
@@ -48,24 +50,26 @@ import { FormsModule } from '@angular/forms';
     DetallesEntradasComponent
   ],
   imports: [
-    BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    MatIconModule,
-    HttpClientModule,
-    FormsModule,
+    BrowserModule,
     CommonModule,
+    FormsModule,
+    HttpClientModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatDatepickerModule,
+    MatIconModule,
+    MatInputModule,
+    MatNativeDateModule,
+    MatSnackBarModule,
+    MatTableModule,
+    ReactiveFormsModule,
     ToastrModule.forRoot(),
   ],
   providers: [
     EntradaServices,
+    ProductoService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],
