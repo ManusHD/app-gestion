@@ -1,6 +1,9 @@
 - Excel
 npm install xlsx
 
+- Angular Forms
+npm install @angular/forms
+
 - Angular Material:
 npm config set legacy-peer-deps true
 ng add @angular/material

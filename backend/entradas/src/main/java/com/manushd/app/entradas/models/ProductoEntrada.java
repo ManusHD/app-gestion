@@ -24,8 +24,8 @@ public class ProductoEntrada {
     @Id
     @GeneratedValue
     private Long id;
-    private Integer dcs; // 10 dígitos
-    private Integer ref; // 7 dígitos
+    private String dcs; // 10 dígitos
+    private String ref; // 7 dígitos
     private String description;
     private Integer unidades;
     private Date fechaRecepcion;
