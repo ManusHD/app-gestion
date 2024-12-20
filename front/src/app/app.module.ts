@@ -32,6 +32,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { EntradaServices } from './services/entrada.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductoService } from './services/producto.service';
+import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/nuevo-producto.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { ProductoService } from './services/producto.service';
     SalidasPendientesComponent,
     SalidasNuevoComponent,
     SalidasEnviadasComponent,
-    DetallesEntradasComponent
+    DetallesEntradasComponent,
+    NuevoProductoComponent
   ],
   imports: [
     AppRoutingModule,

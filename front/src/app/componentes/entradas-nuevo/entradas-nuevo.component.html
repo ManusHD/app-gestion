@@ -2,83 +2,87 @@
 
 <div id="contenedor-tabla">
     <div id="botones">
-        <input type="file" 
-               (change)="onFileChange($event)" 
-               accept=".xlsx, .xls" 
-               style="display: none" 
-               #excelInput>
-        <button (click)="excelInput.click()">Importar Excel</button>
-        <button (click)="changeAMano()">Crear a mano</button>
+        <input type="file" (change)="onFileChange($event)" accept=".xlsx, .xls" style="display: none" #excelInput>
+        <button (click)="changeVista()" (click)="excelInput.click()">Importar Excel</button>
+        <button (click)="changeVista()">Borrar Entrada</button>
     </div>
 
     <div id="contenedores-botones">
-        <ng-container *ngIf="crearMano">
+        <ng-container>
             <form [formGroup]="entradaForm" (ngSubmit)="onSubmit()">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nº Entrada</th>
-                        <th>DCS</th>
-                        <th>REF</th>
-                        <th>DESCRIPCIÓN</th>
-                        <th>UNIDADES</th>
-                        <th>FECHA RECEPCIÓN</th>
-                        <th>UBICACIÓN</th>
-                        <th>PALETS</th>
-                        <th>BULTOS</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody formArrayName="productos">
-                    <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i">
-                        <td class="">
-                            <input type="text" formControlName="numeroEntrada" class=""
-                                (change)="sincronizarEntrada()">
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="dcs" class="">
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="ref" class=""
-                                (change)="buscarProductoPorReferencia(i)">
-                        </td>
-                        <td class="">
-                            <input type="text" formControlName="description" class="" readonly>
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="unidades" class="">
-                        </td>
-                        <td class="">
-                            <input type="date" formControlName="fechaRecepcion" class=""
-                                (change)="sincronizarEntrada()">
-                        </td>
-                        <td class="">
-                            <input type="text" formControlName="ubicacion" class="">
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="palets" class="">
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="bultos" class="">
-                        </td>
-                        <td class="">
-                            <button type="button" (click)="eliminarProducto(i)" class="btn-eliminar">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Origen<span class="obligatorio">*</span></th>
+                            <th>DCS</th>
+                            <th>Ref<span class="obligatorio">*</span></th>
+                            <th>Descripción<span class="obligatorio">*</span></th>
+                            <th>Unidades<span class="obligatorio">*</span></th>
+                            <th>Fecha recepción<span class="obligatorio">*</span></th>
+                            <th>Ubicación<span class="obligatorio">*</span></th>
+                            <th>Palets<span class="obligatorio">*</span></th>
+                            <th>Bultos<span class="obligatorio">*</span></th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody formArrayName="productos">
+                        <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i">
+                            <td class="">
+                                <input type="text" formControlName="numeroEntrada"
+                                    [ngClass]="getEstadoCampo('numeroEntrada', i)" class=""
+                                    (change)="sincronizarEntrada()">
+                            </td>
+                            <td class="">
+                                <input type="number" formControlName="dcs" max="9999999999" class="">
+                            </td>
+                            <td class="">
+                                <input type="text" formControlName="ref" min="0" max="9999999"
+                                    [ngClass]="getEstadoCampo('ref', i)" class=""
+                                    (blur)="buscarProductoPorReferencia(i)">
+                            </td>
+                            <td class="">
+                                <input type="text" formControlName="description"
+                                    [ngClass]="getEstadoCampo('description', i)" class="" readonly>
+                            </td>
+                            <td class="">
+                                <input type="number" formControlName="unidades" min="1"
+                                    [ngClass]="getEstadoCampo('unidades', i)" class="">
+                            </td>
+                            <td class="">
+                                <input type="date" formControlName="fechaRecepcion"
+                                    [ngClass]="getEstadoCampo('fechaRecepcion', i)" class=""
+                                    (change)="sincronizarEntrada()">
+                            </td>
+                            <td class="">
+                                <input type="text" formControlName="ubicacion"
+                                    [ngClass]="getEstadoCampo('ubicacion', i)" class="">
+                            </td>
+                            <td class="">
+                                <input type="number" formControlName="palets" [ngClass]="getEstadoCampo('palets', i)"
+                                    min="0" class="">
+                            </td>
+                            <td class="">
+                                <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
+                                    min="1" class="">
+                            </td>
+                            <td class="">
+                                <button type="button" (click)="eliminarProducto(i)" class="btn-eliminar">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
-            <div class="">
-                <button type="button" (click)="agregarProducto()" class="">
-                    Añadir Producto
-                </button>
-                <button type="submit" class="">
-                    Crear
-                </button>
-            </div>
-        </form>
-    </ng-container>
+                <div class="">
+                    <button type="button" (click)="agregarProducto()" class="">
+                        Añadir Producto
+                    </button>
+                    <button type="submit" class="">
+                        Crear
+                    </button>
+                </div>
+            </form>
+        </ng-container>
     </div>
 </div>

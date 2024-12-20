@@ -19,7 +19,7 @@ export class EntradasRecibidasComponent implements OnInit{
 
   cargarEntradas() {
     this.entradaServices.getEntradasByEstado(true).subscribe((data: Entrada[]) => {
-      this.entradas = data.map(entrada => ({ ...entrada, rellena: false }));
+      this.entradas = data;
       console.log(this.entradas);
     });
   }

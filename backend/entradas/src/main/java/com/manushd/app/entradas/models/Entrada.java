@@ -29,7 +29,7 @@ public class Entrada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String origen; 
-    private Boolean estado;
+    private Boolean estado; // false = pendiente, true = recibida
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "productoId")

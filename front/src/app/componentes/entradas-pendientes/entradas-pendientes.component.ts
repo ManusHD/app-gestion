@@ -29,6 +29,5 @@ export class EntradasPendientesComponent implements OnInit {
       location.reload();
     });
   }
-  
 }
 

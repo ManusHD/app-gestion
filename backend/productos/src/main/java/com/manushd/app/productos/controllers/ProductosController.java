@@ -54,13 +54,15 @@ public class ProductosController {
         return null;
     }
     
-    @PutMapping("/productos/{id}/sumar")
-    public Producto addStock(@PathVariable Long id, @RequestBody Integer cantidad) {
-        Producto producto = productosRepository.findById(id).orElse(null);
+    @PutMapping("/productos/{ref}/sumar")
+    public Producto addStock(@PathVariable String ref, @RequestBody Integer cantidad) {
+        Producto producto = productosRepository.findByReferencia(ref).orElse(null);
         if (producto != null) {
             Integer nuevoStock = producto.getStock() + cantidad;
             producto.setStock(nuevoStock);
             return productosRepository.save(producto);
+        }else{
+            System.out.println("El producto con referencia: " + ref + " no existe");
         }
 
         return null;

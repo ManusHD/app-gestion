@@ -9,7 +9,17 @@ export class ProductoService {
 
   constructor(private http: HttpClient) {}
 
-  getProductoPorReferencia(referencia: number): Observable<Producto> {
+  getProductos(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}`);
+  }
+
+  getProductoPorReferencia(referencia: String): Observable<Producto> {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }
+
+  postProducto(producto: Producto): Observable<Producto> {
+    producto.stock = 0;
+    return this.http.post<Producto>(`${this.apiUrl}`, producto);
+  }
+  
 }

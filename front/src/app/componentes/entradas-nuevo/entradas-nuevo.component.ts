@@ -6,6 +6,10 @@ import { Entrada } from 'src/app/models/entrada.model';
 import { ProductoEntrada } from 'src/app/models/productoEntrada.model';
 import { EntradaServices } from 'src/app/services/entrada.service';
 import { ProductoService } from 'src/app/services/producto.service';
+import { EMPTY, forkJoin, Observable, of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-entradas-nuevo',
@@ -17,7 +21,6 @@ import { ProductoService } from 'src/app/services/producto.service';
 })
 export class EntradasNuevoComponent {
   entradaForm!: FormGroup;
-  crearMano: boolean = false;
   importarExcel: boolean = false;
 
   private snackBar = inject(MatSnackBar);
@@ -40,19 +43,57 @@ export class EntradasNuevoComponent {
     return this.entradaForm.get('productos') as FormArray;
   }
 
-  // Crear un FormGroup para cada producto
+  getEstadoCampo(nombreCampo: string, indexCampo: number) {
+    const producto = this.productosControls.at(indexCampo);
+    const estadoCampo = producto.get(nombreCampo)!.invalid;
+
+    if (estadoCampo) {
+      return 'campo-vacio';
+    } else {
+      return '';
+    }
+  }
+
+  // Modificar el método crearProductoFormGroup
   crearProductoFormGroup(): FormGroup {
     return this.fb.group({
       numeroEntrada: ['', Validators.required],
-      dcs: [''],
-      ref: ['', Validators.required],
+      dcs: ['', [Validators.max(9999999999)]],
+      ref: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.min(0),
+            Validators.maxLength(8),
+          ],
+          asyncValidators: [this.referenciaValidator.bind(this)],
+          updateOn: 'blur', // Mantener blur para validación async
+        },
+      ],
       description: ['', Validators.required],
-      unidades: [0, [Validators.required, Validators.min(1)]],
+      unidades: [1, [Validators.required, Validators.min(1)]],
       fechaRecepcion: [null, Validators.required],
       ubicacion: ['', Validators.required],
       palets: [0, [Validators.required, Validators.min(0)]],
       bultos: [1, [Validators.required, Validators.min(1)]],
     });
+  }
+
+  // Agregar un nuevo método de validación asíncrono
+  referenciaValidator(
+    control: AbstractControl
+  ): Observable<ValidationErrors | null> {
+    const ref = control.value;
+
+    if (!ref) {
+      return of(null);
+    }
+
+    return this.productoService.getProductoPorReferencia(ref).pipe(
+      map((producto) => null),
+      catchError(() => of({ referenciaInvalida: true }))
+    );
   }
 
   // Método para añadir un nuevo producto
@@ -92,25 +133,36 @@ export class EntradasNuevoComponent {
   }
 
   // Buscar producto por referencia y autocompletar descripción
+  // Modificar el método de búsqueda
   buscarProductoPorReferencia(index: number) {
     const refControl = this.productosControls.at(index).get('ref');
     const descriptionControl = this.productosControls
       .at(index)
       .get('description');
 
-    if (refControl!.value) {
-      this.productoService
-        .getProductoPorReferencia(refControl!.value)
-        .subscribe({
-          next: (producto) => {
+    refControl!.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((ref) => {
+          if (ref?.trim()) {
+            return this.productoService.getProductoPorReferencia(ref.trim());
+          }
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (producto) => {
+          if (producto) {
             descriptionControl!.setValue(producto.description);
-          },
-          error: (error) => {
-            console.error('Error al buscar producto', error);
+          } else {
             descriptionControl!.setValue('');
-          },
-        });
-    }
+          }
+        },
+        error: () => {
+          descriptionControl!.setValue('');
+        },
+      });
   }
 
   // Método para guardar la entrada de productos
@@ -139,13 +191,22 @@ export class EntradasNuevoComponent {
           };
         });
 
-      // Crear el objeto Entrada
-      const nuevaEntrada: Entrada = {
-        origen: numeroEntrada,
-        estado: true,
-        productos: productosEntrada,
-        rellena: true,
-      };
+
+        // Crear el objeto Entrada
+        const nuevaEntrada: Entrada = {
+          origen: numeroEntrada,
+          estado: true,
+          productos: productosEntrada,
+          rellena: true,
+        };
+
+        if(this.importarExcel) {
+          nuevaEntrada.estado = false;
+          nuevaEntrada.rellena = false;
+          console.log("Entro: ", nuevaEntrada.rellena);
+        }else{
+          console.log("No entro", nuevaEntrada.rellena);
+        }
 
       // Llamar al servicio para crear la entrada
       this.entradaService.newEntrada(nuevaEntrada).subscribe({
@@ -195,17 +256,19 @@ export class EntradasNuevoComponent {
   }
 
   // Método para cambiar a creación manual
-  changeAMano() {
+  changeVista() {
     // Resetear completamente el formulario
     this.entradaForm = this.fb.group({
       productos: this.fb.array([this.crearProductoFormGroup()]),
     });
 
-    // Reiniciar flags
-    this.crearMano = !this.crearMano;
-    this.importarExcel = false;
+    if (this.importarExcel) {
+      this.importarExcel = false;
+    }
   }
 
+  //------------------------------------------------------
+  //------------------ IMPORTAR EXCEL---------------------
   //------------------------------------------------------
 
   // Método para manejar la importación de archivos Excel
@@ -213,7 +276,6 @@ export class EntradasNuevoComponent {
     const file = event.target.files[0];
 
     if (file) {
-      // Leer el archivo Excel
       const reader = new FileReader();
 
       reader.onload = (e: any) => {
@@ -227,8 +289,8 @@ export class EntradasNuevoComponent {
           // Limpiar el FormArray actual
           this.productosControls.clear();
 
-          // Crear FormGroups para cada fila de Excel
-          excelData.forEach((row: any) => {
+          // Preparar los datos para agregar
+          const productosParaAgregar = excelData.map((row: any) => {
             const productoFormGroup = this.crearProductoFormGroup();
 
             // Mapear los campos del Excel a los controles del formulario
@@ -244,17 +306,21 @@ export class EntradasNuevoComponent {
               bultos: row.bultos,
             });
 
-            // Buscar descripción del producto si se proporciona referencia
             if (row.ref) {
               this.buscarDescripcionProducto(productoFormGroup, row.ref);
             }
 
-            // Agregar el FormGroup al FormArray
-            this.productosControls.push(productoFormGroup);
+            return productoFormGroup;
+          });
+
+          // Buscar descripción del producto si se proporciona referencia
+
+          // Agregar los FormGroups al FormArray
+          productosParaAgregar.forEach((formGroup) => {
+            this.productosControls.push(formGroup);
           });
 
           // Mostrar la tabla de importación
-          this.crearMano = true;
           this.importarExcel = true;
 
           // Mostrar mensaje de éxito
@@ -293,7 +359,7 @@ export class EntradasNuevoComponent {
     return null;
   }
 
-  buscarDescripcionProducto(formGroup: FormGroup, ref: number) {
+  buscarDescripcionProducto(formGroup: FormGroup, ref: String) {
     this.productoService.getProductoPorReferencia(ref).subscribe({
       next: (producto) => {
         formGroup.get('description')?.setValue(producto.description);

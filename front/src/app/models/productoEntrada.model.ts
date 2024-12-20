@@ -1,10 +1,10 @@
 export class ProductoEntrada {
     id?: number;
-    dcs?: number;
-    ref?: number;
+    dcs?: String;
+    ref?: String;
     description?: String;
     unidades?: number;
-    fechaRecepcion?: Date;
+    fechaRecepcion?: string;
     ubicacion?: String;
     palets?: number;
     bultos?: number;

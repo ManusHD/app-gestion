@@ -20,7 +20,8 @@ export class DetallesEntradasComponent implements OnInit {
 
   ngOnInit() {
     if(!this.enRecibidas) {
-      this.iniciarBultos();
+      this.iniciarEntradas();
+      this.entradaRellena.emit(this.todosLosCamposRellenos());
     }
   }
 
@@ -45,9 +46,12 @@ export class DetallesEntradasComponent implements OnInit {
     });
   }
 
-  iniciarBultos() {
+  iniciarEntradas() {
     this.entrada.productos!.forEach((producto) => {
       producto.bultos = 1;
+      if(this.formatearFecha(producto.fechaRecepcion) != null){
+        producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
+      }
     });
   }
 
@@ -59,7 +63,7 @@ export class DetallesEntradasComponent implements OnInit {
     this.mostrarModal = false;
   }
 
-  actualizarFecha(fecha: Date) {
+  actualizarFecha(fecha: string) {
     this.entrada.productos!.forEach((producto) => {
       producto.fechaRecepcion = fecha;
     });
@@ -75,6 +79,24 @@ export class DetallesEntradasComponent implements OnInit {
         producto.palets != null &&
         producto.bultos != null
     );
+  }
+  
+  formatearFecha(fecha: any): string | null {
+    if (!fecha) return null;
+
+    // Si la fecha ya está en formato Date o Date string
+    if (fecha instanceof Date || typeof fecha === 'string') {
+      return new Date(fecha).toISOString().split('T')[0];
+    }
+
+    // Si es un número (serial de fecha de Excel)
+    if (typeof fecha === 'number') {
+      // Convertir número de serie de Excel a fecha
+      const excelDate = new Date(Date.UTC(1900, 0, fecha - 1));
+      return excelDate.toISOString().split('T')[0];
+    }
+
+    return null;
   }
 
 }

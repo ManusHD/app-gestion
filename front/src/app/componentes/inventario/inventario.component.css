@@ -1,0 +1,4 @@
+#contenedor-inventario {
+    display: flex;
+    justify-content: space-around;
+}

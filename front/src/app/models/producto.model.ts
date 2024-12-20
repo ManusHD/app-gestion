@@ -1,6 +1,6 @@
 export class Producto {
     id?: number;
-    referencia?: number;
+    referencia?: String;
     description?: String;
     stock?: number;
 }

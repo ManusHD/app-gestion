@@ -1,1 +1,22 @@
-<p>inventario works!</p>
+
+<div id="contenedor-inventario">
+    
+    <app-nuevo-producto></app-nuevo-producto>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Ref</th>
+                <th>Descripción</th>
+                <th>Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let producto of productos">
+                <td>{{producto.referencia}} </td>
+                <td>{{producto.description}} </td>
+                <td>{{producto.stock}} </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

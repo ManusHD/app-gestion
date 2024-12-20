@@ -16,6 +16,11 @@
     src: url('./assets/fuentes/Nunito-SemiBold.ttf');
 }
 
+@font-face {
+    font-family: 'Nunito-Bold';
+    src: url('./assets/fuentes/Nunito-Bold.ttf');
+}
+
 html,
 body {
     margin: 0;

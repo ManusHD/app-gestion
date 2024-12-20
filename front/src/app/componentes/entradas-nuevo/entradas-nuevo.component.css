@@ -12,3 +12,12 @@
     display: flex;
     justify-content: center;
 }
+
+.obligatorio {
+    font-size: small;
+    margin-left: 2px;
+}
+
+.campo-vacio {
+    border-bottom: 2px solid red;
+}
