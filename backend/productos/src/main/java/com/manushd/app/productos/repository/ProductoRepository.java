@@ -8,5 +8,7 @@ import com.manushd.app.productos.models.Producto;
 public interface ProductoRepository extends CrudRepository<Producto, Long>{
 
     Optional<Producto> findByReferencia(String referencia);
+
+    Iterable<Producto> findByDescriptionContainingIgnoreCase(String description);
     
 }

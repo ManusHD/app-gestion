@@ -38,6 +38,11 @@ public class ProductosController {
         return productosRepository.findByReferencia(referencia).orElse(null);
     }
 
+    @GetMapping("/productos/description/{description}")
+    public Iterable<Producto> obtenerProductosPorDescripcion(@PathVariable String description) {
+        return productosRepository.findByDescriptionContainingIgnoreCase(description);
+    }
+
     @PostMapping("/productos")
     public Producto addProducto(@RequestBody Producto producto) {
         return productosRepository.save(producto);
