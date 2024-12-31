@@ -1,5 +1,4 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
 import { Entrada } from 'src/app/models/entrada.model';
 import { EntradaServices } from 'src/app/services/entrada.service';
 
@@ -11,7 +10,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 export class EntradasPendientesComponent implements OnInit {
   entradas: Entrada[] = [];
 
-  constructor(private router: Router, private entradaServices: EntradaServices) {}
+  constructor(private entradaServices: EntradaServices) {}
 
   ngOnInit() {
     this.cargarEntradas();
@@ -30,4 +29,3 @@ export class EntradasPendientesComponent implements OnInit {
     });
   }
 }
-

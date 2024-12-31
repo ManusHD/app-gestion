@@ -1,4 +1,4 @@
-package com.manushd.app.entradas.models;
+package com.manushd.app.salidas.models;
 
 import lombok.Data;
 
@@ -23,14 +23,16 @@ import jakarta.persistence.CascadeType;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Entrada {
+public class Salida {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String origen; 
+    private String destino; 
+    private Date fechaEnvio;
+    private String formaEnvio;
     private Boolean estado; // false = pendiente, true = recibida
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "productoId")
-    private Set<ProductoEntrada> productos;
+    private Set<ProductoSalida> productos;
 }

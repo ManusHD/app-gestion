@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Producto } from 'src/app/models/producto.model';
-import { ProductoService } from 'src/app/services/producto.service';
+import { ProductoServices } from 'src/app/services/producto.service';
 
 @Component({
   selector: 'app-nuevo-producto',
@@ -15,7 +15,7 @@ export class NuevoProductoComponent {
   referenciaPattern = '^(\\d{1,7}|R\\d{7})$';
   existe: boolean = false;
 
-  constructor(private productosService: ProductoService) {}
+  constructor(private productosService: ProductoServices) {}
 
   existeRef() {
     console.log(this.producto.referencia);

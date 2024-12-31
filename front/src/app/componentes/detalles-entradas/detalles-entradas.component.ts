@@ -48,7 +48,6 @@ export class DetallesEntradasComponent implements OnInit {
 
   iniciarEntradas() {
     this.entrada.productos!.forEach((producto) => {
-      producto.bultos = 1;
       if(this.formatearFecha(producto.fechaRecepcion) != null){
         producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
       }

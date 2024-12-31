@@ -11,7 +11,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 export class EntradasRecibidasComponent implements OnInit{
   entradas: Entrada[] = [];
 
-  constructor(private router: Router, private entradaServices: EntradaServices) {}
+  constructor(private entradaServices: EntradaServices) {}
 
   ngOnInit(): void {
       this.cargarEntradas();

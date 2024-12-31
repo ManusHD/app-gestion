@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -48,70 +49,73 @@ public class EntradaController {
     }
 
     @PostMapping("/entradas")
-public ResponseEntity<?> addEntrada(@RequestBody Entrada entrada) {
-    if (entrada.getEstado()) {
-        RestTemplate restTemplate = new RestTemplate();
-        
-        // Verificar y crear productos si no existen
-        for (ProductoEntrada productoEntrada : entrada.getProductos()) {
-            try {
-                // Intentar obtener el producto
-                ResponseEntity<Producto> response = restTemplate.getForEntity(
-                    "http://localhost:8091/productos/referencia/" + productoEntrada.getRef(),
-                    Producto.class
-                );
-                
-                if (response.getBody() == null) {
-                    // Si no existe, crear el producto
-                    Producto nuevoProducto = new Producto();
-                    nuevoProducto.setReferencia(productoEntrada.getRef());
-                    nuevoProducto.setDescription(productoEntrada.getDescription());
-                    nuevoProducto.setStock(0); // Stock inicial en 0
-                    
-                    // Llamar al endpoint para crear el producto
-                    restTemplate.postForEntity(
-                        "http://localhost:8091/productos",
-                        nuevoProducto,
-                        Producto.class
-                    );
+    public ResponseEntity<?> addEntrada(@RequestBody Entrada entrada) {
+        if (entrada.getEstado()) {
+            RestTemplate restTemplate = new RestTemplate();
+
+            // Verificar y crear productos si no existen
+            for (ProductoEntrada productoEntrada : entrada.getProductos()) {
+                try {
+                    // Intentar obtener el producto
+                    ResponseEntity<Producto> response = restTemplate.getForEntity(
+                            "http://localhost:8091/productos/referencia/" + productoEntrada.getRef(),
+                            Producto.class);
+
+                    if (productoEntrada.getUnidades() < 0) {
+                        throw new IllegalArgumentException("Los productos no pueden tener unidades negativas"
+                                + productoEntrada.getRef());
+                    } else if (response.getBody() == null) {
+                        // Si no existe, crear el producto
+                        Producto nuevoProducto = new Producto();
+                        nuevoProducto.setReferencia(productoEntrada.getRef());
+                        nuevoProducto.setDescription(productoEntrada.getDescription());
+                        nuevoProducto.setStock(0); // Stock inicial en 0
+
+                        // Llamar al endpoint para crear el producto
+                        restTemplate.postForEntity(
+                                "http://localhost:8091/productos",
+                                nuevoProducto,
+                                Producto.class);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "Error al verificar/crear el producto " + productoEntrada.getRef() + ": " + e.getMessage());
                 }
+            }
+        }
+
+        // Crear la entrada y actualizar stock
+        Entrada savedEntrada = entradasRepository.save(entrada);
+
+        if (entrada.getEstado()) {
+            actualizarStockProductos(entrada.getProductos());
+        }
+
+        return ResponseEntity.ok(savedEntrada);
+    }
+
+    private void actualizarStockProductos(Iterable<ProductoEntrada> productos) {
+        RestTemplate restTemplate = new RestTemplate();
+        for (ProductoEntrada productoEntrada : productos) {
+            try {
+                String url = "http://localhost:8091/productos/" + productoEntrada.getRef() + "/sumar";
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.PUT,
+                        new HttpEntity<>(productoEntrada.getUnidades()),
+                        ProductoEntrada.class,
+                        productoEntrada.getRef());
             } catch (Exception e) {
-                throw new RuntimeException("Error al verificar/crear el producto " + productoEntrada.getRef() + ": " + e.getMessage());
+                throw new RuntimeException(
+                        "Error al actualizar stock del producto " + productoEntrada.getRef() + ": " + e.getMessage());
             }
         }
     }
-    
-    // Crear la entrada y actualizar stock
-    Entrada savedEntrada = entradasRepository.save(entrada);
-    
-    if (entrada.getEstado()) {
-        actualizarStockProductos(entrada.getProductos());
-    }
-    
-    return ResponseEntity.ok(savedEntrada);
-}
 
-private void actualizarStockProductos(Iterable<ProductoEntrada> productos) {
-    RestTemplate restTemplate = new RestTemplate();
-    for (ProductoEntrada productoEntrada : productos) {
-        try {
-            String url = "http://localhost:8091/productos/" + productoEntrada.getRef() + "/sumar";
-            restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                new HttpEntity<>(productoEntrada.getUnidades()),
-                ProductoEntrada.class,
-                productoEntrada.getRef()
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Error al actualizar stock del producto " + productoEntrada.getRef() + ": " + e.getMessage());
-        }
-    }
-}
-    
     @PutMapping("/entradas/{id}")
-    public Entrada setRecibida(@PathVariable Long id, @RequestBody Entrada entrada) {
-        Entrada entradaAux = entradasRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+    public Entrada updateEntrada(@PathVariable Long id, @RequestBody Entrada entrada) {
+        Entrada entradaAux = entradasRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
             return entradasRepository.save(entrada);
         }

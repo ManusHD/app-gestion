@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Producto } from '../models/producto.model';
 
 @Injectable()
-export class ProductoService {
+export class ProductoServices {
   private apiUrl = 'http://localhost:8091/productos';
 
   constructor(private http: HttpClient) {}

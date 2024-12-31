@@ -17,8 +17,18 @@
 }
 
 @font-face {
+    font-family: 'Nunito-Medium';
+    src: url('./assets/fuentes/Nunito-Medium.ttf');
+}
+
+@font-face {
     font-family: 'Nunito-Bold';
     src: url('./assets/fuentes/Nunito-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Nunito-ExtraBold';
+    src: url('./assets/fuentes/Nunito-ExtraBold.ttf');
 }
 
 html,
@@ -46,4 +56,8 @@ body {
     background-color: #de0000 !important;
     color: white !important;
     border-radius: 4px;
+}
+
+.campo-vacio {
+    border-bottom: 2px solid red !important;
 }

@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { Entrada } from 'src/app/models/entrada.model';
 import { ProductoEntrada } from 'src/app/models/productoEntrada.model';
 import { EntradaServices } from 'src/app/services/entrada.service';
-import { ProductoService } from 'src/app/services/producto.service';
+import { ProductoServices } from 'src/app/services/producto.service';
 import { EMPTY, forkJoin, Observable, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
@@ -15,19 +15,20 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   selector: 'app-entradas-nuevo',
   templateUrl: './entradas-nuevo.component.html',
   styleUrls: [
-    './entradas-nuevo.component.css',
     '../detalles-entradas/detalles-entradas.component.css',
+    './entradas-nuevo.component.css',
   ],
 })
 export class EntradasNuevoComponent {
   entradaForm!: FormGroup;
-  importarExcel: boolean = false;
+  pendiente: boolean = true;
+  nNuevosProductos: number = 0;
 
   private snackBar = inject(MatSnackBar);
 
   constructor(
     private fb: FormBuilder,
-    private productoService: ProductoService,
+    private productoService: ProductoServices,
     private entradaService: EntradaServices
   ) {}
 
@@ -45,9 +46,19 @@ export class EntradasNuevoComponent {
 
   getEstadoCampo(nombreCampo: string, indexCampo: number) {
     const producto = this.productosControls.at(indexCampo);
-    const estadoCampo = producto.get(nombreCampo)!.invalid;
+    const campoVacio = producto.get(nombreCampo)!.invalid;
 
-    if (estadoCampo) {
+    let rellenoObligatorioVacio = false;
+    const camposObligatorios = /^(numeroEntrada|ref|description)$/;
+
+    if (camposObligatorios.test(nombreCampo)) {
+      rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
+    }
+
+    if (
+      (campoVacio && !this.pendiente) ||
+      (campoVacio && rellenoObligatorioVacio)
+    ) {
       return 'campo-vacio';
     } else {
       return '';
@@ -64,11 +75,11 @@ export class EntradasNuevoComponent {
         {
           validators: [
             Validators.required,
-            Validators.min(0),
+            Validators.minLength(7),
             Validators.maxLength(8),
           ],
           asyncValidators: [this.referenciaValidator.bind(this)],
-          updateOn: 'blur', // Mantener blur para validación async
+          updateOn: 'blur',
         },
       ],
       description: ['', Validators.required],
@@ -80,19 +91,30 @@ export class EntradasNuevoComponent {
     });
   }
 
-  // Agregar un nuevo método de validación asíncrono
+  // Modificar el validador asíncrono
   referenciaValidator(
     control: AbstractControl
   ): Observable<ValidationErrors | null> {
     const ref = control.value;
 
-    if (!ref) {
-      return of(null);
+    // Verificar si la referencia cumple el formato esperado
+    const formatoValido = /^\d{7}$|^R\d{7}$/.test(ref);
+    if (!formatoValido) {
+      // Mostrar el snackBar con el mensaje de error
+      this.snackBarError(
+        'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
+      );
+      return of({ referenciaInvalida: true });
     }
 
+    // Validar con el servicio
     return this.productoService.getProductoPorReferencia(ref).pipe(
       map((producto) => null),
-      catchError(() => of({ referenciaInvalida: true }))
+      catchError(() => {
+        // Mostrar otro mensaje en caso de error del servicio
+        this.snackBarError('Error al validar la referencia.');
+        return of({ referenciaInvalida: true });
+      })
     );
   }
 
@@ -167,104 +189,121 @@ export class EntradasNuevoComponent {
 
   // Método para guardar la entrada de productos
   onSubmit() {
-    if (this.entradaForm.valid) {
-      // Obtener el número de entrada del primer producto
-      const numeroEntrada = this.productosControls
-        .at(0)
-        .get('numeroEntrada')!.value;
+    let referenciasRellenas = true;
+    let descriptionRellenas = true;
+    let formatoValidoRef = false;
 
-      // Transformar los productos del formulario a ProductoEntrada
-      const productosEntrada: ProductoEntrada[] =
-        this.entradaForm.value.productos.map((producto: any) => {
-          // Crear un nuevo objeto ProductoEntrada
-          return {
-            dcs: producto.dcs,
-            ref: producto.ref,
-            description: producto.description,
-            unidades: producto.unidades,
-            fechaRecepcion: producto.fechaRecepcion
-              ? new Date(producto.fechaRecepcion)
-              : undefined,
-            ubicacion: producto.ubicacion,
-            palets: producto.palets,
-            bultos: producto.bultos,
-          };
-        });
+    // Obtener el número de entrada del primer producto
+    const numeroEntrada = this.productosControls
+      .at(0)
+      .get('numeroEntrada')!.value;
 
-
-        // Crear el objeto Entrada
-        const nuevaEntrada: Entrada = {
-          origen: numeroEntrada,
-          estado: true,
-          productos: productosEntrada,
-          rellena: true,
-        };
-
-        if(this.importarExcel) {
-          nuevaEntrada.estado = false;
-          nuevaEntrada.rellena = false;
-          console.log("Entro: ", nuevaEntrada.rellena);
-        }else{
-          console.log("No entro", nuevaEntrada.rellena);
+    // Transformar los productos del formulario a ProductoEntrada
+    const productosEntrada: ProductoEntrada[] =
+      this.entradaForm.value.productos.map((producto: any) => {
+        if (
+          producto.ref == null ||
+          producto.ref == undefined ||
+          producto.ref == ''
+        ) {
+          referenciasRellenas = false;
         }
 
-      // Llamar al servicio para crear la entrada
-      this.entradaService.newEntrada(nuevaEntrada).subscribe({
-        next: (entradaCreada) => {
-          console.log('Entrada creada exitosamente:', entradaCreada);
-          this.entradaForm.reset();
-          this.entradaForm.setControl(
-            'productos',
-            this.fb.array([this.crearProductoFormGroup()])
-          );
-          this.snackBar.open('Entrada guardada correctamente', '✖', {
-            duration: 3000,
-            panelClass: 'exito',
-          });
-        },
-        error: (error) => {
-          console.error('Error completo al crear la entrada:', error);
-          let errorMessage = 'Error desconocido';
+        formatoValidoRef = /^\d{7}$|^R\d{7}$/.test(producto.ref);
 
-          // Manejo más detallado del error
-          if (error.error instanceof ErrorEvent) {
-            // Error del lado del cliente
-            errorMessage = error.error.message;
-          } else {
-            // Error del lado del servidor
-            errorMessage =
-              error.error?.message ||
-              error.message ||
-              'Error al crear la entrada';
-          }
+        if (
+          producto.description == null ||
+          producto.description == undefined ||
+          producto.description == ''
+        ) {
+          descriptionRellenas = false;
+        }
 
-          this.snackBar.open(errorMessage, '✖', {
-            duration: 3000,
-            panelClass: 'error',
-          });
-        },
+        // Crear un nuevo objeto ProductoEntrada
+        return {
+          dcs: producto.dcs,
+          ref: producto.ref,
+          description: producto.description,
+          unidades: producto.unidades,
+          fechaRecepcion: producto.fechaRecepcion
+            ? new Date(producto.fechaRecepcion)
+            : undefined,
+          ubicacion: producto.ubicacion,
+          palets: producto.palets,
+          bultos: producto.bultos,
+        };
       });
+
+    // Crear el objeto Entrada
+    const nuevaEntrada: Entrada = {
+      origen: numeroEntrada,
+      estado: !this.pendiente,
+      productos: productosEntrada,
+      rellena: false,
+    };
+
+    if (this.entradaForm.valid) {
+      nuevaEntrada.rellena = true;
+      this.crearEntrada(nuevaEntrada);
     } else {
-      // Marcar todos los campos como tocados para mostrar validaciones
-      this.entradaForm.markAllAsTouched();
-      console.log('Formulario inválido. Errores:', this.entradaForm.errors);
-      this.snackBar.open('Faltan datos por rellenar', '✖', {
-        duration: 3000,
-        panelClass: 'error',
-      });
+      if (this.pendiente && numeroEntrada != null && numeroEntrada != undefined && numeroEntrada != '' && referenciasRellenas && formatoValidoRef && descriptionRellenas) {
+        this.crearEntrada(nuevaEntrada);
+      } else {
+        // Marcar todos los campos como tocados para mostrar validaciones
+        this.entradaForm.markAllAsTouched();
+        console.log('Formulario inválido. Errores:', this.entradaForm.errors);
+        if (!this.pendiente) {
+          this.snackBarError(
+            "Para 'Recibir' una entrada deben estar todos los campos completos y correctos"
+          );
+        } else if (!referenciasRellenas) {
+          this.snackBarError('Las referencias no pueden estar en blanco');
+        } else if (!formatoValidoRef) {
+          this.snackBarError(
+            'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
+          );
+        } else if (!descriptionRellenas) {
+          this.snackBarError('Las descripiciones no pueden estar en blanco');
+        } else {
+          this.snackBarError('El origen no puede estar en blanco');
+        }
+      }
     }
   }
 
-  // Método para cambiar a creación manual
-  changeVista() {
-    // Resetear completamente el formulario
+  private crearEntrada(nuevaEntrada: Entrada) {
+    this.entradaService.newEntrada(nuevaEntrada).subscribe({
+      next: (entradaCreada) => {
+        console.log('Entrada creada exitosamente:', entradaCreada);
+        this.entradaForm.reset();
+        this.entradaForm.setControl(
+          'productos',
+          this.fb.array([this.crearProductoFormGroup()])
+        );
+        this.snackBar.open('Entrada guardada correctamente', '✖', {
+          duration: 3000,
+          panelClass: 'exito',
+        });
+      },
+      error: (error) => {
+        console.error('Error completo al crear la entrada:', error);
+        this.snackBarError(error);
+      },
+    });
+  }
+
+  snackBarError(error: string) {
+    this.snackBar.open(error, '✖', {
+      duration: 3000,
+      panelClass: 'error',
+    });
+  }
+
+  // Resetear completamente el formulario
+  resetForm() {
     this.entradaForm = this.fb.group({
       productos: this.fb.array([this.crearProductoFormGroup()]),
     });
-
-    if (this.importarExcel) {
-      this.importarExcel = false;
-    }
   }
 
   //------------------------------------------------------
@@ -285,6 +324,7 @@ export class EntradasNuevoComponent {
           const worksheet = workbook.Sheets[sheetName];
 
           const excelData = XLSX.utils.sheet_to_json(worksheet);
+          console.log(excelData);
 
           // Limpiar el FormArray actual
           this.productosControls.clear();
@@ -313,21 +353,20 @@ export class EntradasNuevoComponent {
             return productoFormGroup;
           });
 
-          // Buscar descripción del producto si se proporciona referencia
-
           // Agregar los FormGroups al FormArray
           productosParaAgregar.forEach((formGroup) => {
             this.productosControls.push(formGroup);
           });
-
-          // Mostrar la tabla de importación
-          this.importarExcel = true;
 
           // Mostrar mensaje de éxito
           this.snackBar.open('Excel importado correctamente', '✖', {
             duration: 3000,
             panelClass: 'exito',
           });
+
+          event.target.value = '';
+          this.sincronizarEntrada();
+          
         } catch (error) {
           console.error('Error procesando Excel:', error);
           this.snackBar.open('Error al procesar el archivo Excel', '✖', {
@@ -336,7 +375,7 @@ export class EntradasNuevoComponent {
           });
         }
       };
-
+      
       reader.readAsBinaryString(file);
     }
   }

@@ -1,1 +1,22 @@
-<p>salidas-enviadas works!</p>
+<app-cabecera-salidas></app-cabecera-salidas>
+
+<div id="contenedor-tabla">
+    <table>
+        <thead>
+            <tr>
+                <th>Origen</th>
+                <th>Fecha recepción</th>
+                <th>Detalles</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let salida of salidas">
+                <tr>
+                    <td>{{salida.destino}} </td>
+                    <td>{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
+                    <td><app-detalles-salidas [enRecibidas]="true" [salida]="salida" (salidaRellena)="salida.rellena=$event"></app-detalles-salidas></td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+</div>

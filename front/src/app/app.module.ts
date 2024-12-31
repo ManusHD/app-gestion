@@ -30,9 +30,11 @@ import { MatTableModule } from '@angular/material/table';
 
 import { HttpClientModule } from '@angular/common/http';
 import { EntradaServices } from './services/entrada.service';
+import { SalidaServices } from './services/salida.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ProductoService } from './services/producto.service';
+import { ProductoServices } from './services/producto.service';
 import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/nuevo-producto.component';
+import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalles-salidas.component';
 
 @NgModule({
   declarations: [
@@ -49,7 +51,8 @@ import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/
     SalidasNuevoComponent,
     SalidasEnviadasComponent,
     DetallesEntradasComponent,
-    NuevoProductoComponent
+    NuevoProductoComponent,
+    DetallesSalidasComponent
   ],
   imports: [
     AppRoutingModule,
@@ -71,7 +74,8 @@ import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/
   ],
   providers: [
     EntradaServices,
-    ProductoService,
+    SalidaServices,
+    ProductoServices,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],

@@ -73,12 +73,12 @@ public class ProductosController {
         return null;
     }
     
-    @PutMapping("/productos/{id}/restar")
-    public Producto subtractStock(@PathVariable Long id, @RequestBody Integer cantidad) {
-        Producto producto = productosRepository.findById(id).orElse(null);
+    @PutMapping("/productos/{ref}/restar")
+    public Producto subtractStock(@PathVariable String ref, @RequestBody Integer cantidad) {
+        Producto producto = productosRepository.findByReferencia(ref).orElse(null);
         if (producto != null) {
             Integer nuevoStock = producto.getStock() - cantidad;
-            if(nuevoStock > 0) {
+            if(nuevoStock >= 0) {
                 producto.setStock(nuevoStock);
                 return productosRepository.save(producto);
             }

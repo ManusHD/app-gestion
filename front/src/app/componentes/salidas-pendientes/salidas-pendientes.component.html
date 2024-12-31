@@ -1,1 +1,29 @@
-<p>salidas-pendientes works!</p>
+<app-cabecera-salidas></app-cabecera-salidas>
+
+<div id="contenedor-tabla">
+    <table>
+        <thead>
+            <tr>
+                <th>Origen</th>
+                <th>Detalles</th>
+                <th>Marcar como recibido</th>
+            </tr>
+        </thead>
+        <tbody>
+            <ng-container *ngFor="let salida of salidas">
+                <tr>
+                    <td>{{ salida.destino }}</td>
+                    <td><app-detalles-salidas [salida]="salida" (salidaRellena)="salida.rellena = $event"></app-detalles-salidas></td>
+                    <td>
+                        <div class="flotar-medio">
+                            <button [disabled]="!salida.rellena" (click)="setEnviada(salida.id!)" class="transparente" >
+                                <img [ngClass]="{'no-relleno': !salida.rellena}" src="../../../assets/icons/check-verde.svg" />
+                                <img [ngClass]="{'relleno': salida.rellena}" src="../../../assets/icons/no-check-gris.svg" />
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-container>
+        </tbody>
+    </table>
+</div>

@@ -1,4 +1,4 @@
-package com.manushd.app.entradas.models;
+package com.manushd.app.salidas.models;
 
 import lombok.Data;
 

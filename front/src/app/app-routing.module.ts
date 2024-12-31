@@ -15,8 +15,7 @@ const routes: Routes = [
   {path: 'entradas/recibidas', component:EntradasRecibidasComponent},
   {path: 'entradas/nuevo', component:EntradasNuevoComponent},
   {path: 'salidas', component:SalidasPendientesComponent},
-  {path: 'salidas/pendientes', component:SalidasPendientesComponent},
-  {path: 'salidas/recibidas', component:SalidasEnviadasComponent},
+  {path: 'salidas/enviadas', component:SalidasEnviadasComponent},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent},
   {path: 'inventario', component:InventarioComponent},
 ];

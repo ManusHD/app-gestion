@@ -16,7 +16,7 @@
                     <td><app-detalles-entradas [entrada]="entrada" (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
                     <td>
                         <div class="flotar-medio">
-                            <button [disabled]="!entrada.rellena" (click)="setRecibida(entrada.id!)" >
+                            <button [disabled]="!entrada.rellena" (click)="setRecibida(entrada.id!)" class="transparente" >
                                 <img [ngClass]="{'no-relleno': !entrada.rellena}" src="../../../assets/icons/check-verde.svg" />
                                 <img [ngClass]="{'relleno': entrada.rellena}" src="../../../assets/icons/no-check-gris.svg" />
                             </button>
