@@ -1,4 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { catchError, throwError } from 'rxjs';
 import { Entrada } from 'src/app/models/entrada.model';
 import { EntradaServices } from 'src/app/services/entrada.service';
 
@@ -10,7 +12,8 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 export class EntradasPendientesComponent implements OnInit {
   entradas: Entrada[] = [];
 
-  constructor(private entradaServices: EntradaServices) {}
+  constructor(private entradaServices: EntradaServices,
+      private snackBar: MatSnackBar) {}
 
   ngOnInit() {
     this.cargarEntradas();
@@ -24,8 +27,18 @@ export class EntradasPendientesComponent implements OnInit {
   }
 
   setRecibida(id: number) {
-    this.entradaServices.setRecibida(id).subscribe(data => {
-      location.reload();
-    });
+    this.entradaServices.setRecibida(id).pipe(
+      catchError((error) => {
+        this.snackBar.open(error.error || 'Error desconocido', '✖', {
+          duration: 3000,
+          panelClass: 'error',
+        });
+        return throwError(error);
+      })
+    ).subscribe(
+      data => {
+        location.reload();
+      }
+    );
   }
 }

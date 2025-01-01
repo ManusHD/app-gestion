@@ -61,9 +61,8 @@ public class EntradaController {
                             "http://localhost:8091/productos/referencia/" + productoEntrada.getRef(),
                             Producto.class);
 
-                    if (productoEntrada.getUnidades() < 0) {
-                        throw new IllegalArgumentException("Los productos no pueden tener unidades negativas"
-                                + productoEntrada.getRef());
+                    if (productoEntrada.getUnidades() <= 0) {
+                        throw new IllegalArgumentException("Los productos no pueden tener menos de 1 unidad");
                     } else if (response.getBody() == null) {
                         // Si no existe, crear el producto
                         Producto nuevoProducto = new Producto();
@@ -77,9 +76,12 @@ public class EntradaController {
                                 nuevoProducto,
                                 Producto.class);
                     }
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(e.getMessage());
                 } catch (Exception e) {
-                    throw new RuntimeException(
-                            "Error al verificar/crear el producto " + productoEntrada.getRef() + ": " + e.getMessage());
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body("Error al procesar la entrada: " + e.getMessage());
                 }
             }
         }

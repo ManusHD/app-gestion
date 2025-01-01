@@ -55,9 +55,14 @@ export class SalidasNuevoComponent {
       rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
     }
 
+    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0) {
+      return 'campo-vacio';
+    }
+
     if (
       (campoVacio && !this.pendiente) ||
-      (campoVacio && rellenoObligatorioVacio)
+      (campoVacio && rellenoObligatorioVacio) || 
+      (producto.get(nombreCampo)!.value < 0)
     ) {
       return 'campo-vacio';
     } else {
@@ -196,6 +201,7 @@ export class SalidasNuevoComponent {
   onSubmit() {
     let referenciasRellenas = true;
     let descriptionRellenas = true;
+    let unidadesNegativas = false;
     let formatoValidoRef = false;
 
     // Obtener el número de salida del primer producto
@@ -222,6 +228,10 @@ export class SalidasNuevoComponent {
           producto.description == ''
         ) {
           descriptionRellenas = false;
+        }
+
+        if (producto.unidades < 0) {
+          unidadesNegativas = true;
         }
 
         // Crear un nuevo objeto ProductoSalida
@@ -257,6 +267,7 @@ export class SalidasNuevoComponent {
         numeroSalida != '' &&
         referenciasRellenas &&
         formatoValidoRef &&
+        !unidadesNegativas &&
         descriptionRellenas
       ) {
         this.crearSalida(nuevaSalida);
@@ -276,6 +287,8 @@ export class SalidasNuevoComponent {
           );
         } else if (!descriptionRellenas) {
           this.snackBarError('Las descripiciones no pueden estar en blanco');
+        } else if (unidadesNegativas) {
+          this.snackBarError('Los productos no pueden tener unidades negativas');
         } else {
           this.snackBarError('El origen no puede estar en blanco');
         }

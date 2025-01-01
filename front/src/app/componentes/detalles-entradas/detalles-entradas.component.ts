@@ -30,7 +30,7 @@ export class DetallesEntradasComponent implements OnInit {
       next: (updatedEntrada) => {
         console.log('Entrada actualizada:', updatedEntrada);
         this.entradaRellena.emit(this.todosLosCamposRellenos());
-        this.snackBar.open('Entrada creada correctamente', '✖', {
+        this.snackBar.open('Entrada actualizada correctamente', '✖', {
           duration: 3000,
           panelClass: 'exito'
         });
@@ -73,6 +73,7 @@ export class DetallesEntradasComponent implements OnInit {
       (producto) =>
         producto.description &&
         producto.unidades != null &&
+        producto.unidades > 0 &&
         producto.fechaRecepcion &&
         producto.ubicacion &&
         producto.palets != null &&

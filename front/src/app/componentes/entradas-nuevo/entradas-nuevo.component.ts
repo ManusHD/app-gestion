@@ -50,9 +50,13 @@ export class EntradasNuevoComponent {
 
     let rellenoObligatorioVacio = false;
     const camposObligatorios = /^(numeroEntrada|ref|description)$/;
-
+    
     if (camposObligatorios.test(nombreCampo)) {
       rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
+    }
+    
+    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0) {
+      return 'campo-vacio';
     }
 
     if (
@@ -192,6 +196,7 @@ export class EntradasNuevoComponent {
     let referenciasRellenas = true;
     let descriptionRellenas = true;
     let formatoValidoRef = false;
+    let unidadesNegativas = false;
 
     // Obtener el número de entrada del primer producto
     const numeroEntrada = this.productosControls
@@ -217,6 +222,10 @@ export class EntradasNuevoComponent {
           producto.description == ''
         ) {
           descriptionRellenas = false;
+        }
+
+        if(producto.unidades < 0) {
+          unidadesNegativas = true;
         }
 
         // Crear un nuevo objeto ProductoEntrada
@@ -246,7 +255,7 @@ export class EntradasNuevoComponent {
       nuevaEntrada.rellena = true;
       this.crearEntrada(nuevaEntrada);
     } else {
-      if (this.pendiente && numeroEntrada != null && numeroEntrada != undefined && numeroEntrada != '' && referenciasRellenas && formatoValidoRef && descriptionRellenas) {
+      if (this.pendiente && numeroEntrada != null && numeroEntrada != undefined && numeroEntrada != '' && referenciasRellenas && formatoValidoRef && descriptionRellenas && !unidadesNegativas) {
         this.crearEntrada(nuevaEntrada);
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
@@ -264,6 +273,8 @@ export class EntradasNuevoComponent {
           );
         } else if (!descriptionRellenas) {
           this.snackBarError('Las descripiciones no pueden estar en blanco');
+        } else if (unidadesNegativas) {
+          this.snackBarError('Los productos no pueden tener unidades negativas');
         } else {
           this.snackBarError('El origen no puede estar en blanco');
         }
