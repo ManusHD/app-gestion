@@ -35,6 +35,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductoServices } from './services/producto.service';
 import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/nuevo-producto.component';
 import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalles-salidas.component';
+import { DCSService } from './services/dcs.service';
+import { DetallesDcsComponent } from './componentes/detalles-dcs/detalles-dcs.component';
 
 @NgModule({
   declarations: [
@@ -52,7 +54,8 @@ import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalle
     SalidasEnviadasComponent,
     DetallesEntradasComponent,
     NuevoProductoComponent,
-    DetallesSalidasComponent
+    DetallesSalidasComponent,
+    DetallesDcsComponent
   ],
   imports: [
     AppRoutingModule,
@@ -76,6 +79,7 @@ import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalle
     EntradaServices,
     SalidaServices,
     ProductoServices,
+    DCSService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],

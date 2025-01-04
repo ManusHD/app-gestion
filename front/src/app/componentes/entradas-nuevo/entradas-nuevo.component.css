@@ -336,3 +336,10 @@ table input {
 .campo-vacio {
     border-bottom: 2px solid red;
 }
+
+.campo-nuevo {
+    background-color: #080 !important;
+    /* Color de fondo suave para indicar nuevo */
+    transition: background-color 0.3s ease;
+    /* Transición suave */
+}

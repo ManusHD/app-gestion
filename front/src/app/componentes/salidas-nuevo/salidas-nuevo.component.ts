@@ -290,7 +290,7 @@ export class SalidasNuevoComponent {
         } else if (unidadesNegativas) {
           this.snackBarError('Los productos no pueden tener unidades negativas');
         } else {
-          this.snackBarError('El origen no puede estar en blanco');
+          this.snackBarError('El destino no puede estar en blanco');
         }
       }
     }
@@ -367,7 +367,7 @@ export class SalidasNuevoComponent {
 
             // Mapear los campos del Excel a los controles del formulario
             productoFormGroup.patchValue({
-              numeroSalida: row.origen,
+              numeroSalida: row.origen || row.destino,
               dcs: row.dcs,
               ref: row.ref,
               description: row.description,

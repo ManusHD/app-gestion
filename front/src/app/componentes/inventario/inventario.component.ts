@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { dcs } from 'src/app/models/dcs.model';
 import { Producto } from 'src/app/models/producto.model';
+import { DCSService } from 'src/app/services/dcs.service';
 import { ProductoServices } from 'src/app/services/producto.service';
 
 @Component({
@@ -9,11 +11,13 @@ import { ProductoServices } from 'src/app/services/producto.service';
 })
 export class InventarioComponent implements OnInit{
   productos: Producto[] = [];
+  DCSs: dcs[] = [];
 
-  constructor(private productoService: ProductoServices){}
+  constructor(private productoService: ProductoServices, private dcsService: DCSService){}
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.cargarDcs();
   }
   
   cargarProductos() {
@@ -22,6 +26,14 @@ export class InventarioComponent implements OnInit{
           this.productos = data;
         }
     );
+  }
+
+  cargarDcs() {
+    this.dcsService.getDCSs().subscribe(
+      (data: dcs[]) => {
+        this.DCSs = data;
+      }
+    )
   }
 
 }

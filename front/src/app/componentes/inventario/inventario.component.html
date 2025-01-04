@@ -19,4 +19,21 @@
             </tr>
         </tbody>
     </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>DCS</th>
+                <th>Usado</th>
+                <th>Ver productos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let dcs of DCSs">
+                <td>{{dcs.dcs}} </td>
+                <td>{{dcs.usado}} </td>
+                <td><app-detalles-dcs [dcs]="dcs"></app-detalles-dcs> </td>
+            </tr>
+        </tbody>
+    </table>
 </div>

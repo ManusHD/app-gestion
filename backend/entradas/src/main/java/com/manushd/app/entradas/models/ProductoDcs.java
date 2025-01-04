@@ -1,7 +1,8 @@
-package com.manushd.app.salidas.models;
+package com.manushd.app.entradas.models;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Set;
 import java.util.Date;
 
@@ -22,16 +23,10 @@ import jakarta.persistence.CascadeType;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Salida {
+public class ProductoDcs {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String destino; 
-    private Date fechaEnvio;
-    private String formaEnvio;
-    private Boolean estado; // false = pendiente, true = recibida
-
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "productoId")
-    private Set<ProductoSalida> productos;
+    private String ref;
+    private Integer unidades;    
 }

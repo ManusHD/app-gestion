@@ -336,3 +336,23 @@ table input {
 .campo-vacio {
     border-bottom: 2px solid red;
 }
+
+#buscadorDCS {
+    border: 2px solid #e8e8e8;
+    padding: 15px;
+    margin: 20px 0 10px;
+    border-radius: 10px;
+    background-color: #212121;
+    font-size: small;
+    font-weight: bold;
+    text-align: left;
+    max-width: 150px;
+    max-height: 8px;
+}
+
+#buscadorDCS:focus {
+    outline-color: white;
+    background-color: #212121;
+    color: #e8e8e8;
+    box-shadow: 3px 3px #888888;
+}

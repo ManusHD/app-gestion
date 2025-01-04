@@ -2,10 +2,17 @@ package com.manushd.app.entradas.controllers;
 
 import com.manushd.app.entradas.models.Entrada;
 import com.manushd.app.entradas.models.Producto;
+import com.manushd.app.entradas.models.ProductoDcs;
 import com.manushd.app.entradas.models.ProductoEntrada;
 import com.manushd.app.entradas.repository.EntradaRepository;
 
+import com.manushd.app.entradas.models.DCS;
+
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,6 +31,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 @Controller
@@ -84,6 +92,7 @@ public class EntradaController {
                             .body("Error al procesar la entrada: " + e.getMessage());
                 }
             }
+            crearDcs(entrada);
         }
 
         // Crear la entrada y actualizar stock
@@ -114,6 +123,71 @@ public class EntradaController {
         }
     }
 
+    private void crearDcs(Entrada entrada) {
+        System.out.println("-------------------Creo DCS--------------------");
+        List<DCS> ListaDcs = new ArrayList<>();
+        RestTemplate restTemplate = new RestTemplate(); // Instancia de RestTemplate
+    
+        for (ProductoEntrada productoEntrada : entrada.getProductos()) {
+            if (productoEntrada.getDcs() != null) {
+                String numeroDcs = productoEntrada.getDcs();
+                boolean existe = ListaDcs.stream().anyMatch(d -> d.getDcs().equals(numeroDcs));
+    
+                ProductoDcs p = new ProductoDcs();
+                p.setRef(productoEntrada.getRef());
+                p.setUnidades(productoEntrada.getUnidades());
+    
+                if (existe) {
+                    int posicionDcs = IntStream.range(0, ListaDcs.size())
+                            .filter(i -> ListaDcs.get(i).getDcs().equals(numeroDcs))
+                            .findFirst()
+                            .orElse(-1);
+    
+                    DCS dcsExistente = ListaDcs.get(posicionDcs);
+                    if (dcsExistente.getProductos() == null) {
+                        dcsExistente.setProductos(new HashSet<>());
+                    }
+                    dcsExistente.getProductos().add(p);
+                } else {
+                    DCS d = new DCS();
+                    d.setDcs(numeroDcs);
+                    d.setUsado(false);
+                    d.setProductos(new HashSet<>());
+                    d.getProductos().add(p);
+                    ListaDcs.add(d);
+                    
+                }
+            }
+        }
+        
+        System.out.println("---------------------------------------");
+        System.out.println(ListaDcs);
+        System.out.println("---------------------------------------");
+        
+        // Enviar cada DCS al microservicio
+        String url = "http://localhost:8094/dcs";
+    
+        for (DCS dcs : ListaDcs) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+    
+                HttpEntity<DCS> request = new HttpEntity<>(dcs, headers);
+                ResponseEntity<?> response = restTemplate.postForEntity(url, request, DCS.class);
+    
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    System.out.println("DCS creado exitosamente: " + response.getBody());
+                } else {
+                    System.out.println("Error al crear el DCS: " + dcs.getDcs());
+                }
+            } catch (Exception e) {
+                System.out.println("Excepción al enviar el DCS: " + dcs.getDcs());
+                e.printStackTrace();
+            }
+        }
+    }
+    
+
     @PutMapping("/entradas/{id}")
     public Entrada updateEntrada(@PathVariable Long id, @RequestBody Entrada entrada) {
         Entrada entradaAux = entradasRepository.findById(id)
@@ -123,6 +197,7 @@ public class EntradaController {
         }
 
         return null;
+
     }
 
     @PutMapping("/entradas/{id}/recibir")
@@ -130,6 +205,7 @@ public class EntradaController {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
+            crearDcs(entradaAux);
             entradaAux.setEstado(true);
             return addEntrada(entradaAux);
         }

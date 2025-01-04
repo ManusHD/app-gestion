@@ -24,7 +24,7 @@
                     </label>
                     <label>
                         <input type="radio" [(ngModel)]="pendiente" [value]="false">
-                        <span>Recibida</span>
+                        <span>Enviada</span>
                     </label>
                     <span class="selection"></span>
                 </div>
@@ -33,10 +33,11 @@
             <form [formGroup]="salidaForm" (ngSubmit)="onSubmit()" #formularioNuevaSalida="ngForm">
                 <p class="obligatorio" style="color: rgba(255, 255, 255, 0.849); margin-bottom: 0px">(*) Obligatorio</p>
                 <p class="obligatorio" style="color: rgba(255, 255, 255, 0.849); margin: 0px">(**) Obligatorio siempre</p>
+                <input type="text" id="buscadorDCS" placeholder="Introduce un DCS...">
                 <table>
                     <thead>
                         <tr>
-                            <th>Origen<span class="obligatorio">**</span></th>
+                            <th>Destino<span class="obligatorio">**</span></th>
                             <th>DCS</th>
                             <th>Ref<span class="obligatorio">**</span></th>
                             <th>Descripción<span class="obligatorio">**</span></th>
@@ -66,7 +67,7 @@
                             </td>
                             <td class="">
                                 <input type="text" formControlName="description"
-                                    [ngClass]="getEstadoCampo('description', i)" class="">
+                                    [ngClass]="getEstadoCampo('description', i)" class="" readonly>
                             </td>
                             <td class="">
                                 <input type="number" formControlName="unidades" min="1"

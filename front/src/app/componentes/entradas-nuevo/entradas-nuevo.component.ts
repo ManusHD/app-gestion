@@ -23,6 +23,7 @@ export class EntradasNuevoComponent {
   entradaForm!: FormGroup;
   pendiente: boolean = true;
   nNuevosProductos: number = 0;
+  productosNuevos: Set<number> = new Set();
 
   private snackBar = inject(MatSnackBar);
 
@@ -150,47 +151,6 @@ export class EntradasNuevoComponent {
     });
   }
 
-  // Método para eliminar un producto
-  eliminarProducto(index: number) {
-    // No eliminar si solo queda un producto
-    if (this.productosControls.length > 1) {
-      this.productosControls.removeAt(index);
-    }
-  }
-
-  // Buscar producto por referencia y autocompletar descripción
-  // Modificar el método de búsqueda
-  buscarProductoPorReferencia(index: number) {
-    const refControl = this.productosControls.at(index).get('ref');
-    const descriptionControl = this.productosControls
-      .at(index)
-      .get('description');
-
-    refControl!.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        switchMap((ref) => {
-          if (ref?.trim()) {
-            return this.productoService.getProductoPorReferencia(ref.trim());
-          }
-          return of(null);
-        })
-      )
-      .subscribe({
-        next: (producto) => {
-          if (producto) {
-            descriptionControl!.setValue(producto.description);
-          } else {
-            descriptionControl!.setValue('');
-          }
-        },
-        error: () => {
-          descriptionControl!.setValue('');
-        },
-      });
-  }
-
   // Método para guardar la entrada de productos
   onSubmit() {
     let referenciasRellenas = true;
@@ -315,6 +275,7 @@ export class EntradasNuevoComponent {
     this.entradaForm = this.fb.group({
       productos: this.fb.array([this.crearProductoFormGroup()]),
     });
+    this.productosNuevos = new Set();
   }
 
   //------------------------------------------------------
@@ -335,7 +296,6 @@ export class EntradasNuevoComponent {
           const worksheet = workbook.Sheets[sheetName];
 
           const excelData = XLSX.utils.sheet_to_json(worksheet);
-          console.log(excelData);
 
           // Limpiar el FormArray actual
           this.productosControls.clear();
@@ -346,12 +306,12 @@ export class EntradasNuevoComponent {
 
             // Mapear los campos del Excel a los controles del formulario
             productoFormGroup.patchValue({
-              numeroEntrada: row.origen,
+              numeroEntrada: row.origen || row.destino,
               dcs: row.dcs,
               ref: row.ref,
               description: row.description,
               unidades: row.unidades,
-              fechaRecepcion: this.formatearFecha(row.fechaRecepcion),
+              fechaRecepcion: this.formatearFecha(row.fechaRecepcion) || this.formatearFecha(row.fechaEnvio),
               ubicacion: row.ubicacion,
               palets: row.palets,
               bultos: row.bultos,
@@ -409,9 +369,72 @@ export class EntradasNuevoComponent {
     return null;
   }
 
+  // Método para eliminar un producto
+  eliminarProducto(index: number) {
+    if (this.productosControls.length > 1) {
+      this.productosControls.removeAt(index);
+      
+      // Actualizar indices en productosNuevos
+      const nuevosIndices = new Set<number>();
+      this.productosNuevos.forEach(idx => {
+        if (idx < index) {
+          nuevosIndices.add(idx);
+        } else if (idx > index) {
+          nuevosIndices.add(idx - 1);
+        }
+      });
+      this.productosNuevos = nuevosIndices;
+    }
+  }
+
+  // Buscar producto por referencia y autocompletar descripción - Se llama desde el HTML
+  buscarProductoPorReferencia(index: number) {
+    const refControl = this.productosControls.at(index).get('ref');
+    const descriptionControl = this.productosControls
+      .at(index)
+      .get('description');
+
+    refControl!.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((ref) => {
+          if (ref?.trim()) {
+            return this.productoService.getProductoPorReferencia(ref.trim());
+          }
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (producto) => {
+          if (producto) {
+            descriptionControl!.setValue(producto.description);
+            this.productosNuevos.delete(index); // Eliminar de productos nuevos si existe
+          } else {
+            descriptionControl!.setValue('');
+            this.productosNuevos.add(index); // Añadir a productos nuevos
+          }
+        },
+        error: () => {
+          descriptionControl!.setValue('');
+          this.productosNuevos.add(index); // Añadir a productos nuevos en caso de error
+        },
+      });
+  }
+
+  isProductoNuevo(index: number): boolean {
+    return this.productosNuevos.has(index);
+  }
+
+  // Se llama al insertar el Excel
+  indice = 0;
   buscarDescripcionProducto(formGroup: FormGroup, ref: String) {
     this.productoService.getProductoPorReferencia(ref).subscribe({
       next: (producto) => {
+        if(producto == null) {
+          this.productosNuevos.add(this.indice);
+        }
+        this.indice++;
         formGroup.get('description')?.setValue(producto.description);
       },
       error: (error) => {
@@ -419,5 +442,6 @@ export class EntradasNuevoComponent {
         formGroup.get('description')?.setValue('');
       },
     });
+    this.indice = 0;
   }
 }

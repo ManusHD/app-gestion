@@ -49,7 +49,7 @@
                         </tr>
                     </thead>
                     <tbody formArrayName="productos">
-                        <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i">
+                        <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i" [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                             <td class="">
                                 <input type="text" formControlName="numeroEntrada"
                                     [ngClass]="getEstadoCampo('numeroEntrada', i)" class=""
@@ -65,7 +65,7 @@
                             </td>
                             <td class="">
                                 <input type="text" formControlName="description"
-                                    [ngClass]="getEstadoCampo('description', i)" class="">
+                                    [ngClass]="getEstadoCampo('description', i)" class="" [readOnly]="!isProductoNuevo(i)">
                             </td>
                             <td class="">
                                 <input type="number" formControlName="unidades" min="1"
