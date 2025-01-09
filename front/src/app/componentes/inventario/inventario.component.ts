@@ -21,7 +21,7 @@ export class InventarioComponent implements OnInit{
   }
   
   cargarProductos() {
-    this.productoService.getProductos().subscribe(
+    this.productoService.getProductosOrdenadosPorReferencia().subscribe(
         (data: Producto[]) => {
           this.productos = data;
         }

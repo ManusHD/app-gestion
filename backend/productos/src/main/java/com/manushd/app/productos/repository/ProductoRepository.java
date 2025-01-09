@@ -9,6 +9,9 @@ public interface ProductoRepository extends CrudRepository<Producto, Long>{
 
     Optional<Producto> findByReferencia(String referencia);
 
+    Iterable<Producto> findAllByOrderByReferenciaAsc();
+
+
     Iterable<Producto> findByDescriptionContainingIgnoreCase(String description);
     
 }

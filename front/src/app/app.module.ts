@@ -37,6 +37,10 @@ import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/
 import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalles-salidas.component';
 import { DCSService } from './services/dcs.service';
 import { DetallesDcsComponent } from './componentes/detalles-dcs/detalles-dcs.component';
+import { FormularioEntradaSalidaComponent } from './componentes/formulario-entrada-salida/formulario-entrada-salida.component';
+import { FormularioEntradaSalidaService } from './services/formulario-entrada-salida.service';
+import { ImportarExcelComponent } from './componentes/importar-excel/importar-excel.component';
+import { ImportarExcelService } from './services/importar-excel.service';
 
 @NgModule({
   declarations: [
@@ -55,7 +59,9 @@ import { DetallesDcsComponent } from './componentes/detalles-dcs/detalles-dcs.co
     DetallesEntradasComponent,
     NuevoProductoComponent,
     DetallesSalidasComponent,
-    DetallesDcsComponent
+    DetallesDcsComponent,
+    FormularioEntradaSalidaComponent,
+    ImportarExcelComponent
   ],
   imports: [
     AppRoutingModule,
@@ -79,6 +85,8 @@ import { DetallesDcsComponent } from './componentes/detalles-dcs/detalles-dcs.co
     EntradaServices,
     SalidaServices,
     ProductoServices,
+    FormularioEntradaSalidaService,
+    ImportarExcelService,
     DCSService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],

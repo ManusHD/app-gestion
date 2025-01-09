@@ -13,6 +13,10 @@ export class ProductoServices {
     return this.http.get<Producto[]>(`${this.apiUrl}`);
   }
 
+  getProductosOrdenadosPorReferencia(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/byReferencia`);
+  }
+
   getProductoPorReferencia(referencia: String): Observable<Producto> {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }

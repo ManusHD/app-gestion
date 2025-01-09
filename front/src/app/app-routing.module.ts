@@ -8,6 +8,7 @@ import { InventarioComponent } from './componentes/inventario/inventario.compone
 import { SalidasPendientesComponent } from './componentes/salidas-pendientes/salidas-pendientes.component';
 import { SalidasNuevoComponent } from './componentes/salidas-nuevo/salidas-nuevo.component';
 import { SalidasEnviadasComponent } from './componentes/salidas-enviadas/salidas-enviadas.component';
+import { FormularioEntradaSalidaComponent } from './componentes/formulario-entrada-salida/formulario-entrada-salida.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent},
@@ -18,6 +19,7 @@ const routes: Routes = [
   {path: 'salidas/enviadas', component:SalidasEnviadasComponent},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent},
   {path: 'inventario', component:InventarioComponent},
+  {path: 'agencias', component:FormularioEntradaSalidaComponent},
 ];
 
 @NgModule({

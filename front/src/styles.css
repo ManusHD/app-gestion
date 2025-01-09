@@ -60,4 +60,15 @@ body {
 
 .campo-vacio {
     border-bottom: 2px solid red !important;
+    background-color: red !important;
 }
+
+.flotar-medio {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --------------------------------------
+--CSS para las Tablas y sus componentes--
+-----------------------------------------*/

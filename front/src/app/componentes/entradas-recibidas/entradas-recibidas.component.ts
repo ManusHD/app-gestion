@@ -6,7 +6,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 @Component({
   selector: 'app-entradas-recibidas',
   templateUrl: './entradas-recibidas.component.html',
-  styleUrls: ['./entradas-recibidas.component.css', '../detalles-entradas/detalles-entradas.component.css', '../../componentes/entradas-pendientes/entradas-pendientes.component.css']
+  styleUrls: ['./entradas-recibidas.component.css', '../detalles-entradas/detalles-entradas.component.css']
 })
 export class EntradasRecibidasComponent implements OnInit{
   entradas: Entrada[] = [];

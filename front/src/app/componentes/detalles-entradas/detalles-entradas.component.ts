@@ -25,6 +25,14 @@ export class DetallesEntradasComponent implements OnInit {
     }
   }
 
+  iniciarEntradas() {
+    this.entrada.productos!.forEach((producto) => {
+      if(this.formatearFecha(producto.fechaRecepcion) != null){
+        producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
+      }
+    });
+  }
+
   modificarEntrada() {
     this.entradaServices.updateEntrada(this.entrada.id!, this.entrada).subscribe({
       next: (updatedEntrada) => {
@@ -43,14 +51,6 @@ export class DetallesEntradasComponent implements OnInit {
           panelClass: 'error'
         });
       },
-    });
-  }
-
-  iniciarEntradas() {
-    this.entrada.productos!.forEach((producto) => {
-      if(this.formatearFecha(producto.fechaRecepcion) != null){
-        producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
-      }
     });
   }
 

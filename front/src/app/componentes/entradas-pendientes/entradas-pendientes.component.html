@@ -1,6 +1,10 @@
 <app-cabecera-entradas></app-cabecera-entradas>
 
-<div id="contenedor-tabla">
+<app-importar-excel></app-importar-excel>
+
+<app-formulario-entrada-salida [pestanaPadre]="'previsionEntrada'"></app-formulario-entrada-salida>
+
+<div class="flotar-medio">
     <table>
         <thead>
             <tr>
@@ -16,7 +20,7 @@
                     <td><app-detalles-entradas [entrada]="entrada" (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
                     <td>
                         <div class="flotar-medio">
-                            <button [disabled]="!entrada.rellena" (click)="setRecibida(entrada.id!)" class="transparente" >
+                            <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena && !btnSubmitActivado" (click)="setRecibida(entrada.id!)" class="transparente" >
                                 <img [ngClass]="{'no-relleno': !entrada.rellena}" src="../../../assets/icons/check-verde.svg" />
                                 <img [ngClass]="{'relleno': entrada.rellena}" src="../../../assets/icons/no-check-gris.svg" />
                             </button>

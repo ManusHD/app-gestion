@@ -1,0 +1,484 @@
+#contenedor-tabla {
+    display: block;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+#botones {
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 20px;
+}
+
+#contenedores-botones {
+    display: block;
+}
+
+/* De uiverse.io desde aquí*/
+
+/*------ Radio .btn-eliminar Pendiente/Recibida -----*/
+.radio-input input {
+    display: none;
+}
+
+.radio-input {
+    --container_width: 250px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    background-color: #212121;
+    color: #eee;
+    width: var(--container_width);
+    overflow: hidden;
+    border: 2px solid var(--bg-color);
+}
+
+.radio-input label {
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.selection {
+    display: none;
+    position: absolute;
+    height: 100%;
+    width: calc(var(--container_width) / 2);
+    z-index: 0;
+    left: 0;
+    top: 0;
+    transition: 0.15s ease;
+}
+
+.radio-input label:nth-child(1):has(input:checked) {
+    color: #212121;
+}
+
+.radio-input label:nth-child(2):has(input:checked) {
+    color: #fff;
+}
+
+.radio-input label:nth-child(1):has(input:checked)~.selection {
+    background-color: #fd0;
+    display: inline-block;
+}
+
+.radio-input label:nth-child(2):has(input:checked)~.selection {
+    background-color: #080;
+    display: inline-block;
+}
+
+.radio-input label:nth-child(1):has(input:checked)~.selection {
+    transform: translateX(calc(var(--container_width) * 0 / 2));
+}
+
+.radio-input label:nth-child(2):has(input:checked)~.selection {
+    transform: translateX(calc(var(--container_width) * 1 / 2));
+}
+
+
+/*----- Boton borrar entrada -----*/
+.btn-eliminar {
+    --btn-eliminar-width: 170px;
+    width: var(--btn-eliminar-width);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    background-color: rgb(255, 16, 16);
+    border: none;
+    border-radius: 5px;
+    box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
+
+}
+
+.btn-eliminar,
+.btn-eliminar span {
+    transition: 200ms;
+}
+
+.btn-eliminar .text {
+    transform: translateX(12px);
+    color: white;
+}
+
+.btn-eliminar .icon {
+    position: absolute;
+    border-left: 1px solid #c41b1b;
+    transform: translateX(120px);
+    height: 37px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-eliminar svg {
+    width: 15px;
+    fill: #eee;
+}
+
+.btn-eliminar:hover {
+    background-color: #ff3636;
+}
+
+.btn-eliminar:hover .text {
+    color: transparent;
+}
+
+.btn-eliminar:hover .icon {
+    width: var(--btn-eliminar-width);
+    border-left: none;
+    transform: translateX(0);
+}
+
+.btn-eliminar:focus {
+    outline: none;
+}
+
+.btn-eliminar:active .icon svg {
+    transform: scale(0.8);
+}
+
+/*-------Botón importar Excel------*/
+.container-btn-file {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    background-color: #307750;
+    color: #fff;
+    border-style: none;
+    padding: 1em 2em;
+    border-radius: 0.5em;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
+    transition: all 250ms;
+}
+
+.container-btn-file input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.container-btn-file>img {
+    margin-right: 1em;
+}
+
+.container-btn-file::before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    border-radius: 0.5em;
+    background-color: #469b61;
+    z-index: -1;
+    transition: all 350ms;
+}
+
+.container-btn-file:hover::before {
+    width: 100%;
+}
+
+/*------- Botón borrar productos -------*/
+.deleteButton {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.deleteButton:hover {
+    overflow: visible;
+}
+
+.bin path {
+    transition: all 0.2s;
+}
+
+.deleteButton:hover .bin path {
+    fill: #ff1d1d;
+}
+
+.deleteButton:active {
+    transform: scale(0.98);
+}
+
+.tooltip {
+    --tooltip-color: rgb(41, 41, 41);
+    position: absolute;
+    top: -40px;
+    background-color: var(--tooltip-color);
+    color: white;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 8px 12px;
+    font-weight: 600;
+    box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.105);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.tooltip::before {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    content: "";
+    background-color: var(--tooltip-color);
+    bottom: -10%;
+}
+
+.deleteButton:hover .tooltip {
+    opacity: 1;
+}
+
+/*------- Botón Añadir producto -------*/
+.add-producto {
+    color: white;
+    background: linear-gradient(0deg,
+            rgba(20, 167, 62, 1) 0%,
+            rgba(102, 247, 113, 1) 100%);
+}
+
+.add-producto img {
+    margin-right: 6px;
+}
+
+.add-producto:hover {
+    box-shadow: 0 0.5em 1.5em -0.5em #14a73e98;
+}
+
+.add-producto:active {
+    box-shadow: 0 0.3em 1em -0.5em #14a73e98;
+}
+
+/*-------  -------*/
+
+
+/* Hasta aquí*/
+
+.btns-tabla button {
+    display: flex;
+    align-items: center;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 12px;
+    padding: 0.7em 1.4em 0.7em 1.1em;
+    border: none;
+    letter-spacing: 0.05em;
+    border-radius: 20em;
+    margin: 1em;
+}
+
+.crear-producto {
+    color: black;
+    background: linear-gradient(0deg,
+            rgb(0, 255, 251) 0%,
+            rgb(0, 200, 222) 100%);
+}
+
+.crear-producto:hover {
+    box-shadow: 0 0.5em 1.5em -0.5em #00e5ff;
+}
+
+.crear-producto:active {
+    box-shadow: 0 0.3em 1em -0.5em #00ffea;
+}
+
+.crear-producto:disabled {
+    background: #212121;
+    box-shadow: none;
+}
+
+.centrar {
+    display: flex;
+    justify-content: center;
+}
+
+table {
+    margin-top: 5px;
+}
+
+table input {
+    background-color: transparent;
+}
+
+.obligatorio {
+    font-size: small;
+    margin-left: 2px;
+}
+
+.campo-vacio {
+    border-bottom: 2px solid red;
+}
+
+.campo-nuevo {
+    background-color: #080 !important;
+    /* Color de fondo suave para indicar nuevo */
+    transition: background-color 0.3s ease;
+    /* Transición suave */
+}
+
+table {
+    border-collapse: collapse;
+    border-radius: 5px;
+    overflow: hidden;
+    color: white;
+    margin-top: 50px;
+    text-align: center;
+}
+
+th {
+    padding: 10px;
+}
+
+td {
+    padding: 10px;
+}
+
+tr:nth-child(even) {
+    background-color: var(--table-primary);
+}
+
+tr:nth-child(odd) {
+    background-color: var(--table-secondary);
+}
+
+thead tr:first-child {
+    background-color: #B4C2E1;
+    color: black;
+    font-family: 'Nunito-ExtraBold';
+}
+
+tr:last-child {
+    border-bottom: 3px solid var(--table-secondary);
+}
+
+tbody button {
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    height: 24px;
+}
+
+.transparente {
+    background-color: transparent;
+}
+
+input {
+    color: white;
+    border: none;
+    text-align: center;
+    width: 100%;
+    border-bottom: 2px solid white;
+}
+
+input:focus {
+    outline: none;
+}
+
+
+/*------uiverse.io-------*/
+/*-------Botón actualizar---------*/
+.btn-actualizar {
+    position: relative;
+    width: 150px;
+    height: 40px;
+    margin-top: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--main-color);
+    box-shadow: 4px 4px var(--main-color);
+    background-color: rgb(244, 244, 244);
+    border-radius: 10px;
+    overflow: hidden;
+    padding-left: 0;
+}
+
+.btn-actualizar,
+.button__icon,
+.button__text {
+    transition: all 0.3s;
+}
+
+.btn-actualizar .button__text {
+    transform: translateX(30px);
+    color: #323232;
+    font-weight: 600;
+}
+
+.btn-actualizar .button__icon {
+    position: absolute;
+    transform: translateX(109px);
+    height: 100%;
+    width: 39px;
+    background-color: #dedede;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-actualizar .svg {
+    width: 20px;
+    fill: var(--main-color);
+}
+
+.btn-actualizar:hover {
+    background: var(--bg-color);
+}
+
+.btn-actualizar:hover .button__text {
+    color: transparent;
+}
+
+.btn-actualizar:hover .button__icon {
+    width: 148px;
+    transform: translateX(0);
+}
+
+.btn-actualizar:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0px 0px var(--main-color);
+}
+
+/*-------------*/
+
+.btn-actualizar .button__icon:hover .svg {
+    animation: rotate 0.3s linear;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -28,6 +28,11 @@ public class ProductosController {
         return productosRepository.findAll();
     }
     
+    @GetMapping("/productos/byReferencia")
+    public Iterable<Producto> getProductosOrderByReferencia() {
+        return productosRepository.findAllByOrderByReferenciaAsc();
+    }
+    
     @GetMapping("/productos/{id}")
     public Producto getProductoById(@PathVariable Long id) {
         return productosRepository.findById(id).orElse(null);
