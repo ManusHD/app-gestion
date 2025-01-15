@@ -4,9 +4,8 @@
     --letter-color: #3d7eff;
     --letter-color-off: #5e6a81;
     --aux-color: #014257;
-    --highlight-color: #00d0ff;
-    --highlight-color2: #00926b;
-    --hover-color: rgba(255, 255, 255, 0.35);
+    --caption-color: #007253;
+    --thead-color: #B4C2E1;
     --table-primary: #1242DF;
     --table-secondary: #3E66DF;
 }
@@ -72,3 +71,42 @@ body {
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
 -----------------------------------------*/
+table {
+    border-collapse: collapse;
+    border-radius: 5px;
+    overflow: hidden;
+    color: white;
+    margin-top: 50px;
+    text-align: center;
+    height: fit-content;
+}
+
+caption {
+    background-color: var(--caption-color) !important;
+}
+
+thead tr:first-child {
+    background-color: var(--thead-color);
+    color: black;
+    font-family: 'Nunito-ExtraBold';
+}
+
+th {
+    padding: 10px;
+}
+
+tr:nth-child(even) {
+    background-color: var(--table-primary);
+}
+
+tr:nth-child(odd) {
+    background-color: var(--table-secondary);
+}
+
+tr:last-child {
+    border-bottom: 3px solid var(--table-secondary);
+}
+
+td {
+    padding: 10px;
+}

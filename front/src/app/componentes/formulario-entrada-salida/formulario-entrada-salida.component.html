@@ -1,6 +1,6 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio">
     <div class="">
-        <form [formGroup]="entradaForm" (ngSubmit)="onSubmit()" #formularioNuevaEntrada="ngForm">
+        <form [formGroup]="entradaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)" #formularioNuevaEntrada="ngForm">
             <table>
                 <thead>
                     <tr>
@@ -13,6 +13,7 @@
                         <th>Ubicación</th>
                         <th>Palets</th>
                         <th>Bultos</th>
+                        <th>Observaciones</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -55,7 +56,20 @@
                             <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
                                 min="0" class="">
                         </td>
+                        <td class="">
+                            <input type="text" formControlName="observaciones" [ngClass]="getEstadoCampo('observaciones', i)"
+                            class="">
+                        </td>
+                        <td style="display: none;">
+                            <input type="number" formControlName="idPadre">
+                        </td>
                         <td class="centrar">
+                            <div class="pendiente" *ngIf="pestanaPadre == 'detallePrevisionEntrada'">
+                                <label [htmlFor]="'pendiente'+i">
+                                    Pendiente
+                                    <input [id]="'pendiente'+i" formControlName="pendiente" type="checkbox">
+                                </label>
+                            </div>
                             <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
                                     <path fill="#B5BAC1"
@@ -84,15 +98,14 @@
                     <span>Añadir línea</span>
                 </button>
 
-                <button *ngIf="pestanaPadre == 'nuevaEntrada'" (click)="desactivarBtnSubmit()" type="submit"
+                <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit"
                     class="crear-producto"
-                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente && !btnSubmitActivado">
+                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente">
                     Grabar entrada
                 </button>
 
                 <button *ngIf="pestanaPadre == 'previsionEntrada'" type="submit" class="crear-producto"
-                    (click)="desactivarBtnSubmit()"
-                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente && !btnSubmitActivado">
+                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente">
                     Grabar previsión
                 </button>
             </div>

@@ -3,15 +3,42 @@
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
         <span class="close" (click)="cerrarModal()">&times;</span>
-        <app-formulario-entrada-salida 
-            *ngIf="enRecibidas; else detallesEnPrevision" 
-            [pestanaPadre]="'detalleHistorialEntrada'" 
-            [detallesES]="entrada">
-        </app-formulario-entrada-salida>
+        
+        <div class="flotar-medio">
+            <table *ngIf="enRecibidas; else detallesEnPrevision">
+                <thead>
+                    <tr>
+                        <th>Origen</th>
+                        <th>DCS</th>
+                        <th>Ref</th>
+                        <th>Descripción</th>
+                        <th>Unidades</th>
+                        <th>Fecha recepción</th>
+                        <th>Ubicación</th>
+                        <th>Palets</th>
+                        <th>Bultos</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let producto of entrada.productos">
+                        <td>{{entrada.origen}} </td>
+                        <td>{{producto.dcs}} </td>
+                        <td>{{producto.ref}} </td>
+                        <td>{{producto.description}} </td>
+                        <td>{{producto.unidades}} </td>
+                        <td>{{producto.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
+                        <td>{{producto.ubicacion}} </td>
+                        <td>{{producto.palets}} </td>
+                        <td>{{producto.bultos}} </td>
+                        <td>{{producto.observaciones}} </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <ng-template #detallesEnPrevision>
-            <app-formulario-entrada-salida 
-                [pestanaPadre]="'detallePrevisionEntrada'" 
-                [detallesES]="entrada">
+            <app-formulario-entrada-salida [pestanaPadre]="'detallePrevisionEntrada'" [detallesES]="entrada">
             </app-formulario-entrada-salida>
         </ng-template>
     </div>

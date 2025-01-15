@@ -1,8 +1,10 @@
-#contenedor-inventario {
+
+#stock, #ubicaciones {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
 }
 
-table {
-    height: fit-content;
+#ubicaciones {
+
 }

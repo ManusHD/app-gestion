@@ -1,11 +1,3 @@
-tr:nth-child(even) {
-    background-color: var(--table-primary);
-}
-
-tr:nth-child(odd) {
-    background-color: var(--table-secondary);
-}
-
 .relleno{
     display: none;
 }
@@ -56,4 +48,67 @@ tr:nth-child(odd) {
 
 .container-btn-file:hover::before {
     width: 100%;
+}
+
+
+/*----- Boton borrar entrada -----*/
+.btn-eliminar {
+    --btn-eliminar-width: 100px;
+    width: var(--btn-eliminar-width);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    background-color: rgb(255, 16, 16);
+    border: none;
+    border-radius: 5px;
+    box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
+
+}
+
+.btn-eliminar,
+.btn-eliminar span {
+    transition: 200ms;
+}
+
+.btn-eliminar .text {
+    transform: translateX(12px);
+    color: white;
+}
+
+.btn-eliminar .icon {
+    position: absolute;
+    border-left: 1px solid #c41b1b;
+    transform: translateX(60px);
+    height: 17px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-eliminar svg {
+    width: 15px;
+    fill: #eee;
+}
+
+.btn-eliminar:hover {
+    background-color: #ff3636;
+}
+
+.btn-eliminar:hover .text {
+    color: transparent;
+}
+
+.btn-eliminar:hover .icon {
+    width: var(--btn-eliminar-width);
+    border-left: none;
+    transform: translateX(0);
+}
+
+.btn-eliminar:focus {
+    outline: none;
+}
+
+.btn-eliminar:active .icon svg {
+    transform: scale(0.8);
 }

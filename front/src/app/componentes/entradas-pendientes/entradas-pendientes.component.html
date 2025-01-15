@@ -11,20 +11,31 @@
                 <th>Origen</th>
                 <th>Detalles</th>
                 <th>Marcar como recibido</th>
+                <th>Eliminar</th>
             </tr>
         </thead>
         <tbody>
             <ng-container *ngFor="let entrada of entradas">
                 <tr>
                     <td>{{ entrada.origen }}</td>
-                    <td><app-detalles-entradas [entrada]="entrada" (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
+                    <td><app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
+                            (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
                     <td>
                         <div class="flotar-medio">
-                            <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena && !btnSubmitActivado" (click)="setRecibida(entrada.id!)" class="transparente" >
-                                <img [ngClass]="{'no-relleno': !entrada.rellena}" src="../../../assets/icons/check-verde.svg" />
-                                <img [ngClass]="{'relleno': entrada.rellena}" src="../../../assets/icons/no-check-gris.svg" />
+                            <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena || !btnSubmitActivado"
+                                (click)="setRecibida(entrada.id!)" class="transparente">
+                                <img [ngClass]="{'no-relleno': !entrada.rellena}"
+                                    src="../../../assets/icons/check-verde.svg" />
+                                <img [ngClass]="{'relleno': entrada.rellena}"
+                                    src="../../../assets/icons/no-check-gris.svg" />
                             </button>
                         </div>
+                    </td>
+                    <td>
+                        <button *ngIf="entrada.productos[0].idPadre == null" (click)="deleteEntrada(entrada.id!)" class="btn-eliminar">
+                            <span class="text">Borrar</span><span class="icon"><img
+                                    src="../../../assets/icons/delete-bin.svg" /></span>
+                        </button>
                     </td>
                 </tr>
             </ng-container>

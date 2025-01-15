@@ -32,4 +32,7 @@ public class ProductoEntrada {
     private String ubicacion;
     private Integer palets;
     private Integer bultos;
+    private String observaciones;
+    private Boolean pendiente; // false = recibida, true = pendiente
+    private Long idPadre;
 }

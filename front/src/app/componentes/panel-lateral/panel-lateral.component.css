@@ -41,16 +41,15 @@ li a {
 }
 
 li a:hover{
-    background-color: rgb(94, 106, 129, 0.5);
-    color: var(--main-color);
+    color: white;
 }
 
 #panel-lateral .active {
     color: white;
+    background-color: rgb(94, 106, 129, 0.5);
 }
 
 #panel-lateral .active:hover {
-    color: var(--letter-color-intense);
     text-shadow: 0px 0px 1px;
 }
 

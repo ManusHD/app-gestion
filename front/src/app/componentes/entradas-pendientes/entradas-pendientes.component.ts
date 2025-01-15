@@ -12,8 +12,12 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
     '../detalles-entradas/detalles-entradas.component.css',
   ],
 })
-export class EntradasPendientesComponent extends FormularioEntradaSalidaService implements OnInit {
+export class EntradasPendientesComponent
+  extends FormularioEntradaSalidaService
+  implements OnInit
+{
   entradas: Entrada[] = [];
+  btnSubmitActivado = true;
 
   ngOnInit() {
     this.cargarEntradas();
@@ -37,9 +41,29 @@ export class EntradasPendientesComponent extends FormularioEntradaSalidaService 
           return throwError(error);
         })
       )
-      .subscribe((data) => {    
+      .subscribe((data) => {
         location.reload();
       });
   }
-  
+
+  deleteEntrada(idEntrada: number) {
+    this.entradaService.deleteEntrada(idEntrada).subscribe(
+      (data) => {
+        console.log('Entrada borrada con éxito');
+        location.reload();
+      },
+      (error) => {
+        console.error(error);
+      }
+    );
+  }
+
+  desactivarBtnSubmit() {
+    this.btnSubmitActivado = false;
+    if (this.btnSubmitActivado) {
+      console.log('El botón está activado');
+    } else {
+      console.log('El botón está desactivado');
+    }
+  }
 }

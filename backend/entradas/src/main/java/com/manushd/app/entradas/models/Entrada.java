@@ -29,8 +29,9 @@ public class Entrada {
     private Long id;
     private String origen; 
     private Boolean estado; // false = pendiente, true = recibida
+    private Date fechaRecepcion;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "productoId")
+    @JoinColumn(name = "entradaId")
     private Set<ProductoEntrada> productos;
 }

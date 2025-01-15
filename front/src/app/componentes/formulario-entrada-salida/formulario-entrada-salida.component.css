@@ -482,3 +482,19 @@ input:focus {
         transform: rotate(360deg);
     }
 }
+
+.pendiente label{
+    background-color: #9f9f9f;
+    padding: 3px 7px;
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.pendiente input {
+    display: none;
+}
+
+.pendiente label:has(input:checked) {
+    background-color: red;
+}
+

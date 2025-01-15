@@ -1,22 +1,26 @@
 <app-cabecera-entradas></app-cabecera-entradas>
+<div class="contenedor-entradas-recibidas">
 
-<div class="flotar-medio">
-    <table>
-        <thead>
-            <tr>
-                <th>Origen</th>
-                <th>Fecha recepción</th>
-                <th>Detalles</th>
-            </tr>
-        </thead>
-        <tbody>
-            <ng-container *ngFor="let entrada of entradas">
-                <tr>
-                    <td>{{entrada.origen}} </td>
-                    <td>{{entrada.productos?.at(0)?.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
-                    <td><app-detalles-entradas [enRecibidas]="true" [entrada]="entrada" (entradaRellena)="entrada.rellena=$event"></app-detalles-entradas></td>
-                </tr>
-            </ng-container>
-        </tbody>
-    </table>
+    <div class="flotar-medio">
+        <div id="historial">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+                <ng-container matColumnDef="origen">
+                    <th class="header-paginator" *matHeaderCellDef>Origen</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.origen}} </td>
+                </ng-container>
+                <ng-container matColumnDef="fechaRecepcion">
+                    <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
+                </ng-container>
+                <ng-container matColumnDef="detalles">
+                    <th class="header-paginator" *matHeaderCellDef>Detalles</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada"><app-detalles-entradas [enRecibidas]="true" [entrada]="entrada" (entradaRellena)="entrada.rellena=$event"></app-detalles-entradas></td>
+                </ng-container>
+                
+                <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+            </table>
+            <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
+        </div>
+    </div>
 </div>

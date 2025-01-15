@@ -33,6 +33,7 @@ export class FormularioEntradaSalidaComponent
   ngOnInit() {
     this.entradaForm = this.initForm();
 
+    // En el if entro cuando creo una nueva entrada o la importo desde Excel
     if (!this.detallesES) {
       if (this.pestanaPadre !== 'nuevaEntrada') {
         this.inicializarPrevisionEntrada();
@@ -44,6 +45,18 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
+  setProductoPendiente(index: number) {
+    const checked = this.productosControls.at(index).get('estado')?.value
+    console.log(checked);
+  }
+
+  // Cuando estoy en Grabar Entrada
+  private inicializarNuevaEntrada() {
+    this.mostrarFormulario = true;
+    this.pendiente = false;
+  }
+
+  // Cuando voy a importar un Excel
   private inicializarPrevisionEntrada() {
     this.pendiente = true;
     this.importarES.excelData$.subscribe((excelData) => {
@@ -54,18 +67,6 @@ export class FormularioEntradaSalidaComponent
         this.mostrarFormulario = false;
       }
     });
-  }
-
-  private inicializarNuevaEntrada() {
-    this.mostrarFormulario = true;
-    this.pendiente = false;
-  }
-
-  private inicializarDetalleEntrada() {
-    this.mostrarFormulario = true;
-    this.enDetalles = true;
-    const origenDestino = this.obtenerOrigenDestino(this.detallesES!);
-    this.actualizarProductos(this.detallesES!.productos!, origenDestino);
   }
 
   private actualizarProductos(productos: any[], origenDestino?: string) {
@@ -84,12 +85,23 @@ export class FormularioEntradaSalidaComponent
         ubicacion: row.ubicacion,
         palets: row.palets,
         bultos: row.bultos,
+        observaciones: row.observaciones,
+        pendiente: row.pendiente,
+        idPadre: row.idPadre
       });
       if (row.ref) {
         this.buscarDescripcionProducto(productoFormGroup, row.ref);
       }
       this.productosControls.push(productoFormGroup);
     });
+  }
+
+  // Cuando voy a ver los Detalles de las Entradas Pendientes
+  private inicializarDetalleEntrada() {
+    this.mostrarFormulario = true;
+    this.enDetalles = true;
+    const origenDestino = this.obtenerOrigenDestino(this.detallesES!);
+    this.actualizarProductos(this.detallesES!.productos!, origenDestino);
   }
 
   private obtenerOrigenDestino(detalles: Entrada | Salida): string {
@@ -102,7 +114,7 @@ export class FormularioEntradaSalidaComponent
     const formValues = this.entradaForm.value;
     this.detallesES = { ...this.detallesES, ...formValues }; // Actualiza el objeto con los valores del formulario
     this.entradaService
-      .updateEntrada(this.detallesES!.id!, this.detallesES!)
+      .updateEntrada(this.detallesES!)
       .subscribe({
         next: (updatedEntrada) => {
           console.log('Entrada actualizada:', updatedEntrada);
