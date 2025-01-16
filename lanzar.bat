@@ -5,6 +5,7 @@ set MICROSERVICIO_ENTRADAS=backend\entradas
 set MICROSERVICIO_PRODUCTOS=backend\productos
 set MICROSERVICIO_SALIDAS=backend\salidas
 set MICROSERVICIO_DCS=backend\dcs
+set MICROSERVICIO_UBICACIONES=backend\ubicaciones
 
 :: Ejecutar entradas en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
@@ -12,8 +13,11 @@ start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
 :: Ejecutar productos en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_PRODUCTOS% && mvn spring-boot:run"
 
-:: Ejecutar productos en una nueva ventana
+:: Ejecutar salidas en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_SALIDAS% && mvn spring-boot:run"
 
-:: Ejecutar productos en una nueva ventana
+:: Ejecutar dcs en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_DCS% && mvn spring-boot:run"
+
+:: Ejecutar ubicaciones en una nueva ventana
+start cmd /c "cd %MICROSERVICIO_UBICACIONES% && mvn spring-boot:run"

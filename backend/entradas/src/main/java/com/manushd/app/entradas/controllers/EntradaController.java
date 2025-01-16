@@ -4,16 +4,22 @@ import com.manushd.app.entradas.models.Entrada;
 import com.manushd.app.entradas.models.Producto;
 import com.manushd.app.entradas.models.ProductoDcs;
 import com.manushd.app.entradas.models.ProductoEntrada;
+import com.manushd.app.entradas.models.Ubicacion;
+import com.manushd.app.entradas.models.ProductoUbicacion;
+import com.manushd.app.entradas.models.DCS;
 import com.manushd.app.entradas.repository.EntradaRepository;
 
-import com.manushd.app.entradas.models.DCS;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
+import java.util.Date;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,10 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,10 +63,60 @@ public class EntradaController {
         return entradasRepository.findAllByEstado(estado);
     }
 
+    @GetMapping("/entradas/estado/{estado}/orderByRecepcion")
+    public Iterable<Entrada> getEntradasOrdenadas(@PathVariable boolean estado) {
+        return entradasRepository.findAllByEstadoOrderByFechaRecepcionAsc(estado);
+    }
+
     @PostMapping("/entradas")
     public ResponseEntity<?> addEntrada(@RequestBody Entrada entrada) {
+        Boolean reintegrar = false;
+        Long idReintegrar = -1L;
         if (entrada.getEstado()) {
             RestTemplate restTemplate = new RestTemplate();
+
+            // Separar productos pendientes y recibidos
+            Set<ProductoEntrada> productosPendientes = new HashSet<>();
+            Set<ProductoEntrada> productosRecibidos = new HashSet<>();
+
+            for (ProductoEntrada producto : entrada.getProductos()) {
+                if (Boolean.TRUE.equals(producto.getPendiente())) {
+                    if(producto.getIdPadre() != null) {
+                        producto.setIdPadre(producto.getIdPadre());
+                    } else {
+                        producto.setIdPadre(entrada.getId());
+                    }
+                    productosPendientes.add(producto);
+                } else {
+                    if(producto.getIdPadre() != null && !reintegrar) {
+                        reintegrar = true;
+                        idReintegrar = producto.getIdPadre();
+                    }
+                    productosRecibidos.add(producto);
+                }
+            }
+
+            if(productosRecibidos.size() < 1) {
+                return null;
+            }
+
+            // Crear una nueva entrada con productos pendientes
+            if (!productosPendientes.isEmpty()) {
+                Entrada entradaPendiente = new Entrada();
+                entradaPendiente.setOrigen(entrada.getOrigen());
+                entradaPendiente.setEstado(false); // Estado pendiente
+                entradaPendiente.setProductos(productosPendientes);
+
+                // Guardar la entrada pendiente
+                entradasRepository.save(entradaPendiente);
+            }
+
+            // Actualizar la entrada original con productos recibidos
+            entrada.setProductos(productosRecibidos);
+
+            /*-------------------------------------------------------------------------
+            En este punto solo se tratarán los productos que hayan llegado al almacén 
+            -------------------------------------------------------------------------*/
 
             // Verificar y crear productos si no existen
             for (ProductoEntrada productoEntrada : entrada.getProductos()) {
@@ -92,18 +149,56 @@ public class EntradaController {
                             .body("Error al procesar la entrada: " + e.getMessage());
                 }
             }
-            crearDcs(entrada);
+        }
+
+        Entrada savedEntrada = null;
+
+        if (reintegrar) {
+            Entrada entradaAntigua = entradasRepository.findById(idReintegrar).orElse(null);
+            
+            if (entradaAntigua != null) {
+                // Crear un nuevo Set para evitar problemas de concurrencia
+                Set<ProductoEntrada> productosActualizados = new HashSet<>(entradaAntigua.getProductos());
+                
+                // Añadir los nuevos productos
+                for (ProductoEntrada producto : entrada.getProductos()) {
+                    // Asegurarse de que es una nueva instancia
+                    ProductoEntrada nuevoProducto = new ProductoEntrada();
+                    BeanUtils.copyProperties(producto, nuevoProducto);
+                    nuevoProducto.setId(null); // Forzar nueva inserción
+                    nuevoProducto.setIdPadre(entradaAntigua.getId());
+                    productosActualizados.add(nuevoProducto);
+                }
+                
+                entradaAntigua.setProductos(productosActualizados);
+                savedEntrada = entradasRepository.save(entradaAntigua);
+            }
+        } else {
+            Date fecRecepcion = null;
+            Boolean enc = false;
+            for (ProductoEntrada pe : entrada.getProductos()) {
+                fecRecepcion = pe.getFechaRecepcion();
+                break;
+            }
+            entrada.setFechaRecepcion(fecRecepcion);
+            savedEntrada = entradasRepository.save(entrada);
         }
 
         // Crear la entrada y actualizar stock
-        Entrada savedEntrada = entradasRepository.save(entrada);
 
         if (entrada.getEstado()) {
+            if(reintegrar) {
+                crearUbicacion(entrada);
+                entradasRepository.deleteById(entrada.getId());
+            }else {
+                crearUbicacion(savedEntrada);
+            }
             actualizarStockProductos(entrada.getProductos());
         }
 
         return ResponseEntity.ok(savedEntrada);
     }
+    
 
     private void actualizarStockProductos(Iterable<ProductoEntrada> productos) {
         RestTemplate restTemplate = new RestTemplate();
@@ -124,25 +219,24 @@ public class EntradaController {
     }
 
     private void crearDcs(Entrada entrada) {
-        System.out.println("-------------------Creo DCS--------------------");
         List<DCS> ListaDcs = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate(); // Instancia de RestTemplate
-    
+
         for (ProductoEntrada productoEntrada : entrada.getProductos()) {
             if (productoEntrada.getDcs() != null) {
                 String numeroDcs = productoEntrada.getDcs();
                 boolean existe = ListaDcs.stream().anyMatch(d -> d.getDcs().equals(numeroDcs));
-    
+
                 ProductoDcs p = new ProductoDcs();
                 p.setRef(productoEntrada.getRef());
                 p.setUnidades(productoEntrada.getUnidades());
-    
+
                 if (existe) {
                     int posicionDcs = IntStream.range(0, ListaDcs.size())
                             .filter(i -> ListaDcs.get(i).getDcs().equals(numeroDcs))
                             .findFirst()
                             .orElse(-1);
-    
+
                     DCS dcsExistente = ListaDcs.get(posicionDcs);
                     if (dcsExistente.getProductos() == null) {
                         dcsExistente.setProductos(new HashSet<>());
@@ -155,44 +249,87 @@ public class EntradaController {
                     d.setProductos(new HashSet<>());
                     d.getProductos().add(p);
                     ListaDcs.add(d);
-                    
                 }
             }
         }
-        
-        System.out.println("---------------------------------------");
-        System.out.println(ListaDcs);
-        System.out.println("---------------------------------------");
-        
+
         // Enviar cada DCS al microservicio
         String url = "http://localhost:8094/dcs";
-    
+
         for (DCS dcs : ListaDcs) {
             try {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-    
+
                 HttpEntity<DCS> request = new HttpEntity<>(dcs, headers);
                 ResponseEntity<?> response = restTemplate.postForEntity(url, request, DCS.class);
-    
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    System.out.println("DCS creado exitosamente: " + response.getBody());
-                } else {
-                    System.out.println("Error al crear el DCS: " + dcs.getDcs());
-                }
+
+                // if (response.getStatusCode().is2xxSuccessful()) {
+                // System.out.println("DCS creado exitosamente: " + response.getBody());
+                // } else {
+                // System.out.println("Error al crear el DCS: " + dcs.getDcs());
+                // }
             } catch (Exception e) {
                 System.out.println("Excepción al enviar el DCS: " + dcs.getDcs());
                 e.printStackTrace();
             }
         }
     }
-    
+
+    private void crearUbicacion(Entrada entrada) {
+        List<Ubicacion> listaUbicaciones = new ArrayList<>();
+        RestTemplate restTemplate = new RestTemplate();
+
+        Map<String, Ubicacion> ubicacionMap = new HashMap<>();
+
+        for (ProductoEntrada productoEntrada : entrada.getProductos()) {
+            String ubicacionNombre = productoEntrada.getUbicacion();
+
+            // Si no existe una ubicación en el mapa, se crea una nueva
+            Ubicacion ubicacion = ubicacionMap.computeIfAbsent(ubicacionNombre, k -> {
+                Ubicacion nuevaUbicacion = new Ubicacion();
+                nuevaUbicacion.setNombre(ubicacionNombre);
+                nuevaUbicacion.setProductos(new HashSet<>());
+                listaUbicaciones.add(nuevaUbicacion);
+                return nuevaUbicacion;
+            });
+
+            // Crear un nuevo ProductoUbicacion y asociarlo a la ubicación
+            ProductoUbicacion productoUbicacion = new ProductoUbicacion();
+            productoUbicacion.setRef(productoEntrada.getRef());
+            productoUbicacion.setUnidades(productoEntrada.getUnidades());
+
+            ubicacion.getProductos().add(productoUbicacion);
+        }
+
+        String url = "http://localhost:8095/ubicaciones/sumar";
+
+        // Imprimir y enviar las ubicaciones con sus productos
+        listaUbicaciones.forEach(ubicacion -> {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+
+                HttpEntity<Ubicacion> request = new HttpEntity<>(ubicacion, headers);
+                ResponseEntity<?> response = restTemplate.postForEntity(url, request, Ubicacion.class);
+                // System.out.println("Ubicación: " + ubicacion.getNombre());
+                // ubicacion.getProductos().forEach(producto -> {
+                //     System.out.println(" - Ref: " + producto.getRef() + ", Unidades: " + producto.getUnidades());
+                // });
+            } catch (Exception e) {
+                System.out.println("Excepción al enviar la Ubicaión: " + ubicacion.getNombre());
+                e.printStackTrace();
+            }
+        });
+
+    }
 
     @PutMapping("/entradas/{id}")
     public Entrada updateEntrada(@PathVariable Long id, @RequestBody Entrada entrada) {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
+            // System.out.println("-------------------------Actualizo entrada------------------------------");
             return entradasRepository.save(entrada);
         }
 

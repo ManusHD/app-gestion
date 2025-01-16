@@ -18,7 +18,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DetallesEntradasComponent } from './componentes/detalles-entradas/detalles-entradas.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
@@ -41,6 +42,7 @@ import { FormularioEntradaSalidaComponent } from './componentes/formulario-entra
 import { FormularioEntradaSalidaService } from './services/formulario-entrada-salida.service';
 import { ImportarExcelComponent } from './componentes/importar-excel/importar-excel.component';
 import { ImportarExcelService } from './services/importar-excel.service';
+import { UbicacionService } from './services/ubicacion.service';
 
 @NgModule({
   declarations: [
@@ -76,7 +78,9 @@ import { ImportarExcelService } from './services/importar-excel.service';
     MatIconModule,
     MatInputModule,
     MatNativeDateModule,
+    MatPaginatorModule,
     MatSnackBarModule,
+    MatSortModule,
     MatTableModule,
     ReactiveFormsModule,
     ToastrModule.forRoot(),
@@ -88,6 +92,7 @@ import { ImportarExcelService } from './services/importar-excel.service';
     FormularioEntradaSalidaService,
     ImportarExcelService,
     DCSService,
+    UbicacionService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],

@@ -44,8 +44,7 @@ public class DCSController {
         DCS dcsAux = dcsRepository.findByDcs(dcs.getDcs()).orElse(null);
         
         if(dcsAux == null) {
-            dcsRepository.save(dcs);
-            return ResponseEntity.ok(dcs);
+            return dcsRepository.save(dcs);
         }
 
         return null;
@@ -57,9 +56,9 @@ public class DCSController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "DCS no encontrada"));
         if (dcsAux != null) {
             return dcsRepository.save(dcs);
+        } else {
+            throw new IllegalArgumentException("El DCS " + dcsAux.getDcs() + " ya existe");
         }
-
-        return null;
     }
 
     @DeleteMapping("/dcs/{id}")

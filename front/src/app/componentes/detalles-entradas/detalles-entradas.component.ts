@@ -10,7 +10,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 })
 export class DetallesEntradasComponent implements OnInit {
   mostrarModal: boolean = false;
-  @Input() enRecibidas: boolean = false;
+  @Input() enRecibidas: boolean = true;
   @Input() entrada!: Entrada;
   @Output() entradaRellena = new EventEmitter<boolean>();
 
@@ -34,7 +34,7 @@ export class DetallesEntradasComponent implements OnInit {
   }
 
   modificarEntrada() {
-    this.entradaServices.updateEntrada(this.entrada.id!, this.entrada).subscribe({
+    this.entradaServices.updateEntrada(this.entrada).subscribe({
       next: (updatedEntrada) => {
         console.log('Entrada actualizada:', updatedEntrada);
         this.entradaRellena.emit(this.todosLosCamposRellenos());

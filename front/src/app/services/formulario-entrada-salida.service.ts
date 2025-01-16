@@ -16,8 +16,7 @@ export class FormularioEntradaSalidaService {
   entradaForm!: FormGroup;
   pendiente: boolean = true;
   productosNuevos: Set<number> = new Set();
-  btnSubmitActivado: boolean = true;
-  mostrarFormulario = false;
+  mostrarFormulario: boolean = false;
 
   private snackBar = inject(MatSnackBar);
 
@@ -34,10 +33,23 @@ export class FormularioEntradaSalidaService {
     });
   }
 
-  desactivarBtnSubmit() {
-    this.btnSubmitActivado = false;
+  onEnterKey(event: KeyboardEvent): void {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      this.agregarProducto();
+      
+      setTimeout(() => {
+        // Usar document.querySelector directamente
+        const filas = document.querySelectorAll('tbody tr');
+        const ultimaFila = filas[filas.length - 1];
+        const primerInput = ultimaFila.querySelectorAll('input')[2];
+        if (primerInput) {
+          primerInput.focus();
+        }
+      });
+    }
   }
-
+  
   // Getter para acceder fácilmente al FormArray de productos
   get productosControls() {
     return this.entradaForm.get('productos') as FormArray;
@@ -54,16 +66,9 @@ export class FormularioEntradaSalidaService {
       rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
     }
 
-    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0) {
+    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0 || campoVacio) {
       return 'campo-vacio';
-    }
-
-    if (
-      (campoVacio && !this.pendiente) ||
-      (campoVacio && rellenoObligatorioVacio)
-    ) {
-      return 'campo-vacio';
-    } else {
+    }else {
       return '';
     }
   }
@@ -91,6 +96,9 @@ export class FormularioEntradaSalidaService {
       ubicacion: ['', Validators.required],
       palets: ['', [Validators.required, Validators.min(0)]],
       bultos: [0, [Validators.required, Validators.min(0)]],
+      observaciones: [''],
+      pendiente: [false],
+      idPadre: [null],
     });
   }
 
@@ -224,6 +232,9 @@ export class FormularioEntradaSalidaService {
           ubicacion: producto.ubicacion,
           palets: producto.palets,
           bultos: producto.bultos,
+          observaciones: producto.observaciones,
+          pendiente: producto.pendiente,
+          idPadre: producto.idPadre
         };
       });
 
@@ -278,8 +289,6 @@ export class FormularioEntradaSalidaService {
       }
     }
   }
-
-  private crearObjetoEntrada() {}
 
   private crearEntrada(nuevaEntrada: Entrada) {
     this.entradaService.newEntrada(nuevaEntrada).subscribe({
@@ -387,4 +396,6 @@ export class FormularioEntradaSalidaService {
 
     return null;
   }
+
+
 }

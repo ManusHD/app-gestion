@@ -8,4 +8,7 @@ export class ProductoEntrada {
     ubicacion?: String;
     palets?: number;
     bultos?: number;
+    observaciones?: String;
+    pendiente: boolean = false; // false = recibida, true = pendiente
+    idPadre?: number;
 }

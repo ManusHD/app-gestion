@@ -5,6 +5,7 @@ export class Entrada {
     id?: number;
     origen?: string;
     estado: boolean = false; // false = pendiente, true = recibida
-    productos?: ProductoEntrada[];
+    productos!: ProductoEntrada[];
     rellena?: boolean;
+    fechaRecepcion?: string;
 }

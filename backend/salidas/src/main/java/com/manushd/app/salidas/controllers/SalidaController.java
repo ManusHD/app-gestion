@@ -70,9 +70,6 @@ public class SalidaController {
                     } else if (productoSalida.getUnidades() < 0) {
                         throw new IllegalArgumentException("Los productos no pueden tener unidades negativas"
                                 + productoSalida.getRef());
-                    } else if (producto == null) {
-                        throw new IllegalArgumentException("No existe ningún producto con referencia: "
-                                + productoSalida.getRef());
                     }
 
                 } catch (HttpClientErrorException.NotFound e) {

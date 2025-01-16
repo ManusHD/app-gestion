@@ -1,0 +1,25 @@
+.tabla-paginator{
+    text-align: center;
+    width: 500px;
+    height: 600px;
+}
+
+.header-paginator, .fila-paginator {
+    text-align: center;
+    font-size: 16px;
+}
+
+.header-paginator {
+    font-family: 'Nunito-ExtraBold';
+}
+
+.fila-paginator {
+    color: white;
+    font-family: 'Nunito-SemiBold';
+}
+
+.paginator {
+    color: white;
+    background-color: var(--main-color);
+    border-radius: 5px;
+}
