@@ -44,8 +44,8 @@ public class DCSController {
         DCS dcsAux = dcsRepository.findByDcs(dcs.getDcs()).orElse(null);
         
         if(dcsAux == null) {
-            Entrada savedDcs =
-            return dcsRepository.save(dcs);
+            DCS savedDcs = dcsRepository.save(dcs);
+            return ResponseEntity.ok(savedDcs);
         }
 
         return null;
