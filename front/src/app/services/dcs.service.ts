@@ -12,5 +12,6 @@ export class DCSService {
     getDCSs(): Observable<dcs[]> {
         return this.http.get<dcs[]>(`${this.apiUrl}`);
     }
+    
 
 }

@@ -1,0 +1,59 @@
+#contenedor {
+    margin-top: 50px;
+}
+
+form {
+    color: white;
+    background-color: var(--main-color);
+    width: 300px;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid white;
+    box-shadow: 0px 0px 1px,
+                0px 0px 2px;
+}
+
+h1 {
+    padding: 0;
+    margin-top: 0;
+    font-family: 'Nunito-Bold';
+    text-align: center;
+    color: var(--letter-color);
+}
+
+.nuevo-input {
+    margin-bottom: 20px;
+}
+
+.alinear-input {
+    display: flex;
+    justify-content: space-between;
+}
+
+.error-message {
+    color: rgb(255, 47, 47);
+}
+
+.editar-agencia {
+    display: flex;
+    align-items: center;
+    background-color: var(--btn-inactive);
+    cursor: pointer;
+    padding: 2px 15px;
+}
+
+.editar-agencia:has(input:checked) {
+    background-color: #5fc23a;
+}
+
+.editar-agencia input{
+    display: none;
+}
+
+.deleteButton {
+    height: 25px;
+}
+
+.acciones {
+    gap: 10px;
+}

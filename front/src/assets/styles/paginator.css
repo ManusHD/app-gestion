@@ -1,7 +1,7 @@
 .tabla-paginator{
     text-align: center;
-    width: 500px;
-    height: 600px;
+    width: var(--w-paginator);
+    height: fit-content;
 }
 
 .header-paginator, .fila-paginator {
@@ -16,6 +16,11 @@
 .fila-paginator {
     color: white;
     font-family: 'Nunito-SemiBold';
+}
+
+.btn-acciones {
+    display: flex;
+    justify-content: center;
 }
 
 .paginator {

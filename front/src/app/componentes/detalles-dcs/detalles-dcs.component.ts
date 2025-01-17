@@ -4,7 +4,7 @@ import { dcs } from 'src/app/models/dcs.model';
 @Component({
   selector: 'app-detalles-dcs',
   templateUrl: './detalles-dcs.component.html',
-  styleUrls: ['./detalles-dcs.component.css']
+  styleUrls: ['../../../assets/styles/modal.css', './detalles-dcs.component.css']
 })
 export class DetallesDcsComponent {
   mostrarModal: boolean = false;

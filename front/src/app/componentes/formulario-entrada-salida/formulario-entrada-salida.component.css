@@ -484,7 +484,7 @@ input:focus {
 }
 
 .pendiente label{
-    background-color: #9f9f9f;
+    background-color: var(--btn-inactive);
     padding: 3px 7px;
     border-radius: 2px;
     cursor: pointer;
@@ -498,3 +498,14 @@ input:focus {
     background-color: red;
 }
 
+select {
+    color: white;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid white;
+}
+
+select option {
+    background-color: #212121;
+    color: white;
+}

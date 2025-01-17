@@ -8,6 +8,8 @@
     --thead-color: #B4C2E1;
     --table-primary: #1242DF;
     --table-secondary: #3E66DF;
+    --btn-inactive: #9f9f9f;
+    --w-paginator: 400px;
 }
 
 @font-face {
@@ -68,6 +70,10 @@ body {
     align-items: center;
 }
 
+.transparente {
+    background-color: transparent;
+}
+
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
 -----------------------------------------*/
@@ -83,6 +89,7 @@ table {
 
 caption {
     background-color: var(--caption-color) !important;
+    padding: 10px;
 }
 
 thead tr:first-child {
@@ -109,4 +116,87 @@ tr:last-child {
 
 td {
     padding: 10px;
+}
+
+.centrar {
+    display: flex;
+    justify-content: center;
+}
+
+.mat-mdc-paginator-container {
+    width: fit-content !important;
+}
+
+.mat-mdc-paginator-outer-container {
+    justify-content: center;
+}
+
+mat-tooltip-component {
+    display: none; /* Oculta el tooltip del paginator*/
+}
+
+/*------- Botón borrar ubicaciones -------*/
+.deleteButton {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.deleteButton:hover {
+    overflow: visible;
+}
+
+.bin path {
+    transition: all 0.2s;
+}
+
+.deleteButton:hover .bin path {
+    fill: #ff1d1d;
+}
+
+.deleteButton:active {
+    transform: scale(0.98);
+}
+
+.tooltip {
+    --tooltip-color: rgb(41, 41, 41);
+    position: absolute;
+    top: -40px;
+    background-color: var(--tooltip-color);
+    color: white;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 8px 12px;
+    font-weight: 600;
+    box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.105);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.5s;
+}
+
+.tooltip::before {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    content: "";
+    background-color: var(--tooltip-color);
+    bottom: -10%;
+}
+
+.deleteButton:hover .tooltip {
+    opacity: 1;
 }

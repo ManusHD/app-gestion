@@ -43,6 +43,11 @@ public class ProductosController {
         return productosRepository.findByReferencia(referencia).orElse(null);
     }
 
+    @GetMapping("/productos/referencia/{referencia}/coincidentes")
+    public Iterable<Producto> obtenerProductosPorReferencia(@PathVariable String referencia) {
+        return productosRepository.findByReferenciaContainingIgnoreCase(referencia);
+    }
+
     @GetMapping("/productos/description/{description}")
     public Iterable<Producto> obtenerProductosPorDescripcion(@PathVariable String description) {
         return productosRepository.findByDescriptionContainingIgnoreCase(description);

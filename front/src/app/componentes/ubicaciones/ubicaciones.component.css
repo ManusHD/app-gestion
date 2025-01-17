@@ -1,0 +1,39 @@
+#contenedor {
+    margin-top: 50px;
+}
+
+#crear-ubicacion, #lista-ubicaciones {
+    align-items: center;
+}
+
+form {
+    color: white;
+    background-color: var(--main-color);
+    width: fit-content;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid white;
+    box-shadow: 0px 0px 1px,
+                0px 0px 2px;
+}
+
+h1 {
+    padding: 0;
+    margin-top: 0;
+    font-family: 'Nunito-Bold';
+    text-align: center;
+    color: var(--letter-color);
+}
+
+.nuevo-input {
+    margin-bottom: 20px;
+}
+
+.alinear-input {
+    display: flex;
+    justify-content: space-between;
+}
+
+.error-message {
+    color: rgb(255, 47, 47);
+}

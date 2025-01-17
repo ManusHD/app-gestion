@@ -312,10 +312,7 @@ public class EntradaController {
 
                 HttpEntity<Ubicacion> request = new HttpEntity<>(ubicacion, headers);
                 ResponseEntity<?> response = restTemplate.postForEntity(url, request, Ubicacion.class);
-                // System.out.println("Ubicación: " + ubicacion.getNombre());
-                // ubicacion.getProductos().forEach(producto -> {
-                //     System.out.println(" - Ref: " + producto.getRef() + ", Unidades: " + producto.getUnidades());
-                // });
+                
             } catch (Exception e) {
                 System.out.println("Excepción al enviar la Ubicaión: " + ubicacion.getNombre());
                 e.printStackTrace();

@@ -1,0 +1,55 @@
+.modal {
+    display: block;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    margin: 5% auto 0;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    color: var(--letter-color);
+    background-color: var(--bg-color);
+    width: 80%;
+}
+
+.columna {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+}
+
+.columna table {
+    margin-top: 20px;
+}
+
+h2 {
+    margin: 0;
+    font-family: 'Nunito-ExtraBold';
+    color: #b6b6b6;
+}
+
+.titulo-modal {
+    color: white;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: white;
+    cursor: pointer;
+}

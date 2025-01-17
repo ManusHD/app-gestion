@@ -21,6 +21,10 @@ export class ProductoServices {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }
 
+  getProductosPorReferencia(referencia: String): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/referencia/${referencia}/coincidentes`);
+  }
+
   postProducto(producto: Producto): Observable<Producto> {
     producto.stock = 0;
     return this.http.post<Producto>(`${this.apiUrl}`, producto);

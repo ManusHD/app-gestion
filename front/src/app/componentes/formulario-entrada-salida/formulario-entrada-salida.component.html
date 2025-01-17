@@ -45,8 +45,11 @@
                                 (change)="sincronizarEntrada()">
                         </td>
                         <td class="">
-                            <input type="text" formControlName="ubicacion" [ngClass]="getEstadoCampo('ubicacion', i)"
-                                class="">
+                            <select formControlName="ubicacion" [ngClass]="getEstadoCampo('ubicacion', i)">
+                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
+                                    {{ubicacion.nombre}}
+                                </option>
+                            </select>
                         </td>
                         <td class="">
                             <input type="number" formControlName="palets" [ngClass]="getEstadoCampo('palets', i)"

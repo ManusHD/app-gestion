@@ -6,7 +6,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 @Component({
   selector: 'app-detalles-entradas',
   templateUrl: './detalles-entradas.component.html',
-  styleUrls: ['./detalles-entradas.component.css'],
+  styleUrls: ['../../../assets/styles/modal.css', './detalles-entradas.component.css'],
 })
 export class DetallesEntradasComponent implements OnInit {
   mostrarModal: boolean = false;

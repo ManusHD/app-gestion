@@ -3,7 +3,7 @@
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
         <span class="close" (click)="cerrarModal()">&times;</span>
-        <h2>Productos del DCS: <span class="titulo-modal">{{dcs.dcs}}</span></h2>
+        <h2>Productos: <span class="titulo-modal">{{ubicacion.nombre}}</span></h2>
         <div class="flotar-medio columna">
             <table>
                 <thead>
@@ -13,9 +13,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let producto of dcs.productos">
-                        <td>{{producto.ref}}</td>
-                        <td>{{producto.unidades}}</td>
+                    <tr *ngFor="let producto of ubicacion.productos">
+                        <td>{{producto.ref}} </td>
+                        <td>{{producto.unidades}} </td>
                     </tr>
                 </tbody>
             </table>

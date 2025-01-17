@@ -38,7 +38,7 @@ export class NuevoProductoComponent {
       this.productosService.postProducto(this.producto).subscribe({
         next: (data) => {
           console.log('Producto creado correctamente: ', data);
-          this.snackBar.open('Entrada guardada correctamente', '✖', {
+          this.snackBar.open('Producto guardado correctamente', '✖', {
             duration: 3000,
             panelClass: 'exito',
           });

@@ -11,16 +11,22 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 @Component({
   selector: 'app-inventario',
   templateUrl: './inventario.component.html',
-  styleUrls: ['./inventario.component.css', '../../../assets/styles/paginator.css']
+  styleUrls: ['../../../assets/styles/paginator.css', './inventario.component.css', ]
 })
 export class InventarioComponent implements OnInit{
   productos: Producto[] = [];
   DCSs: dcs[] = [];
   ubicaciones: Ubicacion[] = [];
+  buscador: string = '';
+  productosBuscados: Producto[] = [];
 
-  columnasPaginator: string[] = ['referencia', 'description', 'stock'];
-  dataSource = new MatTableDataSource<Producto>();
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  columnasStock: string[] = ['referencia', 'description', 'stock'];
+  dataSourceStock = new MatTableDataSource<Producto>();
+  @ViewChild(MatPaginator) paginatorStock!: MatPaginator;
+
+  columnasProductosBuscados: string[] = ['referencia', 'description', 'stock'];
+  dataSourceProductosBuscados = new MatTableDataSource<Producto>();
+  @ViewChild(MatPaginator) paginatorProductosBuscados!: MatPaginator;
 
   constructor(private productoService: ProductoServices, private dcsService: DCSService, private ubiService: UbicacionService){}
 
@@ -29,13 +35,29 @@ export class InventarioComponent implements OnInit{
     this.cargarDcs();
     this.cargarUbicaciones();
   }
+
+  buscarProducto() {
+    this.productoService.getProductosPorReferencia(this.buscador).subscribe(
+      (data: Producto[]) => {
+        this.productosBuscados = data;
+        this.dataSourceProductosBuscados.data = this.productosBuscados;
+        this.dataSourceProductosBuscados.paginator = this.paginatorProductosBuscados;
+        console.log(this.productosBuscados);
+      }
+    );
+  }
+
+  resetearBuscador() {
+    this.buscador = '';
+    this.productosBuscados = [];
+  }
   
   cargarProductos() {
     this.productoService.getProductosOrdenadosPorReferencia().subscribe(
       (data: Producto[]) => {
         this.productos = data;
-        this.dataSource.data = this.productos;
-        this.dataSource.paginator = this.paginator; // Vincula el paginador
+        this.dataSourceStock.data = this.productos;
+        this.dataSourceStock.paginator = this.paginatorStock; // Vincula el paginador
       }
     );
   }
@@ -52,9 +74,7 @@ export class InventarioComponent implements OnInit{
     this.ubiService.getUbicacionesOrderByNombre().subscribe(
       (data: Ubicacion[]) => {
         this.ubicaciones = data;
-        // console.log(this.ubicaciones);
       }
     );
   }
-
 }

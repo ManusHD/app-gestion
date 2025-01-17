@@ -43,6 +43,12 @@ import { FormularioEntradaSalidaService } from './services/formulario-entrada-sa
 import { ImportarExcelComponent } from './componentes/importar-excel/importar-excel.component';
 import { ImportarExcelService } from './services/importar-excel.service';
 import { UbicacionService } from './services/ubicacion.service';
+import { UbicacionesComponent } from './componentes/ubicaciones/ubicaciones.component';
+import { AgenciasTransporteComponent } from './componentes/agencias-transporte/agencias-transporte.component';
+import { AgenciasTransporteService } from './services/agencias-transporte.service';
+import { SnackBar } from './services/snackBar.service';
+import { DetallesUbicacionComponent } from './componentes/detalles-ubicacion/detalles-ubicacion.component';
+import { ListaUbicacionesComponent } from './componentes/lista-ubicaciones/lista-ubicaciones.component';
 
 @NgModule({
   declarations: [
@@ -63,7 +69,11 @@ import { UbicacionService } from './services/ubicacion.service';
     DetallesSalidasComponent,
     DetallesDcsComponent,
     FormularioEntradaSalidaComponent,
-    ImportarExcelComponent
+    ImportarExcelComponent,
+    UbicacionesComponent,
+    AgenciasTransporteComponent,
+    DetallesUbicacionComponent,
+    ListaUbicacionesComponent
   ],
   imports: [
     AppRoutingModule,
@@ -93,6 +103,8 @@ import { UbicacionService } from './services/ubicacion.service';
     ImportarExcelService,
     DCSService,
     UbicacionService,
+    AgenciasTransporteService,
+    SnackBar,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],

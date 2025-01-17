@@ -6,6 +6,7 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
 import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { Entrada } from 'src/app/models/entrada.model';
 import { Salida } from 'src/app/models/salida.model';
+import { UbicacionService } from 'src/app/services/ubicacion.service';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
@@ -25,9 +26,10 @@ export class FormularioEntradaSalidaComponent
     productoService: ProductoServices,
     entradaService: EntradaServices,
     entradasFormService: EntradaServices,
+    ubicacionesService: UbicacionService,
     private importarES: ImportarExcelService
   ) {
-    super(fb, productoService, entradaService, entradasFormService);
+    super(fb, productoService, entradaService, entradasFormService, ubicacionesService);
   }
 
   ngOnInit() {
@@ -43,6 +45,8 @@ export class FormularioEntradaSalidaComponent
     } else {
       this.inicializarDetalleEntrada();
     }
+
+    this.getUbicaciones();
   }
 
   setProductoPendiente(index: number) {

@@ -10,6 +10,8 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { UbicacionService } from './ubicacion.service';
+import { Ubicacion } from '../models/ubicacion.model';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -17,6 +19,7 @@ export class FormularioEntradaSalidaService {
   pendiente: boolean = true;
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
+  ubicaciones: Ubicacion[] = [];
 
   private snackBar = inject(MatSnackBar);
 
@@ -24,7 +27,8 @@ export class FormularioEntradaSalidaService {
     protected fb: FormBuilder,
     protected productoService: ProductoServices,
     protected entradaService: EntradaServices,
-    public entradasFormService: EntradaServices
+    public entradasFormService: EntradaServices,
+    protected ubicacionesService: UbicacionService
   ) {}
 
   initForm() {
@@ -42,9 +46,9 @@ export class FormularioEntradaSalidaService {
         // Usar document.querySelector directamente
         const filas = document.querySelectorAll('tbody tr');
         const ultimaFila = filas[filas.length - 1];
-        const primerInput = ultimaFila.querySelectorAll('input')[2];
-        if (primerInput) {
-          primerInput.focus();
+        const tercerInput = ultimaFila.querySelectorAll('input')[2];
+        if (tercerInput) {
+          tercerInput.focus();
         }
       });
     }
@@ -397,5 +401,15 @@ export class FormularioEntradaSalidaService {
     return null;
   }
 
+  getUbicaciones() {
+    this.ubicacionesService.getUbicaciones().subscribe({
+      next: (ubicaciones) => {
+        this.ubicaciones = ubicaciones;
+      },
+      error: (error) => {
+        console.error('Error al obtener ubicaciones', error);
+      },
+    })
+  }
 
 }

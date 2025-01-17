@@ -1,6 +1,8 @@
 package com.manushd.app.ubicaciones.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,13 +43,24 @@ public class UbicacionesController {
         return ubicacionesRepository.findById(id).orElse(null);
     }
 
+    @PostMapping("/ubicaciones")
+    public Ubicacion addUbicacion(@RequestBody Ubicacion ubicacion) {
+        Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
+
+        if (ubiAux != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La ubicación ya existe");
+        }
+
+        return ubicacionesRepository.save(ubicacion);
+    }
+
     @GetMapping("/ubicaciones/nombre/{nombre}")
     public Ubicacion obtenerUbicacionPorNombre(@PathVariable String nombre) {
         return ubicacionesRepository.findByNombre(nombre).orElse(null);
     }
 
     @PostMapping("/ubicaciones/sumar")
-    public Ubicacion addUbicacion(@RequestBody Ubicacion ubicacion) {
+    public Ubicacion sumarUbicacion(@RequestBody Ubicacion ubicacion) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
 
         if (ubiAux != null) {
@@ -91,8 +104,17 @@ public class UbicacionesController {
                         .orElse(null);
     
                 if (productoExistente != null) {
-                    // Si el producto existe, restar las unidades
-                    productoExistente.setUnidades(productoExistente.getUnidades() - nuevoProducto.getUnidades());
+                    if (productoExistente.getUnidades() - nuevoProducto.getUnidades() < 0) {
+                        // Si las unidades son negativas, lanzar una excepción
+                        throw new IllegalArgumentException("No hay unidades suficientes del producto con referencia " + nuevoProducto.getRef() + " en la ubicación " + ubicacion.getNombre());
+                    } else if (productoExistente.getUnidades() - nuevoProducto.getUnidades() == 0) {
+                        // Si las unidades son 0, eliminar el producto
+                        ubiAux.getProductos().remove(productoExistente);
+                    } else {
+                        // Si el producto existe y quedan más de 0 unidades, restar las unidades
+                        productoExistente.setUnidades(productoExistente.getUnidades() - nuevoProducto.getUnidades());
+                    }
+
                 } else {
                     // Si no existe el producto
                     throw new IllegalArgumentException("No hay unidades del producto con referencia " + nuevoProducto.getRef() + " en la ubicación indicada");
@@ -111,7 +133,15 @@ public class UbicacionesController {
     // }
 
     @DeleteMapping("/ubicaciones/{id}")
-    public void deleteById(@PathVariable Long id) {
-        ubicacionesRepository.deleteById(id);
+    public ResponseEntity<?> deleteById(@PathVariable Long id) {
+        Ubicacion ubicacionAux = ubicacionesRepository.findById(id).orElse(null);
+        if (ubicacionAux == null) {
+            return ResponseEntity.badRequest().body("ERROR: La ubicación no existe");
+        } else if(ubicacionAux.getProductos().size() > 0) {
+            return ResponseEntity.badRequest().body("ERROR: La ubicación " + ubicacionAux.getNombre() + " tiene productos asociados");
+        } else {
+            ubicacionesRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
     }
 }

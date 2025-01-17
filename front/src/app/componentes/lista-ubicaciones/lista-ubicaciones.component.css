@@ -1,0 +1,12 @@
+
+#lista-ubicaciones {
+    margin-top: 50px;
+}
+
+#lista-ubicaciones table{
+    margin-top: 0;
+}
+
+.deleteButton {
+    height: 25px;
+}
