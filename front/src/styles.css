@@ -74,6 +74,19 @@ body {
     background-color: transparent;
 }
 
+.btn-productos {
+    border: none;
+    background-color: #EBB934;
+    padding: 3.5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Nunito-Medium';
+}
+
+.btn-productos:hover {
+    background-color: #ffd875;
+}
+
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
 -----------------------------------------*/
@@ -135,7 +148,7 @@ mat-tooltip-component {
     display: none; /* Oculta el tooltip del paginator*/
 }
 
-/*------- Botón borrar ubicaciones -------*/
+/*------- Botón borrar (estático) -------*/
 .deleteButton {
     width: 40px;
     height: 40px;

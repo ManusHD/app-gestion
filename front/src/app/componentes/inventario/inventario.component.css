@@ -5,14 +5,11 @@
 }
 
 .tabla-paginator {
-    height: 700px;
-}
-
-#buscador-stock {
-    margin-top: 50px;
-}
-
-.productos-buscados table {
-    margin-top: 10px;
+    width: 550px;
     height: fit-content;
 }
+
+.tabla-paginator td{
+    height: 65px;
+}
+

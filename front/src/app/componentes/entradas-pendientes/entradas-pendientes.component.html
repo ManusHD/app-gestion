@@ -32,7 +32,7 @@
                         </div>
                     </td>
                     <td>
-                        <button *ngIf="entrada.productos[0].idPadre == null" (click)="deleteEntrada(entrada.id!)" class="btn-eliminar">
+                        <button *ngIf="entrada.productos[0].idPadre == null" [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)" class="btn-eliminar">
                             <span class="text">Borrar</span><span class="icon"><img
                                     src="../../../assets/icons/delete-bin.svg" /></span>
                         </button>

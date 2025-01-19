@@ -169,7 +169,7 @@ export class FormularioEntradaSalidaService {
       map((producto) => null),
       catchError(() => {
         // Mostrar otro mensaje en caso de error del servicio
-        this.snackBarError('Error al validar la referencia.');
+        // this.snackBarError('Error al validar la referencia.');
         return of({ referenciaInvalida: true });
       })
     );

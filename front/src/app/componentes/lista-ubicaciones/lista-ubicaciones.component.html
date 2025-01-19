@@ -1,5 +1,18 @@
 <div id="lista-ubicaciones" class="centrar">
+
     <div>
+        <div class="buscador" (keyup)="onEnterKey($event)">
+            <select [(ngModel)]="tipoBusqueda" class="select-buscador" >
+                <option value="productos">Productos</option>
+                <option value="ubicaciones">Ubicaciones</option>
+            </select>
+            <input type="text" placeholder="Buscar..." [(ngModel)]="buscador"/>
+            <button (click)="buscarUbicaciones()" class="btn-buscar">
+                <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+                <span class="letra-buscador">Buscar</span>
+            </button>
+            <button (click)="resetearBuscador()" class="btn-resetear">Resetear</button>
+        </div>
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceUbicaciones">
             <caption>Ubicaciones almacén</caption>
             <ng-container matColumnDef="nombre">

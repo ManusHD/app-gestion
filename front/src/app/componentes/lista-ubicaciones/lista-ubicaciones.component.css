@@ -1,12 +1,15 @@
 
 #lista-ubicaciones {
-    margin-top: 50px;
-}
-
-#lista-ubicaciones table{
-    margin-top: 0;
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .deleteButton {
     height: 25px;
+}
+
+.tabla-paginator {
+    width: 500px;
 }

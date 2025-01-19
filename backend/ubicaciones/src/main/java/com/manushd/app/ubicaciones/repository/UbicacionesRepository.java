@@ -14,4 +14,8 @@ public interface UbicacionesRepository extends CrudRepository<Ubicacion, Long>{
 
         Optional<Ubicacion> findByNombre(String nombre);
 
+        Iterable<Ubicacion> findByNombreContainingIgnoreCase(String nombre);
+
+        Iterable<Ubicacion> findByProductosRef(String ref);
+
 }

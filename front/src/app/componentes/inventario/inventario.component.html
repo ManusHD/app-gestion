@@ -3,44 +3,22 @@
 
 
 <div id="stock">
-    <div id="buscador-stock">
-        <div class="buscador">
-            <input type="text" placeholder="Buscar producto" [(ngModel)]="buscador">
-            <button (click)="buscarProducto()">Buscar</button>
-            <button (click)="resetearBuscador()">Resetear</button>
+
+    <div>
+        <div class="buscador" (keyup)="onEnterKey($event)">
+            <input type="text" placeholder="Buscar producto" [(ngModel)]="buscador"/>
+            <button (click)="buscarProducto()" class="btn-buscar">
+                <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+                <span class="letra-buscador">Buscar</span>
+            </button>
+            <button (click)="resetearBuscador()" class="btn-resetear">Resetear</button>
         </div>
-        <div *ngIf="productosBuscados.length > 0" class="productos-buscados">
-            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceProductosBuscados">
-                <caption>Productos encontrados</caption>
-                <ng-container matColumnDef="referencia">
-                    <th class="header-paginator" *matHeaderCellDef> Ref </th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.referencia}} </td>
-                </ng-container>
-
-                <ng-container matColumnDef="description">
-                    <th class="header-paginator" mat-header-cell *matHeaderCellDef> Descripción </th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.description}} </td>
-                </ng-container>
-
-                <ng-container matColumnDef="stock">
-                    <th class="header-paginator" mat-header-cell *matHeaderCellDef> Stock </th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.stock}} </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="columnasProductosBuscados"></tr>
-                <tr mat-row *matRowDef="let row; columns: columnasProductosBuscados;"></tr>
-            </table>
-            <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
-        </div> 
-    </div>
-
-    <div id="productos-almacen">
-        <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceStock">
+        <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productosBuscados.length > 0}" mat-table [dataSource]="dataSourceStock">
             <caption>Productos en el almacén</caption>
             <!-- Ref Column -->
             <ng-container matColumnDef="referencia">
                 <th class="header-paginator" *matHeaderCellDef> Ref </th>
-                <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.referencia}} </td>
+                <td class="fila-paginator" style="cursor: pointer;" mat-cell *matCellDef="let producto" (click)="copiarReferencia(producto.referencia)"> {{producto.referencia}} </td>
             </ng-container>
 
             <!-- Descripción Column -->

@@ -21,6 +21,14 @@ export class UbicacionService {
     return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/nombre/${nombre}`);
   }
 
+  getUbicacionesByNombre(nombre: String): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/nombre/${nombre}/coincidentes`);
+  }
+
+  getUbicacionesByReferenciaProducto(referenciaProducto: String): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/referenciaProducto/${referenciaProducto}`);
+  }
+
   newUbicacion(ubicacion: Ubicacion): Observable<Ubicacion> {
     return this.httpClient.post(`${this.apiUrl}`, ubicacion);
   }

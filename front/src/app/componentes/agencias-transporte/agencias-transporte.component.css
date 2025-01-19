@@ -40,6 +40,7 @@ h1 {
     background-color: var(--btn-inactive);
     cursor: pointer;
     padding: 2px 15px;
+    border-radius: 5px;
 }
 
 .editar-agencia:has(input:checked) {

@@ -6,6 +6,13 @@
     display: none;
 }
 
+tbody button {
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    height: 24px;
+}
+
 /*-------Botón importar Excel------*/
 .container-btn-file {
     display: flex;

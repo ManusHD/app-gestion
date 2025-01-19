@@ -59,6 +59,16 @@ public class UbicacionesController {
         return ubicacionesRepository.findByNombre(nombre).orElse(null);
     }
 
+    @GetMapping("/ubicaciones/nombre/{nombre}/coincidentes")
+    public Iterable<Ubicacion> obtenerUbicacionesPorNombre(@PathVariable String nombre) {
+        return ubicacionesRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    @GetMapping("/ubicaciones/referenciaProducto/{ref}")
+    public Iterable<Ubicacion> findByProductosRef(@PathVariable String ref) {
+        return ubicacionesRepository.findByProductosRef(ref);
+    }
+
     @PostMapping("/ubicaciones/sumar")
     public Ubicacion sumarUbicacion(@RequestBody Ubicacion ubicacion) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
