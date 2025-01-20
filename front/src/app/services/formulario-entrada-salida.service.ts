@@ -12,14 +12,21 @@ import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UbicacionService } from './ubicacion.service';
 import { Ubicacion } from '../models/ubicacion.model';
+import { SalidaServices } from './salida.service';
+import { Salida } from '../models/salida.model';
+import { ProductoSalida } from '../models/productoSalida.model';
+import { AgenciasTransporteService } from './agencias-transporte.service';
+import { AgenciaTransporte } from '../models/agencia-transporte.model';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
-  entradaForm!: FormGroup;
+  entradaSalidaForm!: FormGroup;
   pendiente: boolean = true;
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
   ubicaciones: Ubicacion[] = [];
+  btnSubmitActivado = true;
+  currentPath: string = window.location.pathname;
 
   private snackBar = inject(MatSnackBar);
 
@@ -27,8 +34,9 @@ export class FormularioEntradaSalidaService {
     protected fb: FormBuilder,
     protected productoService: ProductoServices,
     protected entradaService: EntradaServices,
-    public entradasFormService: EntradaServices,
-    protected ubicacionesService: UbicacionService
+    protected salidaService: SalidaServices,
+    protected ubicacionesService: UbicacionService,
+    protected agenciasTransporteService: AgenciasTransporteService
   ) {}
 
   initForm() {
@@ -56,7 +64,7 @@ export class FormularioEntradaSalidaService {
   
   // Getter para acceder fácilmente al FormArray de productos
   get productosControls() {
-    return this.entradaForm.get('productos') as FormArray;
+    return this.entradaSalidaForm.get('productos') as FormArray;
   }
 
   getEstadoCampo(nombreCampo: string, indexCampo: number) {
@@ -64,7 +72,7 @@ export class FormularioEntradaSalidaService {
     const campoVacio = producto.get(nombreCampo)!.invalid;
 
     let rellenoObligatorioVacio = false;
-    const camposObligatorios = /^(numeroEntrada|ref|description)$/;
+    const camposObligatorios = /^(numeroEntradaSalida|ref|description)$/;
 
     if (camposObligatorios.test(nombreCampo)) {
       rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
@@ -80,7 +88,7 @@ export class FormularioEntradaSalidaService {
   // Modificar el método crearProductoFormGroup
   crearProductoFormGroup(): FormGroup {
     return this.fb.group({
-      numeroEntrada: ['', Validators.required],
+      numeroEntradaSalida: ['', Validators.required],
       dcs: ['', [Validators.max(9999999999)]],
       ref: [
         '',
@@ -96,11 +104,12 @@ export class FormularioEntradaSalidaService {
       ],
       description: ['', Validators.required],
       unidades: [1, [Validators.required, Validators.min(1)]],
-      fechaRecepcion: [null, Validators.required],
+      fechaRecepcionEnvio: [null, Validators.required],
       ubicacion: ['', Validators.required],
       palets: ['', [Validators.required, Validators.min(0)]],
       bultos: [0, [Validators.required, Validators.min(0)]],
       observaciones: [''],
+      formaEnvio: [''],
       pendiente: [false],
       idPadre: [null],
     });
@@ -114,10 +123,10 @@ export class FormularioEntradaSalidaService {
     const nuevoProducto = this.crearProductoFormGroup();
 
     // Copiar el número de entrada del último producto
-    const ultimoNumeroEntrada = ultimoProducto.get('numeroEntrada')!.value;
-    nuevoProducto.get('numeroEntrada')!.setValue(ultimoNumeroEntrada);
-    const ultimoFechaRecepcion = ultimoProducto.get('fechaRecepcion')!.value;
-    nuevoProducto.get('fechaRecepcion')!.setValue(ultimoFechaRecepcion);
+    const numeroEntradaSalida = ultimoProducto.get('numeroEntradaSalida')!.value;
+    nuevoProducto.get('numeroEntradaSalida')!.setValue(numeroEntradaSalida);
+    const ultimoFechaRecepcionEnvio = ultimoProducto.get('fechaRecepcionEnvio')!.value;
+    nuevoProducto.get('fechaRecepcionEnvio')!.setValue(ultimoFechaRecepcionEnvio);
 
     this.productosControls.push(nuevoProducto);
   }
@@ -142,7 +151,7 @@ export class FormularioEntradaSalidaService {
 
   // Resetear completamente el formulario
   resetForm() {
-    this.entradaForm = this.fb.group({
+    this.entradaSalidaForm = this.fb.group({
       productos: this.fb.array([this.crearProductoFormGroup()]),
     });
     this.productosNuevos = new Set();
@@ -178,17 +187,29 @@ export class FormularioEntradaSalidaService {
   // Sincronizar número de entrada en todas las filas
   sincronizarEntrada() {
     const primerProducto = this.productosControls.at(0);
-    const numeroEntrada = primerProducto.get('numeroEntrada')!.value;
-    const fechaRecepcion = primerProducto.get('fechaRecepcion')!.value;
+    const numeroEntradaSalida = primerProducto.get('numeroEntradaSalida')!.value;
+    const fechaRecepcionEnvio = primerProducto.get('fechaRecepcionEnvio')!.value;
 
     this.productosControls.controls.forEach((producto) => {
-      producto.get('numeroEntrada')!.setValue(numeroEntrada);
-      producto.get('fechaRecepcion')!.setValue(fechaRecepcion);
+      producto.get('numeroEntradaSalida')!.setValue(numeroEntradaSalida);
+      producto.get('fechaRecepcionEnvio')!.setValue(fechaRecepcionEnvio);
     });
   }
 
-  // Método para guardar la entrada de productos
+  getCurrentPathIsSalida(){
+    return this.currentPath.startsWith('/salidas');
+  }
+
   onSubmit() {
+    if(this.currentPath.startsWith('/entradas')) {
+      this.onSubmitEntrada();
+    } else if(this.currentPath.startsWith('/salidas')) {
+      this.onSubmitSalida();
+    }
+  }
+
+  // Método para guardar la entrada de productos
+  onSubmitEntrada(){
     let referenciasRellenas = true;
     let descriptionRellenas = true;
     let formatoValidoRef = false;
@@ -197,11 +218,11 @@ export class FormularioEntradaSalidaService {
     // Obtener el número de entrada del primer producto
     const numeroEntrada = this.productosControls
       .at(0)
-      .get('numeroEntrada')!.value;
+      .get('numeroEntradaSalida')!.value;
 
     // Transformar los productos del formulario a ProductoEntrada
     const productosEntrada: ProductoEntrada[] =
-      this.entradaForm.value.productos.map((producto: any) => {
+      this.entradaSalidaForm.value.productos.map((producto: any) => {
         if (
           producto.ref == null ||
           producto.ref == undefined ||
@@ -230,17 +251,20 @@ export class FormularioEntradaSalidaService {
           ref: producto.ref,
           description: producto.description,
           unidades: producto.unidades,
-          fechaRecepcion: producto.fechaRecepcion
-            ? new Date(producto.fechaRecepcion)
+          fechaRecepcion: producto.fechaRecepcionEnvio
+            ? new Date(producto.fechaRecepcionEnvio)
             : undefined,
           ubicacion: producto.ubicacion,
           palets: producto.palets,
           bultos: producto.bultos,
           observaciones: producto.observaciones,
+          formaEnvio: producto.formaEnvio,
           pendiente: producto.pendiente,
           idPadre: producto.idPadre
         };
       });
+
+      console.log('Productos entrada:', productosEntrada);
 
     // Crear el objeto Entrada
     const nuevaEntrada: Entrada = {
@@ -250,7 +274,7 @@ export class FormularioEntradaSalidaService {
       rellena: false,
     };
 
-    if (this.entradaForm.valid) {
+    if (this.entradaSalidaForm.valid) {
       nuevaEntrada.rellena = true;
       this.crearEntrada(nuevaEntrada);
       location.reload();
@@ -269,8 +293,8 @@ export class FormularioEntradaSalidaService {
         location.reload();
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
-        this.entradaForm.markAllAsTouched();
-        console.log('Formulario inválido. Errores:', this.entradaForm.errors);
+        this.entradaSalidaForm.markAllAsTouched();
+        console.log('Formulario inválido. Errores:', this.entradaSalidaForm.errors);
         if (!this.pendiente) {
           this.snackBarError(
             "Para 'Recibir' una entrada deben estar todos los campos completos y correctos"
@@ -294,12 +318,138 @@ export class FormularioEntradaSalidaService {
     }
   }
 
+  // Método para guardar la salida de productos
+  private onSubmitSalida() {
+    let referenciasRellenas = true;
+    let descriptionRellenas = true;
+    let formatoValidoRef = false;
+    let unidadesNegativas = false;
+
+    // Obtener el número de salida del primer producto
+    const numeroSalida = this.productosControls
+      .at(0)
+      .get('numeroEntradaSalida')!.value;
+
+    // Transformar los productos del formulario a ProductoEntrada
+    const productosSalida: ProductoSalida[] =
+      this.entradaSalidaForm.value.productos.map((producto: any) => {
+        if (
+          producto.ref == null ||
+          producto.ref == undefined ||
+          producto.ref == ''
+        ) {
+          referenciasRellenas = false;
+        }
+
+        formatoValidoRef = /^\d{7}$|^R\d{7}$/.test(producto.ref);
+
+        if (
+          producto.description == null ||
+          producto.description == undefined ||
+          producto.description == ''
+        ) {
+          descriptionRellenas = false;
+        }
+
+        if (producto.unidades < 0) {
+          unidadesNegativas = true;
+        }
+
+        // Crear un nuevo objeto ProductoEntrada
+        return {
+          dcs: producto.dcs,
+          ref: producto.ref,
+          description: producto.description,
+          unidades: producto.unidades,
+          fechaEnvio: producto.fechaRecepcionEnvio
+            ? new Date(producto.fechaRecepcionEnvio)
+            : undefined,
+          ubicacion: producto.ubicacion,
+          palets: producto.palets,
+          bultos: producto.bultos,
+          observaciones: producto.observaciones,
+          pendiente: producto.pendiente,
+          idPadre: producto.idPadre
+        };
+      });
+
+    // Crear el objeto Salida
+    const nuevaSalida: Salida = {
+      destino: numeroSalida,
+      estado: !this.pendiente,
+      productos: productosSalida,
+      rellena: false,
+    };
+
+    if (this.entradaSalidaForm.valid) { 
+      nuevaSalida.rellena = true;
+      this.crearSalida(nuevaSalida);
+      location.reload();
+    } else {
+      if (
+        this.pendiente &&
+        numeroSalida != null &&
+        numeroSalida != undefined &&
+        numeroSalida != '' &&
+        referenciasRellenas &&
+        formatoValidoRef &&
+        descriptionRellenas &&
+        !unidadesNegativas
+      ) {
+        this.crearSalida(nuevaSalida);
+        location.reload();
+      }
+      else {
+        // Marcar todos los campos como tocados para mostrar validaciones
+        this.entradaSalidaForm.markAllAsTouched();
+        console.log('Formulario inválido. Errores:', this.entradaSalidaForm.errors);
+        if (!this.pendiente) {
+          this.snackBarError(
+            "Para 'Enviar' una salida deben estar todos los campos completos y correctos"
+          );
+        } else if (!referenciasRellenas) {
+          this.snackBarError('Las referencias no pueden estar en blanco');
+        } else if (!formatoValidoRef) {
+          this.snackBarError(
+            'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
+          );
+        } else if (!descriptionRellenas) {
+          this.snackBarError('Las descripiciones no pueden estar en blanco');
+        } else if (unidadesNegativas) {
+          this.snackBarError(
+            'Los productos no pueden tener unidades negativas'
+          );
+        } else {
+          this.snackBarError('El destino no puede estar en blanco');
+        }
+      }
+    }
+  }
+
+  private crearSalida(nuevaSalida: Salida) {
+    this.salidaService.newSalida(nuevaSalida).subscribe({
+      next: (salidaCreada) => {
+        console.log('Salida creada exitosamente:', salidaCreada);
+        this.entradaSalidaForm.reset();
+        this.entradaSalidaForm.setControl(
+          'productos',
+          this.fb.array([this.crearProductoFormGroup()])
+        );
+        this.snackBarExito('Salida guardada correctamente');
+      },
+      error: (error) => {
+        console.error('Error completo al crear la salida:', error);
+        this.snackBarError(error);
+      },
+    });
+  }
+
   private crearEntrada(nuevaEntrada: Entrada) {
     this.entradaService.newEntrada(nuevaEntrada).subscribe({
       next: (entradaCreada) => {
         console.log('Entrada creada exitosamente:', entradaCreada);
-        this.entradaForm.reset();
-        this.entradaForm.setControl(
+        this.entradaSalidaForm.reset();
+        this.entradaSalidaForm.setControl(
           'productos',
           this.fb.array([this.crearProductoFormGroup()])
         );
@@ -402,7 +552,7 @@ export class FormularioEntradaSalidaService {
   }
 
   getUbicaciones() {
-    this.ubicacionesService.getUbicaciones().subscribe({
+    this.ubicacionesService.getUbicacionesOrderByNombre().subscribe({
       next: (ubicaciones) => {
         this.ubicaciones = ubicaciones;
       },
@@ -410,6 +560,15 @@ export class FormularioEntradaSalidaService {
         console.error('Error al obtener ubicaciones', error);
       },
     })
+  }
+
+  desactivarBtnSubmit() {
+    this.btnSubmitActivado = false;
+    if (this.btnSubmitActivado) {
+      console.log('El botón está activado');
+    } else {
+      console.log('El botón está desactivado');
+    }
   }
 
 }

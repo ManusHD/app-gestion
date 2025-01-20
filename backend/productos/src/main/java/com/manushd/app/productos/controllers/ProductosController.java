@@ -45,7 +45,7 @@ public class ProductosController {
 
     @GetMapping("/productos/referencia/{referencia}/coincidentes")
     public Iterable<Producto> obtenerProductosPorReferencia(@PathVariable String referencia) {
-        return productosRepository.findByReferenciaContainingIgnoreCase(referencia);
+        return productosRepository.findByReferenciaContainingIgnoreCaseOrderByReferenciaAsc(referencia);
     }
 
     @GetMapping("/productos/description/{description}")

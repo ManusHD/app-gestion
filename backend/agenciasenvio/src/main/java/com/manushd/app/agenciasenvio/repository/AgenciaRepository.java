@@ -12,6 +12,8 @@ public interface AgenciaRepository extends CrudRepository<Agencia, Long>{
 
     Iterable<Agencia> findAllByOrderByNombreAsc();
 
+    Iterable<Agencia> findAllByActivaOrderByNombreAsc(boolean activa);
+
     Optional<Agencia> findByNombre(String nombre);
     
 }

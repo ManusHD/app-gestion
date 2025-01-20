@@ -8,7 +8,6 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
   templateUrl: './entradas-pendientes.component.html',
   styleUrls: [
     './entradas-pendientes.component.css',
-    '../entradas-nuevo/entradas-nuevo.component.css',
     '../detalles-entradas/detalles-entradas.component.css',
   ],
 })
@@ -17,14 +16,13 @@ export class EntradasPendientesComponent
   implements OnInit
 {
   entradas: Entrada[] = [];
-  btnSubmitActivado = true;
 
   ngOnInit() {
     this.cargarEntradas();
   }
 
   cargarEntradas() {
-    this.entradasFormService
+    this.entradaService
       .getEntradasByEstado(false)
       .subscribe((data: Entrada[]) => {
         this.entradas = data;
@@ -33,7 +31,7 @@ export class EntradasPendientesComponent
   }
 
   setRecibida(id: number) {
-    this.entradasFormService
+    this.entradaService
       .setRecibida(id)
       .pipe(
         catchError((error) => {
@@ -56,14 +54,5 @@ export class EntradasPendientesComponent
         console.error(error);
       }
     );
-  }
-
-  desactivarBtnSubmit() {
-    this.btnSubmitActivado = false;
-    if (this.btnSubmitActivado) {
-      console.log('El botón está activado');
-    } else {
-      console.log('El botón está desactivado');
-    }
   }
 }

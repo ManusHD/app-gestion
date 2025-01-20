@@ -7,6 +7,10 @@ import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { Entrada } from 'src/app/models/entrada.model';
 import { Salida } from 'src/app/models/salida.model';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
+import { SalidaServices } from 'src/app/services/salida.service';
+import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
+import { ProductoSalida } from 'src/app/models/productoSalida.model';
+import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
@@ -21,47 +25,61 @@ export class FormularioEntradaSalidaComponent
   @Input() detallesES?: Entrada | Salida = undefined;
   enDetalles: boolean = false;
 
+  agenciasTransporte: AgenciaTransporte[] = [];
+  
   constructor(
     fb: FormBuilder,
     productoService: ProductoServices,
     entradaService: EntradaServices,
-    entradasFormService: EntradaServices,
+    salidaService: SalidaServices,
     ubicacionesService: UbicacionService,
+    agendaTransporteService: AgenciasTransporteService,
     private importarES: ImportarExcelService
   ) {
-    super(fb, productoService, entradaService, entradasFormService, ubicacionesService);
+    super(fb, productoService, entradaService, salidaService, ubicacionesService, agendaTransporteService);
   }
 
   ngOnInit() {
-    this.entradaForm = this.initForm();
+    this.entradaSalidaForm = this.initForm();
 
-    // En el if entro cuando creo una nueva entrada o la importo desde Excel
+    // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
+    // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
+    // pestanaPadre es 'detallePrevisionEntrada' cuando se visualizan los detalles de una Entrada
+    // pestanaPadre es 'nuevaSalida' cuando se crea una nueva Salida
+    // pestanaPadre es 'previsionSalida' cuando se importa una Salida desde Excel
+    // pestanaPadre es 'detallePrevisionSalida' cuando se visualizan los detalles de una Salida
+    // En el if entro cuando creo una nueva Entrada/Salida o la importo desde Excel
     if (!this.detallesES) {
-      if (this.pestanaPadre !== 'nuevaEntrada') {
-        this.inicializarPrevisionEntrada();
+      if(this.pestanaPadre === 'nuevaSalida' || this.pestanaPadre === 'previsionSalida' || this.pestanaPadre === 'detallePrevisionSalida') {
+        this.cargarAgenciasTransporte();
+      }
+      if (this.pestanaPadre !== 'nuevaEntrada' && this.pestanaPadre !== 'nuevaSalida') {
+        this.inicializarPrevisionEntradaTrabajo();
       } else {
-        this.inicializarNuevaEntrada();
+        this.inicializarNuevaEntradaTrabajo();
       }
     } else {
-      this.inicializarDetalleEntrada();
+      this.inicializarDetalleEntradaTrabajo();
     }
+    
+    console.log(this.currentPath);        
 
     this.getUbicaciones();
   }
-
+  
   setProductoPendiente(index: number) {
     const checked = this.productosControls.at(index).get('estado')?.value
     console.log(checked);
   }
 
   // Cuando estoy en Grabar Entrada
-  private inicializarNuevaEntrada() {
+  private inicializarNuevaEntradaTrabajo() {
     this.mostrarFormulario = true;
     this.pendiente = false;
   }
 
   // Cuando voy a importar un Excel
-  private inicializarPrevisionEntrada() {
+  private inicializarPrevisionEntradaTrabajo() {
     this.pendiente = true;
     this.importarES.excelData$.subscribe((excelData) => {
       if (excelData?.length) {
@@ -78,17 +96,18 @@ export class FormularioEntradaSalidaComponent
     productos.forEach((row) => {
       const productoFormGroup = this.crearProductoFormGroup();
       productoFormGroup.patchValue({
-        numeroEntrada: origenDestino || row.origen || row.destino,
+        numeroEntradaSalida: origenDestino || row.origen || row.destino,
         dcs: row.dcs,
         ref: row.ref,
         description: row.descripcion || row.description,
         unidades: row.unidades,
-        fechaRecepcion: this.formatearFecha(
+        fechaRecepcionEnvio: this.formatearFecha(
           row.fechaRecepcion || row.fechaEnvio
         ),
         ubicacion: row.ubicacion,
         palets: row.palets,
         bultos: row.bultos,
+        formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
         pendiente: row.pendiente,
         idPadre: row.idPadre
@@ -101,7 +120,7 @@ export class FormularioEntradaSalidaComponent
   }
 
   // Cuando voy a ver los Detalles de las Entradas Pendientes
-  private inicializarDetalleEntrada() {
+  private inicializarDetalleEntradaTrabajo() {
     this.mostrarFormulario = true;
     this.enDetalles = true;
     const origenDestino = this.obtenerOrigenDestino(this.detallesES!);
@@ -115,10 +134,17 @@ export class FormularioEntradaSalidaComponent
   }
 
   modificarEntrada() {
-    const formValues = this.entradaForm.value;
-    this.detallesES = { ...this.detallesES, ...formValues }; // Actualiza el objeto con los valores del formulario
+    const entradaData: Entrada = {
+      ...this.detallesES,
+      productos: this.entradaSalidaForm.value.productos.map((producto: any) => ({
+        ...producto,
+        fechaRecepcion: producto.fechaRecepcionEnvio ? new Date(producto.fechaRecepcionEnvio) : undefined,
+      })),
+      estado: this.detallesES?.estado ?? false,
+    };
+
     this.entradaService
-      .updateEntrada(this.detallesES!)
+      .updateEntrada(entradaData)
       .subscribe({
         next: (updatedEntrada) => {
           console.log('Entrada actualizada:', updatedEntrada);
@@ -127,5 +153,39 @@ export class FormularioEntradaSalidaComponent
         },
         error: (err) => console.error('Error al actualizar la entrada:', err),
       });
+  }
+
+  modificarSalida() {
+    const salidaData: Salida = {
+      ...this.detallesES,
+      productos: this.entradaSalidaForm.value.productos.map((producto: any) => ({
+        ...producto,
+        fechaEnvio: producto.fechaRecepcionEnvio ? new Date(producto.fechaRecepcionEnvio) : undefined,
+      })),
+      estado: this.detallesES?.estado ?? false,
+    };
+
+    this.salidaService
+      .updateSalida(salidaData)
+      .subscribe({
+        next: (updatedSalida) => {
+          console.log('Salida actualizada:', updatedSalida);
+          location.reload();
+          this.snackBarExito('Salida actualizada exitosamente');
+        },
+        error: (err) => console.error('Error al actualizar la salida:', err),
+      });
+  }
+
+  cargarAgenciasTransporte() {
+    this.agenciasTransporteService.getAgenciasActivas().subscribe({
+      next: (agencias) => {
+        this.agenciasTransporte = agencias;
+        console.log('Agencias de transporte:', this.agenciasTransporte);
+      },
+      error: (error) => {
+        console.error('Error al obtener agencias de transporte', error);
+      },
+    });
   }
 }

@@ -36,6 +36,11 @@ public class AgenciasController {
         return agenciaRepository.findAllByOrderByNombreAsc();
     }
 
+    @GetMapping("/agenciasEnvio/activas")
+    public Iterable<Agencia> getAgenciasActivas() {
+        return agenciaRepository.findAllByActivaOrderByNombreAsc(true);
+    }
+
     @GetMapping("/agenciasEnvio/{id}")
     public Agencia getAgenciaById(@PathVariable Long id) {
         return agenciaRepository.findById(id).orElse(null);

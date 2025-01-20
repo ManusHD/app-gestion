@@ -6,6 +6,8 @@ import { ProductoServices } from 'src/app/services/producto.service';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
 import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
+import { SalidaServices } from 'src/app/services/salida.service';
+import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
 
 @Component({
   selector: 'app-importar-excel',
@@ -18,10 +20,11 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
     fb: FormBuilder,
     productoService: ProductoServices,
     entradaService: EntradaServices,
-    entradasFormService: EntradaServices,
+    salidaService: SalidaServices,
     ubicacionesService: UbicacionService,
+    agenciasTransporteService: AgenciasTransporteService,
     private importarES: ImportarExcelService){
-    super(fb, productoService, entradaService, entradasFormService, ubicacionesService);
+    super(fb, productoService, entradaService, salidaService, ubicacionesService, agenciasTransporteService);
   }
   
   // Método para manejar la importación de archivos Excel

@@ -1,6 +1,6 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio">
     <div class="">
-        <form [formGroup]="entradaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)" #formularioNuevaEntrada="ngForm">
+        <form [formGroup]="entradaSalidaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)" #formularioNuevaEntradaSalida="ngForm">
             <table>
                 <thead>
                     <tr>
@@ -9,10 +9,12 @@
                         <th>Ref</th>
                         <th>Descripción</th>
                         <th>Unidades</th>
-                        <th>Fecha recepción</th>
+                        <th *ngIf="currentPath.startsWith('/entradas')">Fecha recepción</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Fecha envío</th>
                         <th>Ubicación</th>
                         <th>Palets</th>
                         <th>Bultos</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Forma envío</th>
                         <th>Observaciones</th>
                         <th>Acciones</th>
                     </tr>
@@ -21,8 +23,8 @@
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td class="">
-                            <input type="text" formControlName="numeroEntrada"
-                                [ngClass]="getEstadoCampo('numeroEntrada', i)" class="" (change)="sincronizarEntrada()">
+                            <input type="text" formControlName="numeroEntradaSalida"
+                                [ngClass]="getEstadoCampo('numeroEntradaSalida', i)" class="" (change)="sincronizarEntrada()">
                         </td>
                         <td class="">
                             <input type="number" formControlName="dcs" max="9999999999" class="">
@@ -40,8 +42,8 @@
                                 [ngClass]="getEstadoCampo('unidades', i)" class="">
                         </td>
                         <td class="">
-                            <input type="date" formControlName="fechaRecepcion"
-                                [ngClass]="getEstadoCampo('fechaRecepcion', i)" class=""
+                            <input type="date" formControlName="fechaRecepcionEnvio"
+                                [ngClass]="getEstadoCampo('fechaRecepcionEnvio', i)" class=""
                                 (change)="sincronizarEntrada()">
                         </td>
                         <td class="">
@@ -59,10 +61,18 @@
                             <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
                                 min="0" class="">
                         </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')" class="">
+                            <select formControlName="formaEnvio" [ngClass]="getEstadoCampo('formaEnvio', i)">
+                                <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
+                                    {{agencia.nombre}}
+                                </option>
+                            </select>
+                        </td>
                         <td class="">
                             <input type="text" formControlName="observaciones" [ngClass]="getEstadoCampo('observaciones', i)"
                             class="">
                         </td>
+
                         <td style="display: none;">
                             <input type="number" formControlName="idPadre">
                         </td>
@@ -95,7 +105,7 @@
             </table>
 
             <div class="btns-tabla">
-                <button *ngIf="pestanaPadre == 'nuevaEntrada' || 'detallePrevisionEntrada'" type="button"
+                <button *ngIf="pestanaPadre == 'nuevaEntrada' || 'detallePrevisionEntrada' || pestanaPadre == 'nuevaSalida' || 'detallePrevisionSalida'" type="button"
                     (click)="agregarProducto()" class="add-producto">
                     <img src="../../../assets/icons/signo-mas.svg" alt="">
                     <span>Añadir línea</span>
@@ -103,14 +113,26 @@
 
                 <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit"
                     class="crear-producto"
-                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente">
+                    [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente">
                     Grabar entrada
                 </button>
 
+                <button *ngIf="pestanaPadre == 'nuevaSalida'" type="submit"
+                    class="crear-producto"
+                    [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente">
+                    Grabar salida
+                </button>
+
                 <button *ngIf="pestanaPadre == 'previsionEntrada'" type="submit" class="crear-producto"
-                    [disabled]="!formularioNuevaEntrada.form.valid && !pendiente">
+                    [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente">
                     Grabar previsión
                 </button>
+
+                <button *ngIf="pestanaPadre == 'previsionSalida'" type="submit" class="crear-producto"
+                    [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente">
+                    Grabar trabajo
+                </button>
+
             </div>
         </form>
         <div class="">
@@ -125,6 +147,19 @@
                         <path d="M0 0h48v48h-48z" fill="none"></path>
                     </svg></span>
             </button>
+
+            <button *ngIf="pestanaPadre == 'detallePrevisionSalida'" (click)="modificarSalida()"
+                class="btn-actualizar">
+                <span class="button__text">Actualizar</span>
+                <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M35.3 12.7c-2.89-2.9-6.88-4.7-11.3-4.7-8.84 0-15.98 7.16-15.98 16s7.14 16 15.98 16c7.45 0 13.69-5.1 15.46-12h-4.16c-1.65 4.66-6.07 8-11.3 8-6.63 0-12-5.37-12-12s5.37-12 12-12c3.31 0 6.28 1.38 8.45 3.55l-6.45 6.45h14v-14l-4.7 4.7z">
+                        </path>
+                        <path d="M0 0h48v48h-48z" fill="none"></path>
+                    </svg></span>
+            </button>
+
         </div>
     </div>
 </div>

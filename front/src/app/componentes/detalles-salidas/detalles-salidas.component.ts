@@ -14,10 +14,6 @@ export class DetallesSalidasComponent implements OnInit {
   @Input() salida!: Salida;
   @Output() salidaRellena = new EventEmitter<boolean>();
 
-  private snackBar = inject(MatSnackBar);
-
-  constructor(private salidaServices: SalidaServices, ) {}
-
   ngOnInit() {
     if(!this.enRecibidas) {
       this.iniciarSalidas();
@@ -25,29 +21,12 @@ export class DetallesSalidasComponent implements OnInit {
     }
   }
 
-  modificarSalida() {
-    this.salidaServices.updateSalida(this.salida.id!, this.salida).subscribe({
-      next: (updatedSalida) => {
-        console.log('Salida actualizada:', updatedSalida);
-        this.salidaRellena.emit(this.todosLosCamposRellenos());
-        this.snackBar.open('Salida creada correctamente', '✖', {
-          duration: 3000,
-          panelClass: 'exito'
-        });
-        this.cerrarModal();
-      },
-      error: (error) => {
-        console.error('Error al actualizar la salida:', error);
-        this.snackBar.open('Error al guardar la salida: ' + error, '✖', {
-          duration: 3000,
-          panelClass: 'error'
-        });
-      },
-    });
-  }
-
   iniciarSalidas() {
-    this.salida.fechaEnvio = this.formatearFecha(this.salida.fechaEnvio)!;
+    this.salida.productos!.forEach((producto) => {
+      if(this.formatearFecha(producto.fechaEnvio) != null){
+        producto.fechaEnvio = this.formatearFecha(producto.fechaEnvio)!;
+      }
+    });
   }
 
   mostrarDetalles() {

@@ -16,6 +16,10 @@
     height: 39px;
 }
 
+select option{
+    font-size: 12px;
+}
+
 .buscador input{
     color: white;
     background-color: #374151;

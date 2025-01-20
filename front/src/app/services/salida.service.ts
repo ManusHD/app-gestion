@@ -22,13 +22,17 @@ export class SalidaServices {
     return this.httpClient.put<Salida>(`${this.apiUrl}/${id}/enviar`, null);
   }
 
-  updateSalida(id: number, salida: Salida): Observable<Salida> {
-    return this.httpClient.put<Salida>(`${this.apiUrl}/${id}`, salida);
+  updateSalida(salida: Salida): Observable<Salida> {
+    return this.httpClient.put<Salida>(`${this.apiUrl}/${salida.id}`, salida);
   }
 
   newSalida(salida: Salida): Observable<Salida> {
     console.log('Salida enviada');
     console.log(salida);
     return this.httpClient.post<Salida>(`${this.apiUrl}`, salida);
+  }
+
+  deleteSalida(id: number): Observable<Salida> {
+    return this.httpClient.delete<Salida>(`${this.apiUrl}/${id}`);
   }
 }

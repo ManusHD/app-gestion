@@ -61,12 +61,12 @@ public class UbicacionesController {
 
     @GetMapping("/ubicaciones/nombre/{nombre}/coincidentes")
     public Iterable<Ubicacion> obtenerUbicacionesPorNombre(@PathVariable String nombre) {
-        return ubicacionesRepository.findByNombreContainingIgnoreCase(nombre);
+        return ubicacionesRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
     }
 
     @GetMapping("/ubicaciones/referenciaProducto/{ref}")
     public Iterable<Ubicacion> findByProductosRef(@PathVariable String ref) {
-        return ubicacionesRepository.findByProductosRef(ref);
+        return ubicacionesRepository.findByProductosRefOrderByNombreAsc(ref);
     }
 
     @PostMapping("/ubicaciones/sumar")

@@ -1,26 +1,42 @@
 <app-cabecera-salidas></app-cabecera-salidas>
 
-<div id="contenedor-tabla">
+<app-importar-excel></app-importar-excel>
+
+<app-formulario-entrada-salida [pestanaPadre]="'previsionSalida'"></app-formulario-entrada-salida>
+
+<div class="flotar-medio">
     <table>
         <thead>
             <tr>
                 <th>Destino</th>
                 <th>Detalles</th>
-                <th>Marcar como recibido</th>
+                <th>Marcar como enviado</th>
+                <th>Eliminar</th>
             </tr>
         </thead>
         <tbody>
             <ng-container *ngFor="let salida of salidas">
                 <tr>
                     <td>{{ salida.destino }}</td>
-                    <td><app-detalles-salidas [salida]="salida" (salidaRellena)="salida.rellena = $event"></app-detalles-salidas></td>
+                    <td><app-detalles-salidas [enRecibidas]="false" [salida]="salida"
+                            (salidaRellena)="salida.rellena = $event"></app-detalles-salidas>
+                    </td>
                     <td>
                         <div class="flotar-medio">
-                            <button [disabled]="!salida.rellena" (click)="setEnviada(salida.id!)" class="transparente" >
-                                <img [ngClass]="{'no-relleno': !salida.rellena}" src="../../../assets/icons/check-verde.svg" />
-                                <img [ngClass]="{'relleno': salida.rellena}" src="../../../assets/icons/no-check-gris.svg" />
+                            <button (click)="desactivarBtnSubmit()" [disabled]="!salida.rellena || !btnSubmitActivado"
+                                (click)="setEnviada(salida.id!)" class="transparente">
+                                <img [ngClass]="{'no-relleno': !salida.rellena}"
+                                    src="../../../assets/icons/check-verde.svg" />
+                                <img [ngClass]="{'relleno': salida.rellena}"
+                                    src="../../../assets/icons/no-check-gris.svg" />
                             </button>
                         </div>
+                    </td>
+                    <td>
+                        <button *ngIf="salida.productos[0].idPadre == null" [disabled]="!btnSubmitActivado" (click)="deleteSalida(salida.id!)" class="btn-eliminar">
+                            <span class="text">Borrar</span><span class="icon"><img
+                                    src="../../../assets/icons/delete-bin.svg" /></span>
+                        </button>
                     </td>
                 </tr>
             </ng-container>

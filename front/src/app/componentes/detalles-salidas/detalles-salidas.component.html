@@ -1,78 +1,43 @@
-<button (click)="mostrarDetalles()">Productos</button>
+<button class="btn-productos" (click)="mostrarDetalles()">Productos</button>
 
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
         <span class="close" (click)="cerrarModal()">&times;</span>
-        <h2>Productos del destino: <span class="nombre-destino">{{salida.destino}}</span></h2>
-        <div id="contenedor-ep">
-            <table>
+        <div class="flotar-medio">
+            <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
                     <tr>
+                        <th>Origen</th>
                         <th>DCS</th>
                         <th>Ref</th>
                         <th>Descripción</th>
                         <th>Unidades</th>
-                        <th>Fecha envío</th>
+                        <th>Fecha recepción</th>
                         <th>Ubicación</th>
                         <th>Palets</th>
                         <th>Bultos</th>
-                        <th>Forma envío</th>
+                        <th>Observaciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                <tbody>
-                    <tr *ngFor="let producto of salida.productos; let i = index">
-                        <td>{{producto.dcs}}</td>
-                        <td>{{producto.ref}}</td>
-                        <td>{{producto.description}}</td>
-                        <ng-container *ngIf="!enRecibidas; else estoyRecibida">
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': producto.unidades! <= 0}"
-                                    [(ngModel)]="producto.unidades" type="number" min="1" />
-                            </td>
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': !salida.fechaEnvio}"
-                                    [(ngModel)]="salida.fechaEnvio" (change)="actualizarFecha(salida.fechaEnvio!)"
-                                    type="date" />
-                            </td>
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': !producto.ubicacion?.trim()}"
-                                    [(ngModel)]="producto.ubicacion" type="text" />
-                            </td>
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': producto.palets! <= 0}"
-                                    [(ngModel)]="producto.palets" type="number" min="1" />
-                            </td>
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': producto.bultos! <= 0}"
-                                    [(ngModel)]="producto.bultos" type="number" min="1" />
-                            </td>
-                            <td>
-                                <input class="transparente" [ngClass]="{'campo-vacio': !salida.formaEnvio?.trim()}"
-                                    [(ngModel)]="salida.formaEnvio" type="text" />
-                            </td>
-                        </ng-container>
-                        <ng-template #estoyRecibida>
-                            <td>{{producto.unidades}} </td>
-                            <td>{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
-                            <td>{{producto.ubicacion}} </td>
-                            <td>{{producto.palets}} </td>
-                            <td>{{producto.bultos}} </td>
-                            <td>{{salida.formaEnvio}} </td>
-                        </ng-template>
+                    <tr *ngFor="let producto of salida.productos">
+                        <td>{{salida.destino}} </td>
+                        <td>{{producto.dcs}} </td>
+                        <td>{{producto.ref}} </td>
+                        <td>{{producto.description}} </td>
+                        <td>{{producto.unidades}} </td>
+                        <td>{{producto.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
+                        <td>{{producto.ubicacion}} </td>
+                        <td>{{producto.palets}} </td>
+                        <td>{{producto.bultos}} </td>
+                        <td>{{producto.observaciones}} </td>
                     </tr>
                 </tbody>
             </table>
-            <button *ngIf="!enRecibidas" (click)="modificarSalida()" class="btn-actualizar">
-                <span class="button__text">Actualizar</span>
-                <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M35.3 12.7c-2.89-2.9-6.88-4.7-11.3-4.7-8.84 0-15.98 7.16-15.98 16s7.14 16 15.98 16c7.45 0 13.69-5.1 15.46-12h-4.16c-1.65 4.66-6.07 8-11.3 8-6.63 0-12-5.37-12-12s5.37-12 12-12c3.31 0 6.28 1.38 8.45 3.55l-6.45 6.45h14v-14l-4.7 4.7z">
-                        </path>
-                        <path d="M0 0h48v48h-48z" fill="none"></path>
-                    </svg></span>
-            </button>
         </div>
+
+        <ng-template #detallesEnPrevision>
+            <app-formulario-entrada-salida [pestanaPadre]="'detallePrevisionSalida'" [detallesES]="salida">
+            </app-formulario-entrada-salida>
+        </ng-template>
     </div>
-</div>

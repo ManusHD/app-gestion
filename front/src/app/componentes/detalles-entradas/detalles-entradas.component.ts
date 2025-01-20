@@ -14,10 +14,6 @@ export class DetallesEntradasComponent implements OnInit {
   @Input() entrada!: Entrada;
   @Output() entradaRellena = new EventEmitter<boolean>();
 
-  private snackBar = inject(MatSnackBar);
-
-  constructor(private entradaServices: EntradaServices, ) {}
-
   ngOnInit() {
     if(!this.enRecibidas) {
       this.iniciarEntradas();
@@ -30,27 +26,6 @@ export class DetallesEntradasComponent implements OnInit {
       if(this.formatearFecha(producto.fechaRecepcion) != null){
         producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
       }
-    });
-  }
-
-  modificarEntrada() {
-    this.entradaServices.updateEntrada(this.entrada).subscribe({
-      next: (updatedEntrada) => {
-        console.log('Entrada actualizada:', updatedEntrada);
-        this.entradaRellena.emit(this.todosLosCamposRellenos());
-        this.snackBar.open('Entrada actualizada correctamente', '✖', {
-          duration: 3000,
-          panelClass: 'exito'
-        });
-        this.cerrarModal();
-      },
-      error: (error) => {
-        console.error('Error al actualizar la entrada:', error);
-        this.snackBar.open('Error al guardar la entrada: ' + error, '✖', {
-          duration: 3000,
-          panelClass: 'error'
-        });
-      },
     });
   }
 
