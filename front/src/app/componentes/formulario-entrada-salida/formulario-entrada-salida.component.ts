@@ -62,9 +62,9 @@ export class FormularioEntradaSalidaComponent
       this.inicializarDetalleEntradaTrabajo();
     }
     
-    console.log(this.currentPath);        
+    console.log(this.currentPath);    
 
-    this.getUbicaciones();
+    this.cargarUbicaciones();
   }
   
   setProductoPendiente(index: number) {
@@ -109,7 +109,7 @@ export class FormularioEntradaSalidaComponent
         bultos: row.bultos,
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
-        pendiente: row.pendiente,
+        pendiente: row.pendiente || false,
         idPadre: row.idPadre
       });
       if (row.ref) {
@@ -121,6 +121,7 @@ export class FormularioEntradaSalidaComponent
 
   // Cuando voy a ver los Detalles de las Entradas Pendientes
   private inicializarDetalleEntradaTrabajo() {
+    this.cargarAgenciasTransporte();
     this.mostrarFormulario = true;
     this.enDetalles = true;
     const origenDestino = this.obtenerOrigenDestino(this.detallesES!);
@@ -178,10 +179,9 @@ export class FormularioEntradaSalidaComponent
   }
 
   cargarAgenciasTransporte() {
-    this.agenciasTransporteService.getAgenciasActivas().subscribe({
+    this.agenciasTransporteService.getAgenciasTransporteActivas().subscribe({
       next: (agencias) => {
         this.agenciasTransporte = agencias;
-        console.log('Agencias de transporte:', this.agenciasTransporte);
       },
       error: (error) => {
         console.error('Error al obtener agencias de transporte', error);

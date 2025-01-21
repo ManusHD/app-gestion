@@ -16,21 +16,24 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.CascadeType;
 
+import com.manushd.app.salidas.models.ProductoDcs;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Salida {
+public class DCS {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String destino; 
-    private Boolean estado; // false = pendiente, true = recibida
-    private Date fechaEnvio;
+    private String dcs;
 
+    // false = aún no se ha usado en ninguna Salida
+    // true = se ha usado en alguna Salida
+    private boolean usado; 
+    
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "productoId")
-    private Set<ProductoSalida> productos;
+    private Set<ProductoDcs> productos;
 }

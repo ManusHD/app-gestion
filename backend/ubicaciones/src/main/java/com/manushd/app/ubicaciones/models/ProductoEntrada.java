@@ -1,4 +1,4 @@
-package com.manushd.app.salidas.models;
+package com.manushd.app.ubicaciones.models;
 
 import lombok.Data;
 
@@ -9,12 +9,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductoSalida {
+@ToString
+public class ProductoEntrada {
     @Id
     @GeneratedValue
     private Long id;
@@ -22,12 +24,11 @@ public class ProductoSalida {
     private String ref; // 7 dígitos
     private String description;
     private Integer unidades;
-    private Date fechaEnvio;
+    private Date fechaRecepcion;
     private String ubicacion;
     private Integer palets;
     private Integer bultos;
-    private String formaEnvio;
     private String observaciones;
-    private Boolean pendiente; // false = enviada, true = pendiente
+    private Boolean pendiente; // false = recibida, true = pendiente
     private Long idPadre;
 }

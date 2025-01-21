@@ -37,9 +37,15 @@ export class SalidasPendientesComponent
           return throwError(error);
         })
       )
-      .subscribe((data) => {
-        location.reload();
-      });
+      .subscribe(
+        (data) => {
+          location.reload();
+        },
+        (error) => {
+          this.btnSubmitActivado = true;
+          console.error(error);
+        }
+      );
   }
 
   deleteSalida(idSalida: number) {

@@ -3,7 +3,8 @@ package com.manushd.app.salidas.models;
 import lombok.Data;
 
 import java.util.Set;
-import java.util.Date;
+
+import com.manushd.app.salidas.models.ProductoUbicacion;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,15 +23,13 @@ import jakarta.persistence.CascadeType;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Salida {
+public class Ubicacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String destino; 
-    private Boolean estado; // false = pendiente, true = recibida
-    private Date fechaEnvio;
-
+    private String nombre;
+    
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "productoId")
-    private Set<ProductoSalida> productos;
+    private Set<ProductoUbicacion> productos;
 }

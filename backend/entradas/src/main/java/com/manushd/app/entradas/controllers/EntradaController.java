@@ -175,7 +175,6 @@ public class EntradaController {
             }
         } else {
             Date fecRecepcion = null;
-            Boolean enc = false;
             for (ProductoEntrada pe : entrada.getProductos()) {
                 fecRecepcion = pe.getFechaRecepcion();
                 break;
@@ -193,30 +192,11 @@ public class EntradaController {
             }else {
                 crearUbicacion(savedEntrada);
             }
-            actualizarStockProductos(entrada.getProductos());
         }
 
         return ResponseEntity.ok(savedEntrada);
     }
-    
 
-    private void actualizarStockProductos(Iterable<ProductoEntrada> productos) {
-        RestTemplate restTemplate = new RestTemplate();
-        for (ProductoEntrada productoEntrada : productos) {
-            try {
-                String url = "http://localhost:8091/productos/" + productoEntrada.getRef() + "/sumar";
-                restTemplate.exchange(
-                        url,
-                        HttpMethod.PUT,
-                        new HttpEntity<>(productoEntrada.getUnidades()),
-                        ProductoEntrada.class,
-                        productoEntrada.getRef());
-            } catch (Exception e) {
-                throw new RuntimeException(
-                        "Error al actualizar stock del producto " + productoEntrada.getRef() + ": " + e.getMessage());
-            }
-        }
-    }
 
     private void crearDcs(Entrada entrada) {
         List<DCS> ListaDcs = new ArrayList<>();
@@ -307,14 +287,14 @@ public class EntradaController {
         // Imprimir y enviar las ubicaciones con sus productos
         listaUbicaciones.forEach(ubicacion -> {
             try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-
-                HttpEntity<Ubicacion> request = new HttpEntity<>(ubicacion, headers);
-                ResponseEntity<?> response = restTemplate.postForEntity(url, request, Ubicacion.class);
+                ResponseEntity<Ubicacion> response = restTemplate.exchange(
+                            url,
+                            HttpMethod.POST,
+                            new HttpEntity<>(ubicacion),
+                            Ubicacion.class);
                 
             } catch (Exception e) {
-                System.out.println("Excepción al enviar la Ubicaión: " + ubicacion.getNombre());
+                System.out.println("Excepción al enviar la ubicación: " + ubicacion.getNombre());
                 e.printStackTrace();
             }
         });

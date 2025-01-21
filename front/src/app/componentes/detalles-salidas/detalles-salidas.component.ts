@@ -18,6 +18,8 @@ export class DetallesSalidasComponent implements OnInit {
     if(!this.enRecibidas) {
       this.iniciarSalidas();
       this.salidaRellena.emit(this.todosLosCamposRellenos());
+      console.log("Productos: ", this.salida.productos);
+      console.log("Salida: "+this.salida.destino+ ", " + this.todosLosCamposRellenos());
     }
   }
 
@@ -45,14 +47,15 @@ export class DetallesSalidasComponent implements OnInit {
     return this.salida.productos!.every(
       (producto) =>
         producto.description &&
-        producto.unidades! > 0 && 
-        this.salida.fechaEnvio &&
+        producto.unidades &&
+        producto.unidades > 0 &&
+        producto.fechaEnvio &&
         producto.ubicacion &&
-        producto.ubicacion.trim() !== '' &&
-        producto.palets! > 0 &&   
-        producto.bultos! > 0 &&   
-        this.salida.formaEnvio &&
-        this.salida.formaEnvio.trim() !== ''
+        producto.ubicacion != '' &&
+        producto.palets! >= 0 &&
+        producto.bultos! >= 0 &&
+        producto.formaEnvio &&
+        producto.formaEnvio.trim() !== ''
     );
   }
   

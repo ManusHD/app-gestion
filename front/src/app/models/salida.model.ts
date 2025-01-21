@@ -6,6 +6,5 @@ export class Salida {
   estado: boolean = false; // false = pendiente, true = recibida
   productos!: ProductoSalida[];
   fechaEnvio?: string;
-  formaEnvio?: string;
   rellena?: boolean;
 }

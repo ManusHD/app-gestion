@@ -4,22 +4,18 @@ import lombok.Data;
 
 import java.util.Date;
 
-import com.manushd.app.entradas.models.Entrada;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.CascadeType;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ProductoEntrada {
     @Id
     @GeneratedValue

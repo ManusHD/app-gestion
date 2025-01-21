@@ -1,25 +1,23 @@
-package com.manushd.app.entradas.models;
+package com.manushd.app.salidas.models;
 
 import lombok.Data;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class ProductoDcs {
+public class ProductoUbicacion {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     private Long id;
     private String ref;
-    private Integer unidades;    
+    private Integer unidades;
 }

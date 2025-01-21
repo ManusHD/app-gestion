@@ -9,5 +9,7 @@ import com.manushd.app.salidas.models.Salida;
 public interface SalidaRepository extends CrudRepository<Salida, Long>{
 
         Iterable<Salida> findAllByEstado(boolean estado);
+
+        Iterable<Salida> findAllByEstadoOrderByFechaEnvioAsc(boolean estado);
         
 }

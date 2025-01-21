@@ -16,7 +16,5 @@ public interface EntradaRepository extends CrudRepository<Entrada, Long> {
 
     Iterable<Entrada> findAllByEstadoOrderByFechaRecepcionAsc(boolean estado);
 
-    @Query("SELECT e FROM Entrada e JOIN e.productos p WHERE p.id = :productoId")
-    Entrada findEntradaByProductoPendiente(@Param("productoId") Long productoId);
 }
 

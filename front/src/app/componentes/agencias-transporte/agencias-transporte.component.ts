@@ -21,7 +21,7 @@ export class AgenciasTransporteComponent implements OnInit {
   }
 
   cargarAgencias() {
-    this.agenciaService.getAgenciasTransporte().subscribe({
+    this.agenciaService.getAgenciasTransporteOrderByNombre().subscribe({
       next: (data) => {
         this.agencias = data;
       },

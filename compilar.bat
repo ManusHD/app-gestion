@@ -14,7 +14,7 @@ start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn clean package"
 :: Ejecutar productos en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package"
 
-:: Ejecutar salidas en una nueva ventana
+@REM :: Ejecutar salidas en una nueva ventana
 start cmd /c "cd %MICROSERVICIO_SALIDAS% && mvn clean package"
 
 :: Ejecutar dcs en una nueva ventana

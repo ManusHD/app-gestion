@@ -71,14 +71,11 @@ export class FormularioEntradaSalidaService {
     const producto = this.productosControls.at(indexCampo);
     const campoVacio = producto.get(nombreCampo)!.invalid;
 
-    let rellenoObligatorioVacio = false;
-    const camposObligatorios = /^(numeroEntradaSalida|ref|description)$/;
-
-    if (camposObligatorios.test(nombreCampo)) {
-      rellenoObligatorioVacio = producto.get(nombreCampo)!.invalid;
-    }
-
-    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0 || campoVacio) {
+    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0 || 
+    campoVacio || 
+    nombreCampo == 'formaEnvio' && producto.get(nombreCampo)!.value == '' ||
+    nombreCampo == 'formaEnvio' && producto.get(nombreCampo)!.value == null
+  ){
       return 'campo-vacio';
     }else {
       return '';
@@ -277,7 +274,6 @@ export class FormularioEntradaSalidaService {
     if (this.entradaSalidaForm.valid) {
       nuevaEntrada.rellena = true;
       this.crearEntrada(nuevaEntrada);
-      location.reload();
     } else {
       if (
         this.pendiente &&
@@ -290,7 +286,6 @@ export class FormularioEntradaSalidaService {
         !unidadesNegativas
       ) {
         this.crearEntrada(nuevaEntrada);
-        location.reload();
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
         this.entradaSalidaForm.markAllAsTouched();
@@ -367,6 +362,7 @@ export class FormularioEntradaSalidaService {
           ubicacion: producto.ubicacion,
           palets: producto.palets,
           bultos: producto.bultos,
+          formaEnvio: producto.formaEnvio,
           observaciones: producto.observaciones,
           pendiente: producto.pendiente,
           idPadre: producto.idPadre
@@ -384,7 +380,7 @@ export class FormularioEntradaSalidaService {
     if (this.entradaSalidaForm.valid) { 
       nuevaSalida.rellena = true;
       this.crearSalida(nuevaSalida);
-      location.reload();
+      console.log("Nueva salida: ", nuevaSalida.rellena);
     } else {
       if (
         this.pendiente &&
@@ -397,7 +393,7 @@ export class FormularioEntradaSalidaService {
         !unidadesNegativas
       ) {
         this.crearSalida(nuevaSalida);
-        location.reload();
+        console.log("Nueva salida: ", nuevaSalida.rellena);
       }
       else {
         // Marcar todos los campos como tocados para mostrar validaciones
@@ -430,16 +426,17 @@ export class FormularioEntradaSalidaService {
     this.salidaService.newSalida(nuevaSalida).subscribe({
       next: (salidaCreada) => {
         console.log('Salida creada exitosamente:', salidaCreada);
+        this.snackBarExito('Salida guardada correctamente');
+        location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
           this.fb.array([this.crearProductoFormGroup()])
         );
-        this.snackBarExito('Salida guardada correctamente');
       },
       error: (error) => {
         console.error('Error completo al crear la salida:', error);
-        this.snackBarError(error);
+        this.snackBarError(error.error);
       },
     });
   }
@@ -448,12 +445,13 @@ export class FormularioEntradaSalidaService {
     this.entradaService.newEntrada(nuevaEntrada).subscribe({
       next: (entradaCreada) => {
         console.log('Entrada creada exitosamente:', entradaCreada);
+        this.snackBarExito('Entrada guardada correctamente');
+        location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
           this.fb.array([this.crearProductoFormGroup()])
         );
-        this.snackBarExito('Entrada guardada correctamente');
       },
       error: (error) => {
         console.error('Error completo al crear la entrada:', error);
@@ -551,7 +549,7 @@ export class FormularioEntradaSalidaService {
     return null;
   }
 
-  getUbicaciones() {
+  cargarUbicaciones() {
     this.ubicacionesService.getUbicacionesOrderByNombre().subscribe({
       next: (ubicaciones) => {
         this.ubicaciones = ubicaciones;
