@@ -278,6 +278,7 @@ public class EntradaController {
             ProductoUbicacion productoUbicacion = new ProductoUbicacion();
             productoUbicacion.setRef(productoEntrada.getRef());
             productoUbicacion.setUnidades(productoEntrada.getUnidades());
+            productoUbicacion.setDescription(productoEntrada.getDescription());
 
             ubicacion.getProductos().add(productoUbicacion);
         }

@@ -3,8 +3,8 @@
     <div>
         <div class="buscador" (keyup)="onEnterKey($event)">
             <select [(ngModel)]="tipoBusqueda" class="select-buscador" >
-                <option value="productos">Productos</option>
-                <option value="ubicaciones">Ubicaciones</option>
+                <option value="productos">Búsqueda por Referencia</option>
+                <option value="ubicaciones">Búsqueda por Ubicación</option>
             </select>
             <input type="text" placeholder="Buscar..." [(ngModel)]="buscador"/>
             <button (click)="buscarUbicaciones()" class="btn-buscar">
@@ -14,7 +14,7 @@
             <button (click)="resetearBuscador()" class="btn-resetear">Resetear</button>
         </div>
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceUbicaciones">
-            <caption>Ubicaciones almacén</caption>
+            <caption>STOCK POR UBICACIONES Y REFERENCIAS</caption>
             <ng-container matColumnDef="nombre">
                 <th class="header-paginator" *matHeaderCellDef> Ubicación </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion"> {{ubicacion.nombre}} </td>

@@ -16,4 +16,8 @@ export class ImportarExcelService {
   setEntrada(entrada: any) {
     this.entradaSource.next(entrada);
   }
+
+  getEntrada() {
+    return this.entrada$;
+  }
 }

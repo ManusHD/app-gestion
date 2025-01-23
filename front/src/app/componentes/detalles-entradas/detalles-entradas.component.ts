@@ -13,12 +13,14 @@ export class DetallesEntradasComponent implements OnInit {
   @Input() enRecibidas: boolean = true;
   @Input() entrada!: Entrada;
   @Output() entradaRellena = new EventEmitter<boolean>();
+  currentPath: String = window.location.pathname;
 
   ngOnInit() {
     if(!this.enRecibidas) {
       this.iniciarEntradas();
       this.entradaRellena.emit(this.todosLosCamposRellenos());
     }
+    console.log(this.currentPath);
   }
 
   iniciarEntradas() {

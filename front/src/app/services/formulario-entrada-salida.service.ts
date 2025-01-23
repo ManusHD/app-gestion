@@ -193,6 +193,17 @@ export class FormularioEntradaSalidaService {
     });
   }
 
+  sincronizarUbicaciones(posicion: number) {
+    if(posicion == 0){
+      const primerProducto = this.productosControls.at(0);
+      const ubicacion = primerProducto.get('ubicacion')!.value;
+      
+      this.productosControls.controls.forEach((producto) => {
+        producto.get('ubicacion')!.setValue(ubicacion);
+      })
+    }
+  }
+
   getCurrentPathIsSalida(){
     return this.currentPath.startsWith('/salidas');
   }
@@ -446,12 +457,13 @@ export class FormularioEntradaSalidaService {
       next: (entradaCreada) => {
         console.log('Entrada creada exitosamente:', entradaCreada);
         this.snackBarExito('Entrada guardada correctamente');
-        location.reload();
+        // location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
           this.fb.array([this.crearProductoFormGroup()])
         );
+        this.resetForm();
       },
       error: (error) => {
         console.error('Error completo al crear la entrada:', error);

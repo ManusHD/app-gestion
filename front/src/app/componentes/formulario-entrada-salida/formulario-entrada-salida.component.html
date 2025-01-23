@@ -5,18 +5,28 @@
                 <thead>
                     <tr>
                         
-                        <th *ngIf="currentPath.startsWith('/entradas')">Origen</th>
-                        <th *ngIf="currentPath.startsWith('/salidas')">Destino</th>
-                        <th>DCS</th>
+                        <th *ngIf="currentPath.startsWith('/entradas') && !pestanaPadre.startsWith('prevision')">Fecha recepción</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') &&  !pestanaPadre.startsWith('prevision')">Fecha envío</th>
+                        <th>Perfumería</th>
+                        <th>PDV</th>
+                        <th>Colaborador</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Otros destinos</th>
+                        <th *ngIf="currentPath.startsWith('/entradas')">Otros origenes</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Dirección</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Población</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Provincia</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">CP</th>
+                        <th *ngIf="currentPath.startsWith('/salidas')">Teléfono</th>
+                        <th *ngIf="currentPath.startsWith('/entradas')">DCS</th>
                         <th>Ref</th>
                         <th>Descripción</th>
-                        <th>Unidades</th>
-                        <th *ngIf="currentPath.startsWith('/entradas')">Fecha recepción</th>
-                        <th *ngIf="currentPath.startsWith('/salidas')">Fecha envío</th>
-                        <th>Ubicación</th>
-                        <th>Palets</th>
-                        <th>Bultos</th>
-                        <th *ngIf="currentPath.startsWith('/salidas')">Forma envío</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Palets</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Bultos</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">Unidades pedidas</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">Unidades enviadas</th>
+                        <th *ngIf="currentPath.startsWith('/entradas')">Unidades</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Ubicación</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">Agencia</th>
                         <th>Observaciones</th>
                         <th>Acciones</th>
                     </tr>
@@ -24,11 +34,39 @@
                 <tbody formArrayName="productos">
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
-                        <td class="">
-                            <input type="text" formControlName="numeroEntradaSalida"
-                                [ngClass]="getEstadoCampo('numeroEntradaSalida', i)" class="" (change)="sincronizarEntrada()">
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
+                            <input type="date" formControlName="fechaRecepcionEnvio"
+                                [ngClass]="getEstadoCampo('fechaRecepcionEnvio', i)" class=""
+                                (change)="sincronizarEntrada()">
                         </td>
-                        <td class="">
+                        <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
+                                <option [value]=""></option>
+                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
+                                    {{ubicacion.nombre}}
+                                </option>
+                            </select></td>
+                        <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
+                                <option [value]=""></option>
+                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
+                                    {{ubicacion.nombre}}
+                                </option>
+                            </select></td>
+                            <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
+                                <option [value]=""></option>
+                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
+                                    {{ubicacion.nombre}}
+                                </option>
+                            </select></td>
+                            <td class="">
+                                <input type="text" formControlName="numeroEntradaSalida"
+                                    [ngClass]="getEstadoCampo('numeroEntradaSalida', i)" class="" (change)="sincronizarEntrada()">
+                            </td>
+<td *ngIf="currentPath.startsWith('/salidas')"></td>
+<td *ngIf="currentPath.startsWith('/salidas')"></td>
+<td *ngIf="currentPath.startsWith('/salidas')"></td>
+<td *ngIf="currentPath.startsWith('/salidas')"></td>
+<td *ngIf="currentPath.startsWith('/salidas')"></td>
+                        <td *ngIf="currentPath.startsWith('/entradas')" class="">
                             <input type="number" formControlName="dcs" max="9999999999" class="">
                         </td>
                         <td class="">
@@ -39,16 +77,22 @@
                             <input type="text" formControlName="description"
                                 [ngClass]="getEstadoCampo('description', i)" class="" [readOnly]="!isProductoNuevo(i)">
                         </td>
-                        <td class="">
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
+                            <input type="number" formControlName="palets" [ngClass]="getEstadoCampo('palets', i)"
+                                min="0" class="">
+                        </td>
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
+                            <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
+                                min="0" class="">
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')" class="">
                             <input type="number" formControlName="unidades" min="1"
                                 [ngClass]="getEstadoCampo('unidades', i)" class="">
                         </td>
-                        <td class="">
-                            <input type="date" formControlName="fechaRecepcionEnvio"
-                                [ngClass]="getEstadoCampo('fechaRecepcionEnvio', i)" class=""
-                                (change)="sincronizarEntrada()">
+                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
+                            <input type="number" formControlName="" min="1">
                         </td>
-                        <td class="">
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')" (click)="sincronizarUbicaciones(i)" class="">
                             <select formControlName="ubicacion" [ngClass]="getEstadoCampo('ubicacion', i)">
                                 <option [value]=""></option>
                                 <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
@@ -56,15 +100,7 @@
                                 </option>
                             </select>
                         </td>
-                        <td class="">
-                            <input type="number" formControlName="palets" [ngClass]="getEstadoCampo('palets', i)"
-                                min="0" class="">
-                        </td>
-                        <td class="">
-                            <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
-                                min="0" class="">
-                        </td>
-                        <td *ngIf="currentPath.startsWith('/salidas')" class="">
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
                             <select formControlName="formaEnvio" [ngClass]="getEstadoCampo('formaEnvio', i)">
                                 <option [value]=""></option>
                                 <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
@@ -142,7 +178,7 @@
         <div class="">
             <button *ngIf="pestanaPadre == 'detallePrevisionEntrada'" (click)="modificarEntrada()"
                 class="btn-actualizar">
-                <span class="button__text">Actualizar</span>
+                <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -154,7 +190,7 @@
 
             <button *ngIf="pestanaPadre == 'detallePrevisionSalida'" (click)="modificarSalida()"
                 class="btn-actualizar">
-                <span class="button__text">Actualizar</span>
+                <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">
                         <path

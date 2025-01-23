@@ -15,7 +15,7 @@ import { EntradaServices } from 'src/app/services/entrada.service';
 })
 export class EntradasRecibidasComponent implements OnInit{
   entradas: Entrada[] = [];
-  columnasPaginator:string[] = ['origen', 'fechaRecepcion', 'detalles'];
+  columnasPaginator:string[] = ['fechaRecepcion', 'origen', 'dcs', 'detalles'];
   dataSource = new MatTableDataSource<Entrada>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 

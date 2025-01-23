@@ -14,7 +14,7 @@
             <button (click)="resetearBuscador()" class="btn-resetear">Resetear</button>
         </div>
         <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productosBuscados.length > 0}" mat-table [dataSource]="dataSourceStock">
-            <caption>Productos en el almacén</caption>
+            <caption>STOCK POR ARTICULOS</caption>
             <!-- Ref Column -->
             <ng-container matColumnDef="referencia">
                 <th class="header-paginator" *matHeaderCellDef> Ref </th>
@@ -39,9 +39,12 @@
         <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true" ></mat-paginator>
         
     </div>
-
-
-    <!-- <table>
+    
+    
+    <app-lista-ubicaciones></app-lista-ubicaciones>
+    
+    
+    <table>
         <caption>DCS recibidos</caption>
         <thead>
             <tr>
@@ -57,9 +60,6 @@
                 <td><app-detalles-dcs [dcs]="dcs"></app-detalles-dcs> </td>
             </tr>
         </tbody>
-    </table> -->
-
-
-    <app-lista-ubicaciones></app-lista-ubicaciones>
+    </table>
     
 </div>

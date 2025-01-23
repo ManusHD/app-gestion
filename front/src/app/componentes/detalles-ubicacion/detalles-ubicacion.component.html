@@ -9,12 +9,14 @@
                 <thead>
                     <tr>
                         <th>Referencia</th>
+                        <th>DESCRIPCION</th>
                         <th>Unidades</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngFor="let producto of ubicacion.productos">
                         <td>{{producto.ref}} </td>
+                        <td>{{producto.description}} </td>
                         <td>{{producto.unidades}} </td>
                     </tr>
                 </tbody>

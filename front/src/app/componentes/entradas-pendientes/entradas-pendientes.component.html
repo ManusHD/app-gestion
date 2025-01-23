@@ -1,25 +1,21 @@
 <app-cabecera-entradas></app-cabecera-entradas>
 
-<app-importar-excel></app-importar-excel>
-
-<app-formulario-entrada-salida [pestanaPadre]="'previsionEntrada'"></app-formulario-entrada-salida>
-
 <div class="flotar-medio">
     <table>
+        <caption>ENTRADAS PENDIENTES DE RECEPCIONAR</caption>
         <thead>
             <tr>
-                <th>Origen</th>
-                <th>Detalles</th>
-                <th>Marcar como recibido</th>
-                <th>Eliminar</th>
+                <th>Origen / PO</th>
+                <th>DCS</th>
+                <th>Estado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             <ng-container *ngFor="let entrada of entradas">
                 <tr>
                     <td>{{ entrada.origen }}</td>
-                    <td><app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
-                            (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas></td>
+                    <td>{{entrada.productos[0].dcs}}</td>
                     <td>
                         <div class="flotar-medio">
                             <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena || !btnSubmitActivado"
@@ -31,7 +27,9 @@
                             </button>
                         </div>
                     </td>
-                    <td>
+                    <td style="display:flex">
+                        <app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
+                            (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas>
                         <button *ngIf="entrada.productos[0].idPadre == null" [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)" class="btn-eliminar">
                             <span class="text">Borrar</span><span class="icon"><img
                                     src="../../../assets/icons/delete-bin.svg" /></span>

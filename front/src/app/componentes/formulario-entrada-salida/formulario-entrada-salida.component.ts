@@ -50,9 +50,7 @@ export class FormularioEntradaSalidaComponent
     // pestanaPadre es 'detallePrevisionSalida' cuando se visualizan los detalles de una Salida
     // En el if entro cuando creo una nueva Entrada/Salida o la importo desde Excel
     if (!this.detallesES) {
-      if(this.pestanaPadre === 'nuevaSalida' || this.pestanaPadre === 'previsionSalida' || this.pestanaPadre === 'detallePrevisionSalida') {
         this.cargarAgenciasTransporte();
-      }
       if (this.pestanaPadre !== 'nuevaEntrada' && this.pestanaPadre !== 'nuevaSalida') {
         this.inicializarPrevisionEntradaTrabajo();
       } else {
@@ -76,6 +74,9 @@ export class FormularioEntradaSalidaComponent
   private inicializarNuevaEntradaTrabajo() {
     this.mostrarFormulario = true;
     this.pendiente = false;
+    if(this.pestanaPadre == 'nuevaEntrada') {
+      
+    }
   }
 
   // Cuando voy a importar un Excel
@@ -88,6 +89,7 @@ export class FormularioEntradaSalidaComponent
       } else {
         this.mostrarFormulario = false;
       }
+      this.mostrarFormulario = true;
     });
   }
 

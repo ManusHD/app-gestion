@@ -20,4 +20,5 @@ public class ProductoUbicacion {
     private Long id;
     private String ref;
     private Integer unidades;
+    private String description;
 }

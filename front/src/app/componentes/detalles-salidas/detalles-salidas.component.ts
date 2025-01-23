@@ -13,6 +13,7 @@ export class DetallesSalidasComponent implements OnInit {
   @Input() enRecibidas: boolean = false;
   @Input() salida!: Salida;
   @Output() salidaRellena = new EventEmitter<boolean>();
+  currentPath:string = window.location.pathname;
 
   ngOnInit() {
     if(!this.enRecibidas) {

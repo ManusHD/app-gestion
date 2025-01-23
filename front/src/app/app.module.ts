@@ -49,6 +49,8 @@ import { AgenciasTransporteService } from './services/agencias-transporte.servic
 import { SnackBar } from './services/snackBar.service';
 import { DetallesUbicacionComponent } from './componentes/detalles-ubicacion/detalles-ubicacion.component';
 import { ListaUbicacionesComponent } from './componentes/lista-ubicaciones/lista-ubicaciones.component';
+import { EntradasPrevisionComponent } from './componentes/entradas-prevision/entradas-prevision.component';
+import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salidas-prevision.component';
 
 @NgModule({
   declarations: [
@@ -73,7 +75,9 @@ import { ListaUbicacionesComponent } from './componentes/lista-ubicaciones/lista
     UbicacionesComponent,
     AgenciasTransporteComponent,
     DetallesUbicacionComponent,
-    ListaUbicacionesComponent
+    ListaUbicacionesComponent,
+    EntradasPrevisionComponent,
+    SalidasPrevisionComponent
   ],
   imports: [
     AppRoutingModule,

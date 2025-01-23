@@ -1,4 +1,7 @@
-<button class="btn-productos" (click)="mostrarDetalles()">Productos</button>
+<button *ngIf="currentPath == '/entradas/recibidas'; else editar" class="btn-productos" (click)="mostrarDetalles()">Productos</button>
+<ng-template #editar>
+    <button class="btn-productos" (click)="mostrarDetalles()">Editar</button>
+</ng-template>
 
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">

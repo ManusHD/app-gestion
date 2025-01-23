@@ -4,13 +4,17 @@
     <div class="flotar-medio">
         <div id="historial">
             <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
-                <ng-container matColumnDef="origen">
-                    <th class="header-paginator" *matHeaderCellDef>Origen</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.origen}} </td>
-                </ng-container>
                 <ng-container matColumnDef="fechaRecepcion">
                     <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
+                </ng-container>
+                <ng-container matColumnDef="origen">
+                    <th class="header-paginator" *matHeaderCellDef>Origen / PO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.origen}} </td>
+                </ng-container>
+                <ng-container matColumnDef="dcs">
+                    <th class="header-paginator" *matHeaderCellDef>DCS</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.productos[0].dcs}} </td>
                 </ng-container>
                 <ng-container matColumnDef="detalles">
                     <th class="header-paginator" *matHeaderCellDef>Detalles</th>

@@ -11,13 +11,17 @@ import { SalidasEnviadasComponent } from './componentes/salidas-enviadas/salidas
 import { FormularioEntradaSalidaComponent } from './componentes/formulario-entrada-salida/formulario-entrada-salida.component';
 import { AgenciasTransporteComponent } from './componentes/agencias-transporte/agencias-transporte.component';
 import { UbicacionesComponent } from './componentes/ubicaciones/ubicaciones.component';
+import { EntradasPrevisionComponent } from './componentes/entradas-prevision/entradas-prevision.component';
+import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salidas-prevision.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent},
-  {path: 'entradas', component:EntradasPendientesComponent},
+  {path: 'entradas', component:EntradasPrevisionComponent},
+  {path: 'entradas/pendientes', component:EntradasPendientesComponent},
   {path: 'entradas/recibidas', component:EntradasRecibidasComponent},
   {path: 'entradas/nuevo', component:EntradasNuevoComponent},
-  {path: 'salidas', component:SalidasPendientesComponent},
+  {path: 'salidas', component:SalidasPrevisionComponent},
+  {path: 'salidas/pendientes', component:SalidasPendientesComponent},
   {path: 'salidas/enviadas', component:SalidasEnviadasComponent},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent},
   {path: 'inventario', component:InventarioComponent},
