@@ -24,11 +24,7 @@ export class DetallesEntradasComponent implements OnInit {
   }
 
   iniciarEntradas() {
-    this.entrada.productos!.forEach((producto) => {
-      if(this.formatearFecha(producto.fechaRecepcion) != null){
-        producto.fechaRecepcion = this.formatearFecha(producto.fechaRecepcion)!;
-      }
-    });
+    this.formatearFecha(this.entrada.fechaRecepcion);
   }
 
   mostrarDetalles() {
@@ -41,7 +37,7 @@ export class DetallesEntradasComponent implements OnInit {
 
   actualizarFecha(fecha: string) {
     this.entrada.productos!.forEach((producto) => {
-      producto.fechaRecepcion = fecha;
+      this.entrada.fechaRecepcion = fecha;
     });
   }
 
@@ -51,7 +47,7 @@ export class DetallesEntradasComponent implements OnInit {
         producto.description &&
         producto.unidades != null &&
         producto.unidades > 0 &&
-        producto.fechaRecepcion &&
+        this.entrada.fechaRecepcion &&
         producto.ubicacion &&
         producto.palets != null &&
         producto.bultos != null

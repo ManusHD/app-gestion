@@ -25,11 +25,7 @@ export class DetallesSalidasComponent implements OnInit {
   }
 
   iniciarSalidas() {
-    this.salida.productos!.forEach((producto) => {
-      if(this.formatearFecha(producto.fechaEnvio) != null){
-        producto.fechaEnvio = this.formatearFecha(producto.fechaEnvio)!;
-      }
-    });
+    this.formatearFecha(this.salida.fechaEnvio);
   }
 
   mostrarDetalles() {
@@ -50,7 +46,7 @@ export class DetallesSalidasComponent implements OnInit {
         producto.description &&
         producto.unidades &&
         producto.unidades > 0 &&
-        producto.fechaEnvio &&
+        this.salida.fechaEnvio &&
         producto.ubicacion &&
         producto.ubicacion != '' &&
         producto.palets! >= 0 &&

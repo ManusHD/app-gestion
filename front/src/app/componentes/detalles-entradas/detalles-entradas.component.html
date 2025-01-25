@@ -25,11 +25,11 @@
                 <tbody>
                     <tr *ngFor="let producto of entrada.productos">
                         <td>{{entrada.origen}} </td>
-                        <td>{{producto.dcs}} </td>
+                        <td>{{entrada.dcs}} </td>
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
                         <td>{{producto.unidades}} </td>
-                        <td>{{producto.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
+                        <td>{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>
                         <td>{{producto.bultos}} </td>

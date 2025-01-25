@@ -18,11 +18,9 @@ public class ProductoSalida {
     @Id
     @GeneratedValue
     private Long id;
-    private String dcs; // 10 dígitos
     private String ref; // 7 dígitos
     private String description;
     private Integer unidades;
-    private Date fechaEnvio;
     private String ubicacion;
     private Integer palets;
     private Integer bultos;

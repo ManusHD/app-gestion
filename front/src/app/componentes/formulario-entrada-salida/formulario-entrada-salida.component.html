@@ -1,12 +1,12 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio">
     <div class="">
-        <form [formGroup]="entradaSalidaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)" #formularioNuevaEntradaSalida="ngForm">
+        <form [formGroup]="entradaSalidaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)"
+            #formularioNuevaEntradaSalida="ngForm">
             <table>
                 <thead>
                     <tr>
-                        
                         <th *ngIf="currentPath.startsWith('/entradas') && !pestanaPadre.startsWith('prevision')">Fecha recepción</th>
-                        <th *ngIf="currentPath.startsWith('/salidas') &&  !pestanaPadre.startsWith('prevision')">Fecha envío</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">Fecha envío</th>
                         <th>Perfumería</th>
                         <th>PDV</th>
                         <th>Colaborador</th>
@@ -34,95 +34,80 @@
                 <tbody formArrayName="productos">
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
-                            <input type="date" formControlName="fechaRecepcionEnvio"
-                                [ngClass]="getEstadoCampo('fechaRecepcionEnvio', i)" class=""
-                                (change)="sincronizarEntrada()">
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
+                            <input formControlName="fechaRecepcionEnvio" type="date"/>
                         </td>
-                        <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
-                                <option [value]=""></option>
-                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
-                                    {{ubicacion.nombre}}
-                                </option>
-                            </select></td>
-                        <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
-                                <option [value]=""></option>
-                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
-                                    {{ubicacion.nombre}}
-                                </option>
-                            </select></td>
-                            <td><select formControlName="" [ngClass]="getEstadoCampo('ubicacion', i)">
-                                <option [value]=""></option>
-                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
-                                    {{ubicacion.nombre}}
-                                </option>
-                            </select></td>
-                            <td class="">
-                                <input type="text" formControlName="numeroEntradaSalida"
-                                    [ngClass]="getEstadoCampo('numeroEntradaSalida', i)" class="" (change)="sincronizarEntrada()">
-                            </td>
-<td *ngIf="currentPath.startsWith('/salidas')"></td>
-<td *ngIf="currentPath.startsWith('/salidas')"></td>
-<td *ngIf="currentPath.startsWith('/salidas')"></td>
-<td *ngIf="currentPath.startsWith('/salidas')"></td>
-<td *ngIf="currentPath.startsWith('/salidas')"></td>
-                        <td *ngIf="currentPath.startsWith('/entradas')" class="">
-                            <input type="number" formControlName="dcs" max="9999999999" class="">
-                        </td>
-                        <td class="">
-                            <input type="text" formControlName="ref" min="0" max="9999999"
-                                [ngClass]="getEstadoCampo('ref', i)" class="" (change)="buscarProductoPorReferencia(i)">
-                        </td>
-                        <td class="">
-                            <input type="text" formControlName="description"
-                                [ngClass]="getEstadoCampo('description', i)" class="" [readOnly]="!isProductoNuevo(i)">
-                        </td>
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
-                            <input type="number" formControlName="palets" [ngClass]="getEstadoCampo('palets', i)"
-                                min="0" class="">
-                        </td>
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
-                            <input type="number" formControlName="bultos" [ngClass]="getEstadoCampo('bultos', i)"
-                                min="0" class="">
-                        </td>
-                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')" class="">
-                            <input type="number" formControlName="unidades" min="1"
-                                [ngClass]="getEstadoCampo('unidades', i)" class="">
-                        </td>
-                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
-                            <input type="number" formControlName="" min="1">
-                        </td>
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')" (click)="sincronizarUbicaciones(i)" class="">
-                            <select formControlName="ubicacion" [ngClass]="getEstadoCampo('ubicacion', i)">
-                                <option [value]=""></option>
-                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">
-                                    {{ubicacion.nombre}}
-                                </option>
+                        <td>
+                            <select formControlName="perfumeria" >
+                                <option *ngFor="let perfumeria of perfumerias" [value]="perfumeria.nombre">{{perfumeria.nombre}}</option>
                             </select>
                         </td>
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')" class="">
-                            <select formControlName="formaEnvio" [ngClass]="getEstadoCampo('formaEnvio', i)">
-                                <option [value]=""></option>
-                                <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
-                                    {{agencia.nombre}}
-                                </option>
+                        <td>
+                            <select formControlName="pdv">
+                                <option *ngFor="let pdv of pdvs" [value]="pdv.nombre">{{pdv.nombre}}</option>
                             </select>
                         </td>
-                        <td class="">
-                            <input type="text" formControlName="observaciones" [ngClass]="getEstadoCampo('observaciones', i)"
-                            class="">
+                        <td>
+                            <select formControlName="colaborador">
+                                <option *ngFor="let pdv of pdvs" [value]="pdv.nombre">{{pdv.nombre}}</option>
+                            </select>
                         </td>
-
-                        <td style="display: none;">
-                            <input type="number" formControlName="idPadre">
+                        <td>
+                            <input formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')">
+                            <input formControlName="direccion" formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')">
+                            <input formControlName="poblacion" formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')">
+                            <input formControlName="provincia" formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')">
+                            <input formControlName="cp" formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas')">
+                            <input formControlName="telefono" formControlName="otroOrigenDestino" type="text"/>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/entradas')">
+                            <input formControlName="dcs" type="number" />
+                        </td>
+                        <td>
+                            <input formControlName="ref" type="text" />
+                        </td>
+                        <td>
+                            <input formControlName="descripcion" type="text" />
+                        </td>
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
+                            <input formControlName="palets" type="number" />
+                        </td>
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
+                            <input formControlName="bultos" type="number" />
+                        </td>
+                        <td formControlName="unidadesPedidas" *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
+                            <input formControlName="unidadesPedidas" type="number" />
+                        </td>
+                        <td formControlName="unidadesEnviadas" *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">
+                            <input formControlName="unidadesEnviadas" type="number" />
+                        </td>
+                        <td formControlName="unidadesEnviadas" *ngIf="currentPath.startsWith('/entradas')">
+                            <input formControlName="unidadesEnviadas" type="number" />
+                        </td>
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
+                            <select formControlName="ubicacion">
+                                <option *ngFor="let ubicacion of ubicaciones" [value]="ubicacion.nombre">{{ubicacion.nombre}} </option>
+                            </select>
+                        </td>
+                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">
+                            <select formControlName="formaEnvio">
+                                <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">{{agencia.nombre}} </option>
+                            </select>
+                        </td>
+                        <td formControlName="observaciones">
+                            <input type="text">
                         </td>
                         <td class="centrar">
-                            <div class="pendiente" *ngIf="pestanaPadre == 'detallePrevisionEntrada'">
-                                <label [htmlFor]="'pendiente'+i">
-                                    Pendiente
-                                    <input [id]="'pendiente'+i" formControlName="pendiente" type="checkbox">
-                                </label>
-                            </div>
                             <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
                                     <path fill="#B5BAC1"
@@ -136,7 +121,7 @@
                                         clip-rule="evenodd" fill-rule="evenodd"></path>
                                     <path fill="#B5BAC1" d="M2 13H48L47.6742 21.28H2.32031L2 13Z"></path>
                                 </svg>
-
+                
                                 <span class="tooltip">Eliminar</span>
                             </button>
                         </td>
@@ -145,20 +130,19 @@
             </table>
 
             <div class="btns-tabla">
-                <button *ngIf="pestanaPadre == 'nuevaEntrada' || 'detallePrevisionEntrada' || pestanaPadre == 'nuevaSalida' || 'detallePrevisionSalida'" type="button"
-                    (click)="agregarProducto()" class="add-producto">
+                <button
+                    *ngIf="pestanaPadre == 'nuevaEntrada' || 'detallePrevisionEntrada' || pestanaPadre == 'nuevaSalida' || 'detallePrevisionSalida'"
+                    type="button" (click)="agregarProducto()" class="add-producto">
                     <img src="../../../assets/icons/signo-mas.svg" alt="">
                     <span>Añadir línea</span>
                 </button>
 
-                <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit"
-                    class="crear-producto"
+                <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit" class="crear-producto"
                     [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente">
                     Grabar entrada
                 </button>
 
-                <button *ngIf="pestanaPadre == 'nuevaSalida'" type="submit"
-                    class="crear-producto"
+                <button *ngIf="pestanaPadre == 'nuevaSalida'" type="submit" class="crear-producto"
                     [disabled]="!formularioNuevaEntradaSalida.form.valid && !pendiente || (productosControls.at(0).get('formaEnvio')?.value == '' || productosControls.at(0).get('formaEnvio')?.value == null)">
                     Grabar salida
                 </button>
@@ -188,8 +172,7 @@
                     </svg></span>
             </button>
 
-            <button *ngIf="pestanaPadre == 'detallePrevisionSalida'" (click)="modificarSalida()"
-                class="btn-actualizar">
+            <button *ngIf="pestanaPadre == 'detallePrevisionSalida'" (click)="modificarSalida()" class="btn-actualizar">
                 <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">

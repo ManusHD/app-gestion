@@ -28,6 +28,7 @@ public class Entrada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String origen; 
+    private String dcs; // 10 dígitos
     private Boolean estado; // false = pendiente, true = recibida
     private Date fechaRecepcion;
 

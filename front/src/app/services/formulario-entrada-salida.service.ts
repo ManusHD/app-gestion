@@ -17,6 +17,9 @@ import { Salida } from '../models/salida.model';
 import { ProductoSalida } from '../models/productoSalida.model';
 import { AgenciasTransporteService } from './agencias-transporte.service';
 import { AgenciaTransporte } from '../models/agencia-transporte.model';
+import { PDV } from '../models/pdv.model';
+import { Colaborador } from '../models/colaborador.model';
+import { Perfumeria } from '../models/perfumeria.model';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -25,6 +28,9 @@ export class FormularioEntradaSalidaService {
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
   ubicaciones: Ubicacion[] = [];
+  perfumerias: Perfumeria[]= [];
+  pdvs: PDV[] = [];
+  colaboradores: Colaborador[] = [];
   btnSubmitActivado = true;
   currentPath: string = window.location.pathname;
 
@@ -85,30 +91,37 @@ export class FormularioEntradaSalidaService {
   // Modificar el método crearProductoFormGroup
   crearProductoFormGroup(): FormGroup {
     return this.fb.group({
-      numeroEntradaSalida: ['', Validators.required],
-      dcs: ['', [Validators.max(9999999999)]],
-      ref: [
-        '',
-        {
-          validators: [
-            Validators.required,
-            Validators.minLength(7),
-            Validators.maxLength(8),
-          ],
-          asyncValidators: [this.referenciaValidator.bind(this)],
-          updateOn: 'blur',
-        },
-      ],
-      description: ['', Validators.required],
-      unidades: [1, [Validators.required, Validators.min(1)]],
       fechaRecepcionEnvio: [null, Validators.required],
-      ubicacion: ['', Validators.required],
-      palets: ['', [Validators.required, Validators.min(0)]],
-      bultos: [0, [Validators.required, Validators.min(0)]],
+      perfumeria: [''],
+      pdv: [''],
+      colaborador: [''],
+      otroOrigenDestino: [''],
+      direccion: [''],
+      poblacion: [''],
+      provincia: [''],
+      cp: [''],
+      telefono: [''],
+      dcs: [''],
+      ref: ['',
+        // {
+        //   validators: [
+        //     Validators.required,
+        //     Validators.minLength(7),
+        //     Validators.maxLength(8),
+        //   ],
+        //   asyncValidators: [this.referenciaValidator.bind(this)],
+        //   updateOn: 'blur',
+        // },
+      ],
+      descripcion: [''],
+      palets: [''],
+      bultos: [0],
+      unidadesPedidas: [1],
+      unidadesEnviadas: [1],
+      ubicacion: [''],
       observaciones: [''],
       formaEnvio: [''],
       pendiente: [false],
-      idPadre: [null],
     });
   }
 
@@ -231,28 +244,6 @@ export class FormularioEntradaSalidaService {
     // Transformar los productos del formulario a ProductoEntrada
     const productosEntrada: ProductoEntrada[] =
       this.entradaSalidaForm.value.productos.map((producto: any) => {
-        if (
-          producto.ref == null ||
-          producto.ref == undefined ||
-          producto.ref == ''
-        ) {
-          referenciasRellenas = false;
-        }
-
-        formatoValidoRef = /^\d{7}$|^R\d{7}$/.test(producto.ref);
-
-        if (
-          producto.description == null ||
-          producto.description == undefined ||
-          producto.description == ''
-        ) {
-          descriptionRellenas = false;
-        }
-
-        if (producto.unidades < 0) {
-          unidadesNegativas = true;
-        }
-
         // Crear un nuevo objeto ProductoEntrada
         return {
           dcs: producto.dcs,

@@ -11,7 +11,6 @@
                 <thead>
                     <tr>
                         <th>Origen</th>
-                        <th>DCS</th>
                         <th>Ref</th>
                         <th>Descripción</th>
                         <th>Unidades</th>
@@ -25,11 +24,10 @@
                 <tbody>
                     <tr *ngFor="let producto of salida.productos">
                         <td>{{salida.destino}} </td>
-                        <td>{{producto.dcs}} </td>
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
                         <td>{{producto.unidades}} </td>
-                        <td>{{producto.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
+                        <td>{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>
                         <td>{{producto.bultos}} </td>
