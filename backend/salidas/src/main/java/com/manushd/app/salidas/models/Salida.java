@@ -27,6 +27,14 @@ public class Salida {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String destino; 
+    private String perfumeria; 
+    private String pdv; 
+    private String colaborador; 
+    private String direccion; 
+    private String poblacion; 
+    private String provincia; 
+    private String cp; 
+    private String telefono; 
     private Boolean estado; // false = pendiente, true = recibida
     private Date fechaEnvio;
 

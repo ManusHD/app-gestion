@@ -26,7 +26,7 @@ export class EntradasPendientesComponent
       .getEntradasByEstado(false)
       .subscribe((data: Entrada[]) => {
         this.entradas = data;
-        console.log(this.entradas);
+        this.cdr.detectChanges();
       });
   }
 

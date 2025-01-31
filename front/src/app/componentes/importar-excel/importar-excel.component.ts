@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { EntradaServices } from 'src/app/services/entrada.service';
@@ -23,8 +23,10 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
     salidaService: SalidaServices,
     ubicacionesService: UbicacionService,
     agenciasTransporteService: AgenciasTransporteService,
-    private importarES: ImportarExcelService){
-    super(fb, productoService, entradaService, salidaService, ubicacionesService, agenciasTransporteService);
+    cdr: ChangeDetectorRef,
+    private importarES: ImportarExcelService,
+      ){
+    super(fb, productoService, entradaService, salidaService, ubicacionesService, agenciasTransporteService, cdr);
   }
   
   // Método para manejar la importación de archivos Excel
@@ -48,7 +50,6 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
           this.snackBarExito('Excel importado correctamente');
 
           event.target.value = '';
-          this.sincronizarEntrada();
         } catch (error) {
           console.error('Error procesando Excel:', error);
           this.snackBarError('Error al procesar el archivo Excel');

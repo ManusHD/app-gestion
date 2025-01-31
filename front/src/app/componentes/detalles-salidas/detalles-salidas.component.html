@@ -1,6 +1,6 @@
-<button *ngIf="currentPath == '/entradas/recibidas'; else editar" class="btn-productos" (click)="mostrarDetalles()">Productos</button>
+<button *ngIf="currentPath == '/salidas/enviadas'; else editar" class="btn-productos" (click)="mostrarDetalles()">PRODUCTOS</button>
 <ng-template #editar>
-    <button class="btn-productos" (click)="mostrarDetalles()">Editar</button>
+    <button class="btn-productos" (click)="mostrarDetalles()">EDITAR</button>
 </ng-template>
 
 <div *ngIf="mostrarModal" class="modal">
@@ -10,11 +10,9 @@
             <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
                     <tr>
-                        <th>Origen</th>
                         <th>Ref</th>
                         <th>Descripción</th>
                         <th>Unidades</th>
-                        <th>Fecha recepción</th>
                         <th>Ubicación</th>
                         <th>Palets</th>
                         <th>Bultos</th>
@@ -23,11 +21,9 @@
                 </thead>
                 <tbody>
                     <tr *ngFor="let producto of salida.productos">
-                        <td>{{salida.destino}} </td>
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
                         <td>{{producto.unidades}} </td>
-                        <td>{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>
                         <td>{{producto.bultos}} </td>

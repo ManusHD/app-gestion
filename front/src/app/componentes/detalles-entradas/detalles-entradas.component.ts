@@ -20,7 +20,6 @@ export class DetallesEntradasComponent implements OnInit {
       this.iniciarEntradas();
       this.entradaRellena.emit(this.todosLosCamposRellenos());
     }
-    console.log(this.currentPath);
   }
 
   iniciarEntradas() {

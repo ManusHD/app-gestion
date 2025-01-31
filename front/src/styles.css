@@ -5,11 +5,15 @@
     --letter-color-off: #5e6a81;
     --aux-color: #014257;
     --caption-color: #007253;
-    --thead-color: #B4C2E1;
+    --thead-color: #000;
+    --thead-bgcolor: #B4C2E1;
     --table-primary: #1242DF;
     --table-secondary: #3E66DF;
     --btn-inactive: #9f9f9f;
     --w-paginator: 400px;
+    --btn-color-w: #fff;
+    --btn-color-b: #000;
+    --table-color: #fff;
 }
 
 @font-face {
@@ -74,18 +78,31 @@ body {
     background-color: transparent;
 }
 
-.btn-productos {
+.btn-productos, .btn-grabar {
     border: none;
-    background-color: #EBB934;
     padding: 3.5px 10px;
     border-radius: 3px;
     cursor: pointer;
     font-family: 'Nunito-Medium';
 }
 
+.btn-productos {
+    background-color: #EBB934;
+}
+
 .btn-productos:hover {
     background-color: #ffd875;
 }
+
+.btn-grabar {
+    background-color: #00f210;
+    font-weight: 590;
+}
+
+.btn-grabar:hover {
+    background-color: #009d00;
+}
+
 
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
@@ -94,7 +111,7 @@ table {
     border-collapse: collapse;
     border-radius: 5px;
     overflow: hidden;
-    color: white;
+    color: var(--table-color);
     margin-top: 50px;
     text-align: center;
     height: fit-content;
@@ -106,8 +123,8 @@ caption {
 }
 
 thead tr:first-child {
-    background-color: var(--thead-color);
-    color: black;
+    background-color: var(--thead-bgcolor);
+    color: var(--thead-color);
     font-family: 'Nunito-ExtraBold';
 }
 
@@ -129,6 +146,14 @@ tr:last-child {
 
 td {
     padding: 10px;
+}
+
+td input {
+    background-color: transparent;
+}
+
+td select {
+    background-color: transparent;
 }
 
 .centrar {
@@ -212,4 +237,66 @@ mat-tooltip-component {
 
 .deleteButton:hover .tooltip {
     opacity: 1;
+}
+
+/*----- Boton borrar entrada -----*/
+.btn-eliminar {
+    --btn-eliminar-width: 100px;
+    width: var(--btn-eliminar-width);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    background-color: rgb(255, 16, 16);
+    border: none;
+    border-radius: 5px;
+    box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
+
+}
+
+.btn-eliminar,
+.btn-eliminar span {
+    transition: 200ms;
+}
+
+.btn-eliminar .text {
+    transform: translateX(7px);
+    color: white;
+}
+
+.btn-eliminar .icon {
+    position: absolute;
+    /* border-left: 1px solid #c41b1b; */
+    transform: translateX(60px);
+    height: 17px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-eliminar svg {
+    width: 15px;
+    fill: #eee;
+}
+
+.btn-eliminar:hover {
+    background-color: #ff3636;
+}
+
+.btn-eliminar:hover .text {
+    color: transparent;
+}
+
+.btn-eliminar:hover .icon {
+    width: var(--btn-eliminar-width);
+    border-left: none;
+    transform: translateX(0);
+}
+
+.btn-eliminar:focus {
+    outline: none;
+}
+
+.btn-eliminar:active .icon svg {
+    transform: scale(0.8);
 }

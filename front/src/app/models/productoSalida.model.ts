@@ -3,6 +3,7 @@ export class ProductoSalida {
     ref?: String;
     description?: String;
     unidades?: number;
+    unidadesPedidas?: number;
     ubicacion?: String;
     palets?: number;
     bultos?: number;

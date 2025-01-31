@@ -21,6 +21,7 @@ public class ProductoSalida {
     private String ref; // 7 dígitos
     private String description;
     private Integer unidades;
+    private Integer unidadesPedidas;
     private String ubicacion;
     private Integer palets;
     private Integer bultos;

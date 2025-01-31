@@ -2,6 +2,7 @@
 
 <div class="flotar-medio">
     <table>
+        <caption>SALIDAS PENDIENTES DE PREPARAR</caption>
         <thead>
             <tr>
                 <th>Destino</th>
@@ -15,25 +16,25 @@
                     <td>{{ salida.destino }}</td>
                     <td>
                         <div class="flotar-medio">
-                            <button (click)="desactivarBtnSubmit()" [disabled]="!salida.rellena || !btnSubmitActivado"
-                                (click)="setEnviada(salida.id!)" class="transparente">
+                            <div>
                                 <img [ngClass]="{'no-relleno': !salida.rellena}"
                                     src="../../../assets/icons/check-verde.svg" />
                                 <img [ngClass]="{'relleno': salida.rellena}"
                                     src="../../../assets/icons/no-check-gris.svg" />
-                            </button>
+                            </div>
                         </div>
                     </td>
-                    <td style="display: flex;">
+                    <td style="display: flex; gap: 5px">
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"
                             (salidaRellena)="salida.rellena = $event"></app-detalles-salidas>
-                        <button *ngIf="salida.productos[0].idPadre == null" [disabled]="!btnSubmitActivado" (click)="deleteSalida(salida.id!)" class="btn-eliminar">
-                            <span class="text">Borrar</span><span class="icon"><img
+                        <button [disabled]="!btnSubmitActivado"
+                            (click)="deleteSalida(salida.id!)" class="btn-eliminar">
+                            <span class="text">BORRAR</span><span class="icon"><img
                                     src="../../../assets/icons/delete-bin.svg" /></span>
                         </button>
-                        <button (click)="desactivarBtnSubmit()" [disabled]="!btnSubmitActivado"
-                        (click)="setEnviada(salida.id!)" class="">
-                            Enviar
+                        <button (click)="desactivarBtnSubmit()" [disabled]="!salida.rellena || !btnSubmitActivado"
+                            (click)="setEnviada(salida.id!)" class="btn-grabar">
+                            GRABAR
                         </button>
                     </td>
                 </tr>

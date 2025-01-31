@@ -104,7 +104,6 @@ tr:last-child {
 tbody button {
     cursor: pointer;
     border: none;
-    padding: 0;
     height: 24px;
 }
 

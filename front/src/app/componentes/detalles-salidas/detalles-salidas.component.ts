@@ -19,8 +19,6 @@ export class DetallesSalidasComponent implements OnInit {
     if(!this.enRecibidas) {
       this.iniciarSalidas();
       this.salidaRellena.emit(this.todosLosCamposRellenos());
-      console.log("Productos: ", this.salida.productos);
-      console.log("Salida: "+this.salida.destino+ ", " + this.todosLosCamposRellenos());
     }
   }
 

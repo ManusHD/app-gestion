@@ -20,4 +20,8 @@ export class ImportarExcelService {
   getEntrada() {
     return this.entrada$;
   }
+
+  resetExcel() {
+    this.excelDataSource.next([]);
+  }
 }

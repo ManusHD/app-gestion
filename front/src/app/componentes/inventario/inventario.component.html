@@ -44,22 +44,4 @@
     <app-lista-ubicaciones></app-lista-ubicaciones>
     
     
-    <table>
-        <caption>DCS recibidos</caption>
-        <thead>
-            <tr>
-                <th>DCS</th>
-                <th>Usado</th>
-                <th>Detalles</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let dcs of DCSs">
-                <td>{{dcs.dcs}} </td>
-                <td>{{dcs.usado}} </td>
-                <td><app-detalles-dcs [dcs]="dcs"></app-detalles-dcs> </td>
-            </tr>
-        </tbody>
-    </table>
-    
 </div>

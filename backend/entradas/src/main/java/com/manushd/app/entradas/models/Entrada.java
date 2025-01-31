@@ -28,9 +28,12 @@ public class Entrada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String origen; 
+    private Date fechaRecepcion;
+    private String perfumeria; 
+    private String pdv; 
+    private String colaborador;
     private String dcs; // 10 dígitos
     private Boolean estado; // false = pendiente, true = recibida
-    private Date fechaRecepcion;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "entradaId")

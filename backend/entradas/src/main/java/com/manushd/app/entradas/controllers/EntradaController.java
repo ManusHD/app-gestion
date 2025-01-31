@@ -174,12 +174,6 @@ public class EntradaController {
                 savedEntrada = entradasRepository.save(entradaAntigua);
             }
         } else {
-            Date fecRecepcion = null;
-            for (ProductoEntrada pe : entrada.getProductos()) {
-                fecRecepcion = pe.getFechaRecepcion();
-                break;
-            }
-            entrada.setFechaRecepcion(fecRecepcion);
             savedEntrada = entradasRepository.save(entrada);
         }
 
@@ -198,63 +192,63 @@ public class EntradaController {
     }
 
 
-    private void crearDcs(Entrada entrada) {
-        List<DCS> ListaDcs = new ArrayList<>();
-        RestTemplate restTemplate = new RestTemplate(); // Instancia de RestTemplate
+    // private void crearDcs(Entrada entrada) {
+    //     List<DCS> ListaDcs = new ArrayList<>();
+    //     RestTemplate restTemplate = new RestTemplate(); // Instancia de RestTemplate
 
-        for (ProductoEntrada productoEntrada : entrada.getProductos()) {
-            if (productoEntrada.getDcs() != null) {
-                String numeroDcs = productoEntrada.getDcs();
-                boolean existe = ListaDcs.stream().anyMatch(d -> d.getDcs().equals(numeroDcs));
+    //     for (ProductoEntrada productoEntrada : entrada.getProductos()) {
+    //         if (productoEntrada.getDcs() != null) {
+    //             String numeroDcs = productoEntrada.getDcs();
+    //             boolean existe = ListaDcs.stream().anyMatch(d -> d.getDcs().equals(numeroDcs));
 
-                ProductoDcs p = new ProductoDcs();
-                p.setRef(productoEntrada.getRef());
-                p.setUnidades(productoEntrada.getUnidades());
+    //             ProductoDcs p = new ProductoDcs();
+    //             p.setRef(productoEntrada.getRef());
+    //             p.setUnidades(productoEntrada.getUnidades());
 
-                if (existe) {
-                    int posicionDcs = IntStream.range(0, ListaDcs.size())
-                            .filter(i -> ListaDcs.get(i).getDcs().equals(numeroDcs))
-                            .findFirst()
-                            .orElse(-1);
+    //             if (existe) {
+    //                 int posicionDcs = IntStream.range(0, ListaDcs.size())
+    //                         .filter(i -> ListaDcs.get(i).getDcs().equals(numeroDcs))
+    //                         .findFirst()
+    //                         .orElse(-1);
 
-                    DCS dcsExistente = ListaDcs.get(posicionDcs);
-                    if (dcsExistente.getProductos() == null) {
-                        dcsExistente.setProductos(new HashSet<>());
-                    }
-                    dcsExistente.getProductos().add(p);
-                } else {
-                    DCS d = new DCS();
-                    d.setDcs(numeroDcs);
-                    d.setUsado(false);
-                    d.setProductos(new HashSet<>());
-                    d.getProductos().add(p);
-                    ListaDcs.add(d);
-                }
-            }
-        }
+    //                 DCS dcsExistente = ListaDcs.get(posicionDcs);
+    //                 if (dcsExistente.getProductos() == null) {
+    //                     dcsExistente.setProductos(new HashSet<>());
+    //                 }
+    //                 dcsExistente.getProductos().add(p);
+    //             } else {
+    //                 DCS d = new DCS();
+    //                 d.setDcs(numeroDcs);
+    //                 d.setUsado(false);
+    //                 d.setProductos(new HashSet<>());
+    //                 d.getProductos().add(p);
+    //                 ListaDcs.add(d);
+    //             }
+    //         }
+    //     }
 
-        // Enviar cada DCS al microservicio
-        String url = "http://localhost:8094/dcs";
+    //     // Enviar cada DCS al microservicio
+    //     String url = "http://localhost:8094/dcs";
 
-        for (DCS dcs : ListaDcs) {
-            try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
+    //     for (DCS dcs : ListaDcs) {
+    //         try {
+    //             HttpHeaders headers = new HttpHeaders();
+    //             headers.setContentType(MediaType.APPLICATION_JSON);
 
-                HttpEntity<DCS> request = new HttpEntity<>(dcs, headers);
-                ResponseEntity<?> response = restTemplate.postForEntity(url, request, DCS.class);
+    //             HttpEntity<DCS> request = new HttpEntity<>(dcs, headers);
+    //             ResponseEntity<?> response = restTemplate.postForEntity(url, request, DCS.class);
 
-                // if (response.getStatusCode().is2xxSuccessful()) {
-                // System.out.println("DCS creado exitosamente: " + response.getBody());
-                // } else {
-                // System.out.println("Error al crear el DCS: " + dcs.getDcs());
-                // }
-            } catch (Exception e) {
-                System.out.println("Excepción al enviar el DCS: " + dcs.getDcs());
-                e.printStackTrace();
-            }
-        }
-    }
+    //             // if (response.getStatusCode().is2xxSuccessful()) {
+    //             // System.out.println("DCS creado exitosamente: " + response.getBody());
+    //             // } else {
+    //             // System.out.println("Error al crear el DCS: " + dcs.getDcs());
+    //             // }
+    //         } catch (Exception e) {
+    //             System.out.println("Excepción al enviar el DCS: " + dcs.getDcs());
+    //             e.printStackTrace();
+    //         }
+    //     }
+    // }
 
     private void crearUbicacion(Entrada entrada) {
         List<Ubicacion> listaUbicaciones = new ArrayList<>();
@@ -320,7 +314,7 @@ public class EntradaController {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
-            crearDcs(entradaAux);
+            // crearDcs(entradaAux);
             entradaAux.setEstado(true);
             return addEntrada(entradaAux);
         }

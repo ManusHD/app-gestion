@@ -1,4 +1,10 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { EntradaServices } from 'src/app/services/entrada.service';
 import { ProductoServices } from 'src/app/services/producto.service';
@@ -11,6 +17,7 @@ import { SalidaServices } from 'src/app/services/salida.service';
 import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
 import { ProductoSalida } from 'src/app/models/productoSalida.model';
 import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
+import { ProductoEntrada } from 'src/app/models/productoEntrada.model';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
@@ -24,9 +31,8 @@ export class FormularioEntradaSalidaComponent
   @Input() pestanaPadre: String = ''; // Indica al componente donde se está abriendo y en función a ello mostrará unos botones u otros
   @Input() detallesES?: Entrada | Salida = undefined;
   enDetalles: boolean = false;
-
   agenciasTransporte: AgenciaTransporte[] = [];
-  
+
   constructor(
     fb: FormBuilder,
     productoService: ProductoServices,
@@ -34,13 +40,26 @@ export class FormularioEntradaSalidaComponent
     salidaService: SalidaServices,
     ubicacionesService: UbicacionService,
     agendaTransporteService: AgenciasTransporteService,
+    cdr: ChangeDetectorRef,
     private importarES: ImportarExcelService
   ) {
-    super(fb, productoService, entradaService, salidaService, ubicacionesService, agendaTransporteService);
+    super(
+      fb,
+      productoService,
+      entradaService,
+      salidaService,
+      ubicacionesService,
+      agendaTransporteService,
+      cdr
+    );
   }
 
   ngOnInit() {
-    this.entradaSalidaForm = this.initForm();
+    this.importarES.resetExcel();
+    this.entradaSalidaForm = this.createForm();
+
+    this.entradaSalidaForm.get('perfumeria')?.setValue('');
+    this.entradaSalidaForm.get('pdv')?.setValue('');
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -50,41 +69,40 @@ export class FormularioEntradaSalidaComponent
     // pestanaPadre es 'detallePrevisionSalida' cuando se visualizan los detalles de una Salida
     // En el if entro cuando creo una nueva Entrada/Salida o la importo desde Excel
     if (!this.detallesES) {
-        this.cargarAgenciasTransporte();
-      if (this.pestanaPadre !== 'nuevaEntrada' && this.pestanaPadre !== 'nuevaSalida') {
-        this.inicializarPrevisionEntradaTrabajo();
+      this.cargarAgenciasTransporte();
+      if (
+        this.pestanaPadre !== 'nuevaEntrada' &&
+        this.pestanaPadre !== 'nuevaSalida'
+      ) {
+        this.inicializarPrevisionEntradaSalida();
       } else {
-        this.inicializarNuevaEntradaTrabajo();
+        this.inicializarNuevaEntradaSalida();
       }
     } else {
-      this.inicializarDetalleEntradaTrabajo();
+      this.inicializarDetalleEntradaSalida();
     }
-    
-    console.log(this.currentPath);    
-
     this.cargarUbicaciones();
   }
-  
+
   setProductoPendiente(index: number) {
-    const checked = this.productosControls.at(index).get('estado')?.value
+    const checked = this.productosControls.at(index).get('estado')?.value;
     console.log(checked);
   }
 
   // Cuando estoy en Grabar Entrada
-  private inicializarNuevaEntradaTrabajo() {
+  private inicializarNuevaEntradaSalida() {
     this.mostrarFormulario = true;
     this.pendiente = false;
-    if(this.pestanaPadre == 'nuevaEntrada') {
-      
-    }
+    this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
   }
 
   // Cuando voy a importar un Excel
-  private inicializarPrevisionEntradaTrabajo() {
+  private inicializarPrevisionEntradaSalida() {
     this.pendiente = true;
     this.importarES.excelData$.subscribe((excelData) => {
       if (excelData?.length) {
         this.mostrarFormulario = true;
+        this.actualizarCamposUnicos(excelData[0]);
         this.actualizarProductos(excelData);
       } else {
         this.mostrarFormulario = false;
@@ -93,26 +111,48 @@ export class FormularioEntradaSalidaComponent
     });
   }
 
-  private actualizarProductos(productos: any[], origenDestino?: string) {
-    this.productosControls.clear();
+  private actualizarCamposUnicos(entradaSalidaFormulario: any) {
+    if (entradaSalidaFormulario && 'origen' in entradaSalidaFormulario) {
+      this.setCampoValue(
+        'fechaRecepcionEnvio',
+        this.formatearFecha(entradaSalidaFormulario.fechaRecepcion)
+      );
+      this.setCampoValue('perfumeria', entradaSalidaFormulario.perfumeria || '');
+      this.setCampoValue('pdv', entradaSalidaFormulario.pdv || '');
+      this.setCampoValue('colaborador', entradaSalidaFormulario.colaborador || '');
+      this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.origen);
+      this.setCampoValue('dcs', entradaSalidaFormulario.dcs);
+    } else if (
+      entradaSalidaFormulario &&
+      'destino' in entradaSalidaFormulario
+    ) {
+      this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(entradaSalidaFormulario.fechaEnvio));
+      this.setCampoValue('perfumeria', entradaSalidaFormulario.perfumeria || '');
+      this.setCampoValue('pdv', entradaSalidaFormulario.pdv || '');
+      this.setCampoValue('colaborador', entradaSalidaFormulario.colaborador || '');
+      this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.destino);
+      this.setCampoValue('direccion', entradaSalidaFormulario.direccion);
+      this.setCampoValue('poblacion', entradaSalidaFormulario.poblacion);
+      this.setCampoValue('provincia', entradaSalidaFormulario.provincia);
+      this.setCampoValue('cp', entradaSalidaFormulario.cp);
+      this.setCampoValue('telefono', entradaSalidaFormulario.telefono);
+    }
+  }
+
+  private actualizarProductos(productos: any[]) {
     productos.forEach((row) => {
-      const productoFormGroup = this.crearProductoFormGroup();
+      const productoFormGroup = this.createProductoGroup();
       productoFormGroup.patchValue({
-        numeroEntradaSalida: origenDestino || row.origen || row.destino,
-        dcs: row.dcs,
         ref: row.ref,
         description: row.descripcion || row.description,
         unidades: row.unidades,
-        fechaRecepcionEnvio: this.formatearFecha(
-          row.fechaRecepcion || row.fechaEnvio
-        ),
+        unidadesPedidas: row.unidadesPedidas || row.unidades,
         ubicacion: row.ubicacion,
         palets: row.palets,
         bultos: row.bultos,
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
         pendiente: row.pendiente || false,
-        idPadre: row.idPadre
       });
       if (row.ref) {
         this.buscarDescripcionProducto(productoFormGroup, row.ref);
@@ -122,33 +162,50 @@ export class FormularioEntradaSalidaComponent
   }
 
   // Cuando voy a ver los Detalles de las Entradas Pendientes
-  private inicializarDetalleEntradaTrabajo() {
+  private inicializarDetalleEntradaSalida() {
     this.cargarAgenciasTransporte();
     this.mostrarFormulario = true;
     this.enDetalles = true;
-    const origenDestino = this.obtenerOrigenDestino(this.detallesES!);
-    this.actualizarProductos(this.detallesES!.productos!, origenDestino);
-  }
-
-  private obtenerOrigenDestino(detalles: Entrada | Salida): string {
-    if ('origen' in detalles) return detalles.origen!;
-    if ('destino' in detalles) return detalles.destino!;
-    return '';
+    this.actualizarProductos(this.detallesES!.productos!);
+    this.actualizarCamposUnicos(this.detallesES);
+    this.marcarCamposInvalidos();
   }
 
   modificarEntrada() {
-    const entradaData: Entrada = {
-      ...this.detallesES,
-      productos: this.entradaSalidaForm.value.productos.map((producto: any) => ({
-        ...producto,
-        fechaRecepcion: producto.fechaRecepcionEnvio ? new Date(producto.fechaRecepcionEnvio) : undefined,
-      })),
-      estado: this.detallesES?.estado ?? false,
-    };
+    if (this.previsionEsValida()) {
+      const productosEntrada: ProductoEntrada[] =
+        this.entradaSalidaForm.value.productos.map((producto: any) => {
+          // Crear un nuevo objeto ProductoEntrada
+          return {
+            ref: producto.ref,
+            description: producto.description,
+            unidades: producto.unidades,
+            ubicacion: producto.ubicacion,
+            palets: producto.palets,
+            bultos: producto.bultos,
+            observaciones: producto.observaciones,
+            pendiente: producto.pendiente,
+          };
+        });
 
-    this.entradaService
-      .updateEntrada(entradaData)
-      .subscribe({
+      console.log('Productos entrada:', productosEntrada);
+
+      // Crear el objeto Entrada
+      const entradaActualizada: Entrada = {
+        id: this.detallesES?.id,
+        origen: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
+        colaborador: this.entradaSalidaForm.get('colaborador')?.value,
+        perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
+        pdv: this.entradaSalidaForm.get('pdv')?.value,
+        dcs: this.entradaSalidaForm.get('dcs')!.value,
+        estado: !this.pendiente,
+        productos: productosEntrada,
+        rellena: false,
+        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!
+          .value,
+      };
+
+      this.entradaService.updateEntrada(entradaActualizada).subscribe({
         next: (updatedEntrada) => {
           console.log('Entrada actualizada:', updatedEntrada);
           location.reload();
@@ -156,21 +213,49 @@ export class FormularioEntradaSalidaComponent
         },
         error: (err) => console.error('Error al actualizar la entrada:', err),
       });
+    }
   }
 
   modificarSalida() {
-    const salidaData: Salida = {
-      ...this.detallesES,
-      productos: this.entradaSalidaForm.value.productos.map((producto: any) => ({
-        ...producto,
-        fechaEnvio: producto.fechaRecepcionEnvio ? new Date(producto.fechaRecepcionEnvio) : undefined,
-      })),
-      estado: this.detallesES?.estado ?? false,
-    };
+    if (this.previsionEsValida()) {
+      const productosSalida: ProductoEntrada[] =
+        this.entradaSalidaForm.value.productos.map((producto: any) => {
+          // Crear un nuevo objeto ProductoEntrada
+          return {
+            ref: producto.ref,
+            description: producto.description,
+            unidades: producto.unidades,
+            unidadesPedidas: producto.unidadesPedidas,
+            ubicacion: producto.ubicacion,
+            palets: producto.palets,
+            bultos: producto.bultos,
+            observaciones: producto.observaciones,
+            formaEnvio: producto.formaEnvio,
+            pendiente: producto.pendiente,
+          };
+        });
 
-    this.salidaService
-      .updateSalida(salidaData)
-      .subscribe({
+      console.log('Productos entrada:', productosSalida);
+
+      // Crear el objeto Entrada
+      const salidaActualizada: Salida = {
+        id: this.detallesES?.id,
+        destino: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
+        colaborador: this.entradaSalidaForm.get('colaborador')?.value,
+        perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
+        pdv: this.entradaSalidaForm.get('pdv')?.value,
+        direccion: this.entradaSalidaForm.get('direccion')!.value,
+        poblacion: this.entradaSalidaForm.get('poblacion')!.value,
+        provincia: this.entradaSalidaForm.get('provincia')!.value,
+        cp: this.entradaSalidaForm.get('cp')!.value,
+        telefono: this.entradaSalidaForm.get('telefono')!.value,
+        estado: !this.pendiente,
+        productos: productosSalida,
+        rellena: false,
+        fechaEnvio: this.entradaSalidaForm.get('fechaRecepcionEnvio')!.value,
+      };
+
+      this.salidaService.updateSalida(salidaActualizada).subscribe({
         next: (updatedSalida) => {
           console.log('Salida actualizada:', updatedSalida);
           location.reload();
@@ -178,6 +263,7 @@ export class FormularioEntradaSalidaComponent
         },
         error: (err) => console.error('Error al actualizar la salida:', err),
       });
+    }
   }
 
   cargarAgenciasTransporte() {
@@ -189,5 +275,9 @@ export class FormularioEntradaSalidaComponent
         console.error('Error al obtener agencias de transporte', error);
       },
     });
+  }
+
+  esPrevision(): boolean {
+    return this.pestanaPadre.startsWith('prevision');
   }
 }

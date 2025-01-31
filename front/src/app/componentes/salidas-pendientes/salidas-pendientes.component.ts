@@ -7,8 +7,8 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
   selector: 'app-salidas-pendientes',
   templateUrl: './salidas-pendientes.component.html',
   styleUrls: [
-    './salidas-pendientes.component.css',
     '../detalles-salidas/detalles-salidas.component.css',
+    './salidas-pendientes.component.css',
   ],
 })
 export class SalidasPendientesComponent
@@ -25,6 +25,7 @@ export class SalidasPendientesComponent
     this.salidaService.getSalidasByEstado(false).subscribe((data: Salida[]) => {
       this.salidas = data;
       console.log(this.salidas);
+      this.cdr.detectChanges();
     });
   }
 

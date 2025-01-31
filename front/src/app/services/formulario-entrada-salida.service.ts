@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { ChangeDetectorRef, Injectable } from '@angular/core';
 import { inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -28,7 +28,7 @@ export class FormularioEntradaSalidaService {
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
   ubicaciones: Ubicacion[] = [];
-  perfumerias: Perfumeria[]= [];
+  perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
   colaboradores: Colaborador[] = [];
   btnSubmitActivado = true;
@@ -42,105 +42,71 @@ export class FormularioEntradaSalidaService {
     protected entradaService: EntradaServices,
     protected salidaService: SalidaServices,
     protected ubicacionesService: UbicacionService,
-    protected agenciasTransporteService: AgenciasTransporteService
+    protected agenciasTransporteService: AgenciasTransporteService,
+    protected cdr: ChangeDetectorRef
   ) {}
 
-  initForm() {
+  createForm() {
     return this.fb.group({
-      productos: this.fb.array([this.crearProductoFormGroup()]),
-    });
-  }
-
-  onEnterKey(event: KeyboardEvent): void {
-    if (event.keyCode === 13) {
-      event.preventDefault();
-      this.agregarProducto();
-      
-      setTimeout(() => {
-        // Usar document.querySelector directamente
-        const filas = document.querySelectorAll('tbody tr');
-        const ultimaFila = filas[filas.length - 1];
-        const tercerInput = ultimaFila.querySelectorAll('input')[2];
-        if (tercerInput) {
-          tercerInput.focus();
-        }
-      });
-    }
-  }
-  
-  // Getter para acceder fácilmente al FormArray de productos
-  get productosControls() {
-    return this.entradaSalidaForm.get('productos') as FormArray;
-  }
-
-  getEstadoCampo(nombreCampo: string, indexCampo: number) {
-    const producto = this.productosControls.at(indexCampo);
-    const campoVacio = producto.get(nombreCampo)!.invalid;
-
-    if (nombreCampo == 'unidades' && producto.get(nombreCampo)!.value < 0 || 
-    campoVacio || 
-    nombreCampo == 'formaEnvio' && producto.get(nombreCampo)!.value == '' ||
-    nombreCampo == 'formaEnvio' && producto.get(nombreCampo)!.value == null
-  ){
-      return 'campo-vacio';
-    }else {
-      return '';
-    }
-  }
-
-  // Modificar el método crearProductoFormGroup
-  crearProductoFormGroup(): FormGroup {
-    return this.fb.group({
-      fechaRecepcionEnvio: [null, Validators.required],
-      perfumeria: [''],
-      pdv: [''],
-      colaborador: [''],
-      otroOrigenDestino: [''],
+      // Campos no repetitivos
+      fechaRecepcionEnvio: ['', Validators.required],
+      perfumeria: ['', Validators.required],
+      pdv: ['', Validators.required],
+      colaborador: ['', Validators.required],
+      otroOrigenDestino: ['', Validators.required],
       direccion: [''],
       poblacion: [''],
       provincia: [''],
       cp: [''],
       telefono: [''],
-      dcs: [''],
-      ref: ['',
-        // {
-        //   validators: [
-        //     Validators.required,
-        //     Validators.minLength(7),
-        //     Validators.maxLength(8),
-        //   ],
-        //   asyncValidators: [this.referenciaValidator.bind(this)],
-        //   updateOn: 'blur',
-        // },
-      ],
-      descripcion: [''],
-      palets: [''],
-      bultos: [0],
-      unidadesPedidas: [1],
-      unidadesEnviadas: [1],
-      ubicacion: [''],
-      observaciones: [''],
-      formaEnvio: [''],
-      pendiente: [false],
+      dcs: ['', Validators.required],
+
+      // Array de productos
+      productos: this.fb.array([]),
     });
+  }
+
+  protected createProductoGroup(): FormGroup {
+    return this.fb.group({
+      ref: ['', Validators.required],
+      description: ['', Validators.required],
+      palets: [0, [Validators.required, Validators.min(0)]],
+      bultos: [0, [Validators.required, Validators.min(0)]],
+      unidadesPedidas: [''],
+      unidades: ['', [Validators.required, Validators.min(1)]],
+      ubicacion: ['', Validators.required],
+      formaEnvio: ['', Validators.required],
+      observaciones: [''],
+    });
+  }
+
+  onEnterKey(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Evita que el formulario se envíe accidentalmente
+      const form = event.target as HTMLElement;
+      const inputs = Array.from(document.querySelectorAll<HTMLElement>('input, select, textarea, button'));
+      const index = inputs.indexOf(form);
+  
+      if (index >= 0 && index < inputs.length - 1) {
+        inputs[index + 1].focus();
+      }
+    }
+
+    if (event.altKey && event.key === '+') {
+      this.agregarProducto();
+    }
+  }
+
+  // Getter para acceder fácilmente al FormArray de productos
+  get productosControls() {
+    return this.entradaSalidaForm.get('productos') as FormArray;
   }
 
   // Método para añadir un nuevo producto
   agregarProducto() {
-    const ultimoProducto = this.productosControls.at(
-      this.productosControls.length - 1
-    );
-    const nuevoProducto = this.crearProductoFormGroup();
-
-    // Copiar el número de entrada del último producto
-    const numeroEntradaSalida = ultimoProducto.get('numeroEntradaSalida')!.value;
-    nuevoProducto.get('numeroEntradaSalida')!.setValue(numeroEntradaSalida);
-    const ultimoFechaRecepcionEnvio = ultimoProducto.get('fechaRecepcionEnvio')!.value;
-    nuevoProducto.get('fechaRecepcionEnvio')!.setValue(ultimoFechaRecepcionEnvio);
-
-    this.productosControls.push(nuevoProducto);
+    this.productosControls.push(this.createProductoGroup());
   }
-  
+
   // Método para eliminar un producto
   eliminarProducto(index: number) {
     if (this.productosControls.length > 1) {
@@ -161,284 +127,165 @@ export class FormularioEntradaSalidaService {
 
   // Resetear completamente el formulario
   resetForm() {
-    this.entradaSalidaForm = this.fb.group({
-      productos: this.fb.array([this.crearProductoFormGroup()]),
-    });
-    this.productosNuevos = new Set();
-  }
-
-  // Modificar el validador asíncrono
-  referenciaValidator(
-    control: AbstractControl
-  ): Observable<ValidationErrors | null> {
-    const ref = control.value;
-
-    // Verificar si la referencia cumple el formato esperado
-    const formatoValido = /^\d{7}$|^R\d{7}$/.test(ref);
-    if (!formatoValido) {
-      // Mostrar el snackBar con el mensaje de error
-      this.snackBarError(
-        'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
-      );
-      return of({ referenciaInvalida: true });
-    }
-
-    // Validar con el servicio
-    return this.productoService.getProductoPorReferencia(ref).pipe(
-      map((producto) => null),
-      catchError(() => {
-        // Mostrar otro mensaje en caso de error del servicio
-        // this.snackBarError('Error al validar la referencia.');
-        return of({ referenciaInvalida: true });
-      })
-    );
-  }
-
-  // Sincronizar número de entrada en todas las filas
-  sincronizarEntrada() {
-    const primerProducto = this.productosControls.at(0);
-    const numeroEntradaSalida = primerProducto.get('numeroEntradaSalida')!.value;
-    const fechaRecepcionEnvio = primerProducto.get('fechaRecepcionEnvio')!.value;
-
-    this.productosControls.controls.forEach((producto) => {
-      producto.get('numeroEntradaSalida')!.setValue(numeroEntradaSalida);
-      producto.get('fechaRecepcionEnvio')!.setValue(fechaRecepcionEnvio);
-    });
+    this.entradaSalidaForm = this.createForm();
   }
 
   sincronizarUbicaciones(posicion: number) {
-    if(posicion == 0){
+    if (posicion == 0) {
       const primerProducto = this.productosControls.at(0);
       const ubicacion = primerProducto.get('ubicacion')!.value;
-      
+
       this.productosControls.controls.forEach((producto) => {
         producto.get('ubicacion')!.setValue(ubicacion);
-      })
+      });
     }
   }
 
-  getCurrentPathIsSalida(){
-    return this.currentPath.startsWith('/salidas');
+  // Establecer valores iniciales
+  setInitialValues() {
+    // Establecer valores para campos individuales
+    this.entradaSalidaForm.patchValue({
+      fechaRecepcionEnvio: new Date().toISOString().split('T')[0],
+      perfumeria: '',
+      pdv: '',
+      colaborador: '',
+      otroOrigenDestino: '',
+      direccion: '',
+      poblacion: '',
+      provincia: '',
+      cp: '',
+      telefono: '',
+      dcs: '',
+    });
   }
 
   onSubmit() {
-    if(this.currentPath.startsWith('/entradas')) {
-      this.onSubmitEntrada();
-    } else if(this.currentPath.startsWith('/salidas')) {
-      this.onSubmitSalida();
+    this.desactivarBtnSubmit();
+    if (this.previsionEsValida()) {
+      if (this.currentPath.startsWith('/entradas')) {
+        this.onSubmitEntrada();
+      } else if (this.currentPath.startsWith('/salidas')) {
+        this.onSubmitSalida();
+      }
+    } else {
+      this.btnSubmitActivado = true;
+      this.marcarCamposInvalidos();
     }
   }
 
   // Método para guardar la entrada de productos
-  onSubmitEntrada(){
-    let referenciasRellenas = true;
-    let descriptionRellenas = true;
-    let formatoValidoRef = false;
-    let unidadesNegativas = false;
-
-    // Obtener el número de entrada del primer producto
-    const numeroEntrada = this.productosControls
-      .at(0)
-      .get('numeroEntradaSalida')!.value;
-
+  onSubmitEntrada() {
     // Transformar los productos del formulario a ProductoEntrada
     const productosEntrada: ProductoEntrada[] =
       this.entradaSalidaForm.value.productos.map((producto: any) => {
         // Crear un nuevo objeto ProductoEntrada
         return {
-          dcs: producto.dcs,
           ref: producto.ref,
           description: producto.description,
           unidades: producto.unidades,
-          fechaRecepcion: producto.fechaRecepcionEnvio
-            ? new Date(producto.fechaRecepcionEnvio)
-            : undefined,
           ubicacion: producto.ubicacion,
           palets: producto.palets,
           bultos: producto.bultos,
           observaciones: producto.observaciones,
-          formaEnvio: producto.formaEnvio,
           pendiente: producto.pendiente,
-          idPadre: producto.idPadre
         };
       });
 
-      console.log('Productos entrada:', productosEntrada);
+    console.log('Productos entrada:', productosEntrada);
 
     // Crear el objeto Entrada
     const nuevaEntrada: Entrada = {
-      origen: numeroEntrada,
+      origen: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
+      colaborador: this.entradaSalidaForm.get('colaborador')?.value,
+      perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
+      pdv: this.entradaSalidaForm.get('pdv')?.value,
+      dcs: this.entradaSalidaForm.get('dcs')?.value,
       estado: !this.pendiente,
-      productos: productosEntrada,
+      productos: this.entradaSalidaForm.get('productos')?.value,
       rellena: false,
+      fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')?.value,
     };
 
-    if (this.entradaSalidaForm.valid) {
+    if (this.fechaValida() && this.productosFinalesValidos()) {
       nuevaEntrada.rellena = true;
       this.crearEntrada(nuevaEntrada);
     } else {
-      if (
-        this.pendiente &&
-        numeroEntrada != null &&
-        numeroEntrada != undefined &&
-        numeroEntrada != '' &&
-        referenciasRellenas &&
-        formatoValidoRef &&
-        descriptionRellenas &&
-        !unidadesNegativas
-      ) {
+      if (this.pendiente) {
         this.crearEntrada(nuevaEntrada);
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
         this.entradaSalidaForm.markAllAsTouched();
-        console.log('Formulario inválido. Errores:', this.entradaSalidaForm.errors);
-        if (!this.pendiente) {
-          this.snackBarError(
-            "Para 'Recibir' una entrada deben estar todos los campos completos y correctos"
-          );
-        } else if (!referenciasRellenas) {
-          this.snackBarError('Las referencias no pueden estar en blanco');
-        } else if (!formatoValidoRef) {
-          this.snackBarError(
-            'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
-          );
-        } else if (!descriptionRellenas) {
-          this.snackBarError('Las descripiciones no pueden estar en blanco');
-        } else if (unidadesNegativas) {
-          this.snackBarError(
-            'Los productos no pueden tener unidades negativas'
-          );
-        } else {
-          this.snackBarError('El origen no puede estar en blanco');
-        }
+        this.btnSubmitActivado = true;
       }
     }
   }
 
   // Método para guardar la salida de productos
   private onSubmitSalida() {
-    let referenciasRellenas = true;
-    let descriptionRellenas = true;
-    let formatoValidoRef = false;
-    let unidadesNegativas = false;
-
-    // Obtener el número de salida del primer producto
-    const numeroSalida = this.productosControls
-      .at(0)
-      .get('numeroEntradaSalida')!.value;
-
-    // Transformar los productos del formulario a ProductoEntrada
     const productosSalida: ProductoSalida[] =
       this.entradaSalidaForm.value.productos.map((producto: any) => {
-        if (
-          producto.ref == null ||
-          producto.ref == undefined ||
-          producto.ref == ''
-        ) {
-          referenciasRellenas = false;
-        }
-
-        formatoValidoRef = /^\d{7}$|^R\d{7}$/.test(producto.ref);
-
-        if (
-          producto.description == null ||
-          producto.description == undefined ||
-          producto.description == ''
-        ) {
-          descriptionRellenas = false;
-        }
-
-        if (producto.unidades < 0) {
-          unidadesNegativas = true;
-        }
-
         // Crear un nuevo objeto ProductoEntrada
         return {
-          dcs: producto.dcs,
           ref: producto.ref,
           description: producto.description,
           unidades: producto.unidades,
-          fechaEnvio: producto.fechaRecepcionEnvio
-            ? new Date(producto.fechaRecepcionEnvio)
-            : undefined,
+          unidadesPedidas: producto.unidadesPedidas,
           ubicacion: producto.ubicacion,
           palets: producto.palets,
           bultos: producto.bultos,
           formaEnvio: producto.formaEnvio,
           observaciones: producto.observaciones,
           pendiente: producto.pendiente,
-          idPadre: producto.idPadre
         };
       });
 
-    // Crear el objeto Salida
+    console.log('Productos salida:', productosSalida);
+
+    // Crear el objeto Entrada
     const nuevaSalida: Salida = {
-      destino: numeroSalida,
+      destino: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
+      colaborador: this.entradaSalidaForm.get('colaborador')?.value,
+      perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
+      pdv: this.entradaSalidaForm.get('pdv')?.value,
       estado: !this.pendiente,
-      productos: productosSalida,
+      productos: this.entradaSalidaForm.get('productos')?.value,
       rellena: false,
+      fechaEnvio: this.entradaSalidaForm.get('fechaRecepcionEnvio')?.value,
     };
 
-    if (this.entradaSalidaForm.valid) { 
+    if (this.fechaValida() && this.formasEnvioValidas() && this.productosFinalesValidos()) {
       nuevaSalida.rellena = true;
       this.crearSalida(nuevaSalida);
-      console.log("Nueva salida: ", nuevaSalida.rellena);
     } else {
-      if (
-        this.pendiente &&
-        numeroSalida != null &&
-        numeroSalida != undefined &&
-        numeroSalida != '' &&
-        referenciasRellenas &&
-        formatoValidoRef &&
-        descriptionRellenas &&
-        !unidadesNegativas
-      ) {
+      if (this.pendiente) {
         this.crearSalida(nuevaSalida);
-        console.log("Nueva salida: ", nuevaSalida.rellena);
-      }
-      else {
+      } else {
         // Marcar todos los campos como tocados para mostrar validaciones
         this.entradaSalidaForm.markAllAsTouched();
-        console.log('Formulario inválido. Errores:', this.entradaSalidaForm.errors);
-        if (!this.pendiente) {
-          this.snackBarError(
-            "Para 'Enviar' una salida deben estar todos los campos completos y correctos"
-          );
-        } else if (!referenciasRellenas) {
-          this.snackBarError('Las referencias no pueden estar en blanco');
-        } else if (!formatoValidoRef) {
-          this.snackBarError(
-            'Referencia inválida. Debe tener 7 dígitos o R seguido de 7 dígitos.'
-          );
-        } else if (!descriptionRellenas) {
-          this.snackBarError('Las descripiciones no pueden estar en blanco');
-        } else if (unidadesNegativas) {
-          this.snackBarError(
-            'Los productos no pueden tener unidades negativas'
-          );
-        } else {
-          this.snackBarError('El destino no puede estar en blanco');
-        }
       }
     }
   }
+
+
 
   private crearSalida(nuevaSalida: Salida) {
     this.salidaService.newSalida(nuevaSalida).subscribe({
       next: (salidaCreada) => {
         console.log('Salida creada exitosamente:', salidaCreada);
         this.snackBarExito('Salida guardada correctamente');
-        location.reload();
+        // location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
-          this.fb.array([this.crearProductoFormGroup()])
+          this.createProductoGroup()
         );
+        this.resetForm();
+        this.btnSubmitActivado = true;
       },
       error: (error) => {
-        console.error('Error completo al crear la salida:', error);
+        console.error('Error al crear la salida:', error);
         this.snackBarError(error.error);
+        this.btnSubmitActivado = true;
       },
     });
   }
@@ -452,13 +299,15 @@ export class FormularioEntradaSalidaService {
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
-          this.fb.array([this.crearProductoFormGroup()])
+          this.createProductoGroup()
         );
         this.resetForm();
+        this.btnSubmitActivado = true;
       },
       error: (error) => {
-        console.error('Error completo al crear la entrada:', error);
+        console.error('Error al crear la entrada:', error);
         this.snackBarError(error);
+        this.btnSubmitActivado = true;
       },
     });
   }
@@ -523,12 +372,13 @@ export class FormularioEntradaSalidaService {
       next: (producto) => {
         if (producto == null) {
           this.productosNuevos.add(this.indice);
+        } else {
+          formGroup.get('description')?.setValue(producto.description);
         }
         this.indice++;
-        formGroup.get('description')?.setValue(producto.description);
       },
       error: (error) => {
-        console.error('Error al buscar producto', error);
+        // console.error('Error al buscar producto', error);
       },
     });
     this.indice = 0;
@@ -560,7 +410,7 @@ export class FormularioEntradaSalidaService {
       error: (error) => {
         console.error('Error al obtener ubicaciones', error);
       },
-    })
+    });
   }
 
   desactivarBtnSubmit() {
@@ -572,4 +422,349 @@ export class FormularioEntradaSalidaService {
     }
   }
 
+  // Obtener valores individuales
+  getCampoValue(CampoName: string) {
+    return this.entradaSalidaForm.get(CampoName)?.value;
+  }
+
+  // Establecer valor individual
+  setCampoValue(CampoName: string, value: any) {
+    this.entradaSalidaForm.get(CampoName)?.setValue(value);
+  }
+
+  // Obtener producto específico
+  getProducto(index: number) {
+    return this.productosControls.at(index);
+  }
+
+  // Establecer valores para un producto específico
+  setProductoValues(index: number, values: any) {
+    this.productosControls.at(index).patchValue(values);
+  }
+
+  // Establecer valores para todos los productos
+  setProductosValues(values: any[]) {
+    // Primero, limpiar el array existente
+    while (this.productosControls.length) {
+      this.productosControls.removeAt(0);
+    }
+
+    // Agregar nuevos controles con valores
+    values.forEach((producto) => {
+      this.productosControls.push(this.fb.group(producto));
+    });
+  }
+
+  // Observar cambios en el formulario
+  private watchFormChanges() {
+    // Observar cambios en campos individuales
+    this.entradaSalidaForm
+      .get('perfumeria')
+      ?.valueChanges.subscribe((value) => {
+        console.log('Perfumería cambió:', value);
+        // Realizar acciones necesarias
+      });
+
+    // Observar cambios en el array de productos
+    this.productosControls.valueChanges.subscribe((values) => {
+      console.log('Productos cambiaron:', values);
+      // Realizar acciones necesarias
+    });
+  }
+
+  // Marcar todos los campos como touched para mostrar errores
+  protected marcarCamposInvalidos() {
+    Object.keys(this.entradaSalidaForm.controls).forEach((key) => {
+      const control = this.entradaSalidaForm.get(key);
+      control?.markAsTouched();
+    });
+
+    this.productosControls.controls.forEach((control) => {
+      const productoGroup = control as FormGroup;
+      Object.keys(productoGroup.controls).forEach((key) => {
+        const productoControl = productoGroup.get(key);
+        productoControl?.markAsTouched();
+      });
+    });
+  }
+
+  esEntrada(): boolean {
+    return this.currentPath.startsWith('/entradas');
+  }
+
+  esSalida(): boolean {
+    return this.currentPath.startsWith('/salidas');
+  }
+
+  campoVacio(nombreCampo: string, index: number) {
+    if (
+      !this.productosControls.at(index).get(nombreCampo)!.valid &&
+      this.productosControls.at(index).get(nombreCampo)!.touched
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  campoValido(nombreCampo: string, index: number = -1) {
+    // Si los campos son unicos
+    if (index == -1) {
+      return this.entradaSalidaForm.get(nombreCampo)!.valid;
+    }
+    // Si los campos se repiten (productos)
+    else {
+      return this.productosControls.at(index).get(nombreCampo)!.valid;
+    }
+  }
+
+  campoSimpleVacio(nombreCampo: string) {
+    if (
+      !this.entradaSalidaForm.get(nombreCampo)!.valid &&
+      this.entradaSalidaForm.get(nombreCampo)!.touched
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  refValida(i: number) {
+    const ref = this.productosControls.at(i).get('ref')!.value;
+    const refValida =
+    /^[0-9]{7}$/.test(ref) ||
+    /^R[0-9]{7}$/.test(ref) ||
+    /^[0-9]{10}$/.test(ref);
+    return refValida;
+  }
+
+  descriptionValida(i: number) {
+    const description = this.productosControls.at(i).get('description')!.value;
+    return description && description.trim().length > 0;
+  }
+
+  fechaValida() {
+    if (this.entradaSalidaForm.get('fechaRecepcionEnvio')?.valid) {
+      return true;
+    }
+    this.snackBarError("La fecha no está inicializada");
+    this.btnSubmitActivado = true;
+    return false;
+  }
+
+  perfumeriaValido() {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)){
+      return true;
+    }
+    return false;
+  }
+
+  pdvValido() {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)){
+      return true;
+    }
+    return false;
+  }
+
+  colaboradorValido() {
+    if(this.entradaSalidaForm.get('colaborador')?.valid){
+      return true;
+    }
+    return false;
+  }
+  
+  otroOrigenDestinoValido() {
+    if(this.entradaSalidaForm.get('otroOrigenDestino')?.valid){
+      return true;
+    }
+    return false;
+  }
+  
+  dcsValido() {
+    const dcs = this.entradaSalidaForm.get('dcs')?.value;
+    const dcsValido = /^[0-9]{10}$/.test(dcs);
+    if(dcsValido){
+      return true;
+    }
+    return false;
+  }
+
+  // Comprueba solo en los campos si todo es válido para ponerse en rojo o no
+  previsionEsValidaCampoSimple() {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+    const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
+    const otroOrigenDestino =
+      this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const dcs = this.entradaSalidaForm.get('dcs')?.value;
+    const dcsValido = /^[0-9]{10}$/.test(dcs);
+
+    const casosOrigenDestino = [
+      perfumeria && pdv,
+      colaborador,
+      otroOrigenDestino,
+    ].filter(Boolean);
+
+    const casoDcs = [dcs].filter(Boolean);
+
+    let previsionValida =
+      (casosOrigenDestino.length === 1 && casoDcs.length === 0) ||
+      (casosOrigenDestino.length === 0 && casoDcs.length === 1 && dcsValido);
+
+    
+      if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
+        previsionValida = false;
+    }
+    
+    return previsionValida;
+  }
+
+  // Comprueba todo al completo de los campos simples y muestra los errores
+  previsionEsValida() {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+    const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
+    const otroOrigenDestino =
+      this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const dcs = this.entradaSalidaForm.get('dcs')?.value;
+    const hayProductos = this.productosControls.length > 0;
+    const productosValidos = this.productosPrevisionSonValidos();
+    const dcsValido = /^[0-9]{10}$/.test(dcs);
+
+    const casosOrigenDestino = [
+      perfumeria && pdv,
+      colaborador,
+      otroOrigenDestino,
+    ].filter(Boolean);
+
+    const casoDcs = [dcs].filter(Boolean);
+
+    let previsionValida =
+      (casosOrigenDestino.length === 1 &&
+        casoDcs.length === 0 &&
+        hayProductos &&
+        productosValidos) ||
+      (casosOrigenDestino.length === 0 &&
+        casoDcs.length === 1 && dcsValido &&
+        hayProductos &&
+        productosValidos);
+
+        
+          if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
+            previsionValida = false;
+        }
+
+    if (casosOrigenDestino.length > 1) {
+      this.snackBarError(
+        'Solo puede seleccionar un campo de ' + this.getOrigenODestino()
+      );
+    } else if (casoDcs.length === 1 && casosOrigenDestino.length > 0) {
+      this.snackBarError('Debe seleccionar un tipo de Origen o DCS, no ambas');
+    } else if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
+      this.snackBarError('Perfumeria y PDV deben estar rellenos conjuntamente');
+    } else if (casosOrigenDestino.length === 0 && casoDcs.length === 0) {
+      this.snackBarError('Faltan campos por rellenar');
+    } else if (!hayProductos) {
+      this.snackBarError('Debe haber al menos 1 producto');
+    } else if (!dcsValido && casosOrigenDestino.length === 0) {
+      this.snackBarError('El DCS debe tener 10 dígitos');
+    }
+
+    if(!previsionValida) {
+      this.btnSubmitActivado = true;
+    }
+
+    return previsionValida;
+  }
+
+  productosPrevisionSonValidos(): boolean {
+    let previsionValida = false;
+
+    previsionValida = this.productosControls.controls.every((producto) => {
+
+      const ref = producto.get('ref')?.value;
+      const description = producto.get('description')?.value;
+      const unidades = producto.get('unidades')?.value;
+      const unidadesPedidas = producto.get('unidadesPedidas')?.value;
+      
+      const refValida =
+      /^[0-9]{7}$/.test(ref) ||
+      /^R[0-9]{7}$/.test(ref) ||
+      /^[0-9]{10}$/.test(ref);
+      const descriptionValida = description && description.trim().length > 0;
+      const unidadesPedidasValidas = unidadesPedidas > 0;
+      const unidadesValidas = unidades > 0 || (this.esSalida() && !this.currentPath.startsWith('/entradas/nuevo') && unidadesPedidasValidas);
+
+      if (!refValida) {
+        this.snackBarError(
+          'Las Referencias deben tener 7 dígitos, R seguida de 7 dígitos o 10 dígitos'
+        );
+      } else if (!descriptionValida) {
+        this.snackBarError('Las descripciones no pueden estar en blanco');
+      } else if (!unidadesPedidasValidas && this.esSalida() && !this.currentPath.startsWith('/salidas/nuevo')) {
+        this.snackBarError('Las UNIDADES PEDIDAS deben ser mayor que 0');
+      } else if (!unidadesValidas) {
+        this.snackBarError('Las UNIDADES deben ser mayor que 0');
+      }
+
+      return refValida && descriptionValida && unidadesValidas;
+    });
+
+    return previsionValida;
+  }
+
+  productosFinalesValidos() {
+    return this.productosControls.controls.every((producto) => {
+      const palets = producto.get('palets')?.value;
+      const bultos = producto.get('bultos')?.value;
+
+      const paletsValidos = palets >= 0;
+      const bultosValidos = bultos >= 0;
+      const ubicacionValida = producto.get('ubicacion')?.valid;
+
+      if (!paletsValidos) {
+        this.snackBarError('Los palets deben ser igual o mayor que 0');
+      } else if (!bultosValidos) {
+        this.snackBarError('Los bultos deben ser igual o mayor que 0');
+      } else if (!ubicacionValida) {
+        this.snackBarError('Las ubicaciones son obligatorias');
+      }
+
+      if((paletsValidos && bultosValidos && ubicacionValida) == false) {
+        this.btnSubmitActivado = true;
+        console.log(palets);
+        console.log(paletsValidos);
+        console.log(bultos);
+        console.log(bultosValidos);
+      }
+
+      return paletsValidos && bultosValidos && ubicacionValida;
+    });
+  }
+
+  formasEnvioValidas() {
+    return this.productosControls.controls.every((producto) => {
+      const formaEnvio = producto.get('formaEnvio')?.valid;
+
+      if (!formaEnvio) {
+        this.snackBarError('La Forma de Envío es obligatoria');
+        this.btnSubmitActivado = true;
+      }
+
+      return formaEnvio;
+    });
+  }
+
+  getOrigenODestino() {
+    if (this.esEntrada()) {
+      return 'Origen';
+    } else if (this.esSalida()) {
+      return 'Salida';
+    }
+    return null;
+  }
 }

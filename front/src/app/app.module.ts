@@ -51,6 +51,7 @@ import { DetallesUbicacionComponent } from './componentes/detalles-ubicacion/det
 import { ListaUbicacionesComponent } from './componentes/lista-ubicaciones/lista-ubicaciones.component';
 import { EntradasPrevisionComponent } from './componentes/entradas-prevision/entradas-prevision.component';
 import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salidas-prevision.component';
+import { DireccionesService } from './services/direcciones.service';
 
 @NgModule({
   declarations: [
@@ -108,6 +109,7 @@ import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salid
     DCSService,
     UbicacionService,
     AgenciasTransporteService,
+    DireccionesService,
     SnackBar,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],

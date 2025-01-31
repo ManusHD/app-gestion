@@ -16,73 +16,70 @@
 
 /* De uiverse.io desde aquí*/
 
-/*------ Radio .btn-eliminar Pendiente/Recibida -----*/
-.radio-input input {
-    display: none;
-}
 
-.radio-input {
-    --container_width: 250px;
+/*------uiverse.io-------*/
+/*-------Botón actualizar---------*/
+.btn-actualizar {
     position: relative;
-    display: flex;
-    align-items: center;
-    border-radius: 10px;
-    background-color: #212121;
-    color: #eee;
-    width: var(--container_width);
-    overflow: hidden;
-    border: 2px solid var(--bg-color);
-}
-
-.radio-input label {
-    width: 100%;
-    padding: 10px;
+    width: 150px;
+    height: 40px;
+    margin-top: 1em;
     cursor: pointer;
     display: flex;
-    justify-content: center;
     align-items: center;
-    z-index: 1;
+    border: 2px solid var(--main-color);
+    box-shadow: 4px 4px var(--main-color);
+    background-color: rgb(244, 244, 244);
+    border-radius: 10px;
+    overflow: hidden;
+    padding-left: 0;
+}
+
+.btn-actualizar,
+.button__icon,
+.button__text {
+    transition: all 0.3s;
+}
+
+.btn-actualizar .button__text {
+    transform: translateX(30px);
+    color: #323232;
     font-weight: 600;
-    font-size: 14px;
 }
 
-.selection {
-    display: none;
+.btn-actualizar .button__icon {
     position: absolute;
+    transform: translateX(109px);
     height: 100%;
-    width: calc(var(--container_width) / 2);
-    z-index: 0;
-    left: 0;
-    top: 0;
-    transition: 0.15s ease;
+    width: 39px;
+    background-color: #dedede;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.radio-input label:nth-child(1):has(input:checked) {
-    color: #212121;
+.btn-actualizar .svg {
+    width: 20px;
+    fill: var(--main-color);
 }
 
-.radio-input label:nth-child(2):has(input:checked) {
-    color: #fff;
+.btn-actualizar:hover {
+    background: var(--bg-color);
 }
 
-.radio-input label:nth-child(1):has(input:checked)~.selection {
-    background-color: #fd0;
-    display: inline-block;
+.btn-actualizar:hover .button__text {
+    color: transparent;
 }
 
-.radio-input label:nth-child(2):has(input:checked)~.selection {
-    background-color: #080;
-    display: inline-block;
+.btn-actualizar:hover .button__icon {
+    width: 148px;
+    transform: translateX(0);
 }
 
-.radio-input label:nth-child(1):has(input:checked)~.selection {
-    transform: translateX(calc(var(--container_width) * 0 / 2));
+.btn-actualizar:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0px 0px var(--main-color);
 }
-
-.radio-input label:nth-child(2):has(input:checked)~.selection {
-    transform: translateX(calc(var(--container_width) * 1 / 2));
-}
-
 
 /*----- Boton borrar entrada -----*/
 .btn-eliminar {
@@ -193,7 +190,7 @@
 /*------- Botón borrar productos -------*/
 .deleteButton {
     width: 40px;
-    height: 40px;
+    height: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -315,75 +312,16 @@
     box-shadow: none;
 }
 
-.centrar {
-    display: flex;
-    justify-content: center;
-}
-
-table {
-    margin-top: 5px;
-}
-
-table input {
-    background-color: transparent;
-}
-
-.obligatorio {
-    font-size: small;
-    margin-left: 2px;
-}
-
 .campo-vacio {
     border-bottom: 2px solid red;
 }
 
-.campo-nuevo {
+.campo-nuevo:nth-child(odd) {
     background-color: #080 !important;
-    /* Color de fondo suave para indicar nuevo */
-    transition: background-color 0.3s ease;
-    /* Transición suave */
 }
 
-table {
-    border-collapse: collapse;
-    border-radius: 5px;
-    overflow: hidden;
-    color: white;
-    margin-top: 50px;
-    text-align: center;
-}
-
-th {
-    padding: 10px;
-}
-
-td {
-    padding: 10px;
-}
-
-tr:nth-child(even) {
-    background-color: var(--table-primary);
-}
-
-tr:nth-child(odd) {
-    background-color: var(--table-secondary);
-}
-
-thead tr:first-child {
-    background-color: #B4C2E1;
-    color: black;
-    font-family: 'Nunito-ExtraBold';
-}
-
-tr:last-child {
-    border-bottom: 3px solid var(--table-secondary);
-}
-
-tbody button {
-    cursor: pointer;
-    border: none;
-    padding: 0;
-    height: 24px;
+.campo-nuevo:nth-child(even) {
+    background-color: rgb(0, 101, 0) !important;
 }
 
 .transparente {
@@ -401,73 +339,6 @@ input {
 input:focus {
     outline: none;
 }
-
-
-/*------uiverse.io-------*/
-/*-------Botón actualizar---------*/
-.btn-actualizar {
-    position: relative;
-    width: 150px;
-    height: 40px;
-    margin-top: 1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    border: 2px solid var(--main-color);
-    box-shadow: 4px 4px var(--main-color);
-    background-color: rgb(244, 244, 244);
-    border-radius: 10px;
-    overflow: hidden;
-    padding-left: 0;
-}
-
-.btn-actualizar,
-.button__icon,
-.button__text {
-    transition: all 0.3s;
-}
-
-.btn-actualizar .button__text {
-    transform: translateX(30px);
-    color: #323232;
-    font-weight: 600;
-}
-
-.btn-actualizar .button__icon {
-    position: absolute;
-    transform: translateX(109px);
-    height: 100%;
-    width: 39px;
-    background-color: #dedede;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-actualizar .svg {
-    width: 20px;
-    fill: var(--main-color);
-}
-
-.btn-actualizar:hover {
-    background: var(--bg-color);
-}
-
-.btn-actualizar:hover .button__text {
-    color: transparent;
-}
-
-.btn-actualizar:hover .button__icon {
-    width: 148px;
-    transform: translateX(0);
-}
-
-.btn-actualizar:active {
-    transform: translate(3px, 3px);
-    box-shadow: 0px 0px var(--main-color);
-}
-
-/*-------------*/
 
 .btn-actualizar .button__icon:hover .svg {
     animation: rotate 0.3s linear;
@@ -500,7 +371,6 @@ input:focus {
 
 select {
     color: white;
-    background-color: transparent;
     border: none;
     border-bottom: 1px solid white;
 }
@@ -508,4 +378,56 @@ select {
 select option {
     background-color: #212121;
     color: white;
+}
+
+.formulario-no-repetido {
+    display: flex;
+    flex-direction: column;
+}
+
+.direcciones, .fechas, .detalles-direcciones, .dcs {
+    margin: 10px 0;
+}
+
+.direcciones {
+    display: flex;
+}
+
+.detalles-direcciones {
+    display: flex;
+}
+
+.detalles-direcciones .campo-form {
+    margin-right: 20px;
+}
+
+.fechas {
+    width: fit-content;
+}
+
+.dcs {
+    display: flex;
+}
+
+.campo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.campo-form label {
+    font-weight: 500;
+    color: white;
+}
+
+.campo-form input,
+.campo-form select{
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #001a6e;
+}
+
+.campo-form{
+    margin: 0 5px;
 }

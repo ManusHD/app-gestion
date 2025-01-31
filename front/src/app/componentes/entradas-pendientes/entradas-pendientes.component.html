@@ -14,25 +14,29 @@
         <tbody>
             <ng-container *ngFor="let entrada of entradas">
                 <tr>
-                    <td>{{ entrada.origen }}</td>
+                    <td>{{entrada.origen || entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}}</td>
                     <td>{{entrada.dcs}}</td>
                     <td>
                         <div class="flotar-medio">
-                            <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena || !btnSubmitActivado"
-                                (click)="setRecibida(entrada.id!)" class="transparente">
+                            <div>
                                 <img [ngClass]="{'no-relleno': !entrada.rellena}"
                                     src="../../../assets/icons/check-verde.svg" />
                                 <img [ngClass]="{'relleno': entrada.rellena}"
                                     src="../../../assets/icons/no-check-gris.svg" />
-                            </button>
+                            </div>
                         </div>
                     </td>
-                    <td style="display:flex">
+                    <td style="display:flex; gap: 5px">
                         <app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
                             (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas>
-                        <button *ngIf="entrada.productos[0].idPadre == null" [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)" class="btn-eliminar">
-                            <span class="text">Borrar</span><span class="icon"><img
+                        <button [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)"
+                            class="btn-eliminar">
+                            <span class="text">BORRAR</span><span class="icon"><img
                                     src="../../../assets/icons/delete-bin.svg" /></span>
+                        </button>
+                        <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena || !btnSubmitActivado"
+                            (click)="setRecibida(entrada.id!)" class="btn-grabar">
+                            GRABAR
                         </button>
                     </td>
                 </tr>

@@ -66,7 +66,7 @@ public class SalidaController {
             // correctos
             for (ProductoSalida productoSalida : salida.getProductos()) {
                 try {
-                    if (productoSalida.getFechaEnvio() == null) {
+                    if (salida.getFechaEnvio() == null) {
                         throw new IllegalArgumentException("La fecha de envío no puede estar en blanco.");
                     } else if (productoSalida.getUnidades() <= 0) {
                         throw new IllegalArgumentException("Las unidades deben ser mayores a 0.");
@@ -182,14 +182,6 @@ public class SalidaController {
                 }
             }
         }
-
-        // Establecer la fecha de envío de la salida
-        Date fechaEnvio = new Date();
-        for (ProductoSalida productoSalida : salida.getProductos()) {
-            fechaEnvio = productoSalida.getFechaEnvio();
-            break;
-        }
-        salida.setFechaEnvio(fechaEnvio);
 
         // Crear la salida y actualizar stock
         Salida savedSalida = salidasRepository.save(salida);
