@@ -1,6 +1,7 @@
 .tabla-paginator{
     text-align: center;
-    width: var(--w-paginator);
+    min-width: var(--w-paginator);
+    width: fit-content;
     height: fit-content;
 }
 
@@ -13,9 +14,20 @@
     font-family: 'Nunito-ExtraBold';
 }
 
-.fila-paginator {
+.fila-paginator, .nombre-editando {
     color: white;
     font-family: 'Nunito-SemiBold';
+}
+
+.nombre-editando {
+    border: 1px solid white;
+    border-radius: 2px;
+    padding: 5px;
+    color: rgb(225, 255, 54);
+}
+
+.nombre-editando:focus {
+    outline: none;
 }
 
 .btn-acciones {
@@ -28,3 +40,4 @@
     background-color: var(--main-color);
     border-radius: 5px;
 }
+

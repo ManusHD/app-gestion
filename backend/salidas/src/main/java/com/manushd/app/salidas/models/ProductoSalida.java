@@ -29,4 +29,5 @@ public class ProductoSalida {
     private String observaciones;
     private Boolean pendiente; // false = enviada, true = pendiente
     private Long idPadre;
+    private Long productoId;
 }

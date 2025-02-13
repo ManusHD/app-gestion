@@ -19,6 +19,7 @@ export class SalidaServices {
   }
 
   setEnviada(id: number): Observable<Salida> {
+    console.log("Envio: " + id);
     return this.httpClient.put<Salida>(`${this.apiUrl}/${id}/enviar`, null);
   }
 

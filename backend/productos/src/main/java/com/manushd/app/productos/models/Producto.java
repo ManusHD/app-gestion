@@ -16,12 +16,11 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class Producto {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String referencia; // 7 dígitos
     private String description;
     private Integer stock;
-    
+    private Long productoId;
 }

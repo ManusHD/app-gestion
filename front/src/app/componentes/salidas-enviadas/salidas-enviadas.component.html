@@ -1,22 +1,29 @@
 <app-cabecera-salidas></app-cabecera-salidas>
 
-<div id="contenedor-tabla">
-    <table>
-        <thead>
-            <tr>
-                <th>Destino</th>
-                <th>Fecha envío</th>
-                <th>Detalles</th>
-            </tr>
-        </thead>
-        <tbody>
-            <ng-container *ngFor="let salida of salidas">
-                <tr>
-                    <td>{{salida.destino}} </td>
-                    <td>{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
-                    <td><app-detalles-salidas [enRecibidas]="true" [salida]="salida" (salidaRellena)="salida.rellena=$event"></app-detalles-salidas></td>
-                </tr>
-            </ng-container>
-        </tbody>
-    </table>
+<div class="contenedor-salidas-enviadas">
+
+    <div class="flotar-medio">
+        <div id="historial">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+                <caption>SALIDAS ENVIADAS</caption>
+                <ng-container matColumnDef="fechaEnvio">
+                    <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let salida">{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
+                </ng-container>
+                <ng-container matColumnDef="destino">
+                    <th class="header-paginator" *matHeaderCellDef>Destino / PO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let salida">{{salida.destino || salida.colaborador || salida.perfumeria + ' - ' + salida.pdv}} </td>
+                </ng-container>
+                <ng-container matColumnDef="detalles">
+                    <th class="header-paginator" *matHeaderCellDef>Detalles</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let salida"><app-detalles-salidas [enRecibidas]="true" [salida]="salida" (entradaRellena)="salida.rellena=$event"></app-detalles-salidas></td>
+                </ng-container>
+                
+                <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+            </table>
+            <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
+        </div>
+    </div>
+    
 </div>

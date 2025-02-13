@@ -1,9 +1,5 @@
-export class Colaborador {
+import { Direccion } from "./direccion.model";
+
+export class Colaborador extends Direccion{
     id?: number;
-    nombre?: string;
-    direccion?: string;
-    poblacion?: string;
-    provincia?: string;
-    cp?: string;
-    telefono?: string;
 }

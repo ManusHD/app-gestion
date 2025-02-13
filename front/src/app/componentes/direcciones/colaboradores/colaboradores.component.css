@@ -1,0 +1,4 @@
+.tabla-paginator {
+    min-width: var(--w-paginator);
+    width: fit-content;
+}

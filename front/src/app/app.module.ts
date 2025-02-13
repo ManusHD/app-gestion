@@ -52,6 +52,10 @@ import { ListaUbicacionesComponent } from './componentes/lista-ubicaciones/lista
 import { EntradasPrevisionComponent } from './componentes/entradas-prevision/entradas-prevision.component';
 import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salidas-prevision.component';
 import { DireccionesService } from './services/direcciones.service';
+import { PerfumeriasComponent } from './componentes/direcciones/perfumerias/perfumerias.component';
+import { PdvsComponent } from './componentes/direcciones/pdvs/pdvs.component';
+import { ColaboradoresComponent } from './componentes/direcciones/colaboradores/colaboradores.component';
+import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direcciones/otras-direcciones.component';
 
 @NgModule({
   declarations: [
@@ -78,7 +82,11 @@ import { DireccionesService } from './services/direcciones.service';
     DetallesUbicacionComponent,
     ListaUbicacionesComponent,
     EntradasPrevisionComponent,
-    SalidasPrevisionComponent
+    SalidasPrevisionComponent,
+    PerfumeriasComponent,
+    PdvsComponent,
+    ColaboradoresComponent,
+    OtrasDireccionesComponent
   ],
   imports: [
     AppRoutingModule,

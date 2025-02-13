@@ -13,6 +13,10 @@ import { AgenciasTransporteComponent } from './componentes/agencias-transporte/a
 import { UbicacionesComponent } from './componentes/ubicaciones/ubicaciones.component';
 import { EntradasPrevisionComponent } from './componentes/entradas-prevision/entradas-prevision.component';
 import { SalidasPrevisionComponent } from './componentes/salidas-prevision/salidas-prevision.component';
+import { PerfumeriasComponent } from './componentes/direcciones/perfumerias/perfumerias.component';
+import { ColaboradoresComponent } from './componentes/direcciones/colaboradores/colaboradores.component';
+import { PdvsComponent } from './componentes/direcciones/pdvs/pdvs.component';
+import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direcciones/otras-direcciones.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent},
@@ -27,6 +31,10 @@ const routes: Routes = [
   {path: 'inventario', component:InventarioComponent},
   {path: 'agencias', component:AgenciasTransporteComponent},
   {path: 'ubicaciones', component:UbicacionesComponent},
+  {path: 'perfumerias', component:PerfumeriasComponent},
+  {path: 'pdv', component:PdvsComponent},
+  {path: 'colaboradores', component:ColaboradoresComponent},
+  {path: 'otrasDirecciones', component:OtrasDireccionesComponent},
 ];
 
 @NgModule({

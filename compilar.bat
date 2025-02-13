@@ -10,22 +10,19 @@ set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
 set MICROSERVICIO_DIRECCIONES=backend\direcciones
 
 :: Ejecutar entradas en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_ENTRADAS% && mvn clean package"
+start cmd /k "cd %MICROSERVICIO_ENTRADAS% && mvn clean package && mvn spring-boot:run"
 
 :: Ejecutar productos en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package"
-
-:: Ejecutar salidas en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_SALIDAS% && mvn clean package"
-
-:: Ejecutar dcs en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_DCS% && mvn clean package"
+start cmd /k "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package && mvn spring-boot:run"
 
 :: Ejecutar ubicaciones en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_UBICACIONES% && mvn clean package"
+start cmd /k "cd %MICROSERVICIO_UBICACIONES% && mvn clean package && mvn spring-boot:run"
+
+:: Ejecutar salidas en una nueva ventana
+start cmd /k "cd %MICROSERVICIO_SALIDAS% && mvn clean package && mvn spring-boot:run"
 
 :: Ejecutar agencias de envío en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_AGENCIASENVIO% && mvn clean package"
+start cmd /k "cd %MICROSERVICIO_AGENCIASENVIO% && mvn clean package && mvn spring-boot:run"
 
 :: Ejecutar agencias de envío en una nueva ventana
-start cmd /k "cd %MICROSERVICIO_DIRECCIONES% && mvn clean package"
+start cmd /k "cd %MICROSERVICIO_DIRECCIONES% && mvn clean package && mvn spring-boot:run"

@@ -1,25 +1,43 @@
 <div id="panel-lateral">
-    <a routerLink="">
-        <img src="../../../assets/imagenes/delim.jpg" />
-    </a>
-    <h1>Juan_Carlos</h1>
-    <ul>
-        <li id="entradas">
-            <a routerLinkActive="active" 
-               [routerLinkActiveOptions]="{exact: false}"
-               routerLink="entradas">
-              Entradas
+    <div class="principal">
+        <a routerLink="">
+            <img src="../../../assets/imagenes/delim.jpg" />
+        </a>
+        <h1>Juan_Carlos</h1>
+        <ul>
+            <li id="entradas">
+                <a routerLinkActive="active" 
+                [routerLinkActiveOptions]="{exact: false}"
+                routerLink="entradas">
+                ENTRADAS
             </a>
-          </li>
-        <li id="salidas">
-            <a routerLinkActive="active" 
-            [routerLinkActiveOptions]="{exact: false}"
-            routerLink="salidas">
-            Salidas
-            </a>
+            </li>
+            <li id="salidas">
+                <a routerLinkActive="active" 
+                [routerLinkActiveOptions]="{exact: false}"
+                routerLink="salidas">
+                    SALIDAS
+                </a>
+            </li>
+            <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">INVENTARIO</a></li>
+            <details>
+                <summary [ngClass]="{'summary-active': isActive('/ubicaciones') || isActive('/agencias') || isActive('/perfumerias') || isActive('/pdv') || isActive('/colaboradores') || isActive('/otrasDirecciones')}">
+                    <span class="summary-content">GESTORES</span>
+                    <span class="summary-marker">►</span>
+                </summary>
+                <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones">Ubicaciones almacén</a></li>
+                <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias">Agencias de transporte</a></li>
+                <li id="perfumerias"><a routerLinkActive="active" class="" routerLink="perfumerias">Perfumerías</a></li>
+                <li id="pdv"><a routerLinkActive="active" class="" routerLink="pdv">PDV</a></li>
+                <li id="colaboradores"><a routerLinkActive="active" class="" routerLink="colaboradores">Colaboradores</a></li>
+                <li id="otrasDirecciones"><a routerLinkActive="active" class="" routerLink="otrasDirecciones">Otras Direcciones</a></li>
+            </details>
+        </ul>
+    </div>
+    <div class="ajustes">
+        <li>
+            <img src="../../../assets/icons/settings.svg" alt="">
+            <a href="">AJUSTES</a>
         </li>
-        <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">Inventario</a></li>
-        <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias">Agencias de transporte</a></li>
-        <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones">Ubicaciones almacén</a></li>
-    </ul>
+    </div>
 </div>

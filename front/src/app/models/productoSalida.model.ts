@@ -11,4 +11,5 @@ export class ProductoSalida {
     observaciones?: String;
     pendiente: boolean = false; // false = recibida, true = pendiente
     idPadre?: number;
+    productoId?: number;
 }

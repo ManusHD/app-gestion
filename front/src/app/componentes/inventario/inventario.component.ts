@@ -12,7 +12,7 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
 @Component({
   selector: 'app-inventario',
   templateUrl: './inventario.component.html',
-  styleUrls: ['../../../assets/styles/paginator.css', './inventario.component.css', '../../../assets/styles/buscador.css']
+  styleUrls: ['../../../assets/styles/paginator.css', './inventario.component.css']
 })
 export class InventarioComponent implements OnInit{
   productos: Producto[] = [];
@@ -25,15 +25,10 @@ export class InventarioComponent implements OnInit{
   dataSourceStock = new MatTableDataSource<Producto>();
   @ViewChild(MatPaginator) paginatorStock!: MatPaginator;
 
-  // columnasProductosBuscados: string[] = ['referencia', 'description', 'stock'];
-  // dataSourceProductosBuscados = new MatTableDataSource<Producto>();
-  // @ViewChild(MatPaginator) paginatorProductosBuscados!: MatPaginator;
-
-  constructor(private productoService: ProductoServices, private dcsService: DCSService, private snackBar: SnackBar){}
+  constructor(private productoService: ProductoServices, private snackBar: SnackBar){}
 
   ngOnInit(): void {
     this.cargarProductos();
-    this.cargarDcs();
   }
 
   onEnterKey(event: any) {
@@ -70,14 +65,6 @@ export class InventarioComponent implements OnInit{
         this.dataSourceStock.paginator = this.paginatorStock; // Vincula el paginador
       }
     );
-  }
-
-  cargarDcs() {
-    this.dcsService.getDCSs().subscribe(
-      (data: dcs[]) => {
-        this.DCSs = data;
-      }
-    )
   }
 
   copiarReferencia(referencia: string) {

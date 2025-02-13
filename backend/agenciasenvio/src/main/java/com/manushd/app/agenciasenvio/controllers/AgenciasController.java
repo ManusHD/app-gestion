@@ -51,6 +51,11 @@ public class AgenciasController {
         return agenciaRepository.findByNombre(nombre).orElse(null);
     }
 
+    @GetMapping("/agenciasEnvio/byNombre/{nombre}")
+    public Iterable<Agencia> obtenerAgenciasPorNombre(@PathVariable String nombre) {
+        return agenciaRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
+    }
+
     @PostMapping("/agenciasEnvio")
     public Agencia addAgencia(@RequestBody Agencia agencia) {
         Agencia agenciaAux = agenciaRepository.findByNombre(agencia.getNombre()).orElse(null);

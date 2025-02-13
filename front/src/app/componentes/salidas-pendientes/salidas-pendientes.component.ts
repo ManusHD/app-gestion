@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { throwError, catchError } from 'rxjs';
 import { Salida } from 'src/app/models/salida.model';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
@@ -7,7 +9,7 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
   selector: 'app-salidas-pendientes',
   templateUrl: './salidas-pendientes.component.html',
   styleUrls: [
-    '../detalles-salidas/detalles-salidas.component.css',
+    '../../../assets/styles/paginator.css',
     './salidas-pendientes.component.css',
   ],
 })
@@ -16,6 +18,9 @@ export class SalidasPendientesComponent
   implements OnInit
 {
   salidas: Salida[] = [];
+  columnasPaginator: string[] = ['destino', 'preparado', 'acciones'];
+  dataSource = new MatTableDataSource<Salida>();
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit() {
     this.cargarSalidas();
@@ -24,6 +29,8 @@ export class SalidasPendientesComponent
   cargarSalidas() {
     this.salidaService.getSalidasByEstado(false).subscribe((data: Salida[]) => {
       this.salidas = data;
+      this.dataSource.data = this.salidas;
+      this.dataSource.paginator = this.paginator;
       console.log(this.salidas);
       this.cdr.detectChanges();
     });
@@ -40,7 +47,7 @@ export class SalidasPendientesComponent
       )
       .subscribe(
         (data) => {
-          location.reload();
+          // location.reload();
         },
         (error) => {
           this.btnSubmitActivado = true;
@@ -53,7 +60,6 @@ export class SalidasPendientesComponent
     this.salidaService.deleteSalida(idSalida).subscribe(
       (data) => {
         console.log('Salida borrada con éxito');
-        location.reload();
       },
       (error) => {
         console.error(error);

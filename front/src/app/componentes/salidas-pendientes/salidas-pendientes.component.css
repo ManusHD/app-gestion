@@ -1,16 +1,3 @@
-#contenedor-tabla {
-    display: flex;
-    justify-content: center;
-}
-
-tr:nth-child(even) {
-    background-color: var(--table-primary);
-}
-
-tr:nth-child(odd) {
-    background-color: var(--table-secondary);
-}
-
 .relleno{
     display: none;
 }
@@ -18,4 +5,3 @@ tr:nth-child(odd) {
 .no-relleno{
     display: none;
 }
-

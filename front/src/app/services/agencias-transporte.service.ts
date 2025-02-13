@@ -25,10 +25,18 @@ export class AgenciasTransporteService {
     return this.http.get<AgenciaTransporte>(`${this.apiUrl}/nombre/${nombre}`);
   }
 
+  getAgenciasTransporteByNombre(
+    nombre: string
+  ): Observable<AgenciaTransporte[]> {
+    return this.http.get<AgenciaTransporte[]>(
+      `${this.apiUrl}/byNombre/${nombre}`
+    );
+  }
+
   updateAgenciaTransporte(
     agencia: AgenciaTransporte
   ): Observable<AgenciaTransporte> {
-    return this.http.put<AgenciaTransporte>(this.apiUrl, agencia);
+    return this.http.put<AgenciaTransporte>(`${this.apiUrl}`, agencia);
   }
 
   newAgenciaTransporte(

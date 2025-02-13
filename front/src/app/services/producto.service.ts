@@ -21,6 +21,26 @@ export class ProductoServices {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }
 
+  getVisuales(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/visuales`);
+  }
+
+  getVisualesPorDescripcion(descripcion: string): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/visuales/descripcion/${descripcion}`);
+  }
+
+  getProductosSinReferencia(): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/sinreferencia`);
+  }
+
+  getProductosSinReferenciaPorDescripcion(descripcion: string): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}`);
+  }
+
+  getProductosPorDescripcion(descripcion: String): Observable<Producto[]> {
+    return this.http.get<Producto[]>(`${this.apiUrl}/descripcion/${descripcion}`);
+  }
+
   getProductosPorReferencia(referencia: String): Observable<Producto[]> {
     return this.http.get<Producto[]>(`${this.apiUrl}/referencia/${referencia}/coincidentes`);
   }

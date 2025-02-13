@@ -30,7 +30,6 @@ export class EntradasRecibidasComponent implements OnInit{
       this.entradas = data;
       this.dataSource.data = this.entradas;
       this.dataSource.paginator = this.paginator;
-      console.log(this.entradas);
     });
   }
 }

@@ -14,6 +14,8 @@
     --btn-color-w: #fff;
     --btn-color-b: #000;
     --table-color: #fff;
+    --checked-color: #00b712;
+    --color-detalles: #EBB934;
 }
 
 @font-face {
@@ -52,7 +54,7 @@ body {
 }
 
 .exito .mdc-snackbar__surface {
-    background-color: #4caf50 !important;
+    background-color: var(--checked-color) !important;
     color: white !important;
     border-radius: 4px;
 }
@@ -78,7 +80,8 @@ body {
     background-color: transparent;
 }
 
-.btn-productos, .btn-grabar {
+.btn-productos,
+.btn-grabar {
     border: none;
     padding: 3.5px 10px;
     border-radius: 3px;
@@ -87,7 +90,7 @@ body {
 }
 
 .btn-productos {
-    background-color: #EBB934;
+    background-color: var(--color-detalles);
 }
 
 .btn-productos:hover {
@@ -112,7 +115,7 @@ table {
     border-radius: 5px;
     overflow: hidden;
     color: var(--table-color);
-    margin-top: 50px;
+    margin-top: 0px;
     text-align: center;
     height: fit-content;
 }
@@ -148,7 +151,7 @@ td {
     padding: 10px;
 }
 
-td input {
+td input, td textarea {
     background-color: transparent;
 }
 
@@ -170,13 +173,266 @@ td select {
 }
 
 mat-tooltip-component {
-    display: none; /* Oculta el tooltip del paginator*/
+    display: none;
+    /* Oculta el tooltip del paginator*/
+}
+
+
+/* ----------------------------------------
+-----------CSS para los Buscadores---------
+-----------------------------------------*/
+.buscador, .campos-gestor {
+    display: flex;
+    align-items: center;
+    margin: 30px 0;
+    height: 16px;
+}
+
+.select-buscador {
+    color: white;
+    background-color: #111827;
+    border: 0.5px solid rgb(75 85 99);
+    padding: 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-family: 'Nunito-Medium';
+    height: 39px;
+}
+
+.seccion-pdvs, .seccion-pdvs-edit {
+   display: flex; 
+}
+
+.seccion-pdvs-edit {
+    margin-top: 5px;
+}
+
+.select-buscador option:first-child {
+    background-color: rgb(75 85 99);
+}
+
+select option {
+    font-size: 12px;
+}
+
+.buscador input, .campos-gestor input {
+    color: white;
+    background-color: #374151;
+    border: 0.5px solid rgb(75 85 99);
+    padding: 10px;
+    border-radius: 7px;
+    width: 180px;
+    font-size: 12px;
+    font-family: 'Nunito-Medium';
+}
+
+input::placeholder {
+    color: #8fa3af;
+    font-style: italic;
+}
+
+.buscador .btn-buscar,
+.buscador .btn-resetear, 
+.campos-gestor .btn-crear,
+.btn-agregar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: fit-content;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 7px;
+    color: white;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 600;
+    height: 39px;
+
+}
+
+.buscador .btn-buscar, .campos-gestor .btn-crear {
+    border: 1px solid rgb(29 78 216);
+    background-color: rgb(37 99 235);
+}
+
+.btn-agregar {
+    background-color: var(--checked-color);
+    border: none;
+}
+
+.btn-agregar:hover {
+    background-color: #009d00;
+}
+
+.letra-buscador {
+    padding: 0 5px 0 10px;
+}
+
+.buscador .btn-resetear {
+    margin-left: 8px;
+    background-color: #ff1d1d;
+    border: 1px solid #ff1d1d;
+}
+
+
+/* ----------------------------------------
+------------CSS para los Gestores----------
+-----------------------------------------*/
+
+.campos-gestor{
+    height: fit-content;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.gestor-titulo {
+    color: var(--letter-color);
+    font-size: 40px;
+}
+
+.gestor-crear {
+    background-color: var(--main-color);
+    padding: 30px 30px 20px;
+    border-radius: 5px;
+    border: 1px solid white;
+    width: fit-content;
+}
+
+.gestor-crear h3 {
+    color: var(--letter-color);
+    margin: 0;
+}
+
+.gestor-crear input[type="checkbox"],
+.editando-label input[type="checkbox"]{
+    display: none;
+}
+
+.gestor-listado-seleccion {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.gestor-listado .estado,
+.gestor-seleccion .estado {
+    padding: 3px 10px;
+}
+
+.gestor-seleccion {
+    height: fit-content;
+    width: 320px;
+    position: relative;
+    margin-top: 50px;
+    padding: 30px;
+    padding-top: 20px;
+    background-color: var(--main-color);
+    border-radius: 5px;
+    border: 1px solid var(--color-detalles);
+}
+
+.gestor-seleccion h3 {
+    margin: 0;
+    color: var(--color-detalles);
+
+}
+
+.gestor-seleccion input[type="checkbox"] {
+    display: none;
+}
+
+.gestor-seleccion label {
+    cursor: pointer;
+}
+
+.gestor-seleccion:has(input:checked) {}
+
+.estado-activo {
+    background-color: var(--checked-color);
+    color: white;
+    border-radius: 3px;
+}
+
+.estado-inactivo {
+    color: white;
+    background-color: red;
+    border-radius: 3px;
+}
+
+.btn-editar {
+    background-color: var(--color-detalles);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-actualizar-gestor {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-actualizar-gestor button {
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.btn-actualizar-gestor button:first-child {
+    background-color: #45A049;
+    color: white;
+}
+
+.btn-actualizar-gestor button:first-child:hover {
+    background-color: var(--checked-color);
+}
+
+.btn-actualizar-gestor button:last-child {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-actualizar-gestor button:last-child:hover {
+    background-color: #d81e1e;
+}
+
+.lista-pdvs {
+    display: flex;
+    flex-direction: column;
+    color: white;
+}
+
+.item-lista-pdv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 2px;
+}
+
+.lista-pdvs-edit .item-lista-pdv:nth-child(even) {
+    background-color: var(--table-primary);
+}
+
+.lista-pdvs-edit .item-lista-pdv:nth-child(odd) {
+    background-color: var(--table-secondary);
+}
+
+.item-lista-pdvs p {
+    margin: 0;
 }
 
 /*------- Botón borrar (estático) -------*/
 .deleteButton {
     width: 40px;
-    height: 40px;
+    height: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;

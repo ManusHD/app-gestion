@@ -9,11 +9,13 @@ import com.manushd.app.agenciasenvio.models.Agencia;
 
 @RestResource(path="agencias", rel="agencia")
 public interface AgenciaRepository extends CrudRepository<Agencia, Long>{
+    
+    Optional<Agencia> findByNombre(String nombre);
 
     Iterable<Agencia> findAllByOrderByNombreAsc();
 
     Iterable<Agencia> findAllByActivaOrderByNombreAsc(boolean activa);
 
-    Optional<Agencia> findByNombre(String nombre);
+    Iterable<Agencia> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
     
 }

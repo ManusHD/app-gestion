@@ -6,5 +6,11 @@ import { Component } from '@angular/core';
   styleUrls: ['./panel-lateral.component.css']
 })
 export class PanelLateralComponent {
+  isActive(route: string): string {
+    if (window.location.pathname === route){
+      return 'summary-active';
+    }
 
+    return '';
+  }
 }

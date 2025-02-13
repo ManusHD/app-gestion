@@ -1,6 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { catchError, throwError } from 'rxjs';
+import { Component, EventEmitter, inject, OnInit } from '@angular/core';
 import { ProductoUbicacion } from 'src/app/models/productoUbicacion.model';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
@@ -12,51 +10,34 @@ import { UbicacionService } from 'src/app/services/ubicacion.service';
   styleUrls: ['./ubicaciones.component.css'],
 })
 export class UbicacionesComponent {
-  ubicacion: Ubicacion = new Ubicacion();
-  existe: boolean = false;
+  ubicaciones: Ubicacion[] = [];
+  nuevaUbicacion: Ubicacion = {};
+  ubicacionCreada = new EventEmitter<void>();
+
+  buscador: string = '';
 
   constructor(
     private ubiService: UbicacionService,
     private snackBar: SnackBar
   ) {}
 
-  existeUbicacion() {
-    if (this.ubicacion.nombre == '') {
-      this.existe = false;
-    } else {
-      console.log(this.ubicacion.nombre);
-      this.ubiService
-        .getUbicacionByNombre(this.ubicacion.nombre!)
-        .subscribe((data) => {
-          if (data != null) {
-            this.existe = true;
-            console.log('Existe: ', this.existe);
-          } else {
-            this.existe = false;
-            console.log('NO existe: ', this.existe);
-          }
-        });
-    }
-  }
-
-  onSubmit() {
-    if (!this.existe) {
-      console.log('Ubicación a enviar: ', this.ubicacion);
+  crearUbicacion() {
+      console.log('Ubicación a enviar: ', this.nuevaUbicacion);
       const productos: ProductoUbicacion[] = [];
-      this.ubicacion.productos = productos;
-      this.ubiService.newUbicacion(this.ubicacion).subscribe({
+      this.nuevaUbicacion.productos = productos;
+      this.nuevaUbicacion.nombre = this.nuevaUbicacion.nombre?.trim();
+      this.ubiService.newUbicacion(this.nuevaUbicacion).subscribe({
         next: (data) => {
           console.log('Ubicación creada correctamente: ', data);
           this.snackBar.snackBarExito('Ubicación guardada correctamente');
-          location.reload();
+          this.nuevaUbicacion.nombre = '';
+          this.ubicacionCreada.emit();
         },
         error: (error) => {
           console.error('Error al crear Ubicación', error);
-          this.snackBar.snackBarError('Error al crear la Ubicación: ' + error);
+          this.snackBar.snackBarError(error.error.message);
         },
       });
-    } else {
-      this.snackBar.snackBarError('Ya existe una Ubicación con este nombre');
-    }
+    
   }
 }

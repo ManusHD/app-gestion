@@ -1,17 +1,14 @@
 <!-- <app-nuevo-producto></app-nuevo-producto> -->
 
-
-
 <div id="stock">
-
-    <div>
+    <div style="margin-top: 30px;">
         <div class="buscador" (keyup)="onEnterKey($event)">
             <input type="text" placeholder="Buscar producto" [(ngModel)]="buscador"/>
             <button (click)="buscarProducto()" class="btn-buscar">
                 <img src="../../../assets/icons/lupa-blanca.svg" alt="">
                 <span class="letra-buscador">Buscar</span>
             </button>
-            <button (click)="resetearBuscador()" class="btn-resetear">Resetear</button>
+            <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
         </div>
         <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productosBuscados.length > 0}" mat-table [dataSource]="dataSourceStock">
             <caption>STOCK POR ARTICULOS</caption>
@@ -37,11 +34,8 @@
             <tr mat-row *matRowDef="let row; columns: columnasStock;"></tr>
         </table>
         <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true" ></mat-paginator>
-        
     </div>
     
-    
     <app-lista-ubicaciones></app-lista-ubicaciones>
-    
     
 </div>

@@ -44,7 +44,7 @@ h1 {
 }
 
 .editar-agencia:has(input:checked) {
-    background-color: #00b712;
+    background-color: var(--checked-color);
 }
 
 .editar-agencia input{

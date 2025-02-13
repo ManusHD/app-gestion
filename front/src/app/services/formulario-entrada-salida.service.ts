@@ -20,6 +20,8 @@ import { AgenciaTransporte } from '../models/agencia-transporte.model';
 import { PDV } from '../models/pdv.model';
 import { Colaborador } from '../models/colaborador.model';
 import { Perfumeria } from '../models/perfumeria.model';
+import { OtraDireccion } from '../models/otraDireccion.model';
+import { Producto } from '../models/producto.model';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -31,8 +33,12 @@ export class FormularioEntradaSalidaService {
   perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
   colaboradores: Colaborador[] = [];
+  otrasDirecciones: OtraDireccion[] = [];
   btnSubmitActivado = true;
   currentPath: string = window.location.pathname;
+  ubicacionesPorProducto: { [ref: string]: Ubicacion[] } = {};
+  visuales: Producto[] = [];
+  productosSR: Producto[] = [];
 
   private snackBar = inject(MatSnackBar);
 
@@ -68,6 +74,7 @@ export class FormularioEntradaSalidaService {
 
   protected createProductoGroup(): FormGroup {
     return this.fb.group({
+      productoId: [],
       ref: ['', Validators.required],
       description: ['', Validators.required],
       palets: [0, [Validators.required, Validators.min(0)]],
@@ -77,6 +84,7 @@ export class FormularioEntradaSalidaService {
       ubicacion: ['', Validators.required],
       formaEnvio: ['', Validators.required],
       observaciones: [''],
+      pendiente: [''],
     });
   }
 
@@ -84,9 +92,13 @@ export class FormularioEntradaSalidaService {
     if (event.key === 'Enter') {
       event.preventDefault(); // Evita que el formulario se envíe accidentalmente
       const form = event.target as HTMLElement;
-      const inputs = Array.from(document.querySelectorAll<HTMLElement>('input, select, textarea, button'));
+      const inputs = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          'input, select, textarea, button'
+        )
+      );
       const index = inputs.indexOf(form);
-  
+
       if (index >= 0 && index < inputs.length - 1) {
         inputs[index + 1].focus();
       }
@@ -226,6 +238,7 @@ export class FormularioEntradaSalidaService {
       this.entradaSalidaForm.value.productos.map((producto: any) => {
         // Crear un nuevo objeto ProductoEntrada
         return {
+          productoId: producto.productoId,
           ref: producto.ref,
           description: producto.description,
           unidades: producto.unidades,
@@ -244,6 +257,11 @@ export class FormularioEntradaSalidaService {
     // Crear el objeto Entrada
     const nuevaSalida: Salida = {
       destino: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
+      direccion: this.entradaSalidaForm.get('direccion')?.value,
+      poblacion: this.entradaSalidaForm.get('poblacion')?.value,
+      provincia: this.entradaSalidaForm.get('provincia')?.value,
+      cp: this.entradaSalidaForm.get('cp')?.value,
+      telefono: this.entradaSalidaForm.get('telefono')?.value,
       colaborador: this.entradaSalidaForm.get('colaborador')?.value,
       perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
       pdv: this.entradaSalidaForm.get('pdv')?.value,
@@ -253,7 +271,13 @@ export class FormularioEntradaSalidaService {
       fechaEnvio: this.entradaSalidaForm.get('fechaRecepcionEnvio')?.value,
     };
 
-    if (this.fechaValida() && this.formasEnvioValidas() && this.productosFinalesValidos()) {
+    console.log(nuevaSalida);
+
+    if (
+      this.fechaValida() &&
+      this.formasEnvioValidas() &&
+      this.productosFinalesValidos()
+    ) {
       nuevaSalida.rellena = true;
       this.crearSalida(nuevaSalida);
     } else {
@@ -265,8 +289,6 @@ export class FormularioEntradaSalidaService {
       }
     }
   }
-
-
 
   private crearSalida(nuevaSalida: Salida) {
     this.salidaService.newSalida(nuevaSalida).subscribe({
@@ -332,33 +354,55 @@ export class FormularioEntradaSalidaService {
     const descriptionControl = this.productosControls
       .at(index)
       .get('description');
-
-    refControl!.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        switchMap((ref) => {
-          if (ref?.trim()) {
-            return this.productoService.getProductoPorReferencia(ref.trim());
-          }
-          return of(null);
-        })
-      )
-      .subscribe({
-        next: (producto) => {
-          if (producto) {
-            descriptionControl!.setValue(producto.description);
-            this.productosNuevos.delete(index); // Eliminar de productos nuevos si existe
-          } else {
+      
+    if (refControl!.value === 'VISUAL') {
+      if(!descriptionControl || descriptionControl.value == '') {
+        this.cargarVisuales();
+      } else {
+        this.cargarVisualesPorDescripcion(descriptionControl.value);
+      }
+    } else if (refControl!.value === 'SIN REFERENCIA') {
+      if(!descriptionControl || descriptionControl.value == '') {
+        this.cargarProductosSinReferencia()
+      } else{
+        this.cargarProductosSinReferenciaPorDescripcion(descriptionControl.value);
+      }
+    } else {
+      refControl!.valueChanges
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(),
+          switchMap((ref) => {
+            if (ref?.trim()) {
+              return this.productoService.getProductoPorReferencia(ref.trim());
+            }
+            return of(null);
+          })
+        )
+        .subscribe({
+          next: (producto) => {
+            if (producto) {
+              descriptionControl!.setValue(producto.description);
+              this.productosNuevos.delete(index); // Eliminar de productos nuevos si existe
+            } else {
+              descriptionControl!.setValue('');
+              this.productosNuevos.add(index); // Añadir a productos nuevos
+            }
+            if (this.esSalida()) {
+              if (producto) {
+                this.setMaxUnidades(index, producto.stock);
+                this.obtenerUbicacionesProductoSalida(
+                  producto.referencia as string
+                );
+              }
+            }
+          },
+          error: () => {
             descriptionControl!.setValue('');
-            this.productosNuevos.add(index); // Añadir a productos nuevos
-          }
-        },
-        error: () => {
-          descriptionControl!.setValue('');
-          this.productosNuevos.add(index); // Añadir a productos nuevos en caso de error
-        },
-      });
+            this.productosNuevos.add(index); // Añadir a productos nuevos en caso de error
+          },
+        });
+    }
   }
 
   isProductoNuevo(index: number): boolean {
@@ -368,19 +412,22 @@ export class FormularioEntradaSalidaService {
   // Se llama al insertar el Excel
   indice = 0;
   buscarDescripcionProducto(formGroup: FormGroup, ref: String) {
-    this.productoService.getProductoPorReferencia(ref).subscribe({
-      next: (producto) => {
-        if (producto == null) {
-          this.productosNuevos.add(this.indice);
-        } else {
-          formGroup.get('description')?.setValue(producto.description);
-        }
-        this.indice++;
-      },
-      error: (error) => {
-        // console.error('Error al buscar producto', error);
-      },
-    });
+    if(ref !== 'VISUAL' && ref !== 'SIN REFERENCIA') {
+      console.log("Entro");
+      this.productoService.getProductoPorReferencia(ref).subscribe({
+        next: (producto) => {
+          if (producto == null) {
+            this.productosNuevos.add(this.indice);
+          } else {
+            formGroup.get('description')?.setValue(producto.description);
+          }
+          this.indice++;
+        },
+        error: (error) => {
+          console.error('Error al buscar producto', error);
+        },
+      });
+    }
     this.indice = 0;
   }
 
@@ -403,14 +450,14 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarUbicaciones() {
-    this.ubicacionesService.getUbicacionesOrderByNombre().subscribe({
-      next: (ubicaciones) => {
+    this.ubicacionesService.getUbicacionesOrderByNombre().subscribe(
+      (ubicaciones) => {
         this.ubicaciones = ubicaciones;
       },
-      error: (error) => {
+      (error) => {
         console.error('Error al obtener ubicaciones', error);
-      },
-    });
+      }
+    );
   }
 
   desactivarBtnSubmit() {
@@ -530,9 +577,11 @@ export class FormularioEntradaSalidaService {
   refValida(i: number) {
     const ref = this.productosControls.at(i).get('ref')!.value;
     const refValida =
-    /^[0-9]{7}$/.test(ref) ||
-    /^R[0-9]{7}$/.test(ref) ||
-    /^[0-9]{10}$/.test(ref);
+      /^[0-9]{7}$/.test(ref) ||
+      /^R[0-9]{7}$/.test(ref) ||
+      /^[0-9]{10}$/.test(ref) ||
+      ref === 'VISUAL' ||
+      ref === 'SIN REFERENCIA';
     return refValida;
   }
 
@@ -545,7 +594,7 @@ export class FormularioEntradaSalidaService {
     if (this.entradaSalidaForm.get('fechaRecepcionEnvio')?.valid) {
       return true;
     }
-    this.snackBarError("La fecha no está inicializada");
+    this.snackBarError('La fecha no está inicializada');
     this.btnSubmitActivado = true;
     return false;
   }
@@ -554,7 +603,7 @@ export class FormularioEntradaSalidaService {
     const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
 
-    if ((pdv && !perfumeria) || (!pdv && perfumeria)){
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
       return true;
     }
     return false;
@@ -564,30 +613,30 @@ export class FormularioEntradaSalidaService {
     const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
 
-    if ((pdv && !perfumeria) || (!pdv && perfumeria)){
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
       return true;
     }
     return false;
   }
 
   colaboradorValido() {
-    if(this.entradaSalidaForm.get('colaborador')?.valid){
+    if (this.entradaSalidaForm.get('colaborador')?.valid) {
       return true;
     }
     return false;
   }
-  
+
   otroOrigenDestinoValido() {
-    if(this.entradaSalidaForm.get('otroOrigenDestino')?.valid){
+    if (this.entradaSalidaForm.get('otroOrigenDestino')?.valid) {
       return true;
     }
     return false;
   }
-  
+
   dcsValido() {
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
     const dcsValido = /^[0-9]{10}$/.test(dcs);
-    if(dcsValido){
+    if (dcsValido) {
       return true;
     }
     return false;
@@ -615,11 +664,10 @@ export class FormularioEntradaSalidaService {
       (casosOrigenDestino.length === 1 && casoDcs.length === 0) ||
       (casosOrigenDestino.length === 0 && casoDcs.length === 1 && dcsValido);
 
-    
-      if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
-        previsionValida = false;
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
+      previsionValida = false;
     }
-    
+
     return previsionValida;
   }
 
@@ -649,14 +697,14 @@ export class FormularioEntradaSalidaService {
         hayProductos &&
         productosValidos) ||
       (casosOrigenDestino.length === 0 &&
-        casoDcs.length === 1 && dcsValido &&
+        casoDcs.length === 1 &&
+        dcsValido &&
         hayProductos &&
         productosValidos);
 
-        
-          if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
-            previsionValida = false;
-        }
+    if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
+      previsionValida = false;
+    }
 
     if (casosOrigenDestino.length > 1) {
       this.snackBarError(
@@ -674,7 +722,7 @@ export class FormularioEntradaSalidaService {
       this.snackBarError('El DCS debe tener 10 dígitos');
     }
 
-    if(!previsionValida) {
+    if (!previsionValida) {
       this.btnSubmitActivado = true;
     }
 
@@ -685,19 +733,24 @@ export class FormularioEntradaSalidaService {
     let previsionValida = false;
 
     previsionValida = this.productosControls.controls.every((producto) => {
-
       const ref = producto.get('ref')?.value;
       const description = producto.get('description')?.value;
       const unidades = producto.get('unidades')?.value;
       const unidadesPedidas = producto.get('unidadesPedidas')?.value;
-      
+
       const refValida =
-      /^[0-9]{7}$/.test(ref) ||
-      /^R[0-9]{7}$/.test(ref) ||
-      /^[0-9]{10}$/.test(ref);
+        /^[0-9]{7}$/.test(ref) ||
+        /^R[0-9]{7}$/.test(ref) ||
+        /^[0-9]{10}$/.test(ref) ||
+        ref === 'VISUAL' ||
+        ref === 'SIN REFERENCIA';
       const descriptionValida = description && description.trim().length > 0;
       const unidadesPedidasValidas = unidadesPedidas > 0;
-      const unidadesValidas = unidades > 0 || (this.esSalida() && !this.currentPath.startsWith('/entradas/nuevo') && unidadesPedidasValidas);
+      const unidadesValidas =
+        unidades > 0 ||
+        (this.esSalida() &&
+          !this.currentPath.startsWith('/entradas/nuevo') &&
+          unidadesPedidasValidas);
 
       if (!refValida) {
         this.snackBarError(
@@ -705,7 +758,11 @@ export class FormularioEntradaSalidaService {
         );
       } else if (!descriptionValida) {
         this.snackBarError('Las descripciones no pueden estar en blanco');
-      } else if (!unidadesPedidasValidas && this.esSalida() && !this.currentPath.startsWith('/salidas/nuevo')) {
+      } else if (
+        !unidadesPedidasValidas &&
+        this.esSalida() &&
+        !this.currentPath.startsWith('/salidas/nuevo')
+      ) {
         this.snackBarError('Las UNIDADES PEDIDAS deben ser mayor que 0');
       } else if (!unidadesValidas) {
         this.snackBarError('Las UNIDADES deben ser mayor que 0');
@@ -734,7 +791,7 @@ export class FormularioEntradaSalidaService {
         this.snackBarError('Las ubicaciones son obligatorias');
       }
 
-      if((paletsValidos && bultosValidos && ubicacionValida) == false) {
+      if ((paletsValidos && bultosValidos && ubicacionValida) == false) {
         this.btnSubmitActivado = true;
         console.log(palets);
         console.log(paletsValidos);
@@ -766,5 +823,77 @@ export class FormularioEntradaSalidaService {
       return 'Salida';
     }
     return null;
+  }
+
+  setMaxUnidades(index: number, stock: number = 0) {
+    const unidadesControl = this.productosControls.at(index).get('unidades');
+    if (unidadesControl) {
+      unidadesControl.setValidators([
+        Validators.required,
+        Validators.min(1),
+        Validators.max(stock),
+      ]);
+      unidadesControl.updateValueAndValidity();
+    }
+  }
+
+  obtenerUbicacionesProductoSalida(ref: string) {
+    if (this.ubicacionesPorProducto[ref]) {
+      return;
+    }
+
+    this.ubicacionesService.getUbicacionesByReferenciaProducto(ref).subscribe({
+      next: (data: Ubicacion[]) => {
+        this.ubicacionesPorProducto[ref] = data; // Almacena las ubicaciones en el objeto
+      },
+      error: (error) => {
+        console.error('Error al obtener ubicaciones:', error);
+        this.ubicacionesPorProducto[ref] = [];
+      },
+    });
+  }
+
+  cargarVisuales() {
+    this.productoService.getVisuales().subscribe(
+      (data: Producto[]) => {
+        this.visuales = data;
+      },
+      (error) => {
+        console.error('Error al obtener los Visuales', error);
+      }
+    );
+  }
+
+  cargarProductosSinReferencia() {
+    this.productoService.getProductosSinReferencia().subscribe(
+      (data: Producto[]) => {
+        this.productosSR = data;
+      },
+      (error) => {
+        console.error('Error al obtener los Visuales', error);
+      }
+    );
+  }
+
+  cargarVisualesPorDescripcion(descripcion: string) {
+    this.productoService.getVisualesPorDescripcion(descripcion).subscribe(
+      (data: Producto[]) => {
+        this.visuales = data;
+      },
+      (error) => {
+        console.error('Error al obtener los Visuales', error);
+      }
+    );
+  }
+
+  cargarProductosSinReferenciaPorDescripcion(descripcion: string) {
+    this.productoService.getProductosSinReferenciaPorDescripcion(descripcion).subscribe(
+      (data: Producto[]) => {
+        this.productosSR = data;
+      },
+      (error) => {
+        console.error('Error al obtener los Visuales', error);
+      }
+    );
   }
 }

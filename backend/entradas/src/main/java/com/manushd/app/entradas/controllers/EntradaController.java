@@ -45,6 +45,7 @@ import org.springframework.http.ResponseEntity;
 @RestController
 @CrossOrigin(value = "http://localhost:4200")
 public class EntradaController {
+
     @Autowired
     private EntradaRepository entradasRepository;
 
@@ -70,9 +71,11 @@ public class EntradaController {
 
     @PostMapping("/entradas")
     public ResponseEntity<?> addEntrada(@RequestBody Entrada entrada) {
-        Boolean reintegrar = false;
+        boolean reintegrar = false;
         Long idReintegrar = -1L;
-        if (entrada.getEstado()) {
+
+        // Si la entrada está marcada como recibida (estado=true)
+        if (Boolean.TRUE.equals(entrada.getEstado())) {
             RestTemplate restTemplate = new RestTemplate();
 
             // Separar productos pendientes y recibidos
@@ -80,15 +83,22 @@ public class EntradaController {
             Set<ProductoEntrada> productosRecibidos = new HashSet<>();
 
             for (ProductoEntrada producto : entrada.getProductos()) {
+                // Validar que la cantidad sea mayor a 0 (para cualquier producto)
+                if (producto.getUnidades() <= 0) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Los productos deben tener al menos 1 unidad");
+                }
+
                 if (Boolean.TRUE.equals(producto.getPendiente())) {
-                    if(producto.getIdPadre() != null) {
-                        producto.setIdPadre(producto.getIdPadre());
-                    } else {
+                    // Si ya se tiene un idPadre se respeta; de lo contrario se asigna el id de la
+                    // entrada
+                    if (producto.getIdPadre() == null) {
                         producto.setIdPadre(entrada.getId());
                     }
                     productosPendientes.add(producto);
                 } else {
-                    if(producto.getIdPadre() != null && !reintegrar) {
+                    // Si existe un idPadre en un producto recibido, se activa el flag de reintegro
+                    if (producto.getIdPadre() != null && !reintegrar) {
                         reintegrar = true;
                         idReintegrar = producto.getIdPadre();
                     }
@@ -96,80 +106,89 @@ public class EntradaController {
                 }
             }
 
-            if(productosRecibidos.size() < 1) {
-                return null;
+            // Si no hay productos recibidos, no se procesa la entrada
+            if (productosRecibidos.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No se han recibido productos en la entrada");
             }
 
-            // Crear una nueva entrada con productos pendientes
+            // Crear y guardar una nueva entrada para los productos pendientes
+            // (estado=false)
             if (!productosPendientes.isEmpty()) {
                 Entrada entradaPendiente = new Entrada();
                 entradaPendiente.setOrigen(entrada.getOrigen());
-                entradaPendiente.setEstado(false); // Estado pendiente
+                entradaPendiente.setEstado(false); // Entrada pendiente
                 entradaPendiente.setProductos(productosPendientes);
-
-                // Guardar la entrada pendiente
                 entradasRepository.save(entradaPendiente);
             }
 
-            // Actualizar la entrada original con productos recibidos
+            // Actualizar la entrada original con los productos recibidos
             entrada.setProductos(productosRecibidos);
 
             /*-------------------------------------------------------------------------
-            En este punto solo se tratarán los productos que hayan llegado al almacén 
-            -------------------------------------------------------------------------*/
+             En este punto se tratarán solo los productos que hayan llegado al almacén
+             -------------------------------------------------------------------------*/
 
-            // Verificar y crear productos si no existen
+            // Para cada producto recibido, si es producto "normal" se verifica su
+            // existencia en Productos.
+            // En caso de productos especiales ("VISUAL" o "SIN REFERENCIA"), se omite la
+            // comprobación.
             for (ProductoEntrada productoEntrada : entrada.getProductos()) {
-                try {
-                    // Intentar obtener el producto
-                    ResponseEntity<Producto> response = restTemplate.getForEntity(
-                            "http://localhost:8091/productos/referencia/" + productoEntrada.getRef(),
-                            Producto.class);
-
-                    if (productoEntrada.getUnidades() <= 0) {
-                        throw new IllegalArgumentException("Los productos no pueden tener menos de 1 unidad");
-                    } else if (response.getBody() == null) {
-                        // Si no existe, crear el producto
-                        Producto nuevoProducto = new Producto();
-                        nuevoProducto.setReferencia(productoEntrada.getRef());
-                        nuevoProducto.setDescription(productoEntrada.getDescription());
-                        nuevoProducto.setStock(0); // Stock inicial en 0
-
-                        // Llamar al endpoint para crear el producto
-                        restTemplate.postForEntity(
-                                "http://localhost:8091/productos",
-                                nuevoProducto,
+                String ref = productoEntrada.getRef();
+                if ("SIN REFERENCIA".equals(ref) || "VISUAL".equals(ref)) {
+                    // No se realiza comprobación ni creación en el microservicio de Productos
+                    continue;
+                } else {
+                    try {
+                        // Intentar obtener el producto por referencia
+                        ResponseEntity<Producto> response = restTemplate.getForEntity(
+                                "http://localhost:8091/productos/referencia/" + ref,
                                 Producto.class);
+
+                        // Si la cantidad es menor o igual a 0 se lanza excepción (aunque ya se validó
+                        // anteriormente)
+                        if (productoEntrada.getUnidades() <= 0) {
+                            throw new IllegalArgumentException("Los productos no pueden tener menos de 1 unidad");
+                        } else if (response.getBody() == null) {
+                            // Si el producto no existe, se crea uno con stock inicial 0
+                            Producto nuevoProducto = new Producto();
+                            nuevoProducto.setReferencia(ref);
+                            nuevoProducto.setDescription(productoEntrada.getDescription());
+                            nuevoProducto.setStock(0);
+
+                            // Llamada al endpoint para crear el producto normal
+                            restTemplate.postForEntity(
+                                    "http://localhost:8091/productos",
+                                    nuevoProducto,
+                                    Producto.class);
+                        }
+                    } catch (IllegalArgumentException e) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(e.getMessage());
+                    } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body("Error al procesar la entrada: " + e.getMessage());
                     }
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(e.getMessage());
-                } catch (Exception e) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Error al procesar la entrada: " + e.getMessage());
                 }
             }
         }
 
         Entrada savedEntrada = null;
 
+        // Si se está reintegrando (por haber productos con idPadre)
         if (reintegrar) {
             Entrada entradaAntigua = entradasRepository.findById(idReintegrar).orElse(null);
-            
             if (entradaAntigua != null) {
-                // Crear un nuevo Set para evitar problemas de concurrencia
+                // Crear un nuevo conjunto para evitar problemas de concurrencia
                 Set<ProductoEntrada> productosActualizados = new HashSet<>(entradaAntigua.getProductos());
-                
-                // Añadir los nuevos productos
+                // Añadir los nuevos productos (forzando nueva inserción y asignando el idPadre)
                 for (ProductoEntrada producto : entrada.getProductos()) {
-                    // Asegurarse de que es una nueva instancia
                     ProductoEntrada nuevoProducto = new ProductoEntrada();
                     BeanUtils.copyProperties(producto, nuevoProducto);
-                    nuevoProducto.setId(null); // Forzar nueva inserción
+                    nuevoProducto.setId(null); // Forzar inserción como nuevo registro
                     nuevoProducto.setIdPadre(entradaAntigua.getId());
                     productosActualizados.add(nuevoProducto);
                 }
-                
                 entradaAntigua.setProductos(productosActualizados);
                 savedEntrada = entradasRepository.save(entradaAntigua);
             }
@@ -177,13 +196,12 @@ public class EntradaController {
             savedEntrada = entradasRepository.save(entrada);
         }
 
-        // Crear la entrada y actualizar stock
-
-        if (entrada.getEstado()) {
-            if(reintegrar) {
+        // Crear la entrada en Ubicaciones y actualizar stock
+        if (Boolean.TRUE.equals(entrada.getEstado())) {
+            if (reintegrar) {
                 crearUbicacion(entrada);
                 entradasRepository.deleteById(entrada.getId());
-            }else {
+            } else {
                 crearUbicacion(savedEntrada);
             }
         }
@@ -191,65 +209,13 @@ public class EntradaController {
         return ResponseEntity.ok(savedEntrada);
     }
 
-
-    // private void crearDcs(Entrada entrada) {
-    //     List<DCS> ListaDcs = new ArrayList<>();
-    //     RestTemplate restTemplate = new RestTemplate(); // Instancia de RestTemplate
-
-    //     for (ProductoEntrada productoEntrada : entrada.getProductos()) {
-    //         if (productoEntrada.getDcs() != null) {
-    //             String numeroDcs = productoEntrada.getDcs();
-    //             boolean existe = ListaDcs.stream().anyMatch(d -> d.getDcs().equals(numeroDcs));
-
-    //             ProductoDcs p = new ProductoDcs();
-    //             p.setRef(productoEntrada.getRef());
-    //             p.setUnidades(productoEntrada.getUnidades());
-
-    //             if (existe) {
-    //                 int posicionDcs = IntStream.range(0, ListaDcs.size())
-    //                         .filter(i -> ListaDcs.get(i).getDcs().equals(numeroDcs))
-    //                         .findFirst()
-    //                         .orElse(-1);
-
-    //                 DCS dcsExistente = ListaDcs.get(posicionDcs);
-    //                 if (dcsExistente.getProductos() == null) {
-    //                     dcsExistente.setProductos(new HashSet<>());
-    //                 }
-    //                 dcsExistente.getProductos().add(p);
-    //             } else {
-    //                 DCS d = new DCS();
-    //                 d.setDcs(numeroDcs);
-    //                 d.setUsado(false);
-    //                 d.setProductos(new HashSet<>());
-    //                 d.getProductos().add(p);
-    //                 ListaDcs.add(d);
-    //             }
-    //         }
-    //     }
-
-    //     // Enviar cada DCS al microservicio
-    //     String url = "http://localhost:8094/dcs";
-
-    //     for (DCS dcs : ListaDcs) {
-    //         try {
-    //             HttpHeaders headers = new HttpHeaders();
-    //             headers.setContentType(MediaType.APPLICATION_JSON);
-
-    //             HttpEntity<DCS> request = new HttpEntity<>(dcs, headers);
-    //             ResponseEntity<?> response = restTemplate.postForEntity(url, request, DCS.class);
-
-    //             // if (response.getStatusCode().is2xxSuccessful()) {
-    //             // System.out.println("DCS creado exitosamente: " + response.getBody());
-    //             // } else {
-    //             // System.out.println("Error al crear el DCS: " + dcs.getDcs());
-    //             // }
-    //         } catch (Exception e) {
-    //             System.out.println("Excepción al enviar el DCS: " + dcs.getDcs());
-    //             e.printStackTrace();
-    //         }
-    //     }
-    // }
-
+    /**
+     * Crea ubicaciones a partir de los productos de la entrada.
+     * Para cada ubicación (según el nombre definido en el ProductoEntrada), se crea
+     * un objeto Ubicacion
+     * con su correspondiente ProductoUbicacion, y se envía al microservicio de
+     * Ubicaciones (POST /ubicaciones/sumar).
+     */
     private void crearUbicacion(Entrada entrada) {
         List<Ubicacion> listaUbicaciones = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
@@ -258,8 +224,7 @@ public class EntradaController {
 
         for (ProductoEntrada productoEntrada : entrada.getProductos()) {
             String ubicacionNombre = productoEntrada.getUbicacion();
-
-            // Si no existe una ubicación en el mapa, se crea una nueva
+            // Si no existe la ubicación en el mapa, se crea y se añade a la lista
             Ubicacion ubicacion = ubicacionMap.computeIfAbsent(ubicacionNombre, k -> {
                 Ubicacion nuevaUbicacion = new Ubicacion();
                 nuevaUbicacion.setNombre(ubicacionNombre);
@@ -268,32 +233,32 @@ public class EntradaController {
                 return nuevaUbicacion;
             });
 
-            // Crear un nuevo ProductoUbicacion y asociarlo a la ubicación
+            // Crear un ProductoUbicacion a partir del ProductoEntrada
             ProductoUbicacion productoUbicacion = new ProductoUbicacion();
             productoUbicacion.setRef(productoEntrada.getRef());
             productoUbicacion.setUnidades(productoEntrada.getUnidades());
             productoUbicacion.setDescription(productoEntrada.getDescription());
+            // Para productos especiales, el microservicio de Ubicaciones se encargará de
+            // asignar el productoId
 
             ubicacion.getProductos().add(productoUbicacion);
         }
 
         String url = "http://localhost:8095/ubicaciones/sumar";
 
-        // Imprimir y enviar las ubicaciones con sus productos
+        // Enviar cada ubicación con sus productos al microservicio de Ubicaciones
         listaUbicaciones.forEach(ubicacion -> {
             try {
-                ResponseEntity<Ubicacion> response = restTemplate.exchange(
-                            url,
-                            HttpMethod.POST,
-                            new HttpEntity<>(ubicacion),
-                            Ubicacion.class);
-                
+                restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        new HttpEntity<>(ubicacion),
+                        Ubicacion.class);
             } catch (Exception e) {
                 System.out.println("Excepción al enviar la ubicación: " + ubicacion.getNombre());
                 e.printStackTrace();
             }
         });
-
     }
 
     @PutMapping("/entradas/{id}")
@@ -301,12 +266,9 @@ public class EntradaController {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
-            // System.out.println("-------------------------Actualizo entrada------------------------------");
             return entradasRepository.save(entrada);
         }
-
         return null;
-
     }
 
     @PutMapping("/entradas/{id}/recibir")
@@ -314,11 +276,10 @@ public class EntradaController {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
         if (entradaAux != null) {
-            // crearDcs(entradaAux);
+            // Marcar la entrada como recibida y procesarla
             entradaAux.setEstado(true);
             return addEntrada(entradaAux);
         }
-
         return null;
     }
 

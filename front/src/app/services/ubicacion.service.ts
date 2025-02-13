@@ -17,8 +17,8 @@ export class UbicacionService {
     return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/byNombre`);
   }
 
-  getUbicacionByNombre(nombre: String): Observable<Ubicacion[]> {
-    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/nombre/${nombre}`);
+  getUbicacionByNombre(nombre: String): Observable<Ubicacion> {
+    return this.httpClient.get<Ubicacion>(`${this.apiUrl}/nombre/${nombre}`);
   }
 
   getUbicacionesByNombre(nombre: String): Observable<Ubicacion[]> {
@@ -31,6 +31,10 @@ export class UbicacionService {
 
   newUbicacion(ubicacion: Ubicacion): Observable<Ubicacion> {
     return this.httpClient.post(`${this.apiUrl}`, ubicacion);
+  }
+
+  updateUbicacion(id: number, ubicacion: Ubicacion): Observable<Ubicacion> {
+    return this.httpClient.put<Ubicacion>(`${this.apiUrl}/${id}`, ubicacion);
   }
 
   deleteUbicacion(id: number): Observable<Ubicacion> {

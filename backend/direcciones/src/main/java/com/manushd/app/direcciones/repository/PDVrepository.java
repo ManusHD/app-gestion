@@ -17,6 +17,4 @@ public interface PDVrepository extends CrudRepository<PDV, Long>{
         Iterable<PDV> findByNombreContainingIgnoreCase(String nombre);
 
         Iterable<PDV> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
-
-        Iterable<PDV> findByPerfumeriasNombreOrderByNombreAsc(String nombre);
 }

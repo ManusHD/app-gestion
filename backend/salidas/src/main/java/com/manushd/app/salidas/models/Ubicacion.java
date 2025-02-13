@@ -2,6 +2,7 @@ package com.manushd.app.salidas.models;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 import com.manushd.app.salidas.models.ProductoUbicacion;
@@ -31,5 +32,5 @@ public class Ubicacion {
     
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "productoId")
-    private Set<ProductoUbicacion> productos;
+    private ArrayList<ProductoUbicacion> productos;
 }

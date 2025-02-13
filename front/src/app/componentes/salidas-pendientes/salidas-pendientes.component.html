@@ -1,44 +1,57 @@
 <app-cabecera-salidas></app-cabecera-salidas>
 
 <div class="flotar-medio">
-    <table>
-        <caption>SALIDAS PENDIENTES DE PREPARAR</caption>
-        <thead>
-            <tr>
-                <th>Destino</th>
-                <th>Preparado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <ng-container *ngFor="let salida of salidas">
-                <tr>
-                    <td>{{ salida.destino }}</td>
-                    <td>
-                        <div class="flotar-medio">
-                            <div>
-                                <img [ngClass]="{'no-relleno': !salida.rellena}"
-                                    src="../../../assets/icons/check-verde.svg" />
-                                <img [ngClass]="{'relleno': salida.rellena}"
-                                    src="../../../assets/icons/no-check-gris.svg" />
-                            </div>
+    <div id="historial">
+        <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+            <caption>SALIDAS PENDIENTES DE PREPARAR</caption>
+            <ng-container matColumnDef="destino">
+                <th class="header-paginator" *matHeaderCellDef>Destino</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let salida">
+                    {{salida.destino || salida.colaborador || salida.perfumeria + ' - ' + salida.pdv}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="preparado">
+                <th class="header-paginator" *matHeaderCellDef>Preparado</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let salida">
+                    <div class="flotar-medio">
+                        <div>
+                            <img [ngClass]="{'no-relleno': !salida.rellena}"
+                                src="../../../assets/icons/check-verde.svg" />
+                            <img [ngClass]="{'relleno': salida.rellena}"
+                                src="../../../assets/icons/no-check-gris.svg" />
                         </div>
-                    </td>
-                    <td style="display: flex; gap: 5px">
+                    </div>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let salida">
+                    <div style="display: flex; gap: 5px">
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"
                             (salidaRellena)="salida.rellena = $event"></app-detalles-salidas>
                         <button [disabled]="!btnSubmitActivado"
                             (click)="deleteSalida(salida.id!)" class="btn-eliminar">
-                            <span class="text">BORRAR</span><span class="icon"><img
-                                    src="../../../assets/icons/delete-bin.svg" /></span>
+                            <span class="text">BORRAR</span>
+                            <span class="icon">
+                                <img src="../../../assets/icons/delete-bin.svg" />
+                            </span>
                         </button>
-                        <button (click)="desactivarBtnSubmit()" [disabled]="!salida.rellena || !btnSubmitActivado"
-                            (click)="setEnviada(salida.id!)" class="btn-grabar">
+                        <button (click)="desactivarBtnSubmit()" 
+                                [disabled]="!salida.rellena || !btnSubmitActivado"
+                                (click)="setEnviada(salida.id!)" 
+                                class="btn-grabar">
                             GRABAR
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </td>
             </ng-container>
-        </tbody>
-    </table>
+
+            <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+        </table>
+        <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true">
+        </mat-paginator>
+    </div>
 </div>

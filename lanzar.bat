@@ -18,9 +18,6 @@ start cmd /c "cd %MICROSERVICIO_PRODUCTOS% && mvn spring-boot:run"
 :: Ejecutar salidas en una nueva ventana 8093
 start cmd /c "cd %MICROSERVICIO_SALIDAS% && mvn spring-boot:run"
 
-:: Ejecutar dcs en una nueva ventana 8094
-start cmd /c "cd %MICROSERVICIO_DCS% && mvn spring-boot:run"
-
 :: Ejecutar ubicaciones en una nueva ventana 8095
 start cmd /c "cd %MICROSERVICIO_UBICACIONES% && mvn spring-boot:run"
 

@@ -1,5 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
 import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
 import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
@@ -7,95 +10,172 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 @Component({
   selector: 'app-agencias-transporte',
   templateUrl: './agencias-transporte.component.html',
-  styleUrls: ['./agencias-transporte.component.css'],
+  styleUrls: ['../../../assets/styles/paginator.css', './agencias-transporte.component.css'],
 })
 export class AgenciasTransporteComponent implements OnInit {
-  agencia: AgenciaTransporte = new AgenciaTransporte();
+  currentPath = window.location.pathname;
   agencias: AgenciaTransporte[] = [];
-  existe: boolean = false;
+  nuevaAgencia: AgenciaTransporte = {};
+  agenciaSeleccionada: AgenciaTransporte | null = null;
+  agenciaEditar: AgenciaTransporte | null = null;
+  indexAgenciaSeleccionada: number = -1;
+  existe: boolean = true;
+  editandoId: number | null = null;
+  editandoAgencia!: AgenciaTransporte;
+  buscador: string = '';
 
-  constructor(private agenciaService: AgenciasTransporteService, private snackBar: SnackBar) {}
+  columnasAgencias: string[] = ['nombre', 'estado', 'acciones'];
+  dataSourceAgencias = new MatTableDataSource<AgenciaTransporte>();
+  @ViewChild(MatPaginator) paginatorAgencias!: MatPaginator;
+
+  constructor(
+    private agenciaService: AgenciasTransporteService,
+    private snackbar: SnackBar
+  ) {}
 
   ngOnInit(): void {
     this.cargarAgencias();
   }
 
-  cargarAgencias() {
-    this.agenciaService.getAgenciasTransporteOrderByNombre().subscribe({
-      next: (data) => {
+  onEnterKey(event: any) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      this.buscarAgencias();
+    } else if (this.buscador === '') {
+      this.resetearBuscador();
+    }
+  }
+
+  resetearBuscador() {
+    this.buscador = '';
+    this.cargarAgencias();
+  }
+
+  buscarAgencias() {
+    this.agenciaService
+      .getAgenciasTransporteByNombre(this.buscador)
+      .subscribe((data: AgenciaTransporte[]) => {
         this.agencias = data;
-      },
-      error: (error) => {
-        console.error('Error al obtener Agencias de Transporte', error);
-        this.snackBar.snackBarError('Error al obtener Agencias de Transporte: ' + error);
-      },
-    });
-  }
-
-  existeAgencia() {
-    if (this.agencia.nombre == '') {
-      this.existe = false;
-    } else {
-      console.log('Agencia2: ' + this.agencia.nombre);
-      this.agenciaService
-        .getAgenciaTransporteByNombre(this.agencia.nombre)
-        .subscribe((data) => {
-          if (data != null) {
-            this.existe = true;
-            console.log('Existe: ', this.existe);
-          } else {
-            this.existe = false;
-            console.log('NO existe: ', this.existe);
-          }
-        });
-    }
-  }
-
-  onSubmit() {
-    if (!this.existe) {
-      console.log('Agencia a enviar: ', this.agencia);
-      this.agenciaService.newAgenciaTransporte(this.agencia).subscribe({
-        next: (data) => {
-          console.log('Agencia creada correctamente: ', data);
-          this.snackBar.snackBarExito('Agencia guardada correctamente');
-          location.reload();
-        },
-        error: (error) => {
-          console.error('Error al crear Agencia', error);
-          this.snackBar.snackBarError('Error al crear la Agencia: ' + error);
-        },
+        this.dataSourceAgencias.data = this.agencias;
+        this.dataSourceAgencias.paginator = this.paginatorAgencias;
       });
+  }
+
+  cargarAgencias(): void {
+    this.agenciaService.getAgenciasTransporte().subscribe(
+      (data: AgenciaTransporte[]) => {
+        this.agencias = data;
+        this.dataSourceAgencias.data = this.agencias;
+        this.dataSourceAgencias.paginator = this.paginatorAgencias;
+      },
+      (error) => {
+        console.error('Error al cargar las agencias de transporte', error);
+      }
+    );
+  }
+
+  crearAgencia(): void {
+    if (
+      !this.nuevaAgencia.nombre ||
+      this.nuevaAgencia.nombre.trim() == ''
+    ) {
+      this.snackbar.snackBarError('El nombre no puede estar en blanco');
     } else {
-      this.snackBar.snackBarError('Ya existe una Agencia con este nombre');
+      if (this.existe) {
+        this.snackbar.snackBarError('Ya existe esta agencia de transporte');
+      } else {
+        this.nuevaAgencia.activa = true;
+        this.nuevaAgencia.nombre = this.nuevaAgencia.nombre?.trim();
+        this.agenciaService.newAgenciaTransporte(this.nuevaAgencia).subscribe(
+          (data: AgenciaTransporte) => {
+            this.agencias.push(data);
+            this.cargarAgencias();
+            this.nuevaAgencia = {};
+            this.snackbar.snackBarExito('Agencia de transporte creada con éxito');
+          },
+          (error) => {
+            console.error('Error al crear la agencia de transporte', error);
+          }
+        );
+      }
     }
   }
 
-  editarAgencia(agencia: AgenciaTransporte) {
-    agencia.activa = !agencia.activa;
-    this.agenciaService.updateAgenciaTransporte(agencia).subscribe({
-      next: (data) => {
-        console.log('Agencia actualizada correctamente: ', data);
-        this.snackBar.snackBarExito('Agencia actualizada correctamente');
-        location.reload();
-      },
-      error: (error) => {
-        console.error('Error al actualizar Agencia', error);
-        this.snackBar.snackBarError('Error al actualizar la Agencia: ' + error);
-      },
-    });
+  seleccionarAgencia(agencia: AgenciaTransporte, index: number): void {
+    this.agenciaSeleccionada = { ...agencia };
+    this.agenciaEditar = this.agenciaSeleccionada;
+    this.indexAgenciaSeleccionada = index;
   }
 
-  eliminarAgencia(id: number) {
-    this.agenciaService.deleteAgenciaTransporte(id).subscribe({
-      next: (data) => {
-        console.log('Agencia eliminada correctamente: ', data);
-        this.snackBar.snackBarExito('Agencia eliminada correctamente');
-        location.reload();
+  editarAgencia(agencia: AgenciaTransporte): void {
+    this.editandoId = agencia.id!;
+    this.editandoAgencia = { ...agencia };
+  }
+
+  guardarEdit(): void {
+    if (this.editandoId && this.editandoAgencia) {
+      if (!this.editandoAgencia.nombre || this.editandoAgencia.nombre.trim() === '') {
+        this.snackbar.snackBarError('El nombre no puede estar en blanco');
+        return;
+      }
+
+      this.editandoAgencia.nombre = this.editandoAgencia.nombre.trim();
+      
+      this.agenciaService
+        .updateAgenciaTransporte(this.editandoAgencia)
+        .subscribe(
+          (data: AgenciaTransporte) => {
+            const index = this.agencias.findIndex((p) => p.id === data.id);
+            if (index !== -1) {
+              this.agencias[index] = data;
+            }
+            this.cargarAgencias();
+            this.cancelarEdit();
+            this.snackbar.snackBarExito('Agencia de transporte actualizada con éxito');
+          },
+          (error) => {
+            this.snackbar.snackBarError(error.error.message);
+            console.error('Error al actualizar la agencia de transporte', error);
+          }
+        );
+    }
+  }
+
+  cancelarEdit(): void {
+    this.editandoId = null;
+    this.editandoAgencia = {};
+  }
+
+  eliminarAgencia(id: number): void {
+    this.agenciaService.deleteAgenciaTransporte(id).subscribe(
+      () => {
+        this.agencias = this.agencias.filter((p) => p.id !== id);
+        this.dataSourceAgencias.data = [...this.agencias];
       },
-      error: (error) => {
-        console.error('Error al eliminar Agencia', error);
-        this.snackBar.snackBarError('Error al eliminar la Agencia: ' + error);
-      },
-    });
+      (error) => {
+        console.error('Error al eliminar la agencia de transporte', error);
+      }
+    );
+  }
+
+  existeAgencia(nombre: string) {
+    if (nombre && nombre.trim() !== '') {
+      this.agenciaService.getAgenciaTransporteByNombre(nombre!.trim()).subscribe(
+        (data: AgenciaTransporte) => {
+          if (data == null) {
+            this.existe = false;
+          } else {
+            this.existe = true;
+          }
+          return this.existe;
+        },
+        (error) => {
+          console.error(error);
+          this.existe = true;
+          return this.existe;
+        }
+      );
+    }
+    return true;
   }
 }

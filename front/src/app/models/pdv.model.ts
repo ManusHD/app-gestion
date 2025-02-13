@@ -1,12 +1,5 @@
-import { Perfumeria } from "./perfumeria.model";
+import { Direccion } from "./direccion.model";
 
-export class PDV {
+export class PDV extends Direccion{
     id?: number;
-    nombre?: string;
-    direccion?: string;
-    poblacion?: string;
-    provincia?: string;
-    cp?: string;
-    telefono?: string;
-    pdvs: Perfumeria[] = [];
 }

@@ -1,46 +1,62 @@
 <app-cabecera-entradas></app-cabecera-entradas>
 
 <div class="flotar-medio">
-    <table>
-        <caption>ENTRADAS PENDIENTES DE RECEPCIONAR</caption>
-        <thead>
-            <tr>
-                <th>Origen / PO</th>
-                <th>DCS</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <ng-container *ngFor="let entrada of entradas">
-                <tr>
-                    <td>{{entrada.origen || entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}}</td>
-                    <td>{{entrada.dcs}}</td>
-                    <td>
-                        <div class="flotar-medio">
-                            <div>
-                                <img [ngClass]="{'no-relleno': !entrada.rellena}"
-                                    src="../../../assets/icons/check-verde.svg" />
-                                <img [ngClass]="{'relleno': entrada.rellena}"
-                                    src="../../../assets/icons/no-check-gris.svg" />
-                            </div>
+    <div id="historial">
+        <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+            <caption>ENTRADAS PENDIENTES DE RECEPCIONAR</caption>
+            <ng-container matColumnDef="origen">
+                <th class="header-paginator" *matHeaderCellDef>Origen</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let entrada">
+                    {{entrada.origen || entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="dcs">
+                <th class="header-paginator" *matHeaderCellDef>DCS</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.dcs}}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+                <th class="header-paginator" *matHeaderCellDef>Estado</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let entrada">
+                    <div class="flotar-medio">
+                        <div>
+                            <img [ngClass]="{'no-relleno': !entrada.rellena}"
+                                src="../../../assets/icons/check-verde.svg" />
+                            <img [ngClass]="{'relleno': entrada.rellena}"
+                                src="../../../assets/icons/no-check-gris.svg" />
                         </div>
-                    </td>
-                    <td style="display:flex; gap: 5px">
+                    </div>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let entrada">
+                    <div style="display:flex; gap: 5px">
                         <app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
                             (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas>
                         <button [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)"
                             class="btn-eliminar">
-                            <span class="text">BORRAR</span><span class="icon"><img
-                                    src="../../../assets/icons/delete-bin.svg" /></span>
+                            <span class="text">BORRAR</span>
+                            <span class="icon">
+                                <img src="../../../assets/icons/delete-bin.svg" />
+                            </span>
                         </button>
-                        <button (click)="desactivarBtnSubmit()" [disabled]="!entrada.rellena || !btnSubmitActivado"
-                            (click)="setRecibida(entrada.id!)" class="btn-grabar">
+                        <button (click)="desactivarBtnSubmit()" 
+                                [disabled]="!entrada.rellena || !btnSubmitActivado"
+                                (click)="setRecibida(entrada.id!)" 
+                                class="btn-grabar">
                             GRABAR
                         </button>
-                    </td>
-                </tr>
+                    </div>
+                </td>
             </ng-container>
-        </tbody>
-    </table>
+
+            <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+        </table>
+        <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true">
+        </mat-paginator>
+    </div>
 </div>

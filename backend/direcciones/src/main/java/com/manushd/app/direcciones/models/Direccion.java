@@ -2,8 +2,6 @@ package com.manushd.app.direcciones.models;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,4 +28,5 @@ public abstract class Direccion{
     private String provincia;
     private String codigoPostal;
     private String telefono;
+    private String cp;
 }

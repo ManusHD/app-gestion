@@ -4,6 +4,7 @@
     <div class="flotar-medio">
         <div id="historial">
             <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+                <caption>ENTRADAS RECEPCIONADAS</caption>
                 <ng-container matColumnDef="fechaRecepcion">
                     <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
@@ -27,4 +28,5 @@
             <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
         </div>
     </div>
+    
 </div>

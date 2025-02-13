@@ -1,31 +1,20 @@
-<div id="contenedor">
-    <div id="crear-ubicacion" class="centrar">
-        <form #formularioUbicacion="ngForm" (ngSubmit)="onSubmit()">
-            <h1>Nueva ubicación</h1>
-            <div class="nuevo-input">
-                <div class="alinear-input">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" id="nombre" name="nombre" [(ngModel)]="ubicacion.nombre" required
-                        (change)="existeUbicacion()" #nombreInput="ngModel">
-                </div>
-                <div *ngIf="nombreInput.invalid && (nombreInput.dirty || nombreInput.touched)" class="error-message">
-                    <small *ngIf="nombreInput.errors?.['required']">
-                        El nombre es obligatorio.
-                    </small>
-                </div>
-                <div class="error-message">
-                    <small *ngIf="existe && ubicacion.nombre!.length > 0">
-                        Ya existe una ubicacion con este nombre
-                    </small>
+<div id="center">
+    <div class="contenedor-gestor">
+        <div class="centrar">
+            <h2 class="gestor-titulo">GESTIÓN DE UBICACIONES</h2>
+        </div>
+
+        <div class="centrar">
+            <div class="gestor-crear">
+                <h3>Crear NUEVA ubicación</h3>
+                <div class="buscador campos-gestor">
+                    <input [(ngModel)]="nuevaUbicacion.nombre" placeholder="Nombre" type="text">
+                    <button (click)="crearUbicacion()" class="btn-crear" [disabled]="nuevaUbicacion.nombre == '' || nuevaUbicacion.nombre == undefined">CREAR</button>
                 </div>
             </div>
+        </div>
 
-            <button type="submit" [disabled]="!formularioUbicacion.form.valid">
-                Crear
-            </button>
-        </form>
+        <app-lista-ubicaciones [ubicacionCreada]="ubicacionCreada"></app-lista-ubicaciones>
+
     </div>
-
-    <app-lista-ubicaciones></app-lista-ubicaciones>
-    
 </div>
