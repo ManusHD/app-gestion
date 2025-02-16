@@ -129,10 +129,10 @@
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
-                            <input formControlName="ref" type="text" [ngClass]="{'campo-vacio': !refValida(i)}" />
+                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" [ngClass]="{'campo-vacio': !refValida(i)}" />
                         </td>
                         <td>
-                            <input formControlName="description" (keyup)="buscarProductoPorReferencia(i)" type="text" [ngClass]="{'campo-vacio': !descriptionValida(i)}" />
+                            <input formControlName="description" (keyup)="buscarProductoEspecial(i)" type="text" [ngClass]="{'campo-vacio': !descriptionValida(i)}" [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)"/>
                             <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' && visuales.length > 0" class="autocomplete-container">
                                 <div class="autocomplete-dropdown">
                                     <div class="autocomplete-item" *ngFor="let visual of visuales" (click)="selectVisual(i, visual)">

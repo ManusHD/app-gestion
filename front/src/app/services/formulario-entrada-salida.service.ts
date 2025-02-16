@@ -171,6 +171,13 @@ export class FormularioEntradaSalidaService {
     });
   }
 
+  // Cuando estoy en Grabar Entrada/Salida
+  protected inicializarNuevaEntradaSalida() {
+    this.mostrarFormulario = true;
+    this.pendiente = false;
+    this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
+  }
+
   onSubmit() {
     this.desactivarBtnSubmit();
     if (this.previsionEsValida()) {
@@ -295,7 +302,6 @@ export class FormularioEntradaSalidaService {
       next: (salidaCreada) => {
         console.log('Salida creada exitosamente:', salidaCreada);
         this.snackBarExito('Salida guardada correctamente');
-        // location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
@@ -303,6 +309,7 @@ export class FormularioEntradaSalidaService {
         );
         this.resetForm();
         this.btnSubmitActivado = true;
+        this.inicializarNuevaEntradaSalida();
       },
       error: (error) => {
         console.error('Error al crear la salida:', error);
@@ -317,7 +324,6 @@ export class FormularioEntradaSalidaService {
       next: (entradaCreada) => {
         console.log('Entrada creada exitosamente:', entradaCreada);
         this.snackBarExito('Entrada guardada correctamente');
-        // location.reload();
         this.entradaSalidaForm.reset();
         this.entradaSalidaForm.setControl(
           'productos',
@@ -325,6 +331,7 @@ export class FormularioEntradaSalidaService {
         );
         this.resetForm();
         this.btnSubmitActivado = true;
+        this.inicializarNuevaEntradaSalida();
       },
       error: (error) => {
         console.error('Error al crear la entrada:', error);
@@ -354,20 +361,22 @@ export class FormularioEntradaSalidaService {
     const descriptionControl = this.productosControls
       .at(index)
       .get('description');
-      
-    if (refControl!.value === 'VISUAL') {
-      if(!descriptionControl || descriptionControl.value == '') {
+
+    if (refControl!.value === 'VISUAL' && this.esSalida()) {
+      if (!descriptionControl || descriptionControl.value == '') {
         this.cargarVisuales();
       } else {
         this.cargarVisualesPorDescripcion(descriptionControl.value);
       }
-    } else if (refControl!.value === 'SIN REFERENCIA') {
-      if(!descriptionControl || descriptionControl.value == '') {
-        this.cargarProductosSinReferencia()
-      } else{
-        this.cargarProductosSinReferenciaPorDescripcion(descriptionControl.value);
+    } else if (refControl!.value === 'SIN REFERENCIA' && this.esSalida()) {
+      if (!descriptionControl || descriptionControl.value == '') {
+        this.cargarProductosSinReferencia();
+      } else {
+        this.cargarProductosSinReferenciaPorDescripcion(
+          descriptionControl.value
+        );
       }
-    } else {
+    } else if (/^\d/.test(refControl!.value)) {
       refControl!.valueChanges
         .pipe(
           debounceTime(300),
@@ -405,6 +414,30 @@ export class FormularioEntradaSalidaService {
     }
   }
 
+  buscarProductoEspecial(index: number) {
+    if (this.esSalida()) {
+      const refControl = this.productosControls.at(index).get('ref');
+      const descriptionControl = this.productosControls
+        .at(index)
+        .get('description');
+      if (refControl!.value === 'VISUAL') {
+        if (!descriptionControl || descriptionControl.value == '') {
+          this.cargarVisuales();
+        } else {
+          this.cargarVisualesPorDescripcion(descriptionControl.value);
+        }
+      } else if (refControl!.value === 'SIN REFERENCIA') {
+        if (!descriptionControl || descriptionControl.value == '') {
+          this.cargarProductosSinReferencia();
+        } else {
+          this.cargarProductosSinReferenciaPorDescripcion(
+            descriptionControl.value
+          );
+        }
+      }
+    }
+  }
+
   isProductoNuevo(index: number): boolean {
     return this.productosNuevos.has(index);
   }
@@ -412,8 +445,7 @@ export class FormularioEntradaSalidaService {
   // Se llama al insertar el Excel
   indice = 0;
   buscarDescripcionProducto(formGroup: FormGroup, ref: String) {
-    if(ref !== 'VISUAL' && ref !== 'SIN REFERENCIA') {
-      console.log("Entro");
+    if (ref !== 'VISUAL' && ref !== 'SIN REFERENCIA') {
       this.productoService.getProductoPorReferencia(ref).subscribe({
         next: (producto) => {
           if (producto == null) {
@@ -887,13 +919,20 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarProductosSinReferenciaPorDescripcion(descripcion: string) {
-    this.productoService.getProductosSinReferenciaPorDescripcion(descripcion).subscribe(
-      (data: Producto[]) => {
-        this.productosSR = data;
-      },
-      (error) => {
-        console.error('Error al obtener los Visuales', error);
-      }
-    );
+    this.productoService
+      .getProductosSinReferenciaPorDescripcion(descripcion)
+      .subscribe(
+        (data: Producto[]) => {
+          this.productosSR = data;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
+  }
+
+  esProductoEspecial(referencia: String) {
+    if (referencia == null) return false;
+    return 'VISUAL' == referencia || 'SIN REFERENCIA' == referencia;
   }
 }

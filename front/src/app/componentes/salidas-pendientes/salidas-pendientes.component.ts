@@ -47,7 +47,11 @@ export class SalidasPendientesComponent
       )
       .subscribe(
         (data) => {
-          // location.reload();
+          this.salidas = this.salidas.filter((e) => e.id !== id);
+          this.dataSource.data = [...this.salidas]
+          console.log('Salida grabada con éxito');
+          this.snackBarExito('Salida grabada con éxito');
+          this.btnSubmitActivado = true;
         },
         (error) => {
           this.btnSubmitActivado = true;
@@ -59,9 +63,14 @@ export class SalidasPendientesComponent
   deleteSalida(idSalida: number) {
     this.salidaService.deleteSalida(idSalida).subscribe(
       (data) => {
+        this.salidas = this.salidas.filter((e) => e.id !== idSalida);
+        this.dataSource.data = [...this.salidas]
         console.log('Salida borrada con éxito');
+        this.snackBarExito('Salida borrada con éxito');
+        this.btnSubmitActivado = true;
       },
       (error) => {
+        this.btnSubmitActivado = true;
         console.error(error);
       }
     );

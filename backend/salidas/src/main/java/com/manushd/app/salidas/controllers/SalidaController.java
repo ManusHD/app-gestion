@@ -64,12 +64,20 @@ public class SalidaController {
         List<Ubicacion> ubicacionesList = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
+        System.out.println("=====================================");
+        System.out.println("SALIDA");
+        System.out.println(salida);
+        
         if (Boolean.TRUE.equals(salida.getEstado())) {
+            System.out.println("Entro en el IF");
             // Lista para almacenar las ubicaciones (únicas) de la salida
             List<String> nombresUbicaciones = new ArrayList<>();
 
             // Validar cada producto de la salida
             for (ProductoSalida productoSalida : salida.getProductos()) {
+                System.out.println("-------------------------------------");
+                System.out.println(productoSalida);
+
                 try {
                     // Validaciones generales
                     if (salida.getFechaEnvio() == null) {
@@ -124,6 +132,7 @@ public class SalidaController {
                     ProductoUbicacion productoUbicacion = new ProductoUbicacion();
                     productoUbicacion.setRef(ref);
                     productoUbicacion.setUnidades(productoSalida.getUnidades());
+                    productoUbicacion.setDescription(productoSalida.getDescription());
 
                     // Agregar el producto a la ubicación
                     ubicacion.getProductos().add(productoUbicacion);
@@ -200,6 +209,8 @@ public class SalidaController {
 
             // Actualizar el stock de cada ubicación llamando al endpoint /ubicaciones/restar
             for (Ubicacion ubicacion : ubicacionesList) {
+                System.out.println("=================UBICACION LISTA SALIDA===============");
+                System.out.println(ubicacion);
                 try {
                     ResponseEntity<Ubicacion> response = restTemplate.exchange(
                             "http://localhost:8095/ubicaciones/restar",

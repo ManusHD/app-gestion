@@ -49,17 +49,29 @@ export class EntradasPendientesComponent
         })
       )
       .subscribe((data) => {
-        location.reload();
-      });
+        this.entradas = this.entradas.filter((e) => e.id !== id);
+        this.dataSource.data = [...this.entradas]
+        console.log('Entrada grabada con éxito');
+        this.snackBarExito('Entrada grabada con éxito');
+        this.btnSubmitActivado = true;
+      }),
+      (error: any) => {
+        this.btnSubmitActivado = true;
+        console.error(error);
+      };
   }
 
   deleteEntrada(idEntrada: number) {
     this.entradaService.deleteEntrada(idEntrada).subscribe(
-      (data) => {
+      (data: Entrada) => {
+        this.entradas = this.entradas.filter((e) => e.id !== idEntrada);
+        this.dataSource.data = [...this.entradas]
         console.log('Entrada borrada con éxito');
-        location.reload();
+        this.snackBarExito('Entrada borrada con éxito');
+        this.btnSubmitActivado = true;
       },
       (error) => {
+        this.btnSubmitActivado = true;
         console.error(error);
       }
     );

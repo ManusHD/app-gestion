@@ -176,21 +176,43 @@ public class ProductosController {
      * Endpoint para restar stock a un producto especial, identificado por su id.
      * Si tras restar el stock este queda en 0, se elimina el producto.
      */
-    @PutMapping("/productos/{id}/restarEspecial")
-    public ResponseEntity<?> subtractStockEspecial(@PathVariable Long id, @RequestBody Integer cantidad) {
-        Optional<Producto> optProducto = productosRepository.findById(id);
+    @PutMapping("/productos/visual/restarEspecial/{description}")
+    public ResponseEntity<?> subtractStockEspecialVisual(@PathVariable String description, @RequestBody Integer cantidad) {
+        Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("VISUAL", description);
         if (!optProducto.isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Producto especial con id " + id + " no encontrado");
+                    .body("Producto especial con Descripción '" + optProducto.get().getDescription() + "' no encontrado");
         }
         Producto producto = optProducto.get();
         int nuevoStock = producto.getStock() - cantidad;
         if (nuevoStock < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("No hay stock suficiente para el producto especial con id " + id);
+                    .body("No hay stock suficiente para el producto especial con Descripción " + optProducto.get().getDescription());
         } else if (nuevoStock == 0) {
             productosRepository.delete(producto);
-            return ResponseEntity.ok("Producto especial con id " + id + " eliminado por stock 0");
+            return ResponseEntity.ok("Producto especial con Descripción " + optProducto.get().getDescription() + " eliminado por stock 0");
+        } else {
+            producto.setStock(nuevoStock);
+            productosRepository.save(producto);
+            return ResponseEntity.ok(producto);
+        }
+    }
+
+    @PutMapping("/productos/sinreferencia/restarEspecial/{description}")
+    public ResponseEntity<?> subtractStockEspecialSR(@PathVariable String description, @RequestBody Integer cantidad) {
+        Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA", description);
+        if (!optProducto.isPresent()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Producto especial con Descripción '" + optProducto.get().getDescription() + "' no encontrado");
+        }
+        Producto producto = optProducto.get();
+        int nuevoStock = producto.getStock() - cantidad;
+        if (nuevoStock < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("No hay stock suficiente para el producto especial con Descripción " + optProducto.get().getDescription());
+        } else if (nuevoStock == 0) {
+            productosRepository.delete(producto);
+            return ResponseEntity.ok("Producto especial con Descripción " + optProducto.get().getDescription() + " eliminado por stock 0");
         } else {
             producto.setStock(nuevoStock);
             productosRepository.save(producto);

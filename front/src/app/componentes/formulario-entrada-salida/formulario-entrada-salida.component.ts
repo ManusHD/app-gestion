@@ -187,13 +187,6 @@ export class FormularioEntradaSalidaComponent
     console.log(checked);
   }
 
-  // Cuando estoy en Grabar Entrada
-  private inicializarNuevaEntradaSalida() {
-    this.mostrarFormulario = true;
-    this.pendiente = false;
-    this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
-  }
-
   // Cuando voy a importar un Excel
   private inicializarPrevisionEntradaSalida() {
     this.pendiente = true;

@@ -7,7 +7,7 @@
             <ng-container matColumnDef="origen">
                 <th class="header-paginator" *matHeaderCellDef>Origen</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let entrada">
-                    {{entrada.origen || entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}}
+                    {{entrada.origen || entrada.colaborador || (entrada.perfumeria && entrada.pdv ? entrada.perfumeria + ' - ' + entrada.pdv : '')}}
                 </td>
             </ng-container>
 

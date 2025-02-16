@@ -73,6 +73,11 @@ public class UbicacionesController {
         return ubicacionesRepository.findByProductosRefOrderByNombreAsc(ref);
     }
 
+    @GetMapping("/ubicaciones/descripcionProducto/{description}")
+    public Iterable<Ubicacion> findByProductosDescription(@PathVariable String description) {
+        return ubicacionesRepository.findByProductosDescriptionOrderByNombreAsc(description);
+    }
+
     /**
      * Al sumar productos a una ubicación, se:
      * - Para productos normales: se comprueba si ya existe en la ubicación y se suman las unidades.
@@ -139,7 +144,7 @@ public class UbicacionesController {
             return ubicacionesRepository.save(ubicacion);
         }
     }
-
+    
     /**
      * Al restar productos de una ubicación:
      * - Para productos normales: se busca por referencia.
@@ -150,6 +155,8 @@ public class UbicacionesController {
      */
     @PostMapping("/ubicaciones/restar")
     public ResponseEntity<?> restarUbicacion(@RequestBody Ubicacion ubicacion) {
+        System.out.println("=============UBICACION RESTAR============");
+        System.out.println(ubicacion);
         try {
             Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
 
@@ -159,17 +166,21 @@ public class UbicacionesController {
                         // Buscar por productoId
                         ProductoUbicacion prodExistente = ubiAux.getProductos()
                                 .stream()
-                                .filter(p -> p.getProductoId() != null && p.getProductoId().equals(prodRestar.getProductoId()))
+                                .filter(p -> p.getDescription() != null && p.getDescription().equals(prodRestar.getDescription()))
                                 .findFirst()
                                 .orElse(null);
+                        
+                        System.out.println("---------------------");
+                        System.out.println(prodExistente);
+                        System.out.println(prodRestar);
                         if (prodExistente == null) {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("No se encontró el producto especial con id " + prodRestar.getProductoId()
+                                    .body("No se encontró el producto especial con id " + prodRestar.getId()
                                             + " en la ubicación " + ubicacion.getNombre());
                         }
                         if (prodExistente.getUnidades() - prodRestar.getUnidades() < 0) {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("No hay unidades suficientes del producto especial con id " + prodRestar.getProductoId());
+                                    .body("No hay unidades suficientes del producto especial con id " + prodRestar.getId());
                         } else if (prodExistente.getUnidades() - prodRestar.getUnidades() == 0) {
                             // Se elimina el producto especial de la ubicación
                             ubiAux.getProductos().remove(prodExistente);
@@ -276,7 +287,12 @@ public class UbicacionesController {
      */
     private void restarStockProductoEspecial(ProductoUbicacion productoUbicacion) {
         RestTemplate restTemplate = new RestTemplate();
-        String url = "http://localhost:8091/productos/" + productoUbicacion.getProductoId() + "/restarEspecial";
+        String url = "";
+        if(productoUbicacion.getRef().equals("VISUAL")){
+            url = "http://localhost:8091/productos/visual/restarEspecial/" + productoUbicacion.getDescription();
+        } else {
+            url = "http://localhost:8091/productos/sinreferencia/restarEspecial/" + productoUbicacion.getDescription();
+        }
         restTemplate.exchange(
                 url,
                 HttpMethod.PUT,

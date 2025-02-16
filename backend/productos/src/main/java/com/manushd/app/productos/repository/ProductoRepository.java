@@ -19,4 +19,5 @@ public interface ProductoRepository extends CrudRepository<Producto, Long>{
 
     Iterable<Producto> findByReferenciaAndDescriptionContainingIgnoreCase(String referencia, String description);
     
+    Optional<Producto> findByReferenciaAndDescription(String referencia, String description);
 }

@@ -46,7 +46,6 @@ export class InventarioComponent implements OnInit{
         this.productosBuscados = data;
         this.dataSourceStock.data = this.productos;
         this.dataSourceStock.paginator = this.paginatorStock;
-        console.log(this.productos);
       }
     );
   }

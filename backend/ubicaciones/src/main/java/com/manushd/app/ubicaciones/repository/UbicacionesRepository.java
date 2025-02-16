@@ -18,4 +18,6 @@ public interface UbicacionesRepository extends CrudRepository<Ubicacion, Long>{
 
         Iterable<Ubicacion> findByProductosRefOrderByNombreAsc(String ref);
 
+        Iterable<Ubicacion> findByProductosDescriptionOrderByNombreAsc(String ref);
+
 }
