@@ -1,6 +1,6 @@
+/* Estilos para el panel lateral */
 #panel-lateral {
     margin: 0;
-    padding: 0 10px;
     min-height: 100vh;
     height: 100%;
     color: white;
@@ -10,90 +10,387 @@
     justify-content: space-between;
 }
 
-a img {
-    width: 100%;
-    padding-top: 10px;
+.principal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--letter-color) var(--main-color);
 }
 
-h1{
+.principal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.principal::-webkit-scrollbar-track {
+  background: var(--main-color);
+}
+
+.principal::-webkit-scrollbar-thumb {
+  background-color: var(--letter-color);
+  border-radius: 6px;
+}
+
+/* Logo */
+.principal > .logo  {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  margin-bottom: 15px;
+}
+
+.principal > a img {
+  max-width: 80%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.principal > a img:hover {
+  transform: scale(1.05);
+}
+
+/* Username */
+.username{
+    color: white;
     font-size: 15px;
     text-align: center;
-    background-color: var(--letter-color-off);
+    background-color: var(--main-color);
     border-radius: 8px;
     padding: 5px;
+    font-weight: 400;
     box-shadow: 0px 0px 1px,
-                0px 0px 2px,
-                0px 0px 5px;
+        0px 0px 2px,
+        0px 0px 5px;
+    text-decoration: none;
+    margin: 0 15px 15px;
+    transition: all 0.2s ease;
+    padding: 5px 10px;
 }
 
+.username:hover {
+  background-color: rgba(61, 126, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Menú de navegación */
 ul {
-    padding: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 li {
-    list-style: none;
-    padding: 0;
+  width: 100%;
+  position: relative;
 }
 
-li a, summary {
-    display: flex;
-    text-decoration: none;
-    padding: 10px 15px;
-    color: var(--letter-color-off);
-    border-radius: 3px;
-    cursor: pointer;
+li a {
+  display: block;
+  padding: 12px 20px;
+  color: var(--letter-color-off);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
 }
 
-li a:hover{
-    color: white;
+li a:hover {
+  color: white;
+  background-color: rgba(1, 8, 31, 0.5);
+  padding-left: 25px;
 }
 
-#panel-lateral .active {
-    color: white;
-    background-color: rgb(94, 106, 129, 0.5);
+li a.active {
+  color: white;
+  background-color: rgba(1, 8, 31, 0.8);
+  border-left: 4px solid white;
+  padding-left: 16px;
 }
 
-#panel-lateral .active:hover {
-    text-shadow: 0px 0px 1px;
+/* Dropdown de gestores */
+details {
+  width: 100%;
 }
 
 summary {
-    display: flex; 
-    align-items: center; 
-    color: var(--letter-color-off);
-    cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  color: var(--letter-color-off);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+  list-style: none;
+  position: relative;
 }
 
-.summary-active {
-    color: white;
+summary:hover, 
+summary.summary-active {
+  color: white;
+  background-color: rgba(1, 8, 31, 0.5);
+}
+
+summary:focus {
+  outline: none;
+}
+
+
+.summary-content {
+  flex-grow: 1;
 }
 
 .summary-marker {
-    margin-left: 10px;
-    transition: transform 0.05s ease;
+  transition: transform 0.3s ease;
+  font-size: 10px;
+  color: white;
 }
 
 details[open] .summary-marker {
-    transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
-details li {
-    margin-left: 15px;
+details[open] summary {
+  color: white;
+  background-color: rgba(1, 8, 31, 0.5);
 }
 
-summary::-webkit-details-marker {
+/* Submenu items */
+details li a {
+  padding-left: 35px;
+  font-size: 13px;
+}
+
+details li a:hover {
+  padding-left: 40px;
+}
+
+details li a.active {
+  padding-left: 31px;
+}
+
+
+/* Responsividad */
+@media (max-width: 768px) {
+  #panel-lateral {
+    width: 60px;
+    overflow: hidden;
+  }
+  
+  #panel-lateral:hover,
+  #panel-lateral:focus-within {
+    width: 250px;
+  }
+  
+  .username {
     display: none;
+  }
+  
+  #panel-lateral:hover .username,
+  #panel-lateral:focus-within .username {
+    display: block;
+  }
+  
+  li a, summary {
+    padding: 15px 15px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  #panel-lateral:hover li a,
+  #panel-lateral:focus-within li a,
+  #panel-lateral:hover summary,
+  #panel-lateral:focus-within summary {
+    text-align: left;
+    padding: 12px 20px;
+  }
+  
+  .summary-content {
+    display: none;
+  }
+  
+  #panel-lateral:hover .summary-content,
+  #panel-lateral:focus-within .summary-content {
+    display: block;
+  }
+  
+  details li {
+    display: none;
+  }
+  
+  #panel-lateral:hover details li,
+  #panel-lateral:focus-within details li {
+    display: block;
+  }
 }
 
-summary {
-    list-style: none;
+/*-------BOTON LOGIN------*/
+.login, .logout {
+    margin-bottom: 10px;
 }
 
-summary:hover {
-    color: white;
-}
-
-.ajustes li {
+.login-button {
+    position: relative;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 36px;
+    border: 4px solid;
+    border-color: transparent;
+    font-size: 16px;
+    background-color: inherit;
+    border-radius: 12px;
+    font-weight: 600;
+    color: rgb(47, 248, 255);
+    box-shadow: 0 0 0 2px rgb(47, 255, 238);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+.login-button svg {
+    position: absolute;
+    width: 24px;
+    fill: rgb(47, 255, 255);
+    z-index: 9;
+    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.login-button .arr-1 {
+    right: 16px;
+}
+
+.login-button .arr-2 {
+    left: -25%;
+}
+
+.login-button .circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 180px;
+    background-color: rgb(47, 224, 255);
+    border-radius: 50%;
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.login-button .text {
+    position: relative;
+    z-index: 1;
+    transform: translateX(-12px);
+    transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.login-button:hover,
+.activeLogin .login-button {
+    box-shadow: 0 0 0 12px transparent;
+    color: #212121;
+    border-radius: 12px;
+}
+
+.login-button:hover .arr-1 {
+    right: -25%;
+}
+
+.login-button:hover .arr-2 {
+    left: 16px;
+}
+
+.login-button:hover .text,
+.activeLogin .login-button text {
+    transform: translateX(12px);
+}
+
+.login-button:hover svg,
+.activeLogin .login-button svg {
+    fill: #212121;
+}
+
+.login-button:active {
+    scale: 0.95;
+}
+
+.login-button:hover .circle,
+.activeLogin .login-button .circle {
+    width: 220px;
+    height: 180px;
+    opacity: 1;
+}
+
+/*-------BOTON LOGOUT------*/
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 45px;
+    height: 45px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position: fixed;
+    bottom: 10px;
+    overflow: hidden;
+    transition-duration: .3s;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+    background-color: rgb(255, 65, 65);
+  }
+  
+  /* plus sign */
+  .sign {
+    width: 100%;
+    transition-duration: .3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .sign svg {
+    width: 17px;
+  }
+  
+  .sign svg path {
+    fill: white;
+  }
+  /* text */
+  .textLogout {
+    position: absolute;
+    right: 0%;
+    width: 0%;
+    opacity: 0;
+    color: white;
+    font-size: 1.2em;
+    font-weight: 600;
+    transition-duration: .3s;
+  }
+  /* hover effect on button width */
+  .btn-logout:hover {
+    width: 150px;
+    border-radius: 10px;
+    transition-duration: .3s;
+  }
+  
+  .btn-logout:hover .sign {
+    width: 30%;
+    transition-duration: .3s;
+    padding-left: 00px;
+  }
+  /* hover effect button's text */
+  .btn-logout:hover .textLogout {
+    opacity: 1;
+    width: 70%;
+    transition-duration: .3s;
+    padding-right: 5px;
+  }
+  /* button click effect*/
+  .btn-logout:active {
+    transform: translate(2px ,2px);
+  }

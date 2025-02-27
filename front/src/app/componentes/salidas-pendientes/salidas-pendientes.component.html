@@ -31,7 +31,7 @@
                     <div style="display: flex; gap: 5px">
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"
                             (salidaRellena)="salida.rellena = $event"></app-detalles-salidas>
-                        <button [disabled]="!btnSubmitActivado"
+                        <button *appHasRole="'ROLE_ADMIN'" [disabled]="!btnSubmitActivado"
                             (click)="deleteSalida(salida.id!)" class="btn-eliminar">
                             <span class="text">BORRAR</span>
                             <span class="icon">
@@ -51,7 +51,14 @@
             <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
             <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
         </table>
-        <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true">
+        <mat-paginator
+            class="paginator"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [length]="totalElementos"
+            [hidePageSize]="true"
+            showFirstLastButtons
+            (page)="cambiarPagina($event)">
         </mat-paginator>
     </div>
 </div>

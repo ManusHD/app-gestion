@@ -2,6 +2,7 @@ package com.manushd.app.agenciasenvio.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RestController
 @CrossOrigin(value = "http://localhost:4200")
+@PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class AgenciasController {
     @Autowired
     private AgenciaRepository agenciaRepository;
@@ -57,6 +59,7 @@ public class AgenciasController {
     }
 
     @PostMapping("/agenciasEnvio")
+    @PreAuthorize("hasRole('ADMIN')")
     public Agencia addAgencia(@RequestBody Agencia agencia) {
         Agencia agenciaAux = agenciaRepository.findByNombre(agencia.getNombre()).orElse(null);
 
@@ -68,6 +71,7 @@ public class AgenciasController {
     }   
 
     @PutMapping("/agenciasEnvio")
+    @PreAuthorize("hasRole('ADMIN')")
     public Agencia updateAgencia(@RequestBody Agencia agencia) {
         Agencia agenciaAux = agenciaRepository.findById(agencia.getId()).orElse(null);
 
@@ -79,6 +83,7 @@ public class AgenciasController {
     }
 
     @DeleteMapping("/agenciasEnvio/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteAgencia(@PathVariable Long id) {
         Agencia agenciaAux = agenciaRepository.findById(id).orElse(null);
 

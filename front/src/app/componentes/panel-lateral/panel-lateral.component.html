@@ -1,43 +1,95 @@
 <div id="panel-lateral">
     <div class="principal">
-        <a routerLink="">
+        <a class="logo" routerLink="">
             <img src="../../../assets/imagenes/delim.jpg" />
         </a>
-        <h1>Juan_Carlos</h1>
-        <ul>
-            <li id="entradas">
-                <a routerLinkActive="active" 
-                [routerLinkActiveOptions]="{exact: false}"
-                routerLink="entradas">
-                ENTRADAS
+
+        <ng-container *appAuthenticated>
+            <a class="username" routerLink="/registrar">
+                {{username}}
             </a>
-            </li>
-            <li id="salidas">
-                <a routerLinkActive="active" 
-                [routerLinkActiveOptions]="{exact: false}"
-                routerLink="salidas">
-                    SALIDAS
-                </a>
-            </li>
-            <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">INVENTARIO</a></li>
-            <details>
-                <summary [ngClass]="{'summary-active': isActive('/ubicaciones') || isActive('/agencias') || isActive('/perfumerias') || isActive('/pdv') || isActive('/colaboradores') || isActive('/otrasDirecciones')}">
-                    <span class="summary-content">GESTORES</span>
-                    <span class="summary-marker">►</span>
-                </summary>
-                <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones">Ubicaciones almacén</a></li>
-                <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias">Agencias de transporte</a></li>
-                <li id="perfumerias"><a routerLinkActive="active" class="" routerLink="perfumerias">Perfumerías</a></li>
-                <li id="pdv"><a routerLinkActive="active" class="" routerLink="pdv">PDV</a></li>
-                <li id="colaboradores"><a routerLinkActive="active" class="" routerLink="colaboradores">Colaboradores</a></li>
-                <li id="otrasDirecciones"><a routerLinkActive="active" class="" routerLink="otrasDirecciones">Otras Direcciones</a></li>
-            </details>
-        </ul>
+
+            <ul>
+                <li id="entradas">
+                    <a 
+                      routerLink="/entradas" 
+                      routerLinkActive="active" 
+                      [routerLinkActiveOptions]="{ exact: false }" 
+                      (click)="onEntradasClick($event)">
+                      ENTRADAS
+                    </a>
+                  </li>
+                  
+                  <li id="salidas">
+                    <a 
+                      routerLink="/salidas" 
+                      routerLinkActive="active" 
+                      [routerLinkActiveOptions]="{ exact: false }" 
+                      (click)="onSalidasClick($event)">
+                      SALIDAS
+                    </a>
+                  </li>
+                <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">INVENTARIO</a></li>
+                <details *appHasRole="'ROLE_ADMIN'">
+                    <summary
+                        [ngClass]="{'summary-active': isActive('/ubicaciones') || isActive('/agencias') || isActive('/perfumerias') || isActive('/pdv') || isActive('/colaboradores') || isActive('/otrasDirecciones')}">
+                        <span class="summary-content">GESTORES</span>
+                        <span class="summary-marker">►</span>
+                    </summary>
+                    <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones">UBICACIONES
+                            ALMACÉN</a></li>
+                    <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias">AGENCIAS DE
+                            TRANSPORTE</a>
+                    </li>
+                    <li id="perfumerias"><a routerLinkActive="active" class="" routerLink="perfumerias">PERFUMERÍAS</a>
+                    </li>
+                    <li id="pdv"><a routerLinkActive="active" class="" routerLink="pdv">PDV</a></li>
+                    <li id="colaboradores"><a routerLinkActive="active" class=""
+                            routerLink="colaboradores">COLABORADORES</a></li>
+                    <li id="otrasDirecciones"><a routerLinkActive="active" class="" routerLink="otrasDirecciones">OTRAS
+                            DIRECCIONES</a></li>
+                    <li id="productos"><a routerLinkActive="active" class="" routerLink="productos">PRODUCTOS</a></li>
+                    <li id="reubicar-palets"><a routerLinkActive="active" class="" routerLink="reubicarPalets">REUBICAR
+                            PALETS</a></li>
+                </details>
+            </ul>
+        </ng-container>
     </div>
-    <div class="ajustes">
-        <li>
-            <img src="../../../assets/icons/settings.svg" alt="">
-            <a href="">AJUSTES</a>
-        </li>
-    </div>
+
+    <ng-container *ngIf="!roles.isLoggedIn; else logout">
+        <div class="login" routerLinkActive="activeLogin">
+            <div class="centrar">
+                <button class="login-button" routerLink="login">
+                    <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z">
+                        </path>
+                    </svg>
+                    <span class="text">LOGIN </span>
+                    <span class="circle"></span>
+                    <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z">
+                        </path>
+                    </svg>
+                </button>
+                <br /><br />
+            </div>
+        </div>
+    </ng-container>
+    <ng-template #logout>
+        <div class="logout">
+            <div class="centrar">
+                <button class="btn-logout" (click)="onLogout()">
+                    <div class="sign"><svg viewBox="0 0 512 512">
+                            <path
+                                d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z">
+                            </path>
+                        </svg></div>
+                    <div class="textLogout">Logout</div>
+                </button>
+            </div>
+        </div>
+    </ng-template>
+
 </div>

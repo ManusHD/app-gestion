@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,12 +27,15 @@ import com.manushd.app.direcciones.repository.ColaboradoresRepository;
 import com.manushd.app.direcciones.repository.OtrasDireccionesRepository;
 import com.manushd.app.direcciones.repository.PDVrepository;
 import com.manushd.app.direcciones.repository.PerfumeriaRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.persistence.EntityManager;
 
 @Controller
 @RestController
 @CrossOrigin(value = "http://localhost:4200")
+@RequestMapping("/direcciones")
+@PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class DireccionesController {
 
     @Autowired
@@ -59,6 +63,7 @@ public class DireccionesController {
     }
 
     @PostMapping("/colaboradores")
+    @PreAuthorize("hasRole('ADMIN')")
     public Colaborador createColaborador(@RequestBody Colaborador colaborador) {
         Colaborador colaboradorAux = colaboradoresRepository.findByNombre(colaborador.getNombre()).orElse(null);
 
@@ -70,6 +75,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/colaboradores/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Colaborador updateColaborador(@PathVariable Long id, @RequestBody Colaborador colaboradorDetails) {
         Colaborador colaborador = colaboradoresRepository.findById(id).orElse(null);
         if (colaborador != null) {
@@ -87,6 +93,7 @@ public class DireccionesController {
     }
 
     @DeleteMapping("/colaboradores/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteColaborador(@PathVariable Long id) {
         colaboradoresRepository.deleteById(id);
     }
@@ -107,6 +114,7 @@ public class DireccionesController {
     }
 
     @PostMapping("/pdvs")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public PDV createPdv(@RequestBody PDV pdv) {
         PDV pdvAux = pdvRepository.findByNombre(pdv.getNombre()).orElse(null);
@@ -117,6 +125,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/pdvs/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PDV updatePdv(@PathVariable Long id, @RequestBody PDV pdvDetails) {
         PDV pdv = pdvRepository.findById(id).orElse(null);
         if (pdv != null) {
@@ -133,6 +142,7 @@ public class DireccionesController {
     }
 
     @DeleteMapping("/pdvs/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deletePdv(@PathVariable Long id) {
         pdvRepository.deleteById(id);
     }
@@ -190,6 +200,7 @@ public class DireccionesController {
     private EntityManager entityManager;
     
     @PostMapping("/perfumerias")
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public Perfumeria createPerfumeria(@RequestBody Perfumeria perfumeria) {
         Perfumeria perfumeriaAux = perfumeriaRepository.findByNombre(perfumeria.getNombre()).orElse(null);
@@ -201,6 +212,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/perfumerias/{id}/nuevoPDV")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> agregarPerfumeria(@PathVariable Long id, @RequestBody PDV pdv) {
         try {
             // Buscar la Perfumeria
@@ -230,6 +242,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/perfumerias/{id}/eliminarPDV/{pdvId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> eliminarPerfumeria(@PathVariable Long id, @PathVariable Long pdvId) {
         try {
             // Buscar el PDV
@@ -255,6 +268,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/perfumerias/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Perfumeria updatePerfumeria(@PathVariable Long id, @RequestBody Perfumeria perfumeriaDetails) {
         Perfumeria perfumeria = perfumeriaRepository.findById(id).orElse(null);
         if (perfumeria != null) {
@@ -272,6 +286,7 @@ public class DireccionesController {
     }
 
     @DeleteMapping("/perfumerias/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deletePerfumeria(@PathVariable Long id) {
         perfumeriaRepository.deleteById(id);
     }
@@ -292,6 +307,7 @@ public class DireccionesController {
     }
 
     @PostMapping("/otrasDirecciones")
+    @PreAuthorize("hasRole('ADMIN')")
     public OtrasDirecciones createOtrasDirecciones(@RequestBody OtrasDirecciones otrasDirecciones) {
         OtrasDirecciones otrasDireccionesAux = otrasDireccionesRepository.findByNombre(otrasDirecciones.getNombre())
                 .orElse(null);
@@ -303,6 +319,7 @@ public class DireccionesController {
     }
 
     @PutMapping("/otrasDirecciones/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public OtrasDirecciones updateOtrasDirecciones(@PathVariable Long id,
             @RequestBody OtrasDirecciones otrasDireccionesDetails) {
         OtrasDirecciones otrasDirecciones = otrasDireccionesRepository.findById(id).orElse(null);
@@ -321,6 +338,7 @@ public class DireccionesController {
     }
 
     @DeleteMapping("/otrasDirecciones/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteOtrasDirecciones(@PathVariable Long id) {
         otrasDireccionesRepository.deleteById(id);
     }

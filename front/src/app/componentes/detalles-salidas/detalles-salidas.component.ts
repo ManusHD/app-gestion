@@ -1,6 +1,7 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { MatSnackBar  } from '@angular/material/snack-bar';
 import { Salida } from 'src/app/models/salida.model';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SalidaServices } from 'src/app/services/salida.service';
 
 @Component({
@@ -15,15 +16,17 @@ export class DetallesSalidasComponent implements OnInit {
   @Output() salidaRellena = new EventEmitter<boolean>();
   currentPath:string = window.location.pathname;
 
+  constructor(private carga: PantallaCargaService){}
+
   ngOnInit() {
     if(!this.enRecibidas) {
       this.iniciarSalidas();
-      this.salidaRellena.emit(this.todosLosCamposRellenos());
     }
   }
 
   iniciarSalidas() {
     this.formatearFecha(this.salida.fechaEnvio);
+    this.salidaRellena.emit(this.todosLosCamposRellenos());
   }
 
   mostrarDetalles() {

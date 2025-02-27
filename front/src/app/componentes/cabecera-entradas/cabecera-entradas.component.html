@@ -1,7 +1,7 @@
 <header>
     <ul>
-        <li><a routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" routerLink="/entradas">Previsión de entradas</a></li>
-        <li><a routerLinkActive="active" routerLink="/entradas/nuevo">Grabar entrada</a></li>
+        <li *appHasRole="'ROLE_ADMIN'"><a routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" routerLink="/entradas">Previsión de entradas</a></li>
+        <li *appHasRole="'ROLE_ADMIN'"><a routerLinkActive="active" routerLink="/entradas/nuevo">Grabar entrada</a></li>
         <li><a routerLinkActive="active" routerLink="/entradas/pendientes">Entradas pendientes de recepcionar</a></li>
         <li><a routerLinkActive="active" routerLink="/entradas/recibidas">Histórico de entradas</a></li>
     </ul>

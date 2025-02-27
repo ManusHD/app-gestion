@@ -7,5 +7,5 @@ export class ProductoEntrada {
     palets?: number;
     bultos?: number;
     observaciones?: String;
-    pendiente: boolean = false; // false = sin comprobar, true = comprobado
+    comprobado: boolean = true;
 }

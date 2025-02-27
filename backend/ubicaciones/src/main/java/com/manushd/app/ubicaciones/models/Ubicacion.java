@@ -29,7 +29,7 @@ public class Ubicacion {
     private Long id;
     private String nombre;
     
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "ubicacion_id")
     private Set<ProductoUbicacion> productos;
 }

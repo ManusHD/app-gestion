@@ -8,10 +8,10 @@ import { OtraDireccion } from "../models/otraDireccion.model";
 
 @Injectable()
 export class DireccionesService {
-    private apiUrlColaboradores = 'http://localhost:8097/colaboradores';
-    private apiUrlPdvs = 'http://localhost:8097/pdvs';
-    private apiUrlPerfumerias = 'http://localhost:8097/perfumerias';
-    private apiUrlOtrasDirecciones = 'http://localhost:8097/otrasDirecciones';
+    private apiUrlColaboradores = 'http://localhost:8097/direcciones/colaboradores';
+    private apiUrlPdvs = 'http://localhost:8097/direcciones/pdvs';
+    private apiUrlPerfumerias = 'http://localhost:8097/direcciones/perfumerias';
+    private apiUrlOtrasDirecciones = 'http://localhost:8097/direcciones/otrasDirecciones';
 
     constructor(private http: HttpClient) {}
 

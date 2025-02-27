@@ -38,7 +38,7 @@ public class Salida {
     private Boolean estado; // false = pendiente, true = recibida
     private Date fechaEnvio;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_producto")
     private Set<ProductoSalida> productos;
 }

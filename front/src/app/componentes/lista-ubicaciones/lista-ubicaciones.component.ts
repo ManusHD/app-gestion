@@ -5,9 +5,9 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { catchError, throwError } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
@@ -25,6 +25,13 @@ export class ListaUbicacionesComponent implements OnInit {
   ubicaciones: Ubicacion[] = [];
   tipoBusqueda: string = 'ubicaciones';
   buscador: string = '';
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
+  buscando: boolean = false;
+  
+  private ubicacionesParaExportarSubject = new BehaviorSubject<Ubicacion[]>([]);
+  ubicacionesParaExportar$ = this.ubicacionesParaExportarSubject.asObservable();
 
   // Propiedades para la edición en línea
   editingId: number | null = null;
@@ -60,41 +67,66 @@ export class ListaUbicacionesComponent implements OnInit {
     }
   }
 
+  cambiarPagina(event: PageEvent) {
+    this.pageIndex = event.pageIndex; 
+    this.pageSize = event.pageSize;
+    if(this.buscando){
+      this.buscarUbicaciones();
+    } else {
+      this.cargarUbicaciones();         
+    }
+  }
+
   resetearBuscador() {
     this.buscador = '';
+    this.pageIndex = 0;
+    this.buscando = false;
     this.cargarUbicaciones();
   }
 
   buscarUbicaciones() {
+    if(!this.buscando) {
+      this.pageIndex = 0;
+    }
+    this.buscando = true;
     if (this.tipoBusqueda === 'ubicaciones') {
-      this.ubicacionService.getUbicacionesByNombre(this.buscador)
-        .subscribe((data: Ubicacion[]) => {
-          this.ubicaciones = data;
+      this.ubicacionService.getUbicacionesByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
+        .subscribe((data) => {
+          this.ubicaciones = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-          this.dataSourceUbicaciones.paginator = this.paginatorUbicaciones;
         });
-    } else {
-      this.ubicacionService.getUbicacionesByReferenciaProducto(this.buscador)
-        .subscribe((data: Ubicacion[]) => {
-          this.ubicaciones = data;
+    } else if(this.tipoBusqueda === 'referencia') {
+      this.ubicacionService.getUbicacionesByReferenciaProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
+        .subscribe((data) => {
+          console.log("Entro")
+          console.log(data)
+          this.ubicaciones = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-          this.dataSourceUbicaciones.paginator = this.paginatorUbicaciones;
         });
     }
   }
 
   cargarUbicaciones(): void {
-    this.ubicacionService.getUbicacionesOrderByNombre().subscribe(
-      (data: Ubicacion[]) => {
-        this.ubicaciones = data;
+    this.ubicacionService.getUbicacionesOrderByNombrePaginadas(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.ubicaciones = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourceUbicaciones.data = this.ubicaciones;
-        this.dataSourceUbicaciones.paginator = this.paginatorUbicaciones;
       },
       (error) => {
         console.error('Error al cargar las ubicaciones', error);
       }
     );
   }
+  
 
   // Método para iniciar la edición
   startEditing(ubicacion: Ubicacion): void {
@@ -150,5 +182,29 @@ export class ListaUbicacionesComponent implements OnInit {
         console.error('Error al eliminar la ubicación', error);
       }
     );
+  }
+
+  // Método para obtener datos para exportar
+  obtenerDatosAExportar() {
+    // Inicia con un arreglo vacío o los datos actuales de la página
+    this.ubicacionesParaExportarSubject.next(this.ubicaciones);
+    if (this.buscando) {
+      if (this.tipoBusqueda === 'ubicaciones') {
+        this.ubicacionService.getUbicacionesByNombre(this.buscador)
+        .subscribe(data => {
+          this.ubicacionesParaExportarSubject.next(data);
+        });
+      } else if(this.tipoBusqueda === 'referencia') {
+        this.ubicacionService.getUbicacionesByReferenciaProducto(this.buscador)
+        .subscribe(data => {
+          this.ubicacionesParaExportarSubject.next(data);
+        });
+      }
+    } else {
+      this.ubicacionService.getUbicacionesOrderByNombre()
+      .subscribe(data => {
+          this.ubicacionesParaExportarSubject.next(data);
+        });
+    }
   }
 }

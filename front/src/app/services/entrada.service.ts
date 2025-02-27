@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { Entrada } from "../models/entrada.model";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { from, Observable } from "rxjs";
 
@@ -11,16 +11,42 @@ export class EntradaServices {
 
   constructor(private httpClient: HttpClient, private router: Router) {}
 
-  getEntradas(): Observable<Entrada[]> {
-    return this.httpClient.get<Entrada[]>(`${this.apiUrl}`);
+  getEntradasPaginado(page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}?page=${page}&size=${size}`);
   }
 
-  getEntradasByEstado(estado: boolean): Observable<Entrada[]> {
-    return this.httpClient.get<Entrada[]>(`${this.apiUrl}/estado/${estado}`);
+  getEntradasByEstadoPaginado(estado: boolean, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/paginado?page=${page}&size=${size}`);
   }
 
-  getEntradasByEstadoOrderByFechaRecepcion(estado: boolean): Observable<Entrada[]> {
-    return this.httpClient.get<Entrada[]>(`${this.apiUrl}/estado/${estado}/orderByRecepcion`);
+  getEntradasByEstado(estado: boolean): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}`);
+  }
+
+  getFiltradasEntradasPaginadas(fechaInicio: string, fechaFin: string, tipoBusqueda: string, texto: string, page: number, size: number): Observable<any> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin)
+      .set('tipoBusqueda', tipoBusqueda);
+    
+    if (texto && texto.trim() !== '') {
+      params = params.set('textoBusqueda', texto);
+    }
+    
+    return this.httpClient.get<any>(`${this.apiUrl}/filtrar/paginado?page=${page}&size=${size}`, { params });
+  }
+
+  getFiltradasEntradas(fechaInicio: string, fechaFin: string, tipoBusqueda: string, texto: string): Observable<Entrada[]> {
+    let params = new HttpParams()
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin)
+      .set('tipoBusqueda', tipoBusqueda);
+    
+    if (texto && texto.trim() !== '') {
+      params = params.set('textoBusqueda', texto);
+    }
+    
+    return this.httpClient.get<Entrada[]>(`${this.apiUrl}/filtrar`, { params });
   }
 
   setRecibida(id: number): Observable<Entrada> {

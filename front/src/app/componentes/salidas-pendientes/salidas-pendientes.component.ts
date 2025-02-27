@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { throwError, catchError } from 'rxjs';
 import { Salida } from 'src/app/models/salida.model';
@@ -23,37 +23,51 @@ export class SalidasPendientesComponent
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit() {
+    this.carga.show();
+    this.cargarSalidas();
+  }
+      
+  cambiarPagina(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
     this.cargarSalidas();
   }
 
   cargarSalidas() {
-    this.salidaService.getSalidasByEstado(false).subscribe((data: Salida[]) => {
-      this.salidas = data;
+    this.salidaService.getSalidasByEstadoPaginado(false, this.pageIndex, this.pageSize).subscribe((data) => {
+      this.salidas = data.content;
+      setTimeout(() => {
+        this.totalElementos = data.totalElements;
+      });
       this.dataSource.data = this.salidas;
-      this.dataSource.paginator = this.paginator;
-      console.log(this.salidas);
       this.cdr.detectChanges();
+      this.carga.hide();
     });
   }
 
   setEnviada(id: number) {
+    this.carga.show();
+    this.btnSubmitActivado = false;
     this.salidaService
       .setEnviada(id)
       .pipe(
         catchError((error) => {
           this.snackBarError(error.error);
+          this.carga.hide();
+          this.btnSubmitActivado = true;
           return throwError(error);
         })
       )
       .subscribe(
         (data) => {
-          this.salidas = this.salidas.filter((e) => e.id !== id);
-          this.dataSource.data = [...this.salidas]
+          this.cargarSalidas();
+          this.carga.hide();
           console.log('Salida grabada con éxito');
           this.snackBarExito('Salida grabada con éxito');
           this.btnSubmitActivado = true;
         },
         (error) => {
+          this.carga.hide();
           this.btnSubmitActivado = true;
           console.error(error);
         }
@@ -61,15 +75,18 @@ export class SalidasPendientesComponent
   }
 
   deleteSalida(idSalida: number) {
+    this.carga.show();
+    this.btnSubmitActivado = false;
     this.salidaService.deleteSalida(idSalida).subscribe(
       (data) => {
-        this.salidas = this.salidas.filter((e) => e.id !== idSalida);
-        this.dataSource.data = [...this.salidas]
+        this.cargarSalidas();
+        this.carga.hide();
         console.log('Salida borrada con éxito');
         this.snackBarExito('Salida borrada con éxito');
         this.btnSubmitActivado = true;
       },
       (error) => {
+        this.carga.hide();
         this.btnSubmitActivado = true;
         console.error(error);
       }

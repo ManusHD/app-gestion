@@ -1,8 +1,46 @@
 .contenedor-salidas-enviadas {
-    height: 1500px;
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
-.tabla-paginator {
+.buscador-fechas {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rango-fechas {
+    display: flex;
+    gap: 60px;
+    color: white;
+    width: fit-content;
+    margin-top: 20px;
+}
+
+.rango-fecha {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-fecha {
+    padding: 8px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #001a6e;
+    color: white;
+}
+
+.tabla-paginator,
+mat-paginator {
     height: fit-content;
-    width: 700px;
+    width: 100%;
+    max-width: 720px;
+}
+
+input[type="text"] {
+    width: 300px;
 }

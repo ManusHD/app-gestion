@@ -1,17 +1,51 @@
 <app-cabecera-entradas></app-cabecera-entradas>
-<div class="contenedor-entradas-recibidas">
 
-    <div class="flotar-medio">
+<div id="contenedor-entradas-recibidas">
+    <div>
+        <div class="contenedor-filtro">
+            <div class="buscador-fechas">
+                <div class="rango-fechas">
+                    <div class="rango-fecha">
+                        <label>Desde:</label>
+                        <input type="date" [(ngModel)]="fechaInicio" class="input-fecha" [max]="fechaFin" />
+                    </div>
+
+                    <div class="rango-fecha">
+                        <label>Hasta:</label>
+                        <input type="date" [(ngModel)]="fechaFin" class="input-fecha" [min]="fechaInicio" />
+                    </div>
+                </div>
+
+                <div class="buscador" (keyup)="onEnterKey($event)">
+                    <select [(ngModel)]="tipoBusqueda" class="select-buscador">
+                        <option value="fecha">Búsqueda solo por FECHA</option>
+                        <option value="referencia">Búsqueda por REFERENCIA</option>
+                        <option value="descripcion">Búsqueda por DESCRIPCIÓN</option>
+                        <option value="observacion">Búsqueda por OBSERVACIÓN</option>
+                        <option value="origen">Búsqueda por ORIGEN</option>
+                    </select>
+                    <input type="text" placeholder="Buscar entrada" [(ngModel)]="buscador" />
+                    <button (click)="buscarEntradas()" class="btn-buscar">
+                        <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+                        <span class="letra-buscador">Buscar</span>
+                    </button>
+                    <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+                </div>
+            </div>
+        </div>
+
         <div id="historial">
             <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
                 <caption>ENTRADAS RECEPCIONADAS</caption>
                 <ng-container matColumnDef="fechaRecepcion">
                     <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}} </td>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.fechaRecepcion | date:
+                        'dd/MM/yyyy'}} </td>
                 </ng-container>
                 <ng-container matColumnDef="origen">
                     <th class="header-paginator" *matHeaderCellDef>Origen / PO</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.origen || entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}} </td>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada">{{entrada.origen ||
+                        entrada.colaborador || entrada.perfumeria + ' - ' + entrada.pdv}} </td>
                 </ng-container>
                 <ng-container matColumnDef="dcs">
                     <th class="header-paginator" *matHeaderCellDef>DCS</th>
@@ -19,14 +53,28 @@
                 </ng-container>
                 <ng-container matColumnDef="detalles">
                     <th class="header-paginator" *matHeaderCellDef>Detalles</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let entrada"><app-detalles-entradas [enRecibidas]="true" [entrada]="entrada" (entradaRellena)="entrada.rellena=$event"></app-detalles-entradas></td>
+                    <td class="fila-paginator" mat-cell *matCellDef="let entrada"><app-detalles-entradas
+                            [enRecibidas]="true" [entrada]="entrada"
+                            (entradaRellena)="entrada.rellena=$event"></app-detalles-entradas></td>
                 </ng-container>
-                
+
                 <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
                 <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
             </table>
-            <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
+            
+        <mat-paginator
+            class="paginator"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [length]="totalElementos"
+            [hidePageSize]="true"
+            showFirstLastButtons
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
+            <app-exportar-excel (click)="obtenerDatosAExportar()"  [data$]="entradasParaExportar$" [nombreConjuntoExportado]="'ENTRADAS'"
+                [fileName]="'ENTRADAS-EXPORTADAS'"></app-exportar-excel>
         </div>
     </div>
-    
 </div>
+
+<app-pantalla-carga></app-pantalla-carga>

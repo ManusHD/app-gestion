@@ -35,7 +35,7 @@ public class Entrada {
     private String dcs; // 10 dígitos
     private Boolean estado; // false = pendiente, true = recibida
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "entradaId")
     private Set<ProductoEntrada> productos;
 }

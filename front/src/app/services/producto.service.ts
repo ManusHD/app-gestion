@@ -13,41 +13,74 @@ export class ProductoServices {
     return this.http.get<Producto[]>(`${this.apiUrl}`);
   }
 
-  getProductosOrdenadosPorReferencia(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/byReferencia`);
+  getProductosPaginado(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/byReferencia?page=${page}&size=${size}`);
   }
 
   getProductoPorReferencia(referencia: String): Observable<Producto> {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }
 
-  getVisuales(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/visuales`);
+  getVisualesPaginado(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/visuales?page=${page}&size=${size}`);
   }
 
-  getVisualesPorDescripcion(descripcion: string): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/visuales/descripcion/${descripcion}`);
+  getVisualesPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
+    console.log(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`)
+    return this.http.get<any>(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`);
   }
 
-  getProductosSinReferencia(): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/sinreferencia`);
+  getProductosSinReferenciaPaginado(page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/sinreferencia?page=${page}&size=${size}`);
   }
 
-  getProductosSinReferenciaPorDescripcion(descripcion: string): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}`);
+  getProductosSinReferenciaPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}?page=${page}&size=${size}`);
   }
 
-  getProductosPorDescripcion(descripcion: String): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/descripcion/${descripcion}`);
+  getProductosPorDescripcionPaginado(descripcion: String, page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/description/${descripcion}/paginado?page=${page}&size=${size}`);
   }
 
-  getProductosPorReferencia(referencia: String): Observable<Producto[]> {
-    return this.http.get<Producto[]>(`${this.apiUrl}/referencia/${referencia}/coincidentes`);
+  getProductosPorReferenciaPaginado(referencia: String, page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/referencia/${referencia}/buscar/paginado?page=${page}&size=${size}`);
+  }
+
+  // getVisualesPaginado(page: number, size: number): Observable<any> {
+  //   return this.http.get<any>(`${this.apiUrl}/visuales?page=${page}&size=${size}`);
+  // }
+
+  // getVisualesPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
+  //   console.log(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`)
+  //   return this.http.get<any>(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`);
+  // }
+
+  // getProductosSinReferenciaPaginado(page: number, size: number): Observable<any> {
+  //   return this.http.get<any>(`${this.apiUrl}/sinreferencia?page=${page}&size=${size}`);
+  // }
+
+  // getProductosSinReferenciaPorDescripcionPaginado(descripcion: string): Observable<any> {
+  //   return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}`);
+  // }
+
+  getProductosPorDescripcion(descripcion: String): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/description/${descripcion}`);
+  }
+
+  getProductosPorReferencia(referencia: String): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/referencia/${referencia}/buscar`);
   }
 
   postProducto(producto: Producto): Observable<Producto> {
     producto.stock = 0;
     return this.http.post<Producto>(`${this.apiUrl}`, producto);
   }
-  
+
+  putProducto(id: number, producto: Producto): Observable<Producto> {
+    return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto.description);
+  }
+
+  deleteProducto(id: number): Observable<Producto> {
+    return this.http.delete<Producto>(`${this.apiUrl}/${id}`);
+  }
 }

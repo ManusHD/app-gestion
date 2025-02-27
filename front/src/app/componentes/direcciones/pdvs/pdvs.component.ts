@@ -9,7 +9,10 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 @Component({
   selector: 'app-pdvs',
   templateUrl: './pdvs.component.html',
-  styleUrls: ['../../../../assets/styles/paginator.css', './pdvs.component.css'], 
+  styleUrls: [
+    '../../../../assets/styles/paginator.css', 
+    './pdvs.component.css'
+  ], 
 })
 export class PdvsComponent implements OnInit {
   currentPath = window.location.pathname;

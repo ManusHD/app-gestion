@@ -8,9 +8,5 @@ npm install @angular/forms
 npm config set legacy-peer-deps true
 ng add @angular/material
 
-
-
-
-
-
-
+- jwtDecode
+npm install jwt-decode

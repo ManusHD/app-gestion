@@ -28,13 +28,13 @@ button {
 }
 
 .modal-content {
-    margin: 5% auto 0;
+    margin: 10px 10px 0;
     padding: 20px;
     border: 1px solid #888;
     border-radius: 10px;
     color: var(--letter-color);
     background-color: var(--bg-color);
-    width: 80%;
+    /* width: 80%; */
 }
 
 h2 {

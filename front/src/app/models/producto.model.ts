@@ -3,5 +3,4 @@ export class Producto {
     referencia?: String;
     description?: String;
     stock?: number;
-    productoId?: number;
 }

@@ -9,7 +9,6 @@ export class ProductoSalida {
     bultos?: number;
     formaEnvio?: String;
     observaciones?: String;
-    pendiente: boolean = false; // false = recibida, true = pendiente
-    idPadre?: number;
+    comprobado: boolean = false;
     productoId?: number;
 }

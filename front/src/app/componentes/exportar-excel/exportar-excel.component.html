@@ -1,0 +1,25 @@
+<div class="flotar-medio">
+    <button (click)="mostrarDetalles()" class="container-btn-file">
+        <img src="../../../assets/icons/excel.svg" />
+        EXPORTAR {{nombreConjuntoExportado}} A EXCEL
+    </button>
+</div>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+        <span class="close" (click)="cerrarModal()">&times;</span>
+        <div class="centrar">
+            <h2 >¿QUIERES EXPORTAR LOS RESULTADOS A EXCEL?</h2>
+        </div>
+        <div class="botones">
+            <button (click)="exportarExcel()"> 
+                Sí
+            </button>
+            <button (click)="cerrarModal()"> 
+                No
+            </button>
+        </div>
+    </div>
+</div>
+
+

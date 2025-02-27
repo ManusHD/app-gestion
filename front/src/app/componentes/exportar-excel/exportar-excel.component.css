@@ -1,0 +1,19 @@
+h2 {
+    color: white;
+}
+
+.modal-content button {
+    font-weight: bolder;
+}
+
+.botones {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.botones button {
+    width: 50px;
+    text-align: center;
+    margin: 0;
+}

@@ -1,0 +1,17 @@
+table {
+    width: 100%;
+}
+
+
+.campos-reubicacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 15px;
+}
+
+.campo-form {
+    height: max-content;
+    width: 50%;
+}

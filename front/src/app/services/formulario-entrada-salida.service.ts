@@ -22,6 +22,9 @@ import { Colaborador } from '../models/colaborador.model';
 import { Perfumeria } from '../models/perfumeria.model';
 import { OtraDireccion } from '../models/otraDireccion.model';
 import { Producto } from '../models/producto.model';
+import { PantallaCargaService } from './pantalla-carga.service';
+import { DireccionesService } from './direcciones.service';
+import { ImportarExcelService } from './importar-excel.service';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -29,7 +32,7 @@ export class FormularioEntradaSalidaService {
   pendiente: boolean = true;
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
-  ubicaciones: Ubicacion[] = [];
+  ubicaciones: String[] = [];
   perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
   colaboradores: Colaborador[] = [];
@@ -39,6 +42,9 @@ export class FormularioEntradaSalidaService {
   ubicacionesPorProducto: { [ref: string]: Ubicacion[] } = {};
   visuales: Producto[] = [];
   productosSR: Producto[] = [];
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
 
   private snackBar = inject(MatSnackBar);
 
@@ -49,7 +55,10 @@ export class FormularioEntradaSalidaService {
     protected salidaService: SalidaServices,
     protected ubicacionesService: UbicacionService,
     protected agenciasTransporteService: AgenciasTransporteService,
-    protected cdr: ChangeDetectorRef
+    protected cdr: ChangeDetectorRef,
+    protected direccionesService: DireccionesService,
+    protected importarES: ImportarExcelService,
+    protected carga: PantallaCargaService,
   ) {}
 
   createForm() {
@@ -84,7 +93,7 @@ export class FormularioEntradaSalidaService {
       ubicacion: ['', Validators.required],
       formaEnvio: ['', Validators.required],
       observaciones: [''],
-      pendiente: [''],
+      comprobado: [!this.esNuevo() ? false : true],
     });
   }
 
@@ -139,6 +148,13 @@ export class FormularioEntradaSalidaService {
 
   // Resetear completamente el formulario
   resetForm() {
+    if(this.entradaSalidaForm) {
+      this.entradaSalidaForm.reset();
+      this.entradaSalidaForm.setControl(
+        'productos',
+        this.createProductoGroup()
+      );
+    }
     this.entradaSalidaForm = this.createForm();
   }
 
@@ -173,20 +189,22 @@ export class FormularioEntradaSalidaService {
 
   // Cuando estoy en Grabar Entrada/Salida
   protected inicializarNuevaEntradaSalida() {
-    this.mostrarFormulario = true;
     this.pendiente = false;
+    this.mostrarFormulario = true;
     this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
   }
 
   onSubmit() {
+    this.carga.show();
     this.desactivarBtnSubmit();
     if (this.previsionEsValida()) {
-      if (this.currentPath.startsWith('/entradas')) {
+      if (this.esEntrada()) {
         this.onSubmitEntrada();
-      } else if (this.currentPath.startsWith('/salidas')) {
+      } else if (this.esSalida()) {
         this.onSubmitSalida();
       }
     } else {
+      this.carga.hide();
       this.btnSubmitActivado = true;
       this.marcarCamposInvalidos();
     }
@@ -194,24 +212,7 @@ export class FormularioEntradaSalidaService {
 
   // Método para guardar la entrada de productos
   onSubmitEntrada() {
-    // Transformar los productos del formulario a ProductoEntrada
-    const productosEntrada: ProductoEntrada[] =
-      this.entradaSalidaForm.value.productos.map((producto: any) => {
-        // Crear un nuevo objeto ProductoEntrada
-        return {
-          ref: producto.ref,
-          description: producto.description,
-          unidades: producto.unidades,
-          ubicacion: producto.ubicacion,
-          palets: producto.palets,
-          bultos: producto.bultos,
-          observaciones: producto.observaciones,
-          pendiente: producto.pendiente,
-        };
-      });
-
-    console.log('Productos entrada:', productosEntrada);
-
+    
     // Crear el objeto Entrada
     const nuevaEntrada: Entrada = {
       origen: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
@@ -234,6 +235,7 @@ export class FormularioEntradaSalidaService {
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
         this.entradaSalidaForm.markAllAsTouched();
+        this.carga.hide();
         this.btnSubmitActivado = true;
       }
     }
@@ -243,7 +245,7 @@ export class FormularioEntradaSalidaService {
   private onSubmitSalida() {
     const productosSalida: ProductoSalida[] =
       this.entradaSalidaForm.value.productos.map((producto: any) => {
-        // Crear un nuevo objeto ProductoEntrada
+        // Crear un nuevo objeto ProductoSalida
         return {
           productoId: producto.productoId,
           ref: producto.ref,
@@ -255,13 +257,13 @@ export class FormularioEntradaSalidaService {
           bultos: producto.bultos,
           formaEnvio: producto.formaEnvio,
           observaciones: producto.observaciones,
-          pendiente: producto.pendiente,
+          comprobado: producto.comprobado,
         };
       });
 
     console.log('Productos salida:', productosSalida);
 
-    // Crear el objeto Entrada
+    // Crear el objeto Salida
     const nuevaSalida: Salida = {
       destino: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
       direccion: this.entradaSalidaForm.get('direccion')?.value,
@@ -293,6 +295,8 @@ export class FormularioEntradaSalidaService {
       } else {
         // Marcar todos los campos como tocados para mostrar validaciones
         this.entradaSalidaForm.markAllAsTouched();
+        this.carga.hide();
+        this.btnSubmitActivado = true;
       }
     }
   }
@@ -302,18 +306,16 @@ export class FormularioEntradaSalidaService {
       next: (salidaCreada) => {
         console.log('Salida creada exitosamente:', salidaCreada);
         this.snackBarExito('Salida guardada correctamente');
-        this.entradaSalidaForm.reset();
-        this.entradaSalidaForm.setControl(
-          'productos',
-          this.createProductoGroup()
-        );
         this.resetForm();
+        this.carga.hide();
         this.btnSubmitActivado = true;
-        this.inicializarNuevaEntradaSalida();
+        this.mostrarFormulario = true;
+        this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
       },
       error: (error) => {
         console.error('Error al crear la salida:', error);
         this.snackBarError(error.error);
+        this.carga.hide();
         this.btnSubmitActivado = true;
       },
     });
@@ -324,21 +326,39 @@ export class FormularioEntradaSalidaService {
       next: (entradaCreada) => {
         console.log('Entrada creada exitosamente:', entradaCreada);
         this.snackBarExito('Entrada guardada correctamente');
-        this.entradaSalidaForm.reset();
-        this.entradaSalidaForm.setControl(
-          'productos',
-          this.createProductoGroup()
-        );
         this.resetForm();
+        this.mostrarFormulario = true;
+        this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
+        this.carga.hide();
         this.btnSubmitActivado = true;
-        this.inicializarNuevaEntradaSalida();
       },
       error: (error) => {
+        const mensaje = this.handleError(error);
         console.error('Error al crear la entrada:', error);
-        this.snackBarError(error);
+        console.error(mensaje);
+        this.snackBarError(mensaje);
+        this.carga.hide();
         this.btnSubmitActivado = true;
       },
     });
+  }
+
+  handleError(error: any) {
+    console.log("LLega: ", error)
+    try {
+      const regex = /Ya existe [^"\\]+/;
+      const coincidencia = error.error.message.match(regex);
+      
+      if (coincidencia) {
+        return coincidencia[0];
+      }
+      
+      // Si no encontramos el patrón específico, retornamos el mensaje original
+      return error.error.message;
+    } catch (e) {
+      console.error('Error en el parse:', e);
+      return error.error.message;
+    }
   }
 
   snackBarError(error: string) {
@@ -439,6 +459,10 @@ export class FormularioEntradaSalidaService {
   }
 
   isProductoNuevo(index: number): boolean {
+    const ref = this.productosControls.at(index).get('ref')!.value;
+    if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
+      return false;
+    }
     return this.productosNuevos.has(index);
   }
 
@@ -483,8 +507,8 @@ export class FormularioEntradaSalidaService {
 
   cargarUbicaciones() {
     this.ubicacionesService.getUbicacionesOrderByNombre().subscribe(
-      (ubicaciones) => {
-        this.ubicaciones = ubicaciones;
+      (ubicaciones: Ubicacion[]) => {
+        this.ubicaciones = ubicaciones.map((ubicacion) => ubicacion.nombre!);
       },
       (error) => {
         console.error('Error al obtener ubicaciones', error);
@@ -493,6 +517,7 @@ export class FormularioEntradaSalidaService {
   }
 
   desactivarBtnSubmit() {
+    this.carga.show();
     this.btnSubmitActivado = false;
     if (this.btnSubmitActivado) {
       console.log('El botón está activado');
@@ -575,6 +600,11 @@ export class FormularioEntradaSalidaService {
     return this.currentPath.startsWith('/salidas');
   }
 
+  esNuevo() {
+    return this.currentPath.includes('/nuevo');
+  }
+
+
   campoVacio(nombreCampo: string, index: number) {
     if (
       !this.productosControls.at(index).get(nombreCampo)!.valid &&
@@ -626,8 +656,6 @@ export class FormularioEntradaSalidaService {
     if (this.entradaSalidaForm.get('fechaRecepcionEnvio')?.valid) {
       return true;
     }
-    this.snackBarError('La fecha no está inicializada');
-    this.btnSubmitActivado = true;
     return false;
   }
 
@@ -754,10 +782,6 @@ export class FormularioEntradaSalidaService {
       this.snackBarError('El DCS debe tener 10 dígitos');
     }
 
-    if (!previsionValida) {
-      this.btnSubmitActivado = true;
-    }
-
     return previsionValida;
   }
 
@@ -823,14 +847,6 @@ export class FormularioEntradaSalidaService {
         this.snackBarError('Las ubicaciones son obligatorias');
       }
 
-      if ((paletsValidos && bultosValidos && ubicacionValida) == false) {
-        this.btnSubmitActivado = true;
-        console.log(palets);
-        console.log(paletsValidos);
-        console.log(bultos);
-        console.log(bultosValidos);
-      }
-
       return paletsValidos && bultosValidos && ubicacionValida;
     });
   }
@@ -841,7 +857,6 @@ export class FormularioEntradaSalidaService {
 
       if (!formaEnvio) {
         this.snackBarError('La Forma de Envío es obligatoria');
-        this.btnSubmitActivado = true;
       }
 
       return formaEnvio;
@@ -886,9 +901,9 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarVisuales() {
-    this.productoService.getVisuales().subscribe(
-      (data: Producto[]) => {
-        this.visuales = data;
+    this.productoService.getVisualesPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.visuales = data.content;
       },
       (error) => {
         console.error('Error al obtener los Visuales', error);
@@ -897,9 +912,9 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarProductosSinReferencia() {
-    this.productoService.getProductosSinReferencia().subscribe(
-      (data: Producto[]) => {
-        this.productosSR = data;
+    this.productoService.getProductosSinReferenciaPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.productosSR = data.content;
       },
       (error) => {
         console.error('Error al obtener los Visuales', error);
@@ -908,9 +923,9 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarVisualesPorDescripcion(descripcion: string) {
-    this.productoService.getVisualesPorDescripcion(descripcion).subscribe(
-      (data: Producto[]) => {
-        this.visuales = data;
+    this.productoService.getVisualesPorDescripcionPaginado(descripcion, this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.visuales = data.content;
       },
       (error) => {
         console.error('Error al obtener los Visuales', error);
@@ -920,10 +935,10 @@ export class FormularioEntradaSalidaService {
 
   cargarProductosSinReferenciaPorDescripcion(descripcion: string) {
     this.productoService
-      .getProductosSinReferenciaPorDescripcion(descripcion)
+      .getProductosSinReferenciaPorDescripcionPaginado(descripcion, this.pageIndex, this.pageSize)
       .subscribe(
-        (data: Producto[]) => {
-          this.productosSR = data;
+        (data) => {
+          this.productosSR = data.content;
         },
         (error) => {
           console.error('Error al obtener los Visuales', error);

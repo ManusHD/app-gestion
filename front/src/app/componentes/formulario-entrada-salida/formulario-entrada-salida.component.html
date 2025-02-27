@@ -1,5 +1,5 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio">
-    <div class="">
+    <div class="cuerpo-formulario">
         <form [formGroup]="entradaSalidaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)"
             #formularioNuevaEntradaSalida="ngForm">
 
@@ -7,18 +7,18 @@
                 <div class="fechas">
 
                     <div class="campo-form" *ngIf="!pestanaPadre.startsWith('prevision')">
-                        <label *ngIf="currentPath.startsWith('/entradas')">Fecha recepción</label>
-                        <label *ngIf="currentPath.startsWith('/salidas')">Fecha envío</label>
-                        <input formControlName="fechaRecepcionEnvio" type="date" [ngClass]="{'campo-vacio': campoSimpleVacio('fechaRecepcionEnvio')}" />
+                        <label *ngIf="currentPath.startsWith('/entradas')">FECHA RECEPCIÓN</label>
+                        <label *ngIf="currentPath.startsWith('/salidas')">FECHA ENVÍO</label>
+                        <input formControlName="fechaRecepcionEnvio" type="date"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('fechaRecepcionEnvio')}" />
                     </div>
                 </div>
 
                 <div class="direcciones">
                     <div class="campo-form">
-                        <label>Perfumería</label>
-                        <select formControlName="perfumeria" 
-                                (ngModelChange)="onPerfumeriaChange($event)"
-                                [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}">
+                        <label>PERFUMERÍA</label>
+                        <select formControlName="perfumeria" (ngModelChange)="onPerfumeriaChange($event)"
+                            [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}">
                             <option value=""></option>
                             <option *ngFor="let perfumeria of perfumerias" [value]="perfumeria.nombre">
                                 {{perfumeria.nombre}}
@@ -28,34 +28,32 @@
 
                     <div class="campo-form">
                         <label>PDV</label>
-                        <select formControlName="pdv" [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}">
+                        <select formControlName="pdv"
+                            [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}">
                             <option value=""></option>
                             <option *ngFor="let pdv of pdvs" [value]="pdv.nombre">{{pdv.nombre}}</option>
                         </select>
                     </div>
 
                     <div class="campo-form">
-                        <label>Colaborador</label>
-                        <select formControlName="colaborador" [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}">
+                        <label>COLABORADOR</label>
+                        <select formControlName="colaborador"
+                            [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}">
                             <option value=""></option>
-                            <option *ngFor="let colaborador of colaboradores" [value]="colaborador.nombre">{{colaborador.nombre}}</option>
+                            <option *ngFor="let colaborador of colaboradores" [value]="colaborador.nombre">
+                                {{colaborador.nombre}}</option>
                         </select>
                     </div>
 
                     <!-- Campos específicos de origen/destino -->
                     <div class="campo-form">
-                        <label *ngIf="currentPath.startsWith('/salidas')">Otros destinos</label>
-                        <label *ngIf="currentPath.startsWith('/entradas')">Otros origenes</label>
+                        <label *ngIf="currentPath.startsWith('/salidas')">OTROS DESTINOS</label>
+                        <label *ngIf="currentPath.startsWith('/entradas')">OTROS ORIGENES</label>
                         <div class="autocomplete-container">
-                            <input 
-                                formControlName="otroOrigenDestino" 
-                                type="text" 
-                                [ngClass]="{'campo-vacio': !otroOrigenDestinoValido() && !previsionEsValidaCampoSimple()}"
-                            />
+                            <input formControlName="otroOrigenDestino" type="text"
+                                [ngClass]="{'campo-vacio': !otroOrigenDestinoValido() && !previsionEsValidaCampoSimple()}" />
                             <div class="autocomplete-dropdown" *ngIf="filteredOtrasDirecciones.length > 0">
-                                <div 
-                                    class="autocomplete-item" 
-                                    *ngFor="let direccion of filteredOtrasDirecciones"
+                                <div class="autocomplete-item" *ngFor="let direccion of filteredOtrasDirecciones"
                                     (click)="selectOtraDireccion(direccion)">
                                     {{ direccion.nombre }}
                                 </div>
@@ -69,17 +67,17 @@
                     <div class="detalles-direcciones">
 
                         <div class="campo-form ">
-                            <label>Dirección</label>
+                            <label>DIRECCIÓN</label>
                             <input formControlName="direccion" type="text" />
                         </div>
 
                         <div class="campo-form ">
-                            <label>Población</label>
+                            <label>POBLACIÓN</label>
                             <input formControlName="poblacion" type="text" />
                         </div>
 
                         <div class="campo-form ">
-                            <label>Provincia</label>
+                            <label>PROVINCIA</label>
                             <input formControlName="provincia" type="text" />
                         </div>
 
@@ -89,7 +87,7 @@
                         </div>
 
                         <div class="campo-form ">
-                            <label>Teléfono</label>
+                            <label>TELÉFONO</label>
                             <input formControlName="telefono" type="text" />
                         </div>
                     </div>
@@ -97,87 +95,134 @@
 
                 <!-- Campo DCS para entradas -->
                 <div class="dcs">
-
                     <div class="campo-form " *ngIf="currentPath.startsWith('/entradas')">
                         <label>DCS</label>
-                        <input formControlName="dcs" [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="number" max="9999999999"/>
+                        <input formControlName="dcs"
+                            [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="number"
+                            max="9999999999" />
                     </div>
                 </div>
+
             </div>
 
             <!-- Tabla para campos repetitivos -->
             <table>
                 <thead>
                     <tr>
-                        <th>Ref</th>
-                        <th>Descripción</th>
-                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Palets</th>
-                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Bultos</th>
+                        <th>REFERENCIA</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">PALETS</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">BULTOS</th>
                         <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
-                            Unidades pedidas</th>
-                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">Unidades
-                            enviadas</th>
-                        <th *ngIf="currentPath.startsWith('/entradas')">Unidades</th>
-                        <th *ngIf="!pestanaPadre.startsWith('prevision')">Ubicación</th>
-                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">Agencia
+                            UNIDADES PEDIDAS
                         </th>
-                        <th>Observaciones</th>
-                        <th>Acciones</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">UNIDADES
+                            ENVIADAS</th>
+                        <th *ngIf="currentPath.startsWith('/entradas')">UNIDADES</th>
+                        <th *ngIf="!pestanaPadre.startsWith('prevision')">UBICACIÓN</th>
+                        <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">AGENCIA
+                        </th>
+                        <th>OBSERVACIONES</th>
+                        <th>ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody formArrayName="productos">
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
-                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" [ngClass]="{'campo-vacio': !refValida(i)}" />
+                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
+                                [ngClass]="{'campo-vacio': !refValida(i)}" />
                         </td>
                         <td>
-                            <input formControlName="description" (keyup)="buscarProductoEspecial(i)" type="text" [ngClass]="{'campo-vacio': !descriptionValida(i)}" [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)"/>
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' && visuales.length > 0" class="autocomplete-container">
-                                <div class="autocomplete-dropdown">
-                                    <div class="autocomplete-item" *ngFor="let visual of visuales" (click)="selectVisual(i, visual)">
-                                        {{ visual.description }}
-                                    </div>
+                            <input 
+                              formControlName="description" 
+                              (keyup)="buscarProductoEspecial(i)" 
+                              (focus)="setActiveRow(i)" 
+                              (blur)="clearActiveRow()"
+                              type="text"
+                              [ngClass]="{'campo-vacio': !descriptionValida(i)}"
+                              [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)" />
+                            
+                            <!-- Dropdown para VISUAL -->
+                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
+                                        && visuales.length > 0 
+                                        && activeRowIndex === i" 
+                                 class="autocomplete-container">
+                              <div class="autocomplete-dropdown">
+                                <div class="autocomplete-item" *ngFor="let visual of visuales" 
+                                     (click)="selectVisual(i, visual)">
+                                  {{ visual.description }}
                                 </div>
+                              </div>
                             </div>
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' && productosSR.length > 0" class="autocomplete-container">
-                                <div class="autocomplete-dropdown">
-                                    <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR" (click)="selectProductosSR(i, sinReferencia)">
-                                        {{ sinReferencia.description }}
-                                    </div>
+                            
+                            <!-- Dropdown para SIN REFERENCIA -->
+                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                                        && productosSR.length > 0 
+                                        && activeRowIndex === i" 
+                                 class="autocomplete-container">
+                              <div class="autocomplete-dropdown">
+                                <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR" 
+                                     (click)="selectProductosSR(i, sinReferencia)">
+                                  {{ sinReferencia.description }}
                                 </div>
+                              </div>
                             </div>
+                          </td>
+                          
+                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
+                            <input formControlName="palets" type="number"
+                                [ngClass]="{'campo-vacio': campoVacio('palets', i)}" min="0" />
                         </td>
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
-                            <input formControlName="palets" type="number" [ngClass]="{'campo-vacio': campoVacio('palets', i)}" min="0"/>
-                        </td>
-                        <td *ngIf="!pestanaPadre.startsWith('prevision')">
-                            <input formControlName="bultos" type="number" [ngClass]="{'campo-vacio': campoVacio('bultos', i)}" min="0"/>
+                            <input formControlName="bultos" type="number"
+                                [ngClass]="{'campo-vacio': campoVacio('bultos', i)}" min="0" />
                         </td>
                         <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
-                            <input formControlName="unidadesPedidas" type="number" [ngClass]="{'campo-vacio': campoVacio('unidadesPedidas', i)}" min="0" />
+                            <div class="centrar">
+                                <input formControlName="unidadesPedidas" type="number"
+                                [ngClass]="{'campo-vacio': campoVacio('unidadesPedidas', i)}" min="0" />
+                            </div>
                         </td>
                         <td
                             *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision') || currentPath.startsWith('/entradas')">
-                            <input formControlName="unidades" type="number" [ngClass]="{'campo-vacio': campoVacio('unidades', i)}" min="0"/>
+                            <div class="centrar">
+                                <input formControlName="unidades" type="number"
+                                [ngClass]="{'campo-vacio': campoVacio('unidades', i)}" min="0" />
+                            </div>
                         </td>
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
-                            <select formControlName="ubicacion" (change)="sincronizarUbicaciones(i)" [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
+                            <select formControlName="ubicacion" (change)="sincronizarUbicaciones(i)"
+                                [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
                                 <option value=""></option>
                                 <ng-container *ngIf="esEntrada(); else ubiSalida">
-                                    <option *ngFor="let ubicacion of ubicaciones; let i = index" [value]="ubicacion.nombre">
-                                        {{ubicacion.nombre}}
+                                    <option *ngFor="let ubicacion of ubicaciones; let i = index"
+                                        [value]="ubicacion">
+                                        {{ubicacion}}
                                     </option>
                                 </ng-container>
                                 <ng-template #ubiSalida>
-                                    <option *ngFor="let ubicacion of ubicacionesPorProducto[productosControls.at(i).get('ref')?.value]" [value]="ubicacion.nombre">
-                                        {{ubicacion.nombre}}
-                                    </option>
+                                    <ng-container
+                                        *ngIf="productosControls.at(i).get('ref')?.value !== 'VISUAL' && productosControls.at(i).get('ref')?.value !== 'SIN REFERENCIA'; else ubisEspeciales">
+                                        <option
+                                            *ngFor="let ubicacion of ubicacionesPorProducto[productosControls.at(i).get('ref')?.value]"
+                                            [value]="ubicacion.nombre">
+                                            {{ubicacion.nombre}}
+                                        </option>
+                                    </ng-container>
+                                    <ng-template #ubisEspeciales>
+                                        <option
+                                            *ngFor="let ubicacion of ubicacionesPorProducto[productosControls.at(i).get('description')?.value]"
+                                            [value]="ubicacion.nombre">
+                                            {{ubicacion.nombre}}
+                                        </option>
+                                    </ng-template>
                                 </ng-template>
                             </select>
                         </td>
                         <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">
-                            <select formControlName="formaEnvio" [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}">
+                            <select formControlName="formaEnvio"
+                                [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}">
                                 <option value=""></option>
                                 <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
                                     {{agencia.nombre}}</option>
@@ -186,10 +231,20 @@
                         <td>
                             <textarea formControlName="observaciones" id="observaciones"></textarea>
                         </td>
-                        <td class="centrar">
-                            <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
-                                    <path fill="#B5BAC1"
+                        
+                        <td>
+                                <div class="centrar">
+                                <label class="checkbox-comprobado">
+                                    <input formControlName="comprobado" type="checkbox"/>
+                                    <svg viewBox="0 0 44 44" class="sizer checkmark">
+                                        <path
+                                        d="M14,24 L21,31 L39.7428882,11.5937758 C35.2809627,6.53125861 30.0333333,4 24,4 C12.95,4 4,12.95 4,24 C4,35.05 12.95,44 24,44 C35.05,44 44,35.05 44,24 C44,19.3 42.5809627,15.1645919 39.7428882,11.5937758"
+                                        transform="translate(-2.000000, -2.000000)"></path>
+                                    </svg>
+                                </label>
+                                <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
+                                        <path fill="#B5BAC1"
                                         d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z">
                                     </path>
                                     <path fill="#B5BAC1"
@@ -202,6 +257,7 @@
                                 </svg>
                                 <span class="tooltip">Eliminar</span>
                             </button>
+                        </div>
                         </td>
                     </tr>
                 </tbody>
@@ -212,27 +268,27 @@
                     *ngIf="pestanaPadre == 'nuevaEntrada' || 'detallePrevisionEntrada' || pestanaPadre == 'nuevaSalida' || 'detallePrevisionSalida'"
                     type="button" (click)="agregarProducto()" class="add-producto">
                     <img src="../../../assets/icons/signo-mas.svg" alt="">
-                    <span>Añadir línea</span>
+                    <span>AÑADIR LÍNEA</span>
                 </button>
-
+            
                 <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit" class="crear-producto"
                     [disabled]="!btnSubmitActivado">
-                    Grabar entrada
+                    GRABAR ENTRADA
                 </button>
-
+            
                 <button *ngIf="pestanaPadre == 'nuevaSalida'" type="submit" class="crear-producto"
                     [disabled]="!btnSubmitActivado">
-                    Grabar salida
+                    GRABAR SALIDA
                 </button>
-
+            
                 <button *ngIf="pestanaPadre == 'previsionEntrada'" type="submit" class="crear-producto"
                     [disabled]="!pendiente || !btnSubmitActivado">
-                    Grabar previsión
+                    GRABAR PREVISIÓN
                 </button>
-
+            
                 <button *ngIf="pestanaPadre == 'previsionSalida'" type="submit" class="crear-producto"
                     [disabled]="!pendiente || !btnSubmitActivado">
-                    Grabar trabajo
+                    GRABAR TRABAJO
                 </button>
             </div>
         </form>
@@ -264,3 +320,5 @@
         </div>
     </div>
 </div>
+
+<app-pantalla-carga></app-pantalla-carga>

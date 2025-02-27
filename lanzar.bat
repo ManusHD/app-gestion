@@ -8,6 +8,7 @@ set MICROSERVICIO_DCS=backend\dcs
 set MICROSERVICIO_UBICACIONES=backend\ubicaciones
 set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
 set MICROSERVICIO_DIRECCIONES=backend\direcciones
+set MICROSERVICIO_AUTH=backend\autenticacion
 
 :: Ejecutar entradas en una nueva ventana 8091
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
@@ -26,3 +27,6 @@ start cmd /c "cd %MICROSERVICIO_AGENCIASENVIO% && mvn spring-boot:run"
 
 :: Ejecutar agencias de envío en una nueva ventana 8097
 start cmd /c "cd %MICROSERVICIO_DIRECCIONES% && mvn spring-boot:run"
+
+:: Ejecutar dcs en una nueva ventana 8098
+start cmd /k "cd %MICROSERVICIO_AUTH% && mvn spring-boot:run"

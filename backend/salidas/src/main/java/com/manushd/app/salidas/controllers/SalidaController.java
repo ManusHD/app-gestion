@@ -7,12 +7,18 @@ import com.manushd.app.salidas.models.ProductoSalida;
 import com.manushd.app.salidas.models.ProductoUbicacion;
 import com.manushd.app.salidas.repository.SalidaRepository;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.client.RestTemplate;
@@ -29,18 +36,25 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 @RestController
 @CrossOrigin(value = "http://localhost:4200")
+@PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class SalidaController {
 
     @Autowired
     private SalidaRepository salidasRepository;
 
     @GetMapping("/salidas")
-    public Iterable<Salida> getSalidas() {
-        return salidasRepository.findAll();
+    public Page<Salida> getSalidas(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fechaEnvio") String sort) {
+        
+        return salidasRepository.findAll(
+            PageRequest.of(page, size, Sort.by(sort)));
     }
 
     @GetMapping("/salidas/{id}")
@@ -49,8 +63,151 @@ public class SalidaController {
     }
 
     @GetMapping("/salidas/estado/{estado}")
-    public Iterable<Salida> getSalidasByEstado(@PathVariable boolean estado) {
-        return salidasRepository.findAllByEstadoOrderByFechaEnvioAsc(estado);
+    public Iterable<Salida> getSalidasByEstado(
+            @PathVariable boolean estado) {
+        
+        return salidasRepository.findAllByEstadoOrderByFechaEnvioAsc(
+            estado);
+    }
+
+    @GetMapping("/salidas/estado/{estado}/paginado")
+    public Page<Salida> getSalidasByEstado(
+            @PathVariable boolean estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        return salidasRepository.findAllByEstadoOrderByFechaEnvioAsc(
+            estado, PageRequest.of(page, size));
+    }
+
+    @GetMapping("/salidas/filtrar/paginado")
+    public ResponseEntity<Page<Salida>> filtrarSalidasPaginado(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam String tipoBusqueda,
+            @RequestParam(required = false) String textoBusqueda,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Salida> salidas = buscarSalidasFiltradasPaginado(
+                fechaInicio, fechaFin, tipoBusqueda, textoBusqueda, pageable);
+        
+        return ResponseEntity.ok(salidas);
+    }
+
+    private Page<Salida> buscarSalidasFiltradasPaginado(
+            LocalDate fechaInicio, 
+            LocalDate fechaFin, 
+            String tipoBusqueda, 
+            String textoBusqueda,
+            Pageable pageable) {
+        
+        if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
+            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                    fechaInicio, fechaFin, true, pageable);
+        }
+        
+        // Si hay texto, filtrar según el tipo de búsqueda
+        switch (tipoBusqueda) {
+            case "referencia":
+                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda, pageable);
+            case "descripcion":
+                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda, pageable);
+            case "observacion":
+                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda, pageable);
+            case "destino":
+                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda, pageable);
+            default:
+                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, true, pageable);
+        }
+    }
+    @GetMapping("/salidas/filtrar")
+    public ResponseEntity<Iterable<Salida>> filtrarSalidas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam String tipoBusqueda,
+            @RequestParam(required = false) String textoBusqueda) {
+        
+        Iterable<Salida> salidas = buscarSalidasFiltradas(
+                fechaInicio, fechaFin, tipoBusqueda, textoBusqueda);
+        
+        return ResponseEntity.ok(salidas);
+    }
+
+    private Iterable<Salida> buscarSalidasFiltradas(
+            LocalDate fechaInicio, 
+            LocalDate fechaFin, 
+            String tipoBusqueda, 
+            String textoBusqueda) {
+        
+        if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
+            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                    fechaInicio, fechaFin, true);
+        }
+        
+        // Si hay texto, filtrar según el tipo de búsqueda
+        switch (tipoBusqueda) {
+            case "referencia":
+                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda);
+            case "descripcion":
+                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda);
+            case "observacion":
+                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda);
+            case "destino":
+                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, textoBusqueda);
+            default:
+                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                        fechaInicio, fechaFin, true);
+        }
+    }
+
+    @PostMapping("/salidas/reubicarPalets")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> reubicarPalets(@RequestBody Salida salida) {
+        // Si la salida está marcada como enviada (estado = true) se puede continuar, sino se devuelve un error
+        if (salida.getEstado() == null || !Boolean.TRUE.equals(salida.getEstado())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("La salida debe estar marcada como enviada.");
+        }
+
+        // Si la salida no tiene fecha de envío se devuelve un error
+        if (salida.getFechaEnvio() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("La salida debe tener una fecha de envío.");
+        }
+
+        // Si la salida no tiene productos se devuelve un error
+        if (salida.getProductos() == null || salida.getProductos().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("La salida debe tener al menos un producto.");
+        }
+
+        // Si el destino de la salida es distinta de "REUBICACION DE PALETS" se devuelve un error
+        if (salida.getDestino() == null || !"REUBICACION DE PALETS".equalsIgnoreCase(salida.getDestino())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Destino incorrecto.");
+        }
+
+        // Si el número de palets es menor que 1 se devuelve un error
+        for (ProductoSalida producto : salida.getProductos()) {
+            if (producto.getPalets() == null || producto.getPalets() < 1) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("El número de palets debe ser mayor o igual a 1.");
+            }
+        }
+        
+        Salida s = salidasRepository.save(salida);
+        return ResponseEntity.ok(s);
     }
 
     /**
@@ -63,20 +220,13 @@ public class SalidaController {
     public ResponseEntity<?> addSalida(@RequestBody Salida salida) {
         List<Ubicacion> ubicacionesList = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
-
-        System.out.println("=====================================");
-        System.out.println("SALIDA");
-        System.out.println(salida);
         
         if (Boolean.TRUE.equals(salida.getEstado())) {
-            System.out.println("Entro en el IF");
             // Lista para almacenar las ubicaciones (únicas) de la salida
             List<String> nombresUbicaciones = new ArrayList<>();
 
             // Validar cada producto de la salida
             for (ProductoSalida productoSalida : salida.getProductos()) {
-                System.out.println("-------------------------------------");
-                System.out.println(productoSalida);
 
                 try {
                     // Validaciones generales
@@ -88,6 +238,9 @@ public class SalidaController {
                     }
                     if (productoSalida.getRef() == null || productoSalida.getRef().isBlank()) {
                         throw new IllegalArgumentException("La referencia del producto no puede estar en blanco.");
+                    }
+                    if (productoSalida.getComprobado() == null || !productoSalida.getComprobado()) {
+                        throw new IllegalArgumentException("Faltan productos por comprobar.");
                     }
 
                     String ref = productoSalida.getRef();
@@ -107,8 +260,8 @@ public class SalidaController {
                                             + ref + " en la ubicación " + productoSalida.getUbicacion());
                         }
                     }
+                    
                     // Para productos especiales se omite la validación en el servicio de Productos
-
                     // Construir u obtener la Ubicación correspondiente
                     String ubicacionNombre = productoSalida.getUbicacion();
                     Ubicacion ubicacion = null;
@@ -209,8 +362,6 @@ public class SalidaController {
 
             // Actualizar el stock de cada ubicación llamando al endpoint /ubicaciones/restar
             for (Ubicacion ubicacion : ubicacionesList) {
-                System.out.println("=================UBICACION LISTA SALIDA===============");
-                System.out.println(ubicacion);
                 try {
                     ResponseEntity<Ubicacion> response = restTemplate.exchange(
                             "http://localhost:8095/ubicaciones/restar",
@@ -256,6 +407,7 @@ public class SalidaController {
     }
 
     @DeleteMapping("/salidas/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteById(@PathVariable Long id) {
         salidasRepository.deleteById(id);
     }

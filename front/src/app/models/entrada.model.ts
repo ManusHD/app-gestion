@@ -10,6 +10,6 @@ export class Entrada {
     dcs?: String;
     estado: boolean = false; // false = pendiente, true = recibida
     productos!: ProductoEntrada[];
-    rellena!: boolean;
+    rellena: boolean = false;
     fechaRecepcion?: string;
 }

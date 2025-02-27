@@ -1,0 +1,11 @@
+#stock, #ubicaciones {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+}
+
+.tabla-paginator {
+    width: 100%;
+    max-width: 560px;
+    height: fit-content;
+}

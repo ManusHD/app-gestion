@@ -1,36 +1,22 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  Input,
-  OnInit,
-  Output,
-  ViewChild,
-} from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { EntradaServices } from 'src/app/services/entrada.service';
-import { ProductoServices } from 'src/app/services/producto.service';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
-import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { Entrada } from 'src/app/models/entrada.model';
 import { Salida } from 'src/app/models/salida.model';
-import { UbicacionService } from 'src/app/services/ubicacion.service';
-import { SalidaServices } from 'src/app/services/salida.service';
-import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
-import { ProductoSalida } from 'src/app/models/productoSalida.model';
 import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
 import { ProductoEntrada } from 'src/app/models/productoEntrada.model';
-import { DireccionesService } from 'src/app/services/direcciones.service';
 import { Colaborador } from 'src/app/models/colaborador.model';
 import { PDV } from 'src/app/models/pdv.model';
 import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { Producto } from 'src/app/models/producto.model';
+import { Ubicacion } from 'src/app/models/ubicacion.model';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
   templateUrl: './formulario-entrada-salida.component.html',
-  styleUrls: ['./formulario-entrada-salida.component.css'],
+  styleUrls: [
+    './formulario-entrada-salida.component.css',
+  ],
 })
 export class FormularioEntradaSalidaComponent
   extends FormularioEntradaSalidaService
@@ -41,30 +27,10 @@ export class FormularioEntradaSalidaComponent
   enDetalles: boolean = false;
   agenciasTransporte: AgenciaTransporte[] = [];
   filteredOtrasDirecciones: OtraDireccion[] = [];
+  activeRowIndex: number | null = null;
 
-  @ViewChild('observaciones', { static: false }) observacionesInput!: ElementRef;
-
-  constructor(
-    fb: FormBuilder,
-    productoService: ProductoServices,
-    entradaService: EntradaServices,
-    salidaService: SalidaServices,
-    ubicacionesService: UbicacionService,
-    agendaTransporteService: AgenciasTransporteService,
-    cdr: ChangeDetectorRef,
-    private direccionesService: DireccionesService,
-    private importarES: ImportarExcelService
-  ) {
-    super(
-      fb,
-      productoService,
-      entradaService,
-      salidaService,
-      ubicacionesService,
-      agendaTransporteService,
-      cdr
-    );
-  }
+  @ViewChild('observaciones', { static: false })
+  observacionesInput!: ElementRef;
 
   ngOnInit() {
     this.importarES.resetExcel();
@@ -76,7 +42,7 @@ export class FormularioEntradaSalidaComponent
     this.cargarColaboradores();
     this.cargarOtrasDirecciones();
     this.cargarPerfumerias();
-    if(this.esEntrada()) {
+    if (this.esEntrada()) {
       this.cargarUbicaciones();
     }
 
@@ -101,17 +67,17 @@ export class FormularioEntradaSalidaComponent
       this.inicializarDetalleEntradaSalida();
     }
 
-    this.entradaSalidaForm.get('otroOrigenDestino')?.valueChanges.subscribe(value => {
-      this.filterOtrasDirecciones(value);
-      if (!value) {
-        this.limpiarCamposDireccion();
-      }
-    });
-    
-    if (this.currentPath.startsWith('/salidas')) {
+    this.entradaSalidaForm
+      .get('otroOrigenDestino')
+      ?.valueChanges.subscribe((value) => {
+        this.filterOtrasDirecciones(value);
+        if (!value) {
+          this.limpiarCamposDireccion();
+        }
+      });
 
-      this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe(value => {
-        console.log("Value en PDV: ", value);
+    if (this.currentPath.startsWith('/salidas')) {
+      this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe((value) => {
         if (value) {
           this.rellenarDireccionPDV(value);
         } else {
@@ -119,13 +85,15 @@ export class FormularioEntradaSalidaComponent
         }
       });
 
-      this.entradaSalidaForm.get('colaborador')?.valueChanges.subscribe(value => {
-        if (value) {
-          this.rellenarDireccionColaborador(value);
-        } else {
-          this.limpiarCamposDireccion();
-        }
-      });
+      this.entradaSalidaForm
+        .get('colaborador')
+        ?.valueChanges.subscribe((value) => {
+          if (value) {
+            this.rellenarDireccionColaborador(value);
+          } else {
+            this.limpiarCamposDireccion();
+          }
+        });
     }
   }
 
@@ -142,7 +110,7 @@ export class FormularioEntradaSalidaComponent
 
   cargarPDVs(nombrePerfumeria: string): Promise<void> {
     const perfumeria = this.getCampoValue('perfumeria');
-    if(perfumeria && perfumeria != '') {
+    if (perfumeria && perfumeria != '') {
       return new Promise((resolve, reject) => {
         this.direccionesService.getPdvsPerfumeria(nombrePerfumeria).subscribe(
           (data: PDV[]) => {
@@ -184,7 +152,6 @@ export class FormularioEntradaSalidaComponent
 
   setProductoPendiente(index: number) {
     const checked = this.productosControls.at(index).get('estado')?.value;
-    console.log(checked);
   }
 
   // Cuando voy a importar un Excel
@@ -192,9 +159,11 @@ export class FormularioEntradaSalidaComponent
     this.pendiente = true;
     this.importarES.excelData$.subscribe((excelData) => {
       if (excelData?.length) {
+        this.resetForm();
         this.mostrarFormulario = true;
         this.actualizarCamposUnicos(excelData[0]);
         this.actualizarProductos(excelData);
+        this.carga.hide();
       } else {
         this.mostrarFormulario = false;
       }
@@ -212,12 +181,12 @@ export class FormularioEntradaSalidaComponent
         'perfumeria',
         entradaSalidaFormulario.perfumeria || ''
       );
-      if(entradaSalidaFormulario.perfumeria  != '') {
+      if (entradaSalidaFormulario.perfumeria != '') {
         this.cargarPDVs(entradaSalidaFormulario.perfumeria).then(() => {
           this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
         });
       }
-        this.setCampoValue(
+      this.setCampoValue(
         'colaborador',
         entradaSalidaFormulario.colaborador || ''
       );
@@ -238,7 +207,6 @@ export class FormularioEntradaSalidaComponent
       this.cargarPDVs(entradaSalidaFormulario.perfumeria).then(() => {
         this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
       });
-      console.log(entradaSalidaFormulario.pdv);
       this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
       this.setCampoValue(
         'colaborador',
@@ -266,7 +234,7 @@ export class FormularioEntradaSalidaComponent
         bultos: row.bultos,
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
-        pendiente: row.pendiente || false,
+        comprobado: row.comprobado || false,
       });
       if (row.ref) {
         this.buscarDescripcionProducto(productoFormGroup, row.ref);
@@ -277,21 +245,31 @@ export class FormularioEntradaSalidaComponent
 
   // Cuando voy a ver los Detalles de las Entradas Pendientes
   private inicializarDetalleEntradaSalida() {
-    this.cargarAgenciasTransporte();
     this.mostrarFormulario = true;
     this.enDetalles = true;
     this.actualizarProductos(this.detallesES!.productos!);
     this.actualizarCamposUnicos(this.detallesES);
     this.marcarCamposInvalidos();
-    this.productosControls.controls.forEach((control, index) => {
-        const ref = control.get('ref')?.value;
-        if (ref) {
+
+    setTimeout(() => {
+      if (this.esSalida()) {
+        this.cargarAgenciasTransporte();
+        this.productosControls.controls.forEach((control, index) => {
+          const ref = control.get('ref')?.value;
+          const descripcion = control.get('description')?.value;
+          if (ref) {
             this.obtenerUbicacionesProductoSalida(ref);
-        }
-    })
+          }
+          if (descripcion) {
+            this.obtenerUbicacionesProductoEspecial(ref, descripcion);
+          }
+        });
+      }
+    });
   }
 
   modificarEntrada() {
+    this.carga.show();
     if (this.previsionEsValida()) {
       const productosEntrada: ProductoEntrada[] =
         this.entradaSalidaForm.value.productos.map((producto: any) => {
@@ -304,7 +282,7 @@ export class FormularioEntradaSalidaComponent
             palets: producto.palets,
             bultos: producto.bultos,
             observaciones: producto.observaciones,
-            pendiente: producto.pendiente,
+            comprobado: producto.comprobado,
           };
         });
 
@@ -327,6 +305,7 @@ export class FormularioEntradaSalidaComponent
         next: (updatedEntrada) => {
           console.log('Entrada actualizada:', updatedEntrada);
           location.reload();
+          this.carga.hide();
           this.snackBarExito('Entrada actualizada exitosamente');
         },
         error: (err) => console.error('Error al actualizar la entrada:', err),
@@ -335,6 +314,7 @@ export class FormularioEntradaSalidaComponent
   }
 
   modificarSalida() {
+    this.carga.show();
     if (this.previsionEsValida()) {
       const productosSalida: ProductoEntrada[] =
         this.entradaSalidaForm.value.productos.map((producto: any) => {
@@ -350,7 +330,7 @@ export class FormularioEntradaSalidaComponent
             bultos: producto.bultos,
             observaciones: producto.observaciones,
             formaEnvio: producto.formaEnvio,
-            pendiente: producto.pendiente,
+            comprobado: producto.comprobado,
           };
         });
 
@@ -378,6 +358,7 @@ export class FormularioEntradaSalidaComponent
         next: (updatedSalida) => {
           console.log('Salida actualizada:', updatedSalida);
           location.reload();
+          this.carga.hide();
           this.snackBarExito('Salida actualizada exitosamente');
         },
         error: (err) => console.error('Error al actualizar la salida:', err),
@@ -401,28 +382,30 @@ export class FormularioEntradaSalidaComponent
   }
 
   private rellenarDireccionPDV(nombrePDV: string) {
-    const pdvSeleccionado = this.pdvs.find(pdv => pdv.nombre === nombrePDV);
+    const pdvSeleccionado = this.pdvs.find((pdv) => pdv.nombre === nombrePDV);
     if (pdvSeleccionado) {
       this.entradaSalidaForm.patchValue({
         direccion: pdvSeleccionado.direccion || '',
         poblacion: pdvSeleccionado.poblacion || '',
         provincia: pdvSeleccionado.provincia || '',
         cp: pdvSeleccionado.cp || '',
-        telefono: pdvSeleccionado.telefono || ''
+        telefono: pdvSeleccionado.telefono || '',
       });
     }
   }
 
   // Método para rellenar la dirección desde un Colaborador
   private rellenarDireccionColaborador(nombreColaborador: string) {
-    const colaboradorSeleccionado = this.colaboradores.find(col => col.nombre === nombreColaborador);
+    const colaboradorSeleccionado = this.colaboradores.find(
+      (col) => col.nombre === nombreColaborador
+    );
     if (colaboradorSeleccionado) {
       this.entradaSalidaForm.patchValue({
         direccion: colaboradorSeleccionado.direccion || '',
         poblacion: colaboradorSeleccionado.poblacion || '',
         provincia: colaboradorSeleccionado.provincia || '',
         cp: colaboradorSeleccionado.cp || '',
-        telefono: colaboradorSeleccionado.telefono || ''
+        telefono: colaboradorSeleccionado.telefono || '',
       });
     }
   }
@@ -440,7 +423,7 @@ export class FormularioEntradaSalidaComponent
         poblacion: '',
         provincia: '',
         cp: '',
-        telefono: ''
+        telefono: '',
       });
     }
   }
@@ -450,7 +433,7 @@ export class FormularioEntradaSalidaComponent
       this.cargarPDVs(nombrePerfumeria);
       // Limpiamos el PDV seleccionado y por tanto su dirección asociada
       this.entradaSalidaForm.patchValue({
-        pdv: ''
+        pdv: '',
       });
     } else {
       this.pdvs = [];
@@ -468,7 +451,7 @@ export class FormularioEntradaSalidaComponent
     }
 
     const filterValue = value.toLowerCase();
-    this.filteredOtrasDirecciones = this.otrasDirecciones.filter(direccion =>
+    this.filteredOtrasDirecciones = this.otrasDirecciones.filter((direccion) =>
       direccion.nombre!.toLowerCase().includes(filterValue)
     );
   }
@@ -479,7 +462,7 @@ export class FormularioEntradaSalidaComponent
       otroOrigenDestino: direccion.nombre,
       // Limpiamos los otros campos que podrían tener dirección
       pdv: '',
-      colaborador: ''
+      colaborador: '',
     });
 
     if (this.currentPath.startsWith('/salidas')) {
@@ -488,25 +471,78 @@ export class FormularioEntradaSalidaComponent
         poblacion: direccion.poblacion || '',
         provincia: direccion.provincia || '',
         cp: direccion.cp || '',
-        telefono: direccion.telefono || ''
+        telefono: direccion.telefono || '',
       });
     }
 
     this.filteredOtrasDirecciones = [];
   }
-  
+
   selectVisual(i: number, visual: Producto) {
-    this.productosControls.at(i).get('description')?.setValue(visual.description);
-    this.productosControls.at(i).get('productoId')?.setValue(visual.productoId);
+    this.productosControls
+      .at(i)
+      .get('description')
+      ?.setValue(visual.description);
     this.productosControls.at(i).get('unidades')?.setValue(visual.stock);
-    console.log("Visual seleccionado: ", visual);
+    this.obtenerUbicacionesProductoEspecial(
+      visual.referencia as string,
+      visual.description as string
+    );
+    console.log('Visual seleccionado: ', visual);
     this.visuales = [];
   }
-  
+
   selectProductosSR(i: number, sinReferencia: Producto) {
-    this.productosControls.at(i).get('description')?.setValue(sinReferencia.description);
-    this.productosControls.at(i).get('productoId')?.setValue(sinReferencia.productoId);
-    console.log("Visual seleccionado: ", sinReferencia);
+    this.productosControls
+      .at(i)
+      .get('description')
+      ?.setValue(sinReferencia.description);
+    this.obtenerUbicacionesProductoEspecial(
+      sinReferencia.referencia as string,
+      sinReferencia.description as string
+    );
+    console.log('Producto SR seleccionado: ', sinReferencia);
     this.productosSR = [];
+  }
+
+  obtenerUbicacionesProductoEspecial(ref: string, descripcion: string): void {
+    if (this.esProductoEspecial(ref)) {
+      // Producto especial: se obtienen las ubicaciones por descripción
+      if (!descripcion) {
+        console.error(
+          'No se proporcionó descripción para el producto especial'
+        );
+        return;
+      }
+      if (this.ubicacionesPorProducto[descripcion]) {
+        console.log('Ya existe producto especial');
+        return;
+      }
+      this.ubicacionesService
+        .getUbicacionesByDescripcionProducto(descripcion)
+        .subscribe({
+          next: (data: Ubicacion[]) => {
+            console.log('Producto especial obtenido!!');
+            this.ubicacionesPorProducto[descripcion] = data; // Se almacena usando la descripción como clave
+          },
+          error: (error) => {
+            console.error(
+              'Error al obtener ubicaciones por descripción:',
+              error
+            );
+            this.ubicacionesPorProducto[descripcion] = [];
+          },
+        });
+    }
+  }
+
+  setActiveRow(index: number): void {
+    this.activeRowIndex = index;
+  }
+
+  clearActiveRow(): void {
+    setTimeout(() => {
+      this.activeRowIndex = null;
+    }, 200);
   }
 }

@@ -17,24 +17,34 @@ import { PerfumeriasComponent } from './componentes/direcciones/perfumerias/perf
 import { ColaboradoresComponent } from './componentes/direcciones/colaboradores/colaboradores.component';
 import { PdvsComponent } from './componentes/direcciones/pdvs/pdvs.component';
 import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direcciones/otras-direcciones.component';
+import { ProductosComponent } from './componentes/productos/productos.component';
+import { ReubicarPaletsComponent } from './componentes/reubicar-palets/reubicar-palets.component';
+import { LoginComponent } from './componentes/login/login.component';
+import { authGuard } from './guardianes/auth.guard';
+import { roleGuard } from './guardianes/role.guard';
+import { RegistrarComponent } from './componentes/registrar/registrar.component';
 
 const routes: Routes = [
-  {path: '', component:InicioComponent},
-  {path: 'entradas', component:EntradasPrevisionComponent},
-  {path: 'entradas/pendientes', component:EntradasPendientesComponent},
-  {path: 'entradas/recibidas', component:EntradasRecibidasComponent},
-  {path: 'entradas/nuevo', component:EntradasNuevoComponent},
-  {path: 'salidas', component:SalidasPrevisionComponent},
-  {path: 'salidas/pendientes', component:SalidasPendientesComponent},
-  {path: 'salidas/enviadas', component:SalidasEnviadasComponent},
-  {path: 'salidas/nuevo', component:SalidasNuevoComponent},
-  {path: 'inventario', component:InventarioComponent},
-  {path: 'agencias', component:AgenciasTransporteComponent},
-  {path: 'ubicaciones', component:UbicacionesComponent},
-  {path: 'perfumerias', component:PerfumeriasComponent},
-  {path: 'pdv', component:PdvsComponent},
-  {path: 'colaboradores', component:ColaboradoresComponent},
-  {path: 'otrasDirecciones', component:OtrasDireccionesComponent},
+  {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'entradas', component:EntradasPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'entradas/pendientes', component:EntradasPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'entradas/recibidas', component:EntradasRecibidasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'entradas/nuevo', component:EntradasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'salidas', component:SalidasPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'salidas/pendientes', component:SalidasPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'salidas/enviadas', component:SalidasEnviadasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'salidas/nuevo', component:SalidasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'inventario', component:InventarioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'agencias', component:AgenciasTransporteComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'ubicaciones', component:UbicacionesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'perfumerias', component:PerfumeriasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'pdv', component:PdvsComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'colaboradores', component:ColaboradoresComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'otrasDirecciones', component:OtrasDireccionesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'productos', component:ProductosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'reubicarPalets', component:ReubicarPaletsComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'login', component:LoginComponent},
+  {path: 'registrar', component:RegistrarComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
 ];
 
 @NgModule({

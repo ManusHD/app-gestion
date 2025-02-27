@@ -1,41 +1,11 @@
 <!-- <app-nuevo-producto></app-nuevo-producto> -->
 
-<div id="stock">
-    <div style="margin-top: 30px;">
-        <div class="buscador" (keyup)="onEnterKey($event)">
-            <input type="text" placeholder="Buscar producto" [(ngModel)]="buscador"/>
-            <button (click)="buscarProducto()" class="btn-buscar">
-                <img src="../../../assets/icons/lupa-blanca.svg" alt="">
-                <span class="letra-buscador">Buscar</span>
-            </button>
-            <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
-        </div>
-        <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productosBuscados.length > 0}" mat-table [dataSource]="dataSourceStock">
-            <caption>STOCK POR ARTICULOS</caption>
-            <!-- Ref Column -->
-            <ng-container matColumnDef="referencia">
-                <th class="header-paginator" *matHeaderCellDef> Ref </th>
-                <td class="fila-paginator" style="cursor: pointer;" mat-cell *matCellDef="let producto" (click)="copiarReferencia(producto.referencia)"> {{producto.referencia}} </td>
-            </ng-container>
-
-            <!-- Descripción Column -->
-            <ng-container matColumnDef="description">
-                <th class="header-paginator" mat-header-cell *matHeaderCellDef> Descripción </th>
-                <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.description}} </td>
-            </ng-container>
-
-            <!-- Stock Column -->
-            <ng-container matColumnDef="stock">
-                <th class="header-paginator" mat-header-cell *matHeaderCellDef> Stock </th>
-                <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.stock}} </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="columnasStock"></tr>
-            <tr mat-row *matRowDef="let row; columns: columnasStock;"></tr>
-        </table>
-        <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true" ></mat-paginator>
-    </div>
+<div id="inventario">
     
+    <app-lista-productos></app-lista-productos>
+
     <app-lista-ubicaciones></app-lista-ubicaciones>
+
+    <app-lista-visuales></app-lista-visuales>
     
 </div>

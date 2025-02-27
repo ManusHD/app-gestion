@@ -1,23 +1,63 @@
-.tabla-paginator{
-    text-align: center;
-    min-width: var(--w-paginator);
-    width: fit-content;
-    height: fit-content;
+
+
+.centrar {
+    flex-wrap: nowrap;
 }
 
-.header-paginator, .fila-paginator {
+
+.tabla-paginator {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    max-width: 1200px;
+    background-color: var(--main-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .tabla-paginator caption {
+    background-color: var(--caption-color);
+    color: white;
+    font-weight: bold;
+    padding: 15px;
+    font-size: 18px;
     text-align: center;
+    letter-spacing: 1px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+  }
+  
+  .header-paginator {
+    background-color: var(--thead-bgcolor);
+    color: var(--thead-color);
+    font-weight: 600;
+    text-align: center;
+    padding: 12px 15px;
+    position: sticky;
+    top: 0;
+    font-size: 18px;
+  }
+  
+  tr:first-child th:first-child {
+    border-top-left-radius: 0;
+  }
+  
+  tr:first-child th:last-child {
+    border-top-right-radius: 0;
+  }
+  
+  .fila-paginator {
+    padding: 12px 20px;
     font-size: 16px;
-}
-
-.header-paginator {
-    font-family: 'Nunito-ExtraBold';
-}
-
-.fila-paginator, .nombre-editando {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
     color: white;
     font-family: 'Nunito-SemiBold';
-}
+    text-align: center;
+  }
+  
+  tr:hover .fila-paginator {
+    background-color: rgba(61, 126, 255, 0.15);
+  }
 
 .nombre-editando {
     border: 1px solid white;
@@ -26,8 +66,17 @@
     color: rgb(225, 255, 54);
 }
 
-.nombre-editando:focus {
-    outline: none;
+.editando-label {
+    display: flex;
+    align-items: center;
+}
+
+.nombre-editando {
+    padding: 8px 10px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--btn-color-w);
+    width: 100%;
 }
 
 .btn-acciones {
@@ -41,3 +90,74 @@
     border-radius: 5px;
 }
 
+.btn-productos,
+.btn-grabar,
+.btn-editar {
+    border: none;
+    padding: 3.5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Nunito-Medium';
+}
+
+.btn-productos,
+.btn-editar {
+    background-color: var(--color-detalles);
+}
+
+.btn-productos:hover,
+.btn-editar:hover {
+    background-color: #ffd875;
+}
+
+.lista-pdvs-edit {
+    max-height: 200px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 5px;
+    padding: 5px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* .lista-pdvs::-webkit-scrollbar, .lista-pdvs-edit::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lista-pdvs::-webkit-scrollbar-thumb, .lista-pdvs-edit::-webkit-scrollbar-thumb {
+    background-color: var(--letter-color-off);
+    border-radius: 3px;
+} */
+
+input {
+    margin: 2px 0;
+}
+
+.item-lista-pdv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.item-lista-pdv p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--btn-color-w);
+}
+
+.mdc-data-table__cell {
+    overflow: visible;
+    
+}
+
+@media (max-width: 768px) { 
+    
+    .fila-paginator {
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+
+}

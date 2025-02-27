@@ -1,13 +1,6 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { Component } from '@angular/core';
 import * as XLSX from 'xlsx';
-import { EntradaServices } from 'src/app/services/entrada.service';
-import { ProductoServices } from 'src/app/services/producto.service';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
-import { ImportarExcelService } from 'src/app/services/importar-excel.service';
-import { UbicacionService } from 'src/app/services/ubicacion.service';
-import { SalidaServices } from 'src/app/services/salida.service';
-import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
 
 @Component({
   selector: 'app-importar-excel',
@@ -15,22 +8,10 @@ import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.
   styleUrls: ['./importar-excel.component.css'],
 })
 export class ImportarExcelComponent extends FormularioEntradaSalidaService{
-
-  constructor(
-    fb: FormBuilder,
-    productoService: ProductoServices,
-    entradaService: EntradaServices,
-    salidaService: SalidaServices,
-    ubicacionesService: UbicacionService,
-    agenciasTransporteService: AgenciasTransporteService,
-    cdr: ChangeDetectorRef,
-    private importarES: ImportarExcelService,
-      ){
-    super(fb, productoService, entradaService, salidaService, ubicacionesService, agenciasTransporteService, cdr);
-  }
   
   // Método para manejar la importación de archivos Excel
   onFileChange(event: any) {
+    this.carga.show();
     const file = event.target.files[0];
 
     if (file) {
@@ -41,21 +22,29 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
           const workbook = XLSX.read(e.target.result, { type: 'binary' });
           const sheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[sheetName];
-
+      
           const excelData = XLSX.utils.sheet_to_json(worksheet);
-
-          this.importarES.setExcelData(excelData);
-
+      
+          // Convertir las claves de cada objeto a minúsculas
+          const normalizedExcelData = excelData.map(row => {
+            const normalizedRow: { [key: string]: any } = {};
+            for (const key in row as Object) {
+              normalizedRow[key.toLowerCase()] = (row as any)[key];
+            }
+            return normalizedRow;
+          });
+      
+          this.importarES.setExcelData(normalizedExcelData);
+      
           // Mostrar mensaje de éxito
           this.snackBarExito('Excel importado correctamente');
-
+      
           event.target.value = '';
         } catch (error) {
           console.error('Error procesando Excel:', error);
           this.snackBarError('Error al procesar el archivo Excel');
         }
       };
-
       reader.readAsBinaryString(file);
     }
   }

@@ -1,1 +1,73 @@
-<p>inicio works!</p>
+<div class="contenedor-inicio">
+
+    <div class="centrar">
+        <div class="logo">
+            <img src="../../../assets/imagenes/chanel-logo-blanco.png" alt="logo de chanel png">
+            <div>
+                <h1 class="x">x</h1>
+            </div>
+            <div class="delim">
+                <img src="../../../assets/imagenes/delim.jpg" alt="logo de chanel png">
+            </div>
+        </div>
+    </div>
+
+    <hr style="margin: 0 10%">
+
+    <div class="centrar">
+        <div class="entradas">
+            <div class="titulo">
+                <h1>ENTRADAS</h1>
+            </div>
+            <div class="tarjetas">
+                <div class="centrar">
+                    <div *appHasRole="'ROLE_ADMIN'" class="tarjeta importar" routerLink="/entradas">
+                        <h1>PREVISIÓN DE ENTRADAS</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div *appHasRole="'ROLE_ADMIN'" class="tarjeta nueva" routerLink="/entradas/nuevo">
+                        <h1>NUEVA ENTRADA</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div class="tarjeta prevision" routerLink="/entradas/pendientes">
+                        <h1>ENTRADAS PENDIENTES DE RECEPCIONAR</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div class="tarjeta historico" routerLink="/entradas/recibidas">
+                        <h1>HISTÓRICO DE ENTRADAS</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="centrar">
+        <div class="salidas">
+            <div class="titulo">
+                <h1>SALIDAS</h1>
+            </div>
+            <div class="tarjetas">
+                <div class="centrar">
+                    <div *appHasRole="'ROLE_ADMIN'" class="tarjeta importar" routerLink="/salidas">
+                        <h1>PREVISIÓN DE SALIDAS</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div *appHasRole="'ROLE_ADMIN'" class="tarjeta nueva" routerLink="/salidas/nuevo">
+                        <h1>NUEVA SALIDA</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div class="tarjeta prevision" routerLink="/salidas/pendientes">
+                        <h1>PEDIDOS A PREPARAR</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                    <div class="tarjeta historico" routerLink="/salidas/enviadas">
+                        <h1>HISTÓRICO DE SALIDAS</h1>
+                        <img src="../../../assets/icons/flecha-circulo.svg" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

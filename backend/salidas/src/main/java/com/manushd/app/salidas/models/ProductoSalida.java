@@ -27,7 +27,6 @@ public class ProductoSalida {
     private Integer bultos;
     private String formaEnvio;
     private String observaciones;
-    private Boolean pendiente; // false = enviada, true = pendiente
-    private Long idPadre;
+    private Boolean comprobado;
     private Long productoId;
 }

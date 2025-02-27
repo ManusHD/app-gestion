@@ -1,0 +1,90 @@
+.icono-reubicar {
+    border: none;
+}
+
+.icono-reubicar {
+    cursor: pointer;
+}
+
+.icono-reubicar:hover .icono {
+    fill: var(--checked-color);
+}
+
+.producto-original {
+    display: flex;
+    flex-direction: column;
+    margin: 3rem;
+}
+
+.modal-content {
+    min-width: 680px;
+}
+
+.producto-original h1{
+    color: white;
+    font-family: 'Nunito-ExtraBold';
+    border: 1px solid white;
+    margin: 0;
+    padding: 1rem;
+    background-color: #00116f;
+}
+
+.producto-original .campos-reubicar{
+    justify-content: space-around;
+    background-color: var(--main-color);
+    border: 1px solid white;
+    padding: 1rem;
+}
+
+.producto-original h2{
+    display: flex;
+    flex-direction: column;
+}
+
+h3, p {
+    margin: 0;
+}
+
+.campos-modificables {
+    margin-top: 1rem;
+    flex-direction: column;
+}
+
+.cambio-ubicacion, .cambio-unidades {
+    display: flex;
+}
+
+.cambio-ubicacion h3, .cambio-unidades h3{
+    color: white;
+    background-color: var(--caption-color);
+    padding: 0.5rem;
+}
+
+.cambio-ubicacion p, .cambio-ubicacion .input, .cambio-unidades p, .cambio-unidades .input{
+    background-color: var(--main-color);
+    padding: 0.5rem;
+    color: white;
+}
+
+.campo-reubicar {
+    width: 300px;
+    margin: 1rem;
+}
+
+.btn-productos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bolder;
+    margin-top: 3rem;
+}
+
+.btn-productos img{
+    margin-right: 0.5rem;
+}
+
+input, select {
+    background-color: var(--main-color);
+    color: white;
+    border: 1px solid white;
+}

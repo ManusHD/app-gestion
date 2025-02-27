@@ -1,0 +1,215 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: white;
+    min-height: 100vh;
+}
+
+.contenedor-inicio {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.logo img {
+    height: 50px;
+    object-fit: contain;
+}
+
+.logo .x {
+    font-size: 2.5rem;
+    margin: 0 1.5rem;
+    color: var(--letter-color);
+    font-weight: 300;
+}
+
+.delim img {
+    height: 40px;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 2rem 0;
+}
+
+.titulo {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.titulo h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--letter-color);
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.5rem;
+}
+
+.titulo h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background-color: var(--letter-color);
+}
+
+.tarjetas {
+    width: 100%;
+    padding: 1rem 0 3rem;
+}
+
+.tarjetas .centrar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.tarjeta {
+    width: 300px;
+    height: 180px;
+    background: linear-gradient(135deg, var(--tarjeta-color) 0%, var(--aux-color) 100%);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.tarjeta:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.tarjeta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: var(--letter-color);
+    transition: width 0.3s ease;
+}
+
+.tarjeta:hover::before {
+    width: 10px;
+}
+
+.tarjeta h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: white;
+    margin-bottom: 1rem;
+    transition: color 0.3s ease;
+}
+
+.tarjeta img {
+    width: 40px;
+    height: 40px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.3s ease;
+}
+
+.tarjeta:hover img {
+    transform: translateX(5px);
+}
+
+.tarjeta.importar {
+    background: linear-gradient(135deg, #023a2b 0%, var(--caption-color) 100%);
+}
+
+.tarjeta.nueva {
+    background: linear-gradient(135deg, rgb(0, 5, 105) 0%, var(--table-primary) 100%);
+}
+
+.tarjeta.prevision {
+    background: linear-gradient(135deg, rgb(96, 85, 0) 0%, var(--color-detalles) 100%);
+}
+
+.tarjeta.historico {
+    background: linear-gradient(135deg, #014e24 0%, var(--color-excel) 100%);
+}
+
+.entradas,
+.salidas {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .tarjeta {
+        width: 280px;
+        height: 170px;
+    }
+}
+
+@media (max-width: 768px) {
+    .titulo h1 {
+        font-size: 1.8rem;
+    }
+
+    .tarjetas .centrar {
+        gap: 1.5rem;
+    }
+
+    .tarjeta {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .logo {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .logo .x {
+        margin: 0.5rem 0;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(61, 126, 255, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(61, 126, 255, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(61, 126, 255, 0);
+    }
+}
+
+.tarjeta:active {
+    animation: pulse 0.8s;
+    transform: scale(0.98);
+}

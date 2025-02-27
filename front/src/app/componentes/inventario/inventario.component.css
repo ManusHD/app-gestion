@@ -1,15 +1,6 @@
-#stock, #ubicaciones {
+#inventario {
     display: flex;
     justify-content: space-evenly;
     flex-wrap: wrap;
-}
-
-.tabla-paginator {
-    width: 550px;
-    height: fit-content;
-}
-
-.tabla-paginator td{
-    height: 65px;
 }
 

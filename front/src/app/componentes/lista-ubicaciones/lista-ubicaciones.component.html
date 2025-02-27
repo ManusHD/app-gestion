@@ -1,10 +1,9 @@
 <div id="lista-ubicaciones" class="centrar">
-
     <div>
         <div class="buscador" (keyup)="onEnterKey($event)">
             <select [(ngModel)]="tipoBusqueda" class="select-buscador">
-                <option value="productos">Búsqueda por Referencia</option>
-                <option value="ubicaciones">Búsqueda por Ubicación</option>
+                <option value="referencia">Búsqueda por REFERENCIA</option>
+                <option value="ubicaciones">Búsqueda por UBICACIÓN</option>
             </select>
             <input type="text" placeholder="Buscar..." [(ngModel)]="buscador" />
             <button (click)="buscarUbicaciones()" class="btn-buscar">
@@ -71,7 +70,17 @@
             <tr mat-header-row *matHeaderRowDef="columnasUbicaciones"></tr>
             <tr mat-row *matRowDef="let row; columns: columnasUbicaciones;"></tr>
         </table>
-        <mat-paginator class="paginator" [pageSize]="10" showFirstLastButtons [hidePageSize]="true"></mat-paginator>
+        <mat-paginator
+            class="paginator"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [length]="totalElementos"
+            [hidePageSize]="true"
+            showFirstLastButtons
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
+
+        <app-exportar-excel (click)="obtenerDatosAExportar()" *ngIf="currentPath == '/ubicaciones' && ubicaciones.length > 0" [data$]="ubicacionesParaExportar$" [nombreConjuntoExportado]="'UBICACIONES'" [fileName]="'UBICACIONES-EXPORTADAS'" ></app-exportar-excel>
     </div>
     
 </div>

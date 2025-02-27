@@ -29,12 +29,12 @@ import { MatInputModule } from '@angular/material/input';
 import { ToastrModule } from 'ngx-toastr';
 import { MatTableModule } from '@angular/material/table';
 
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { EntradaServices } from './services/entrada.service';
 import { SalidaServices } from './services/salida.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductoServices } from './services/producto.service';
-import { NuevoProductoComponent } from './componentes/inventario/nuevo-producto/nuevo-producto.component';
+import { NuevoProductoComponent } from './componentes/productos/nuevo-producto/nuevo-producto.component';
 import { DetallesSalidasComponent } from './componentes/detalles-salidas/detalles-salidas.component';
 import { DCSService } from './services/dcs.service';
 import { DetallesDcsComponent } from './componentes/detalles-dcs/detalles-dcs.component';
@@ -56,6 +56,21 @@ import { PerfumeriasComponent } from './componentes/direcciones/perfumerias/perf
 import { PdvsComponent } from './componentes/direcciones/pdvs/pdvs.component';
 import { ColaboradoresComponent } from './componentes/direcciones/colaboradores/colaboradores.component';
 import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direcciones/otras-direcciones.component';
+import { ReubicarProductoComponent } from './componentes/reubicar-producto/reubicar-producto.component';
+import { ExportarExcelComponent } from './componentes/exportar-excel/exportar-excel.component';
+import { ListaVisualesComponent } from './componentes/lista-visuales/lista-visuales.component';
+import { ProductosComponent } from './componentes/productos/productos.component';
+import { ListaProductosComponent } from './componentes/lista-productos/lista-productos.component';
+import { ReubicarPaletsComponent } from './componentes/reubicar-palets/reubicar-palets.component';
+import { ReubicarPaletsService } from './services/reubicar-palets.service';
+import { PantallaCargaComponent } from './componentes/pantalla-carga/pantalla-carga.component';
+import { PantallaCargaService } from './services/pantalla-carga.service';
+import { LoginComponent } from './componentes/login/login.component';
+import { AuthService } from './services/auth-service.service';
+import { JwtInterceptor } from './interceptors/JwtInterceptor.interceptor';
+import { RegistrarComponent } from './componentes/registrar/registrar.component';
+import { AuthenticatedDirective } from './directivas/authenticated.directive';
+import { HasRoleDirective } from './directivas/has-role.directive';
 
 @NgModule({
   declarations: [
@@ -86,7 +101,18 @@ import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direc
     PerfumeriasComponent,
     PdvsComponent,
     ColaboradoresComponent,
-    OtrasDireccionesComponent
+    OtrasDireccionesComponent,
+    ReubicarProductoComponent,
+    ExportarExcelComponent,
+    ListaVisualesComponent,
+    ProductosComponent,
+    ListaProductosComponent,
+    ReubicarPaletsComponent,
+    PantallaCargaComponent,
+    LoginComponent,
+    RegistrarComponent,
+    HasRoleDirective,
+    AuthenticatedDirective
   ],
   imports: [
     AppRoutingModule,
@@ -109,16 +135,20 @@ import { OtrasDireccionesComponent } from './componentes/direcciones/otras-direc
     ToastrModule.forRoot(),
   ],
   providers: [
+    AuthService,
+    AgenciasTransporteService,
+    DCSService,
+    DireccionesService,
     EntradaServices,
-    SalidaServices,
-    ProductoServices,
     FormularioEntradaSalidaService,
     ImportarExcelService,
-    DCSService,
-    UbicacionService,
-    AgenciasTransporteService,
-    DireccionesService,
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    ProductoServices,
+    ReubicarPaletsService,
+    SalidaServices,
     SnackBar,
+    UbicacionService,
+    PantallaCargaService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },
   ],
   bootstrap: [AppComponent],

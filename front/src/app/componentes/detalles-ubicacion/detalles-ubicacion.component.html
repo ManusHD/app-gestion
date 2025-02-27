@@ -8,9 +8,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Referencia</th>
+                        <th>REFERENCIA</th>
                         <th>DESCRIPCION</th>
-                        <th>Unidades</th>
+                        <th>UNIDADES</th>
+                        <th *ngIf="currentPath == '/ubicaciones'">REUBICAR</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -18,6 +19,9 @@
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
                         <td>{{producto.unidades}} </td>
+                        <td *ngIf="currentPath == '/ubicaciones'" class="centrar transparente">
+                            <app-reubicar-producto [productoActual]="producto" [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
+                        </td>
                     </tr>
                 </tbody>
             </table>

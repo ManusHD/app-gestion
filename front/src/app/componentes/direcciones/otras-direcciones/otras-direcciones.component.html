@@ -73,7 +73,7 @@
                       {{ otraDireccion.telefono }}
                     </ng-container>
                     <ng-template #editTelefono>
-                      <input [(ngModel)]="editandoOtraDireccion.telefono" placeholder="Teléfono" class="telefono-editando" />
+                      <input [(ngModel)]="editandoOtraDireccion.telefono" placeholder="Teléfono" class="nombre-editando" />
                     </ng-template>
                   </td>
                 </ng-container>
@@ -86,10 +86,10 @@
                       {{ otraDireccion.direccion }} <br> {{ otraDireccion.cp }} - {{ otraDireccion.poblacion }} ({{ otraDireccion.provincia }}) 
                     </ng-container>
                     <ng-template #editDireccion>
-                      <input [(ngModel)]="editandoOtraDireccion.direccion" placeholder="Dirección" class="direccion-editando" /><br>
-                      <input [(ngModel)]="editandoOtraDireccion.poblacion" placeholder="Población" class="poblacion-editando" /><br>
-                      <input [(ngModel)]="editandoOtraDireccion.provincia" placeholder="Provincia" class="provincia-editando" /><br>
-                      <input [(ngModel)]="editandoOtraDireccion.cp" placeholder="CP" class="cp-editando" />
+                      <input [(ngModel)]="editandoOtraDireccion.direccion" placeholder="Dirección" class="nombre-editando" /><br>
+                      <input [(ngModel)]="editandoOtraDireccion.poblacion" placeholder="Población" class="nombre-editando" /><br>
+                      <input [(ngModel)]="editandoOtraDireccion.provincia" placeholder="Provincia" class="nombre-editando" /><br>
+                      <input [(ngModel)]="editandoOtraDireccion.cp" placeholder="CP" class="nombre-editando" />
                     </ng-template>
                   </td>
                 </ng-container>

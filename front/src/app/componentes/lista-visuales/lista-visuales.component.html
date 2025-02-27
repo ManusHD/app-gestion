@@ -1,0 +1,45 @@
+<div id="lista-visuales" class="centrar">
+
+<div>
+    <div class="buscador" (keyup)="onEnterKey($event)">
+        <input type="text" placeholder="Buscar visual" [(ngModel)]="buscador"/>
+        <button (click)="buscarProductos()" class="btn-buscar">
+            <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+            <span class="letra-buscador">Buscar</span>
+        </button>
+        <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+    </div>
+    <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productos.length > 0}" mat-table [dataSource]="dataSourceStock">
+        <caption>STOCK POR VISUALES</caption>
+        <!-- Ref Column -->
+        <ng-container matColumnDef="referencia">
+            <th class="header-paginator" *matHeaderCellDef> Ref </th>
+            <td class="fila-paginator" style="cursor: pointer;" mat-cell *matCellDef="let producto"> {{producto.referencia}} </td>
+        </ng-container>
+
+        <!-- Descripción Column -->
+        <ng-container matColumnDef="description">
+            <th class="header-paginator" mat-header-cell *matHeaderCellDef> Descripción </th>
+            <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.description}} </td>
+        </ng-container>
+
+        <!-- Stock Column -->
+        <ng-container matColumnDef="stock">
+            <th class="header-paginator" mat-header-cell *matHeaderCellDef> Stock </th>
+            <td class="fila-paginator" mat-cell *matCellDef="let producto"> {{producto.stock}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnasStock"></tr>
+        <tr mat-row *matRowDef="let row; columns: columnasStock;"></tr>
+    </table>
+    <mat-paginator
+        class="paginator"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [length]="totalElementos"
+        [hidePageSize]="true"
+        showFirstLastButtons
+        (page)="cambiarPagina($event)">
+    </mat-paginator>
+</div>
+</div>

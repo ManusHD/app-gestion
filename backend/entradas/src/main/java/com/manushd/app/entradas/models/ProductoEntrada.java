@@ -27,6 +27,5 @@ public class ProductoEntrada {
     private Integer palets;
     private Integer bultos;
     private String observaciones;
-    private Boolean pendiente; // false = recibida, true = pendiente
-    private Long idPadre;
+    private Boolean comprobado;
 }

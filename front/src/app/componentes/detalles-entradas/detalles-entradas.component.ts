@@ -2,6 +2,7 @@ import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular
 import { MatSnackBar  } from '@angular/material/snack-bar';
 import { Entrada } from 'src/app/models/entrada.model';
 import { EntradaServices } from 'src/app/services/entrada.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 
 @Component({
   selector: 'app-detalles-entradas',
@@ -14,16 +15,18 @@ export class DetallesEntradasComponent implements OnInit {
   @Input() entrada!: Entrada;
   @Output() entradaRellena = new EventEmitter<boolean>();
   currentPath: String = window.location.pathname;
+  
+  constructor(private carga: PantallaCargaService){}
 
   ngOnInit() {
     if(!this.enRecibidas) {
       this.iniciarEntradas();
-      this.entradaRellena.emit(this.todosLosCamposRellenos());
     }
   }
 
   iniciarEntradas() {
     this.formatearFecha(this.entrada.fechaRecepcion);
+    this.entradaRellena.emit(this.todosLosCamposRellenos());
   }
 
   mostrarDetalles() {
@@ -35,9 +38,7 @@ export class DetallesEntradasComponent implements OnInit {
   }
 
   actualizarFecha(fecha: string) {
-    this.entrada.productos!.forEach((producto) => {
-      this.entrada.fechaRecepcion = fecha;
-    });
+    this.entrada.fechaRecepcion = fecha;
   }
 
   todosLosCamposRellenos(): boolean {

@@ -1,0 +1,46 @@
+<!-- <div class="centrar">
+    <div>
+        <form #formularioProducto="ngForm" (ngSubmit)="onSubmit()">
+            <div class="centrar">
+                <h3>Crear NUEVO producto</h3>
+            </div>
+            <div class="nuevo-input"> 
+                <div class="alinear-input campos-gestor">
+                    <input type="text" id="referencia" name="referencia" placeholder="REFERENCIA" [(ngModel)]="producto.referencia"
+                    (change)="existeRef()" #referenciaInput="ngModel" [pattern]="referenciaPattern" required>
+                </div>
+                
+                <div *ngIf="referenciaInput.invalid && (referenciaInput.dirty || referenciaInput.touched)"
+                class="error-message">
+                <small *ngIf="referenciaInput.errors?.['required']">
+                    La referencia es obligatoria.
+                </small>
+                <small *ngIf="referenciaInput.errors?.['pattern']">
+                    La referencia debe tener 7 dígitos como máximo o comenzar por R seguido de los dígitos o tener 10 dígitos.
+                </small>
+            </div>
+            <small *ngIf="existe" class="error-message">
+                Ya existe un producto con esta referencia
+            </small>
+        </div>
+        
+        <div class="nuevo-input">
+            <div class="alinear-input campos-gestor">
+                <input type="text" id="descripcion" name="descripcion" placeholder="DESCRIPCIÓN" [(ngModel)]="producto.description" required
+                #descripcionInput="ngModel">
+            </div>
+            
+            <div *ngIf="descripcionInput.invalid && (descripcionInput.dirty || descripcionInput.touched)"
+            class="error-message">
+            <small *ngIf="descripcionInput.errors?.['required']">
+                La descripción es obligatoria.
+                </small>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-crear" >
+            Crear
+        </button>
+    </form>
+</div>
+</div> -->

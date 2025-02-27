@@ -14,172 +14,25 @@
     display: block;
 }
 
-/* De uiverse.io desde aquí*/
-
-
-/*------uiverse.io-------*/
-/*-------Botón actualizar---------*/
-.btn-actualizar {
-    position: relative;
-    width: 150px;
-    height: 40px;
-    margin-top: 1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    border: 2px solid var(--main-color);
-    box-shadow: 4px 4px var(--main-color);
-    background-color: rgb(244, 244, 244);
-    border-radius: 10px;
-    overflow: hidden;
-    padding-left: 0;
-}
-
-.btn-actualizar,
-.button__icon,
-.button__text {
-    transition: all 0.3s;
-}
-
-.btn-actualizar .button__text {
-    transform: translateX(30px);
-    color: #323232;
-    font-weight: 600;
-}
-
-.btn-actualizar .button__icon {
-    position: absolute;
-    transform: translateX(109px);
-    height: 100%;
-    width: 39px;
-    background-color: #dedede;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-actualizar .svg {
-    width: 20px;
-    fill: var(--main-color);
-}
-
-.btn-actualizar:hover {
-    background: var(--bg-color);
-}
-
-.btn-actualizar:hover .button__text {
-    color: transparent;
-}
-
-.btn-actualizar:hover .button__icon {
-    width: 148px;
-    transform: translateX(0);
-}
-
-.btn-actualizar:active {
-    transform: translate(3px, 3px);
-    box-shadow: 0px 0px var(--main-color);
-}
-
-/*------- Botón Añadir producto -------*/
-.add-producto {
-    color: white;
-    background: linear-gradient(0deg,
-            rgba(20, 167, 62, 1) 0%,
-            rgba(102, 247, 113, 1) 100%);
-}
-
-.add-producto img {
-    margin-right: 6px;
-}
-
-.add-producto:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #14a73e98;
-}
-
-.add-producto:active {
-    box-shadow: 0 0.3em 1em -0.5em #14a73e98;
-}
-
-/* Hasta aquí*/
-
-.btns-tabla button {
-    display: flex;
-    align-items: center;
-    font-family: inherit;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 12px;
-    padding: 0.7em 1.4em 0.7em 1.1em;
-    border: none;
-    letter-spacing: 0.05em;
-    border-radius: 20em;
-    margin: 1em;
-}
-
-.crear-producto {
-    color: black;
-    background: linear-gradient(0deg,
-            rgb(0, 255, 251) 0%,
-            rgb(0, 200, 222) 100%);
-}
-
-.crear-producto:hover {
-    box-shadow: 0 0.5em 1.5em -0.5em #00e5ff;
-}
-
-.crear-producto:active {
-    box-shadow: 0 0.3em 1em -0.5em #00ffea;
-}
-
-.crear-producto:disabled {
-    background: #212121;
-    box-shadow: none;
-}
-
 .campo-vacio {
-    border-bottom: 2px solid red;
-}
+    border-color: rgba(255, 29, 29, 0.5) !important;
+    background-color: rgba(255, 29, 29, 0.4) !important;
+  }
+  
+  .campo-nuevo {
+    animation: highlight 1s ease-in-out;
+  }
 
-.campo-nuevo:nth-child(odd) {
-    background-color: #080 !important;
-}
-
-.campo-nuevo:nth-child(even) {
-    background-color: rgb(0, 101, 0) !important;
-}
-
+  @keyframes highlight {
+    0% { background-color: rgba(0, 114, 83, 0.2); }
+    100% { background-color: transparent; }
+  }
+  
 .transparente {
     background-color: transparent;
 }
 
-input, textarea {
-    color: white;
-    border: none;
-    text-align: center;
-    width: 100%;
-    border-bottom: 2px solid white;
-}
-
-input:focus, textarea:focus {
-    outline: none;
-}
-
-.btn-actualizar .button__icon:hover .svg {
-    animation: rotate 0.3s linear;
-}
-
-@keyframes rotate {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.pendiente label{
+.pendiente label {
     background-color: var(--btn-inactive);
     padding: 3px 7px;
     border-radius: 2px;
@@ -200,7 +53,8 @@ select {
     border-bottom: 1px solid white;
 }
 
-select option, .autocomplete-dropdown {
+select option,
+.autocomplete-dropdown {
     background-color: #212121;
     color: white;
 }
@@ -210,7 +64,10 @@ select option, .autocomplete-dropdown {
     flex-direction: column;
 }
 
-.direcciones, .fechas, .detalles-direcciones, .dcs {
+.direcciones,
+.fechas,
+.detalles-direcciones,
+.dcs {
     margin: 10px 0;
 }
 
@@ -220,6 +77,7 @@ select option, .autocomplete-dropdown {
 
 .detalles-direcciones {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .detalles-direcciones .campo-form {
@@ -238,50 +96,69 @@ select option, .autocomplete-dropdown {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin: 0 5px;
+    margin-top: 10px;
 }
 
 .campo-form label {
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     color: white;
+    letter-spacing: 1px;
 }
 
 .campo-form input,
-.campo-form select{
+.campo-form select {
     padding: 0.5rem;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #001a6e;
 }
 
-.campo-form{
-    margin: 0 5px;
-}
-
+/* ------------------------------ */
+/* ----------AUTOCOMPLETE-------- */
+/* ------------------------------ */
 .autocomplete-container {
     position: relative;
-}
-
-.autocomplete-dropdown {
+    width: 100%;
+    z-index: 3;
+  }
+  
+  .autocomplete-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    border: 1px solid #ddd;
-    border-top: none;
+    background-color: var(--bg-color);
+    border: 1px solid var(--letter-color);
+    border-radius: 0 0 5px 5px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 1000;
-    font-size: 12px;
-}
-
-.autocomplete-item {
-    padding: 8px 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .autocomplete-item {
+    padding: 10px 12px;
     cursor: pointer;
-}
-
-.autocomplete-item:hover {
-    background-color: #1967d2;
-}
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+  }
+  
+  .autocomplete-item:hover {
+    background-color: var(--table-primary);
+    color: white;
+  }
+  
+  /* Estilos para checkbox personalizado */
+  .checkbox-comprobado {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    width: 28px;
+    height: 28px;
+  }
 
 #observaciones {
     height: 22.6px;
@@ -289,3 +166,133 @@ select option, .autocomplete-dropdown {
     max-width: 150px;
     overflow: hidden;
 }
+
+input, select, textarea {
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(61, 126, 255, 0.2);
+    border-radius: 5px;
+    color: var(--btn-color-w);
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--letter-color);
+    box-shadow: 0 0 0 2px rgba(61, 126, 255, 0.2);
+  }
+  
+  input[type="date"] {
+    cursor: pointer;
+  }
+  
+
+
+/*---------------------------------------*/
+/*----------CSS CHECK-RECIBIDO-----------*/
+/*---------------------------------------*/
+
+.checkbox-comprobado {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    height: 24px;
+}
+
+.checkbox-comprobado input {
+    cursor: none;
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    --sizer: var(--toast-success-sz, 24px);
+    position: relative;
+    top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    z-index: 1;
+    border-radius: 999px;
+}
+
+.checkmark,
+.checkmark path {
+    transition:
+        all 0.2s linear 0s,
+        stroke 0.15s,
+        fill 0.15s;
+}
+
+.checkbox-comprobado input:checked~.checkmark {
+    fill: hsl(108, 62%, 55%);
+    stroke: hsl(0, 0%, 100%);
+}
+
+.checkbox-comprobado input:checked~.checkmark path {
+    animation: checked_success 0.8s linear 0s both;
+    stroke-dashoffset: 162.6;
+    stroke-dasharray: 0 162.6 28 134.6;
+}
+
+.checkbox-comprobado input:where(:not(:checked))~.checkmark {
+    fill: hsl(0, 0%, 100%);
+    stroke: hsl(0, 62%, 55%);
+}
+
+.checkbox-comprobado input:where(:not(:checked))~.checkmark path {
+    stroke-dashoffset: 162.6;
+    stroke-dasharray: 0 200 158 134.6;
+}
+
+.sizer {
+    width: var(--sizer);
+    min-width: var(--sizer);
+    max-width: var(--sizer);
+    height: var(--sizer);
+    min-height: var(--sizer);
+    max-height: var(--sizer);
+}
+
+@media (max-width: 992px) {
+    .formulario-no-repetido {
+      grid-template-columns: 1fr;
+    }
+    
+    table {
+      display: block;
+      overflow-x: auto;
+    }
+    
+    .btns-tabla {
+      justify-content: center;
+    }
+  }
+  
+  /* Personalización de scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--letter-color);
+    border-radius: 5px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--table-primary);
+  }

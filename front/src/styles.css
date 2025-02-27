@@ -16,6 +16,9 @@
     --table-color: #fff;
     --checked-color: #00b712;
     --color-detalles: #EBB934;
+    --color-excel-hover: #307750;
+    --color-excel: #469b61;
+    --error-color: #e74c3c;
 }
 
 @font-face {
@@ -49,7 +52,7 @@ body {
 
 .mat-mdc-snack-bar-container {
     position: fixed !important;
-    z-index: 1;
+    z-index: 2;
     justify-content: right !important;
 }
 
@@ -111,24 +114,24 @@ body {
 --CSS para las Tablas y sus componentes--
 -----------------------------------------*/
 table {
+    width: 100%;
     border-collapse: collapse;
-    border-radius: 5px;
-    overflow: hidden;
-    color: var(--table-color);
-    margin-top: 0px;
-    text-align: center;
-    height: fit-content;
-}
+    margin: 20px 0 0;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
 
 caption {
     background-color: var(--caption-color) !important;
     padding: 10px;
+    color: white;
 }
 
 thead tr:first-child {
     background-color: var(--thead-bgcolor);
     color: var(--thead-color);
     font-family: 'Nunito-ExtraBold';
+    text-align: center;
 }
 
 th {
@@ -148,20 +151,27 @@ tr:last-child {
 }
 
 td {
-    padding: 10px;
-}
+    font-size: 14px;
+  }
+  
+  td input, td textarea {
+    width: 80%;
+    margin: 0 10px;
+  }
+  
+  td select {
+    width: 100%;
+  }
 
-td input, td textarea {
-    background-color: transparent;
-}
-
-td select {
-    background-color: transparent;
-}
+  td > input[type="number"] {
+    width: 4vw;
+  }
 
 .centrar {
     display: flex;
     justify-content: center;
+    text-align: center;
+    flex-wrap: wrap;
 }
 
 .mat-mdc-paginator-container {
@@ -176,6 +186,21 @@ mat-tooltip-component {
     display: none;
     /* Oculta el tooltip del paginator*/
 }
+
+input,
+textarea {
+    color: white;
+    border: none;
+    text-align: center;
+    border-bottom: 2px solid white;
+    /* width: 100%; */
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+}
+
 
 
 /* ----------------------------------------
@@ -222,7 +247,7 @@ select option {
     padding: 10px;
     border-radius: 7px;
     width: 180px;
-    font-size: 12px;
+    font-size: 14px;
     font-family: 'Nunito-Medium';
 }
 
@@ -231,9 +256,9 @@ input::placeholder {
     font-style: italic;
 }
 
-.buscador .btn-buscar,
-.buscador .btn-resetear, 
-.campos-gestor .btn-crear,
+.btn-buscar,
+.btn-resetear, 
+.btn-crear,
 .btn-agregar {
     display: flex;
     align-items: center;
@@ -246,7 +271,6 @@ input::placeholder {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     font-weight: 600;
     height: 39px;
-
 }
 
 .buscador .btn-buscar, .campos-gestor .btn-crear {
@@ -267,7 +291,7 @@ input::placeholder {
     padding: 0 5px 0 10px;
 }
 
-.buscador .btn-resetear {
+.btn-resetear {
     margin-left: 8px;
     background-color: #ff1d1d;
     border: 1px solid #ff1d1d;
@@ -286,7 +310,7 @@ input::placeholder {
 }
 
 .gestor-titulo {
-    color: var(--letter-color);
+    color: rgb(239, 239, 239);
     font-size: 40px;
 }
 
@@ -373,7 +397,7 @@ input::placeholder {
     gap: 10px;
 }
 
-.btn-actualizar-gestor button {
+.btn-actualizar-gestor button, .botones button {
     color: white;
     border: none;
     padding: 6px 12px;
@@ -385,21 +409,21 @@ input::placeholder {
     transition: background-color 0.2s ease;
 }
 
-.btn-actualizar-gestor button:first-child {
+.btn-actualizar-gestor button:first-child, .botones button:first-child {
     background-color: #45A049;
     color: white;
 }
 
-.btn-actualizar-gestor button:first-child:hover {
+.btn-actualizar-gestor button:first-child:hover, .botones button:first-child:hover{
     background-color: var(--checked-color);
 }
 
-.btn-actualizar-gestor button:last-child {
+.btn-actualizar-gestor button:last-child, .botones button:last-child {
     background-color: #f44336;
     color: white;
 }
 
-.btn-actualizar-gestor button:last-child:hover {
+.btn-actualizar-gestor button:last-child:hover, .botones button:last-child:hover {
     background-color: #d81e1e;
 }
 
@@ -479,6 +503,7 @@ input::placeholder {
     justify-content: center;
     opacity: 0;
     transition: all 0.5s;
+    z-index: 3;
 }
 
 .tooltip::before {
@@ -506,7 +531,10 @@ input::placeholder {
     border: none;
     border-radius: 5px;
     box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
-
+    padding: 8px 12px;
+    min-width: 90px;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-eliminar,
@@ -515,14 +543,14 @@ input::placeholder {
 }
 
 .btn-eliminar .text {
-    transform: translateX(7px);
+    transform: translateX(-2px);
     color: white;
 }
 
 .btn-eliminar .icon {
     position: absolute;
     /* border-left: 1px solid #c41b1b; */
-    transform: translateX(60px);
+    transform: translateX(50px);
     height: 17px;
     width: 40px;
     display: flex;
@@ -546,7 +574,7 @@ input::placeholder {
 .btn-eliminar:hover .icon {
     width: var(--btn-eliminar-width);
     border-left: none;
-    transform: translateX(0);
+    transform: translateX(-10px);
 }
 
 .btn-eliminar:focus {
@@ -556,3 +584,181 @@ input::placeholder {
 .btn-eliminar:active .icon svg {
     transform: scale(0.8);
 }
+
+/*-------Botón actualizar---------*/
+.btn-actualizar {
+    position: relative;
+    width: 180px;
+    height: 40px;
+    margin-top: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--main-color);
+    box-shadow: 4px 4px var(--main-color);
+    background-color: rgb(244, 244, 244);
+    border-radius: 10px;
+    overflow: hidden;
+    padding-left: 0;
+}
+
+.btn-actualizar,
+.button__icon,
+.button__text {
+    transition: all 0.3s;
+}
+
+.btn-actualizar .button__text {
+    transform: translateX(20px);
+    color: #323232;
+    font-weight: 600;
+}
+
+.btn-actualizar .button__icon {
+    position: absolute;
+    transform: translateX(139px);
+    height: 100%;
+    width: 39px;
+    background-color: #dedede;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-actualizar .svg {
+    width: 20px;
+    fill: var(--main-color);
+}
+
+.btn-actualizar:hover {
+    background: var(--bg-color);
+}
+
+.btn-actualizar:hover .button__text {
+    color: transparent;
+}
+
+.btn-actualizar:hover .button__icon {
+    width: 178px;
+    transform: translateX(0);
+}
+
+.btn-actualizar:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0px 0px var(--main-color);
+}
+
+.btn-actualizar .button__icon:hover .svg {
+    animation: rotate 0.3s linear;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/*-------Botón importar Excel------*/
+.container-btn-file {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    background-color: #307750;
+    color: #fff;
+    border-style: none;
+    padding: 1em 2em;
+    border-radius: 0.5em;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
+    transition: all 250ms;
+    margin-top: 2vw;
+}
+
+.container-btn-file input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.container-btn-file>img {
+    margin-right: 1em;
+}
+
+.container-btn-file::before {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    border-radius: 0.5em;
+    background-color: #469b61;
+    z-index: -1;
+    transition: all 350ms;
+}
+
+.container-btn-file:hover::before {
+    width: 100%;
+}
+
+/*------- Botón Añadir producto -------*/
+.btns-tabla {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .add-producto, .crear-producto {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+  }
+  
+  .add-producto {
+    background-color: transparent;
+    color: var(--letter-color);
+    border: 1px dashed var(--letter-color);
+  }
+  
+  .add-producto:hover {
+    background-color: rgba(61, 126, 255, 0.1);
+  }
+  
+  .add-producto img {
+    width: 16px;
+    height: 16px;
+    filter: invert(46%) sepia(85%) saturate(2383%) hue-rotate(213deg) brightness(98%) contrast(97%);
+  }
+  
+  .crear-producto {
+    background: linear-gradient(135deg, var(--caption-color), var(--color-excel));
+    color: var(--btn-color-w);
+    box-shadow: 0 4px 15px rgba(0, 114, 83, 0.3);
+  }
+  
+  .crear-producto:hover {
+    background: linear-gradient(135deg, var(--caption-color), var(--color-excel-hover));
+    transform: translateY(-2px);
+  }
+  
+  .crear-producto:disabled {
+    background: var(--btn-inactive);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
