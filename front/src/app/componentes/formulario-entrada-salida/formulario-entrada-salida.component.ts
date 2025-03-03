@@ -310,6 +310,8 @@ export class FormularioEntradaSalidaComponent
         },
         error: (err) => console.error('Error al actualizar la entrada:', err),
       });
+    } else {
+      this.carga.hide();
     }
   }
 

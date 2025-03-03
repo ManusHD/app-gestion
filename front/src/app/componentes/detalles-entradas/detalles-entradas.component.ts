@@ -7,7 +7,10 @@ import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 @Component({
   selector: 'app-detalles-entradas',
   templateUrl: './detalles-entradas.component.html',
-  styleUrls: ['../../../assets/styles/modal.css', './detalles-entradas.component.css'],
+  styleUrls: [
+    '../../../assets/styles/modal.css', 
+    './detalles-entradas.component.css',
+  ],
 })
 export class DetallesEntradasComponent implements OnInit {
   mostrarModal: boolean = false;
@@ -50,7 +53,8 @@ export class DetallesEntradasComponent implements OnInit {
         this.entrada.fechaRecepcion &&
         producto.ubicacion &&
         producto.palets != null &&
-        producto.bultos != null
+        producto.bultos != null &&
+        producto.comprobado
     );
   }
   

@@ -5,14 +5,14 @@
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
             <caption>SALIDAS PENDIENTES DE PREPARAR</caption>
             <ng-container matColumnDef="destino">
-                <th class="header-paginator" *matHeaderCellDef>Destino</th>
+                <th class="header-paginator" *matHeaderCellDef>DESTINO</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let salida">
                     {{salida.destino || salida.colaborador || salida.perfumeria + ' - ' + salida.pdv}}
                 </td>
             </ng-container>
 
             <ng-container matColumnDef="preparado">
-                <th class="header-paginator" *matHeaderCellDef>Preparado</th>
+                <th class="header-paginator" *matHeaderCellDef>PREPARADO</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let salida">
                     <div class="flotar-medio">
                         <div>
@@ -26,7 +26,7 @@
             </ng-container>
 
             <ng-container matColumnDef="acciones">
-                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <th class="header-paginator" *matHeaderCellDef>ACCIONES</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let salida">
                     <div style="display: flex; gap: 5px">
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"

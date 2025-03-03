@@ -141,7 +141,7 @@
                     <div class="seccion-pdvs-edit">
                       <select #pdvSelect class="select-buscador" [(ngModel)]="pdvSeleccionadoEdit" [ngModelOptions]="{standalone: true}">
                         <option [ngValue]="null">Seleccione un PDV</option>
-                        <option *ngFor="let pdv of pdvs" [ngValue]="pdv">
+                        <option *ngFor="let pdv of obtenerPDVsSelect(perfumeria)" [ngValue]="pdv">
                           {{ pdv.nombre }}
                         </option>
                       </select>

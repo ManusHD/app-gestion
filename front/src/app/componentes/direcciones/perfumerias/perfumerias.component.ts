@@ -192,6 +192,14 @@ export class PerfumeriasComponent implements OnInit {
     );
   }
 
+  obtenerPDVsSelect(perfumeria: Perfumeria) {
+    const idsPDVsPerfumeria = new Set(perfumeria.pdvs.map(pdv => pdv.id));
+
+    const pdvsNoEnPerfumeria = this.pdvs.filter(pdv => !idsPDVsPerfumeria.has(pdv.id));
+
+    return pdvsNoEnPerfumeria;
+  }
+
   // MÉTODOS PARA MANEJAR PERFUMERÍAS EN MODO CREACIÓN
 
   agregarPdv(): void {
@@ -238,7 +246,7 @@ export class PerfumeriasComponent implements OnInit {
               this.perfumerias[index] = data;
             }
             this.pdvSeleccionadoEdit = null;
-            this.snackbar.snackBarExito('PDV agregadO con éxito');
+            this.snackbar.snackBarExito('PDV agregado con éxito');
           },
           (error) => {
             console.error('Error al agregar EL PDV', error);

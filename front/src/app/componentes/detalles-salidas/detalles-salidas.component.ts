@@ -7,7 +7,10 @@ import { SalidaServices } from 'src/app/services/salida.service';
 @Component({
   selector: 'app-detalles-salidas',
   templateUrl: './detalles-salidas.component.html',
-  styleUrls: ['./detalles-salidas.component.css']
+  styleUrls: [
+    '../../../assets/styles/modal.css',
+    './detalles-salidas.component.css',
+  ]
 })
 export class DetallesSalidasComponent implements OnInit {
   mostrarModal: boolean = false;
@@ -53,7 +56,8 @@ export class DetallesSalidasComponent implements OnInit {
         producto.palets! >= 0 &&
         producto.bultos! >= 0 &&
         producto.formaEnvio &&
-        producto.formaEnvio.trim() !== ''
+        producto.formaEnvio.trim() !== '' &&
+        producto.comprobado
     );
   }
   

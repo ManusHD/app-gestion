@@ -61,7 +61,7 @@
                 showFirstLastButtons
                 (page)="cambiarPagina($event)">
             </mat-paginator>
-            <app-exportar-excel [data]="salidas" [nombreConjuntoExportado]="'SALIDAS'" [fileName]="'SALIDAS-EXPORTADAS'" ></app-exportar-excel>
+            <app-exportar-excel (click)="obtenerDatosAExportar()" [data$]="salidasParaExportar$" [nombreConjuntoExportado]="'SALIDAS'" [fileName]="'SALIDAS-EXPORTADAS'" ></app-exportar-excel>
         </div>
     </div>
 </div>

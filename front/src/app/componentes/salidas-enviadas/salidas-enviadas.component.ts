@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { BehaviorSubject } from 'rxjs';
 import { Salida } from 'src/app/models/salida.model';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SalidaServices } from 'src/app/services/salida.service';
@@ -29,6 +30,9 @@ export class SalidasEnviadasComponent {
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
+      
+  private salidasParaExportarSubject = new BehaviorSubject<Salida[]>([]);
+  salidasParaExportar$ = this.salidasParaExportarSubject.asObservable();
 
   constructor(private salidaServices: SalidaServices, private carga: PantallaCargaService, private snackbar: SnackBar) {}
 
@@ -112,5 +116,23 @@ export class SalidasEnviadasComponent {
     
     const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 2);
     this.fechaInicio = primerDiaMes.toISOString().split('T')[0];
+  }
+
+  // Método para obtener datos para exportar
+  obtenerDatosAExportar() {
+    // Inicia con un arreglo vacío o los datos actuales de la página
+    this.salidasParaExportarSubject.next(this.salidas);
+    if (this.buscando) {
+      this.salidaServices.getFiltradasSalidas(this.fechaInicio, this.fechaFin, this.tipoBusqueda, this.buscador)
+      .subscribe((data) => {
+        this.salidasParaExportarSubject.next(data);
+      });
+    } else {
+      this.salidaServices.getSalidasByEstado(true)
+      .subscribe(data => {
+        console.log(data)
+          this.salidasParaExportarSubject.next(data);
+      });
+    }
   }
 }

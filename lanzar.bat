@@ -29,4 +29,4 @@ start cmd /c "cd %MICROSERVICIO_AGENCIASENVIO% && mvn spring-boot:run"
 start cmd /c "cd %MICROSERVICIO_DIRECCIONES% && mvn spring-boot:run"
 
 :: Ejecutar dcs en una nueva ventana 8098
-start cmd /k "cd %MICROSERVICIO_AUTH% && mvn spring-boot:run"
+start cmd /c "cd %MICROSERVICIO_AUTH% && mvn spring-boot:run"

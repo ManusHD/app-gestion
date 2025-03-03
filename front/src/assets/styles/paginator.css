@@ -79,6 +79,10 @@
     width: 100%;
 }
 
+.editando-label .estado {
+    cursor: pointer;
+}
+
 .btn-acciones {
     display: flex;
     justify-content: center;

@@ -1,44 +1,185 @@
+/* Estilos de header */
 header {
-    width: 100%;
-    font-size: 18px;
+    background-color: var(--main-color);
+    box-shadow: var(--header-shadow);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--border-color);
 }
 
-ul, li {
+/* Estilos de navegación */
+header ul {
+    display: flex;
     list-style: none;
     margin: 0;
     padding: 0;
-}
-
-ul {
-    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--letter-color) var(--main-color);
     justify-content: space-around;
-    padding: 15px 30px;
 }
 
-li a{
-    text-decoration: none;
+header ul::-webkit-scrollbar {
+    height: 4px;
+}
+
+header ul::-webkit-scrollbar-track {
+    background: var(--main-color);
+}
+
+header ul::-webkit-scrollbar-thumb {
+    background-color: var(--letter-color);
+    border-radius: 2px;
+}
+
+/* Elementos de navegación */
+header ul li {
+    position: relative;
+    white-space: nowrap;
+}
+
+header ul li a {
+    display: block;
+    padding: 16px 20px;
     color: var(--letter-color-off);
-    padding: 10px 25px;
-    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all var(--transition-speed);
+    position: relative;
 }
 
-li a:hover{
+/* Estilo al pasar el mouse */
+header ul li a:hover {
     color: white;
+    background-color: var(--hover-color);
 }
 
-header .active {
+/* Elemento activo */
+header ul li a.active {
     color: white;
-    background-color: rgb(94, 106, 129, 0.5);
+    font-weight: 600;
 }
 
-header .active:hover {
-    color: white;
-    text-shadow: 0px 0px 1px;
+/* Indicador de elemento activo */
+header ul li a.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px 2px 0 0;
 }
 
+/* Separador horizontal */
 hr {
-    margin: 0 50px;
-    background-color: var(--letter-color-off);
-    height: 1px;
     border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0;
+}
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 768px) {
+    header ul {
+        flex-wrap: nowrap;
+    }
+    
+    header ul li a {
+        padding: 14px 16px;
+        font-size: 13px;
+    }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+    header ul {
+        justify-content: flex-start;
+    }
+    
+    header ul li a {
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+}
+
+/* Animación para el elemento activo */
+@keyframes activeIn {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+header ul li a.active::after {
+    animation: activeIn 0.3s ease-out forwards;
+    transform-origin: left;
+}
+
+/* Mejoras de accesibilidad - focus visible */
+header ul li a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--letter-color);
+}
+
+/* Botón de menú para dispositivos móviles (opcional) */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--letter-color);
+    cursor: pointer;
+    padding: 10px;
+}
+
+/* Clases adicionales para resaltar elementos específicos */
+.item-importante a {
+    font-weight: 600 !important;
+}
+
+.item-alerta a {
+    color: #ff9800 !important;
+}
+
+/* Indicadores de notificación (opcional) */
+.notificacion {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4d4d;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Efecto de hover mejorado */
+header ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background-color: var(--letter-color);
+    transition: all var(--transition-speed);
+    opacity: 0;
+    transform: translateX(-50%);
+}
+
+header ul li a:hover::before {
+    width: 80%;
+    opacity: 0.5;
+}
+
+header ul li a.active:hover::before {
+    opacity: 0;
 }

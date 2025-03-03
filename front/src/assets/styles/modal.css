@@ -18,7 +18,7 @@
     border-radius: 10px;
     color: var(--letter-color);
     background-color: var(--bg-color);
-    width: 80%;
+    width: 95%;
 }
 
 .columna {
@@ -53,3 +53,24 @@ h2 {
     color: white;
     cursor: pointer;
 }
+
+
+@media (max-width: 992px) {
+
+    .formulario-no-repetido {
+        margin-left: 10px;
+    }
+  
+    .direcciones {
+      margin-left: 10px;
+      justify-content: center;
+    }
+  
+    .detalles-direcciones {
+      justify-content: center;
+    }
+  
+    .dcs {
+      justify-content: center;
+    }
+  }

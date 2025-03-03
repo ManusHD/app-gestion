@@ -5,7 +5,7 @@
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
             <caption>ENTRADAS PENDIENTES DE RECEPCIONAR</caption>
             <ng-container matColumnDef="origen">
-                <th class="header-paginator" *matHeaderCellDef>Origen</th>
+                <th class="header-paginator" *matHeaderCellDef>ORIGEN</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let entrada">
                     {{entrada.origen || entrada.colaborador || (entrada.perfumeria && entrada.pdv ? entrada.perfumeria + ' - ' + entrada.pdv : '')}}
                 </td>
@@ -17,7 +17,7 @@
             </ng-container>
 
             <ng-container matColumnDef="estado">
-                <th class="header-paginator" *matHeaderCellDef>Estado</th>
+                <th class="header-paginator" *matHeaderCellDef>ESTADO</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let entrada">
                     <div class="flotar-medio">
                         <div>
@@ -31,13 +31,14 @@
             </ng-container>
 
             <ng-container matColumnDef="acciones">
-                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <th class="header-paginator" *matHeaderCellDef>ACCIONES</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let entrada">
-                    <div style="display:flex; gap: 5px">
-                        <app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
+                    <div class="centrar">
+                        <div style="display:flex; gap: 5px">
+                            <app-detalles-entradas [enRecibidas]="false" [entrada]="entrada"
                             (entradaRellena)="entrada.rellena = $event"></app-detalles-entradas>
                         <button *appHasRole="'ROLE_ADMIN'" [disabled]="!btnSubmitActivado" (click)="deleteEntrada(entrada.id!)"
-                            class="btn-eliminar">
+                        class="btn-eliminar">
                             <span class="text">BORRAR</span>
                             <span class="icon">
                                 <img src="../../../assets/icons/delete-bin.svg" />
@@ -47,8 +48,9 @@
                                 [disabled]="!entrada.rellena || !btnSubmitActivado"
                                 (click)="setRecibida(entrada.id!)" 
                                 class="btn-grabar">
-                            GRABAR
-                        </button>
+                                GRABAR
+                            </button>
+                        </div>
                     </div>
                 </td>
             </ng-container>
