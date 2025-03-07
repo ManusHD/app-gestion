@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { finalize, Subject, takeUntil } from 'rxjs';
 import { PDV } from 'src/app/models/pdv.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
+import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -14,7 +16,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
     './pdvs.component.css'
   ], 
 })
-export class PdvsComponent implements OnInit {
+export class PdvsComponent implements OnInit, OnDestroy {
   currentPath = window.location.pathname;
   pdvs: PDV[] = [];
   // Inicializamos el nuevo PDV con un array vacío de Perfumerías
@@ -26,6 +28,14 @@ export class PdvsComponent implements OnInit {
   editandoId: number | null = null;
   editandoPdv: PDV = {};
   buscador: string = '';
+  
+  pdvsImportacion: PDV[] = [];
+  importando = false;
+  progresoActual = 0;
+  pdvsImportadosOK = 0;
+  pdvsConError = 0;
+  importacionCompletada = false;
+  private unsubscribe$ = new Subject<void>();
 
   columnasPdvs: string[] = [
     'nombre',
@@ -38,12 +48,28 @@ export class PdvsComponent implements OnInit {
   @ViewChild(MatPaginator) paginatorPdvs!: MatPaginator;
 
   constructor(
+    private importarES: ImportarExcelService,
     private direccionesService: DireccionesService,
     private snackbar: SnackBar
   ) {}
 
   ngOnInit(): void {
     this.cargarPdvs();
+    
+    // Limpiar los datos de la importacion
+    this.importarES.resetExcel();
+    this.pdvsImportacion = [];
+
+    this.importarES.excelData$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(data => {
+        if (data && data.length > 0) {
+          this.procesarDatosExcel(data);
+        } else {
+          this.pdvs = [];
+          this.importacionCompletada = false;
+        }
+      });
   }
 
   // Manejo de la tecla Enter en el buscador
@@ -176,4 +202,93 @@ export class PdvsComponent implements OnInit {
       }
     );
   }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+  procesarDatosExcel(data: any[]): void {
+    this.pdvsImportacion = data.map(row => {
+      const pdv: PDV = new PDV();
+      // Mapear las propiedades desde el Excel a nuestro modelo
+      pdv.nombre = row.nombre || '';
+      pdv.direccion = row.direccion || '';
+      pdv.poblacion = row.poblacion || '';
+      pdv.provincia = row.provincia || '';
+      pdv.cp = row.cp || '';
+      pdv.telefono = row.telefono || '';
+      return pdv;
+    });
+
+    // Reset de los valores de importación
+    this.progresoActual = 0;
+    this.pdvsImportadosOK = 0;
+    this.pdvsConError = 0;
+    this.importacionCompletada = false;
+  }
+
+  importarPDVs(): void {
+    if (this.pdvsImportacion.length === 0) return;
+
+    this.importando = true;
+    this.progresoActual = 0;
+    this.pdvsImportadosOK = 0;
+    this.pdvsConError = 0;
+    
+    // Importar PDVs de uno en uno
+    this.importarSiguientePDV();
+  }
+
+  importarSiguientePDV(): void {
+    if (this.progresoActual >= this.pdvsImportacion.length) {
+      this.finalizarImportacion();
+      return;
+    }
+
+    const pdvActual = this.pdvsImportacion[this.progresoActual];
+    
+    this.direccionesService.createPdv(pdvActual)
+      .pipe(
+        finalize(() => {
+          this.progresoActual++;
+          // Continuar con el siguiente PDV
+          setTimeout(() => this.importarSiguientePDV(), 100); // Pequeño delay para evitar sobrecarga
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.pdvsImportadosOK++;
+        },
+        error: (error) => {
+          console.error('Error al importar PDV:', error);
+          this.pdvsConError++;
+        }
+      });
+  }
+
+  finalizarImportacion(): void {
+    this.importando = false;
+    this.importacionCompletada = true;
+    
+    if (this.pdvsConError === 0) {
+      this.snackbar.snackBarExito(`Se han importado ${this.pdvsImportadosOK} PDVs correctamente`);
+    } else {
+      this.snackbar.snackBarError(`Importación con errores: ${this.pdvsImportadosOK} PDVs correctos, ${this.pdvsConError} con errores`);
+    }
+  }
+
+  cancelarImportacion(): void {
+    if (this.importando) {
+      // Si está en proceso, cancelamos
+      this.importando = false;
+      this.snackbar.snackBarError('Importación cancelada');
+    }
+    
+    // Limpiar los datos
+    this.importarES.resetExcel();
+    this.pdvsImportacion = [];
+    this.importacionCompletada = false;
+  }
+
 }

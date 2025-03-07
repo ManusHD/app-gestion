@@ -5,6 +5,56 @@
       <h2 class="gestor-titulo">GESTIÓN DE PDV</h2>
     </div>
 
+    <app-importar-excel></app-importar-excel>
+
+    <div id="contenedor-importar">
+      <div class="container-tabla" *ngIf="pdvsImportacion.length > 0">
+        <h3>PDVs a importar</h3>
+        <table class="tabla-pdv">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Dirección</th>
+              <th>Población</th>
+              <th>Provincia</th>
+              <th>CP</th>
+              <th>Teléfono</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let pdv of pdvsImportacion">
+              <td>{{ pdv.nombre }}</td>
+              <td>{{ pdv.direccion }}</td>
+              <td>{{ pdv.poblacion }}</td>
+              <td>{{ pdv.provincia }}</td>
+              <td>{{ pdv.cp }}</td>
+              <td>{{ pdv.telefono }}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="acciones">
+          <button class="btn-importar" (click)="importarPDVs()" [disabled]="importando">
+            {{ importando ? 'IMPORTANDO...' : 'IMPORTAR' }}
+          </button>
+          <button class="btn-cancelar" (click)="cancelarImportacion()">CANCELAR</button>
+        </div>
+        
+        <div class="progreso" *ngIf="importando">
+          <p>Importando PDV {{ progresoActual }} de {{ pdvsImportacion.length }}</p>
+          <div class="barra-progreso">
+            <div class="progreso-completado" [style.width.%]="(progresoActual / pdvsImportacion.length) * 100"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="resultado" *ngIf="importacionCompletada">
+        <h3>Resultados de la importación</h3>
+        <p>PDVs importados correctamente: {{ pdvsImportadosOK }}</p>
+        <p>PDVs con errores: {{ pdvsConError }}</p>
+      </div>
+    </div>
+
     <!-- Formulario para crear un nuevo PDV -->
     <div class="centrar">
       <div class="gestor-crear">
@@ -72,7 +122,7 @@
                 <th class="header-paginator" *matHeaderCellDef> Dirección </th>
                 <td class="fila-paginator direccion" mat-cell *matCellDef="let pdv">
                   <ng-container *ngIf="editandoId !== pdv.id; else editDireccion">
-                    {{ pdv.direccion }} <br> {{ pdv.cp }} - {{ pdv.poblacion }} ({{ pdv.provincia }})
+                    {{ pdv.direccion }} <br> {{ pdv.cp }} - {{ pdv.poblacion }} {{ pdv.provincia }}
                   </ng-container>
                   <ng-template #editDireccion>
                     <input [(ngModel)]="editandoPdv.direccion" placeholder="Dirección" class="nombre-editando" /><br>

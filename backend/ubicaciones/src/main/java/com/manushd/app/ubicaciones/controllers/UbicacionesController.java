@@ -66,9 +66,9 @@ public class UbicacionesController {
     public Ubicacion addUbicacion(@RequestBody Ubicacion ubicacion) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
         if (ubiAux != null) {
-            throw new IllegalArgumentException("La ubicación ya existe");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La ubicación ya existe");
         } else if (ubicacion.getNombre().isEmpty() || ubicacion.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre de la ubicación no puede estar vacío");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de la ubicación no puede estar vacío");
         }
         return ubicacionesRepository.save(ubicacion);
     }

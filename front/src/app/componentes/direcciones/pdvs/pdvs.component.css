@@ -1,0 +1,269 @@
+/* Estilos generales para el contenedor principal */
+#contenedor-importar {
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+    color: var(--table-color);
+  }
+  
+  /* Estilos para el encabezado */
+  h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.5px;
+    position: relative;
+    padding-left: 15px;
+  }
+  
+  /* Estilos para la tabla */
+  .container-tabla {
+    background-color: rgba(5, 18, 60, 0.7);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .tabla-pdv {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+  
+  .tabla-pdv thead {
+    background-color: var(--thead-bgcolor);
+  }
+  
+  .tabla-pdv th {
+    color: var(--thead-color);
+    padding: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .tabla-pdv tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(94, 106, 129, 0.2);
+  }
+  
+  .tabla-pdv tbody tr:hover {
+    background-color: rgba(61, 126, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  .tabla-pdv tbody tr:last-child {
+    border-bottom: none;
+  }
+  
+  .tabla-pdv td {
+    padding: 1rem;
+    color: var(--table-color);
+  }
+  
+  /* Sección de acciones y botones */
+  .acciones {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    justify-content: center;
+  }
+  
+  .btn-importar, .btn-cancelar {
+    padding: 0.9rem 1.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+  }
+  
+  .btn-importar {
+    background: linear-gradient(135deg, var(--table-primary), var(--table-secondary));
+    color: var(--btn-color-w);
+    min-width: 220px;
+    box-shadow: 0 4px 15px rgba(18, 66, 223, 0.3);
+  }
+  
+  .btn-importar:not([disabled]):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(18, 66, 223, 0.4);
+  }
+  
+  .btn-importar:not([disabled]):active {
+    transform: translateY(-1px);
+  }
+  
+  .btn-importar[disabled] {
+    background: var(--btn-inactive);
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+  
+  .btn-cancelar {
+    background-color: transparent;
+    color: var(--btn-color-w);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .btn-cancelar:hover {
+    background-color: var(--negative-color);
+    border-color: red;
+  }
+  
+  /* Barra de progreso */
+  .progreso {
+    margin-top: 2rem;
+  }
+  
+  .progreso p {
+    margin-bottom: 0.8rem;
+    color: var(--letter-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  
+  .barra-progreso {
+    height: 10px;
+    background-color: rgba(94, 106, 129, 0.3);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .progreso-completado {
+    height: 100%;
+    background: linear-gradient(90deg, var(--table-primary), var(--color-excel));
+    border-radius: 5px;
+    transition: width 0.5s ease;
+    position: relative;
+  }
+  
+  .progreso-completado::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%
+    );
+    animation: brillo 1.5s infinite linear;
+    background-size: 200% 100%;
+  }
+  
+  @keyframes brillo {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  /* Resultados de importación */
+  .resultado {
+    background-color: rgba(5, 18, 60, 0.7);
+    border-radius: 10px;
+    padding: 1.8rem;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(61, 126, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  .resultado h3 {
+    color: var(--caption-color);
+    margin-bottom: 1.2rem;
+  }
+  
+  .resultado p {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    position: relative;
+    padding-left: 2rem;
+  }
+  
+  .resultado p:first-of-type {
+    background-color: rgba(0, 183, 18, 0.1);
+  }
+  
+  .resultado p:first-of-type::before {
+    content: '✓';
+    position: absolute;
+    left: 0.8rem;
+    font-size: 1rem;
+    color: var(--checked-color);
+  }
+  
+  .resultado p:last-of-type {
+    background-color: rgba(235, 185, 52, 0.1);
+    margin-bottom: 0;
+  }
+  
+  .resultado p:last-of-type::before {
+    content: '!';
+    position: absolute;
+    left: 0.8rem;
+    font-size: 1rem;
+    color: var(--color-detalles);
+    font-weight: bold;
+  }
+  
+  /* Animaciones */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Estilos responsivos */
+  @media (max-width: 768px) {
+    #contenedor-importar {
+      padding: 1.5rem;
+    }
+    
+    .acciones {
+      flex-direction: column;
+    }
+    
+    .btn-importar, .btn-cancelar {
+      width: 100%;
+    }
+    
+    .tabla-pdv th, .tabla-pdv td {
+      padding: 0.8rem;
+    }
+  }
+  
+  /* Estilo personalizado para cuando no hay perfumerías */
+  .container-tabla:empty::after {
+    content: "No hay perfumerías para importar";
+    display: block;
+    text-align: center;
+    color: var(--letter-color-off);
+    padding: 2rem;
+    font-style: italic;
+  }

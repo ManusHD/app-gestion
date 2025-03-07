@@ -37,7 +37,7 @@ export class ListaUbicacionesComponent implements OnInit {
   editingId: number | null = null;
   editingUbicacion: Ubicacion = {};
 
-  columnasUbicaciones: string[] = ['nombre', 'detalles'];
+  columnasUbicaciones: string[] = ['nombre', 'reubicacion', 'detalles'];
   dataSourceUbicaciones = new MatTableDataSource<Ubicacion>();
   @ViewChild(MatPaginator) paginatorUbicaciones!: MatPaginator;
 

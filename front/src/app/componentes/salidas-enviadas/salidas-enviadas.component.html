@@ -37,15 +37,15 @@
             <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
                 <caption>SALIDAS ENVIADAS</caption>
                 <ng-container matColumnDef="fechaEnvio">
-                    <th class="header-paginator" *matHeaderCellDef>Fecha recepción</th>
+                    <th class="header-paginator" *matHeaderCellDef>FECHA ENVÍO</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let salida">{{salida.fechaEnvio | date: 'dd/MM/yyyy'}} </td>
                 </ng-container>
                 <ng-container matColumnDef="destino">
-                    <th class="header-paginator" *matHeaderCellDef>Destino / PO</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let salida">{{salida.destino || salida.colaborador || salida.perfumeria + ' - ' + salida.pdv}} </td>
+                    <th class="header-paginator" *matHeaderCellDef>DESTINO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let salida">{{salida.destino || salida.colaborador || salida.pdv}}</td>
                 </ng-container>
                 <ng-container matColumnDef="detalles">
-                    <th class="header-paginator" *matHeaderCellDef>Detalles</th>
+                    <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let salida"><app-detalles-salidas [enRecibidas]="true" [salida]="salida" (entradaRellena)="salida.rellena=$event"></app-detalles-salidas></td>
                 </ng-container>
                 

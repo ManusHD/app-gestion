@@ -1,6 +1,6 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio">
     <div class="cuerpo-formulario">
-        <form [formGroup]="entradaSalidaForm" (ngSubmit)="onSubmit()" (keydown)="onEnterKey($event)"
+        <form [formGroup]="entradaSalidaForm" (keydown)="onEnterKey($event)"
             #formularioNuevaEntradaSalida="ngForm">
 
             <div class="formulario-no-repetido">
@@ -133,22 +133,25 @@
                                 [ngClass]="{'campo-vacio': !refValida(i)}" />
                         </td>
                         <td>
-                            <input formControlName="description" (keyup)="buscarProductoEspecial(i)"
+                            <div class="centrar">
+
+                                <textarea formControlName="description" (keyup)="buscarProductoEspecial(i)"
                                 (focus)="setActiveRow(i)" (blur)="clearActiveRow()" type="text"
                                 [ngClass]="{'campo-vacio': !descriptionValida(i)}"
-                                [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)" />
+                                [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)" 
+                                class=".description"></textarea>
 
-                            <!-- Dropdown para VISUAL -->
+                                <!-- Dropdown para VISUAL -->
                             <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
-                                        && visuales.length > 0 
-                                        && activeRowIndex === i" class="autocomplete-container">
-                                <div class="autocomplete-dropdown">
-                                    <div class="autocomplete-item" *ngFor="let visual of visuales"
-                                        (click)="selectVisual(i, visual)">
-                                        {{ visual.description }}
-                                    </div>
-                                </div>
+                            && visuales.length > 0 
+                            && activeRowIndex === i" class="autocomplete-container">
+                            <div class="autocomplete-dropdown">
+                                <div class="autocomplete-item" *ngFor="let visual of visuales"
+                                (click)="selectVisual(i, visual)">
+                                {{ visual.description }}
                             </div>
+                        </div>
+                    </div>
 
                             <!-- Dropdown para SIN REFERENCIA -->
                             <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
@@ -161,6 +164,7 @@
                                     </div>
                                 </div>
                             </div>
+                                    </div>
                         </td>
 
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
@@ -263,22 +267,26 @@
                     <span>AÑADIR LÍNEA</span>
                 </button>
 
-                <button *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit" class="crear-producto"
+                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR LA ENTRADA?'" (confirmed)="onSubmit()"
+                    *ngIf="pestanaPadre == 'nuevaEntrada'" type="submit" class="crear-producto"
                     [disabled]="!btnSubmitActivado">
                     GRABAR ENTRADA
                 </button>
 
-                <button *ngIf="pestanaPadre == 'nuevaSalida'" type="submit" class="crear-producto"
+                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR LA SALIDA?'" (confirmed)="onSubmit()"
+                    *ngIf="pestanaPadre == 'nuevaSalida'" type="submit" class="crear-producto"
                     [disabled]="!btnSubmitActivado">
                     GRABAR SALIDA
                 </button>
 
-                <button *ngIf="pestanaPadre == 'previsionEntrada'" type="submit" class="crear-producto"
+                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR LA PREVISIÓN?'" (confirmed)="onSubmit()"
+                    *ngIf="pestanaPadre == 'previsionEntrada'" type="submit" class="crear-producto"
                     [disabled]="!pendiente || !btnSubmitActivado">
                     GRABAR PREVISIÓN
                 </button>
 
-                <button *ngIf="pestanaPadre == 'previsionSalida'" type="submit" class="crear-producto"
+                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR EL TRABAJO?'" (confirmed)="onSubmit()"
+                    *ngIf="pestanaPadre == 'previsionSalida'" type="submit" class="crear-producto"
                     [disabled]="!pendiente || !btnSubmitActivado">
                     GRABAR TRABAJO
                 </button>
@@ -286,8 +294,8 @@
         </form>
 
         <div class="">
-            <button *ngIf="pestanaPadre == 'detallePrevisionEntrada'" (click)="modificarEntrada()"
-                class="btn-actualizar">
+            <button [appConfirm]="'¿ESTÁS SEGURO DE GUARDAR LOS CAMBIOS?'" (confirmed)="modificarEntrada()"
+                *ngIf="pestanaPadre == 'detallePrevisionEntrada'" class="btn-actualizar">
                 <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">
@@ -298,7 +306,8 @@
                     </svg></span>
             </button>
 
-            <button *ngIf="pestanaPadre == 'detallePrevisionSalida'" (click)="modificarSalida()" class="btn-actualizar">
+            <button [appConfirm]="'¿ESTÁS SEGURO DE GUARDAR LOS CAMBIOS?'" (confirmed)="modificarSalida()"
+                *ngIf="pestanaPadre == 'detallePrevisionSalida'" class="btn-actualizar">
                 <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">

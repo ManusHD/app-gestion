@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -111,7 +113,7 @@ public class ProductosController {
 
     @GetMapping("/productos/sinreferencia/descripcion/{description}")
     public Page<Producto> obtenerProductosSinReferenciaPorDescripcion(
-        @RequestParam String description,
+        @PathVariable String description,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
         return productosRepository.findByReferenciaAndDescriptionContainingIgnoreCaseOrderByDescriptionAsc("SIN REFERENCIA", description, PageRequest.of(page, size));
@@ -154,6 +156,7 @@ public class ProductosController {
         } else if(producto.getReferencia() == null || producto.getDescription() == null || producto.getReferencia().length() < 1 || producto.getDescription().length() < 1) {
             throw new IllegalArgumentException("La referencia y descripción no pueden estar vacíos");
         }
+        producto.setReferencia(producto.getReferencia().trim());
         return productosRepository.save(producto);
     }
 
@@ -161,46 +164,55 @@ public class ProductosController {
      * Endpoint para modificar la descripción de un producto.
      */
     @PutMapping("/productos/{id}")
-    public ResponseEntity<?> modifyDescription(@PathVariable Long id, @RequestBody String newDescription) {
-        // Buscar el producto en la base de datos
-        Producto producto = productosRepository.findById(id).orElse(null);
-        if (producto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Producto no encontrado");
-        }
-        String oldDescription = producto.getDescription();
-
-        // Construir el DTO para actualizar en UBICACIONES
-        ProductoDescripcionUpdateDTO dto = new ProductoDescripcionUpdateDTO();
-        dto.setRef(producto.getReferencia()); // Se asume que la propiedad se llama "referencia"
-        dto.setOldDescription(oldDescription);
-        dto.setNewDescription(newDescription);
-
-        // Invocar al endpoint del microservicio de UBICACIONES
-        RestTemplate restTemplate = new RestTemplate();
-        // Ajusta la URL y el puerto según tu configuración
-        String ubicacionesUrl = "http://localhost:8090/ubicaciones/productos/updateDescripcion";
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    ubicacionesUrl,
-                    HttpMethod.PUT,
-                    new HttpEntity<>(dto),
-                    String.class
-            );
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("Error al actualizar ubicaciones: " + response.getBody());
-            }
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al actualizar ubicaciones: " + ex.getMessage());
-        }
-
-        // Si la llamada a UBICACIONES fue exitosa, se actualiza el producto en PRODUCTOS
-        producto.setDescription(newDescription);
-        Producto updatedProducto = productosRepository.save(producto);
-        return ResponseEntity.ok(updatedProducto);
+public ResponseEntity<?> modifyDescription(
+        @PathVariable Long id,
+        @RequestBody String newDescription,
+        @RequestHeader("Authorization") String token) {
+    // Buscar el producto en la base de datos
+    Producto producto = productosRepository.findById(id).orElse(null);
+    if (producto == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("Producto no encontrado");
     }
+    String oldDescription = producto.getDescription();
+
+    // Construir el DTO para actualizar en UBICACIONES
+    ProductoDescripcionUpdateDTO dto = new ProductoDescripcionUpdateDTO();
+    dto.setRef(producto.getReferencia()); // Se asume que la propiedad se llama "referencia"
+    dto.setOldDescription(oldDescription);
+    dto.setNewDescription(newDescription);
+
+    // Configurar el RestTemplate y los headers incluyendo el token
+    RestTemplate restTemplate = new RestTemplate();
+    String ubicacionesUrl = "http://localhost:8095/ubicaciones/productos/updateDescripcion";
+    
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", token);
+    HttpEntity<ProductoDescripcionUpdateDTO> requestEntity = new HttpEntity<>(dto, headers);
+
+    // Invocar al endpoint del microservicio de UBICACIONES
+    try {
+        ResponseEntity<String> response = restTemplate.exchange(
+                ubicacionesUrl,
+                HttpMethod.PUT,
+                requestEntity,
+                String.class
+        );
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar ubicaciones: " + response.getBody());
+        }
+    } catch (Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al actualizar ubicaciones: " + ex.getMessage());
+    }
+
+    // Si la llamada a UBICACIONES fue exitosa, se actualiza el producto en PRODUCTOS
+    producto.setDescription(newDescription);
+    Producto updatedProducto = productosRepository.save(producto);
+    return ResponseEntity.ok(updatedProducto);
+}
+
 
     /**
      * Endpoint para sumar stock a un producto normal.
@@ -250,15 +262,25 @@ public class ProductosController {
         // Comprueba que no exista un producto con la misma descripción
         Optional<Producto> existe = productosRepository.findByReferenciaAndDescription(producto.getReferencia(), producto.getDescription());
 
-        if (existe.isPresent()) {
-            throw new IllegalArgumentException("Ya existe un producto especial con Descripción: " + producto.getDescription());
+        Producto productoFinal = null;
+
+        if(!producto.getReferencia().equals("VISUAL") && !producto.getReferencia().equals("SIN REFERENCIA")) {
+            throw new IllegalArgumentException("La referencia de un producto especial debe ser 'VISUAL' o 'SIN REFERENCIA'");
         }
 
-        if(producto.getDescription().equals("VISUAL") && producto.getDescription().equals("SIN REFERENCIA")) {
-            throw new IllegalArgumentException("La descripción de un producto especial debe ser 'VISUAL' o 'SIN REFERENCIA'");
+        if (existe.isPresent() && producto.getReferencia().equals("VISUAL")) {
+            throw new IllegalArgumentException("Ya existe un visual con Descripción: " + producto.getDescription());
+        } else if(existe.isPresent() && producto.getReferencia().equals("SIN REFERENCIA")) {
+            Integer nuevoStock = producto.getStock() + existe.get().getStock();
+            existe.get().setStock(nuevoStock);
+            
+            existe.get().setDescription(existe.get().getDescription().trim());
+            productoFinal = productosRepository.save(existe.get());
+        } else {
+            producto.setDescription(producto.getDescription().trim());
+            productoFinal = productosRepository.save(producto);
         }
 
-        Producto productoFinal = productosRepository.save(producto);
         productoFinal = productosRepository.save(productoFinal);
         return productoFinal;
     }

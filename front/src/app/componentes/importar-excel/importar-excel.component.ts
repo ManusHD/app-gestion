@@ -29,12 +29,14 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
           const normalizedExcelData = excelData.map(row => {
             const normalizedRow: { [key: string]: any } = {};
             for (const key in row as Object) {
-              normalizedRow[key.toLowerCase()] = (row as any)[key];
+              normalizedRow[key.toLowerCase().trim()] = (row as any)[key];
             }
             return normalizedRow;
           });
       
           this.importarES.setExcelData(normalizedExcelData);
+
+          console.log(normalizedExcelData);
       
           // Mostrar mensaje de éxito
           this.snackBarExito('Excel importado correctamente');

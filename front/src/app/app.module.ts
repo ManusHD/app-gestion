@@ -71,6 +71,9 @@ import { JwtInterceptor } from './interceptors/JwtInterceptor.interceptor';
 import { RegistrarComponent } from './componentes/registrar/registrar.component';
 import { AuthenticatedDirective } from './directivas/authenticated.directive';
 import { HasRoleDirective } from './directivas/has-role.directive';
+import { ConfirmDialogComponent } from './componentes/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogService } from './services/confirm-dialog.service';
+import { ConfirmDirective } from './directivas/confirm.directive';
 
 @NgModule({
   declarations: [
@@ -112,7 +115,9 @@ import { HasRoleDirective } from './directivas/has-role.directive';
     LoginComponent,
     RegistrarComponent,
     HasRoleDirective,
-    AuthenticatedDirective
+    AuthenticatedDirective,
+    ConfirmDialogComponent,
+    ConfirmDirective,
   ],
   imports: [
     AppRoutingModule,
@@ -137,6 +142,7 @@ import { HasRoleDirective } from './directivas/has-role.directive';
   providers: [
     AuthService,
     AgenciasTransporteService,
+    ConfirmDialogService,
     DCSService,
     DireccionesService,
     EntradaServices,

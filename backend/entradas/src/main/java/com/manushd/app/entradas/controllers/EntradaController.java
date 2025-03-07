@@ -185,6 +185,12 @@ public class EntradaController {
         }
     }
 
+    @GetMapping("/entradas/paletsRecibidos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Integer getPaletsRecibidos() {
+        return entradasRepository.sumPaletsByEstadoTrue();
+    }
+
     @PostMapping("/entradas/reubicarPalets")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> reubicarPalets(@RequestBody Entrada entrada) {

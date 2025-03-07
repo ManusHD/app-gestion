@@ -29,6 +29,9 @@ public interface SalidaRepository extends PagingAndSortingRepository<Salida, Lon
 
         void deleteById(Long id);
 
+        @Query("SELECT SUM(p.palets) FROM Salida e JOIN e.productos p WHERE e.estado = true")
+        Integer sumPaletsByEstadoTrue();
+
         // Buscar salidas solo por rango de fechas
         @Query("SELECT e FROM Salida e WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaEnvio ASC")
         Page<Salida> findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(

@@ -34,8 +34,8 @@ export class ProductoServices {
     return this.http.get<any>(`${this.apiUrl}/sinreferencia?page=${page}&size=${size}`);
   }
 
-  getProductosSinReferenciaPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}?page=${page}&size=${size}`);
+  getProductosSinReferenciaPorDescripcionPaginado(description: string, page: number, size: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${description}?page=${page}&size=${size}`);
   }
 
   getProductosPorDescripcionPaginado(descripcion: String, page: number, size: number): Observable<any> {
@@ -77,6 +77,7 @@ export class ProductoServices {
   }
 
   putProducto(id: number, producto: Producto): Observable<Producto> {
+    console.log(producto.description);
     return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto.description);
   }
 

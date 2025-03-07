@@ -16,7 +16,7 @@
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceUbicaciones">
             <caption>STOCK POR UBICACIONES Y REFERENCIAS</caption>
             <ng-container matColumnDef="nombre">
-                <th class="header-paginator" *matHeaderCellDef> Ubicación </th>
+                <th class="header-paginator" *matHeaderCellDef> UBICACIÓN </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
                     <ng-container *ngIf="editingId !== ubicacion.id; else editNombre">
                         {{ubicacion.nombre}}
@@ -29,19 +29,26 @@
                 </td>
             </ng-container>
     
+            <ng-container matColumnDef="reubicacion">
+                <th class="header-paginator" *matHeaderCellDef> REUBICACIÓN DE PALETS </th>
+                <td class="fila-paginator centrar" mat-cell *matCellDef="let ubicacion">
+                    <app-reubicar-producto [tipoReubicacion]="'completa'" [productosPalet]="ubicacion.productos" [ubicacionActual]="ubicacion.nombre"></app-reubicar-producto>
+                </td>
+            </ng-container>
+    
             <ng-container matColumnDef="detalles">
-                <th class="header-paginator" *matHeaderCellDef> Detalles </th>
+                <th class="header-paginator" *matHeaderCellDef> DETALLES </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
                     <app-detalles-ubicacion [ubicacion]="ubicacion"></app-detalles-ubicacion>
                 </td>
             </ng-container>
     
             <ng-container *ngIf="currentPath == '/ubicaciones'" matColumnDef="acciones">
-                <th class="header-paginator" *matHeaderCellDef> Acciones </th>
+                <th class="header-paginator" *matHeaderCellDef> ACCIONES </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
                     <div class="centrar">
                         <ng-container *ngIf="editingId !== ubicacion.id; else editActions">
-                            <button class="btn-editar" (click)="startEditing(ubicacion)">EDITAR</button>
+                            <button class="btn-editar" (click)="startEditing(ubicacion)">EDITAR NOMBRE UBICACIÓN</button>
                         </ng-container>
                         <ng-template #editActions>
                             <div class="btn-actualizar-gestor">
@@ -49,6 +56,7 @@
                                 <button class="btn-cancelar" (click)="cancelEdit()">CANCELAR</button>
                             </div>
                         </ng-template>
+                        
                         <button type="button" (click)="eliminarUbicacion(ubicacion.id!)" class="deleteButton">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
                                 <path fill="#B5BAC1"

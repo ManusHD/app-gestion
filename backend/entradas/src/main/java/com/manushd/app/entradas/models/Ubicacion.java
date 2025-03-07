@@ -30,6 +30,6 @@ public class Ubicacion {
     private String nombre;
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "productoId")
+    @JoinColumn(name = "ubicacionId")
     private Set<ProductoUbicacion> productos;
 }

@@ -165,13 +165,6 @@ select option,
   height: 28px;
 }
 
-#observaciones {
-  height: 22.6px;
-  width: fit-content;
-  max-width: 150px;
-  overflow: hidden;
-}
-
 input,
 select,
 textarea {
@@ -198,7 +191,18 @@ input[type="date"] {
 
 input {
   padding-left: 0;
-  margin-left: 0;
+}
+
+textarea {
+  height: 22.6px;
+  overflow: hidden;
+  font-family: 'Nunito-SemiBold';
+  font-size: 14px;
+  transition: none;
+}
+
+td input, td textarea {
+  margin: 0 0 0 10px;
 }
 
 
@@ -302,24 +306,4 @@ input {
 
   .dcs {
   }
-}
-
-/* Personalización de scrollbar */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--letter-color);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--table-primary);
 }

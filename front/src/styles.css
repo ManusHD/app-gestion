@@ -23,7 +23,12 @@
     --hover-color: rgba(61, 126, 255, 0.1);
     --border-color: rgba(255, 255, 255, 0.1);
     --header-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    --success-color: #4caf50;
     --transition-speed: 0.3s;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --positive-color: #00b712;
+    --negative-color: #ff4d4d;
+    --warning-color: #ffc107;
 }
 
 @font-face {
@@ -57,7 +62,7 @@ body {
 
 .mat-mdc-snack-bar-container {
     position: fixed !important;
-    z-index: 2;
+    z-index: 200;
     justify-content: right !important;
 }
 
@@ -79,7 +84,6 @@ body {
 }
 
 .flotar-medio {
-    display: flex;
     justify-content: center;
     align-items: center;
 }
@@ -114,6 +118,33 @@ body {
     background-color: #009d00;
 }
 
+/* Personalización de scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--letter-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--table-primary);
+}
+
+app-importar-excel {
+    margin: 20px;
+}
+
+app-exportar-excel {
+    margin: 50px;
+}
 
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
@@ -375,8 +406,6 @@ input::placeholder {
     cursor: pointer;
 }
 
-.gestor-seleccion:has(input:checked) {}
-
 .estado-activo {
     background-color: var(--checked-color);
     color: white;
@@ -397,7 +426,7 @@ input::placeholder {
     font-weight: bold;
 }
 
-.btn-actualizar-gestor {
+.btn-actualizar-gestor, .botones {
     display: flex;
     gap: 10px;
 }
@@ -408,7 +437,6 @@ input::placeholder {
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 8px;
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.2s ease;
@@ -683,7 +711,6 @@ input::placeholder {
     z-index: 1;
     box-shadow: 4px 8px 10px -3px rgba(0, 0, 0, 0.356);
     transition: all 250ms;
-    margin-top: 2vw;
 }
 
 .container-btn-file input[type="file"] {

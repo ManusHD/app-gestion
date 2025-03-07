@@ -1,9 +1,11 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Subject, finalize, takeUntil } from 'rxjs';
 import { PDV } from 'src/app/models/pdv.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
+import { ImportarExcelService } from 'src/app/services/importar-excel.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -11,7 +13,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
   templateUrl: './perfumerias.component.html',
   styleUrls: ['../../../../assets/styles/paginator.css', './perfumerias.component.css'],
 })
-export class PerfumeriasComponent implements OnInit {
+export class PerfumeriasComponent implements OnInit, OnDestroy {
   currentPath = window.location.pathname;
   perfumerias: Perfumeria[] = [];
   nuevaPerfumeria: Perfumeria = { pdvs: [] };
@@ -28,12 +30,22 @@ export class PerfumeriasComponent implements OnInit {
   pdvs: PDV[] = [];
   pdvSeleccionado: PDV | null = null;
   pdvSeleccionadoEdit: PDV | null = null;
+  PDVsSelectEdit: PDV[] = [];
 
   columnasPerfumerias: string[] = ['nombre', 'estado', 'pdvs', 'acciones'];
   dataSourcePerfumerias = new MatTableDataSource<Perfumeria>();
   @ViewChild(MatPaginator) paginatorPerfumerias!: MatPaginator;
+    
+  perfumeriasImportacion: Perfumeria[] = [];
+  importando = false;
+  progresoActual = 0;
+  perfumeriasImportadosOK = 0;
+  perfumeriasConError = 0;
+  importacionCompletada = false;
+  private unsubscribe$ = new Subject<void>();
 
   constructor(
+    private importarES: ImportarExcelService,
     private perfumeriaService: DireccionesService,
     private snackbar: SnackBar
   ) {}
@@ -41,6 +53,22 @@ export class PerfumeriasComponent implements OnInit {
   ngOnInit(): void {
     this.cargarPerfumerias();
     this.cargarPdvs();
+    
+    // Limpiar los datos de la importacion
+    this.importarES.resetExcel();
+    this.perfumeriasImportacion = [];
+
+    this.importarES.excelData$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(data => {
+        if (data && data.length > 0) {
+          this.procesarDatosExcel(data);
+        } else {
+          this.pdvs = [];
+          this.importacionCompletada = false;
+        }
+      }
+    );
   }
 
   onEnterKey(event: any) {
@@ -144,6 +172,7 @@ export class PerfumeriasComponent implements OnInit {
     this.editandoId = perfumeria.id!;
     this.editandoPerfumeria = { ...perfumeria, pdvs: [...perfumeria.pdvs || []] };
     this.pdvParaAgregarEdit = '';
+    this.obtenerPDVsSelectEdit();
   }
 
   guardarEdit(): void {
@@ -178,6 +207,7 @@ export class PerfumeriasComponent implements OnInit {
   cancelarEdit(): void {
     this.editandoId = null;
     this.editandoPerfumeria = { pdvs: [] };
+    this.cargarPerfumerias();
   }
 
   eliminarPerfumeria(id: number): void {
@@ -192,12 +222,10 @@ export class PerfumeriasComponent implements OnInit {
     );
   }
 
-  obtenerPDVsSelect(perfumeria: Perfumeria) {
-    const idsPDVsPerfumeria = new Set(perfumeria.pdvs.map(pdv => pdv.id));
+  obtenerPDVsSelectEdit() {
+    const idsPDVsPerfumeria = new Set(this.editandoPerfumeria.pdvs.map(pdv => pdv.id));
 
-    const pdvsNoEnPerfumeria = this.pdvs.filter(pdv => !idsPDVsPerfumeria.has(pdv.id));
-
-    return pdvsNoEnPerfumeria;
+    this.PDVsSelectEdit = this.pdvs.filter(pdv => !idsPDVsPerfumeria.has(pdv.id));
   }
 
   // MÉTODOS PARA MANEJAR PERFUMERÍAS EN MODO CREACIÓN
@@ -213,6 +241,7 @@ export class PerfumeriasComponent implements OnInit {
       );
       if (!existe) {
         this.nuevaPerfumeria.pdvs.push(this.pdvSeleccionado);
+        this.obtenerPDVsSelectEdit();
       }
       // Reiniciamos el select
       this.pdvSeleccionado = null;
@@ -247,6 +276,7 @@ export class PerfumeriasComponent implements OnInit {
             }
             this.pdvSeleccionadoEdit = null;
             this.snackbar.snackBarExito('PDV agregado con éxito');
+        this.obtenerPDVsSelectEdit();
           },
           (error) => {
             console.error('Error al agregar EL PDV', error);
@@ -283,6 +313,90 @@ export class PerfumeriasComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+  }
+
+  procesarDatosExcel(data: any[]): void {
+    this.perfumeriasImportacion = data.map(row => {
+      const perfumeria: Perfumeria = new Perfumeria();
+      // Mapear las propiedades desde el Excel a nuestro modelo
+      perfumeria.nombre = row.nombre || '';
+      perfumeria.activa = true;
+      return perfumeria;
+    });
+
+    // Reset de los valores de importación
+    this.progresoActual = 0;
+    this.perfumeriasImportadosOK = 0;
+    this.perfumeriasConError = 0;
+    this.importacionCompletada = false;
+  }
+
+  importarPerfumerias(): void {
+    if (this.perfumeriasImportacion.length === 0) return;
+
+    this.importando = true;
+    this.progresoActual = 0;
+    this.perfumeriasImportadosOK = 0;
+    this.perfumeriasConError = 0;
+    
+    // Importar PDVs de uno en uno
+    this.importarSiguientePerfumeria();
+  }
+
+  importarSiguientePerfumeria(): void {
+    if (this.progresoActual >= this.perfumeriasImportacion.length) {
+      this.finalizarImportacion();
+      return;
+    }
+
+    const perfumeriaActual = this.perfumeriasImportacion[this.progresoActual];
+    
+    this.perfumeriaService.createPerfumeria(perfumeriaActual)
+      .pipe(
+        finalize(() => {
+          this.progresoActual++;
+          // Continuar con el siguiente PDV
+          setTimeout(() => this.importarSiguientePerfumeria(), 100); // Pequeño delay para evitar sobrecarga
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.perfumeriasImportadosOK++;
+        },
+        error: (error) => {
+          console.error('Error al importar PDV:', error);
+          this.perfumeriasConError++;
+        }
+      });
+  }
+
+  finalizarImportacion(): void {
+    this.importando = false;
+    this.importacionCompletada = true;
+    
+    if (this.perfumeriasConError === 0) {
+      this.snackbar.snackBarExito(`Se han importado ${this.perfumeriasImportadosOK} PDVs correctamente`);
+      this.perfumerias = this.perfumeriasImportacion;
+    } else {
+      this.snackbar.snackBarError(`Importación con errores: ${this.perfumeriasImportadosOK} PDVs correctos, ${this.perfumeriasConError} con errores`);
+    }
+  }
+
+  cancelarImportacion(): void {
+    if (this.importando) {
+      // Si está en proceso, cancelamos
+      this.importando = false;
+      this.snackbar.snackBarError('Importación cancelada');
+    }
+    
+    // Limpiar los datos
+    this.importarES.resetExcel();
+    this.perfumeriasImportacion = [];
+    this.importacionCompletada = false;
+  }
 
 
 }

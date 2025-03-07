@@ -13,7 +13,11 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 export class ColaboradoresComponent implements OnInit {
   currentPath = window.location.pathname;
   colaboradores: Colaborador[] = [];
-  nuevaColaborador: Colaborador = {};
+  nuevaColaborador: Colaborador = {
+    telefono: '',
+    direccion: '',
+    provincia: '',
+  };
   colaboradorSeleccionado: Colaborador | null = null;
   colaboradorEditar: Colaborador | null = null;
   indexColaboradorSeleccionado: number = -1;

@@ -17,5 +17,13 @@ export class ReubicarPaletsService {
     reubicarPaletsSalida(salida: Salida) {
         return this.httpClient.post<Entrada>(`${this.apiUrlSalidas}/reubicarPalets`, salida);
     }
+    
+    getPaletsRecibidos() {
+        return this.httpClient.get<number>(`${this.apiUrlEntradas}/paletsRecibidos`);
+    }
+    
+    getPaletsEnviados() {
+        return this.httpClient.get<number>(`${this.apiUrlSalidas}/paletsEnviados`);
+    }
 
 }

@@ -28,6 +28,9 @@ public interface EntradaRepository extends PagingAndSortingRepository<Entrada, L
         Entrada save(Entrada entrada);
 
         void deleteById(Long id);
+
+        @Query("SELECT SUM(p.palets) FROM Entrada e JOIN e.productos p WHERE e.estado = true")
+        Integer sumPaletsByEstadoTrue();
     
         @Query("SELECT e FROM Entrada e WHERE DATE(e.fechaRecepcion) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaRecepcion ASC")
         Page<Entrada> findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionAsc(

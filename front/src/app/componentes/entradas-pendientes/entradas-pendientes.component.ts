@@ -54,8 +54,8 @@ export class EntradasPendientesComponent
 
   // Rest of the methods remain the same
   setRecibida(id: number) {
-    this.carga.show();
     this.btnSubmitActivado = false;
+    this.carga.show();
     this.entradaService
       .setRecibida(id)
       .pipe(

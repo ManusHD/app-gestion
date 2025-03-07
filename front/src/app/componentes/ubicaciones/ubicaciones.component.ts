@@ -40,7 +40,7 @@ export class UbicacionesComponent {
         error: (error) => {
           this.carga.hide();
           console.error('Error al crear Ubicación', error);
-          this.snackBar.snackBarError(error.error.message);
+          this.snackBar.snackBarError("Ya existe la ubicación: " + this.nuevaUbicacion.nombre);
         },
       });
     

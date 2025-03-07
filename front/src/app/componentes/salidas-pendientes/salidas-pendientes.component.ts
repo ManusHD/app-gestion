@@ -46,13 +46,13 @@ export class SalidasPendientesComponent
   }
 
   setEnviada(id: number) {
-    this.carga.show();
     this.btnSubmitActivado = false;
+    this.carga.show();
     this.salidaService
       .setEnviada(id)
       .pipe(
         catchError((error) => {
-          this.snackBarError(error.error);
+          this.snackBarError(error.error || "Algunos artículos no tienen suficiente Stock");
           this.carga.hide();
           this.btnSubmitActivado = true;
           return throwError(error);

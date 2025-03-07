@@ -19,6 +19,8 @@ export class ReubicarPaletsComponent implements OnInit {
   entradaSalidaForm!: FormGroup;
   btnSubmitActivado: boolean = true;
   ubicaciones: String[] = [];
+  paletsEnviados: number = 0;
+  paletsRecibidos: number = 0;
 
   constructor(
     private reubicarService: ReubicarPaletsService,
@@ -31,6 +33,7 @@ export class ReubicarPaletsComponent implements OnInit {
     this.cargarUbicaciones();
     this.entradaSalidaForm = this.createForm();
     this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
+    this.cargarNumeroPalets();
   }
 
   createForm() {
@@ -215,4 +218,19 @@ export class ReubicarPaletsComponent implements OnInit {
       }
     );
   }
+
+  cargarNumeroPalets() {
+    this.reubicarService.getPaletsEnviados().subscribe(
+      (data: number) => {
+        this.paletsEnviados = data;
+      }
+    );
+
+    this.reubicarService.getPaletsRecibidos().subscribe(
+      (data: number) => {
+        this.paletsRecibidos = data;
+      }
+    );
+  }
+
 }

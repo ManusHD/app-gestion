@@ -154,7 +154,7 @@ export class ListaProductosComponent implements OnInit {
             this.snackbar.snackBarExito('Producto actualizado con éxito');
           },
           (error) => {
-            this.snackbar.snackBarError(error.error.message);
+            this.snackbar.snackBarError(error.message);
             console.error('Error al actualizar el producto', error);
           }
         );

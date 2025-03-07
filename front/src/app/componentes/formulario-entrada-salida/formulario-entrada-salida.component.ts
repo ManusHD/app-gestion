@@ -225,13 +225,13 @@ export class FormularioEntradaSalidaComponent
     productos.forEach((row) => {
       const productoFormGroup = this.createProductoGroup();
       productoFormGroup.patchValue({
-        ref: row.ref,
+        ref: row.referencia || row.ref,
         description: row.descripcion || row.description,
-        unidades: row.unidades,
-        unidadesPedidas: row.unidadesPedidas || row.unidades,
+        unidades: row.unidades || row.unidadesPedidas,
+        unidadesPedidas: row.unidadesPedidas,
         ubicacion: row.ubicacion,
-        palets: row.palets,
-        bultos: row.bultos,
+        palets: row.palets || 0,
+        bultos: row.bultos || 0,
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
         comprobado: row.comprobado || false,
@@ -305,7 +305,6 @@ export class FormularioEntradaSalidaComponent
         next: (updatedEntrada) => {
           console.log('Entrada actualizada:', updatedEntrada);
           location.reload();
-          this.carga.hide();
           this.snackBarExito('Entrada actualizada exitosamente');
         },
         error: (err) => console.error('Error al actualizar la entrada:', err),
@@ -360,7 +359,6 @@ export class FormularioEntradaSalidaComponent
         next: (updatedSalida) => {
           console.log('Salida actualizada:', updatedSalida);
           location.reload();
-          this.carga.hide();
           this.snackBarExito('Salida actualizada exitosamente');
         },
         error: (err) => console.error('Error al actualizar la salida:', err),

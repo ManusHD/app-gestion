@@ -396,7 +396,7 @@ export class FormularioEntradaSalidaService {
           descriptionControl.value
         );
       }
-    } else if (/^\d/.test(refControl!.value)) {
+    } else if (/^(?:\d|R)/.test(refControl!.value)) {
       refControl!.valueChanges
         .pipe(
           debounceTime(300),
@@ -427,7 +427,6 @@ export class FormularioEntradaSalidaService {
             }
           },
           error: () => {
-            descriptionControl!.setValue('');
             this.productosNuevos.add(index); // Añadir a productos nuevos en caso de error
           },
         });
@@ -463,6 +462,7 @@ export class FormularioEntradaSalidaService {
     if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
       return false;
     }
+
     return this.productosNuevos.has(index);
   }
 
@@ -938,6 +938,7 @@ export class FormularioEntradaSalidaService {
       .getProductosSinReferenciaPorDescripcionPaginado(descripcion, this.pageIndex, this.pageSize)
       .subscribe(
         (data) => {
+          console.log(data);
           this.productosSR = data.content;
         },
         (error) => {

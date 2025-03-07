@@ -3,7 +3,7 @@
       <div class="centrar">
         <h2 class="gestor-titulo">GESTIÓN DE COLABORADORES</h2>
       </div>
-  
+      <!-- [value]="nuevaColaborador.direccion + ' ' + nuevaColaborador.poblacion + ' ' + nuevaColaborador.provincia" -->
       <!-- Formulario para crear un nuevo colaborador -->
       <div class="centrar">
         <div class="gestor-crear">
@@ -12,7 +12,7 @@
             <input
               [(ngModel)]="nuevaColaborador.nombre"
               placeholder="Nombre"
-              (keyup)="existeColaborador(nuevaColaborador.nombre!)" />
+              (keyup)="existeColaborador(nuevaColaborador.nombre!)"/>
             <input
               [(ngModel)]="nuevaColaborador.telefono"
               placeholder="Teléfono" />

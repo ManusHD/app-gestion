@@ -2,7 +2,6 @@ table {
     width: 100%;
 }
 
-
 .campos-reubicacion {
     display: flex;
     justify-content: space-between;
@@ -14,4 +13,116 @@ table {
 .campo-form {
     height: max-content;
     width: 50%;
+}
+
+.contenedor-reubicacion {
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+
+/* Estilo base para la tabla de palets */
+#palets-almacen {
+    width: 200px;
+    max-width: 400px;
+    margin: 20px auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Estilo para el título (caption) */
+#palets-almacen caption {
+    background-color: var(--table-primary);
+    color: var(--btn-color-w);
+    padding: 12px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 1px;
+    font-size: 16px;
+}
+
+/* Estilo para las celdas */
+#palets-almacen tbody tr td {
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: var(--main-color);
+    position: relative;
+    transition: all var(--transition-speed);
+}
+
+#palets-almacen tbody tr td {
+    background-color: rgba(61, 126, 255, 0.1);
+    color: white;
+}
+
+/* Efecto hover */
+#palets-almacen tbody tr td:hover {
+    transform: scale(1.02);
+}
+
+/* Estilo para pantallas pequeñas */
+@media (max-width: 600px) {
+    #palets-almacen {
+        max-width: 100%;
+        margin: 10px;
+    }
+    
+    #palets-almacen tbody tr td {
+        padding: 15px;
+        font-size: 20px;
+    }
+}
+
+/* Animación de entrada */
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#palets-almacen {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Etiquetas adicionales */
+.palets-desglose {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    flex-direction: column;
+}
+
+.palets-desglose span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: white;
+}
+
+.palets-desglose .palets-recibidos::before,
+.palets-desglose .palets-enviados::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.palets-desglose .palets-recibidos::before {
+    background-color: var(--positive-color);
+}
+
+.palets-desglose .palets-enviados::before {
+    background-color: var(--negative-color);
 }

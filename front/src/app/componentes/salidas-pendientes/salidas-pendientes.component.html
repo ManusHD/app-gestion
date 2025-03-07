@@ -1,13 +1,13 @@
 <app-cabecera-salidas></app-cabecera-salidas>
 
-<div class="flotar-medio">
+<div class="centrar">
     <div id="historial">
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
             <caption>SALIDAS PENDIENTES DE PREPARAR</caption>
             <ng-container matColumnDef="destino">
                 <th class="header-paginator" *matHeaderCellDef>DESTINO</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let salida">
-                    {{salida.destino || salida.colaborador || salida.perfumeria + ' - ' + salida.pdv}}
+                    {{salida.destino || salida.colaborador || salida.pdv}}
                 </td>
             </ng-container>
 
@@ -31,16 +31,16 @@
                     <div style="display: flex; gap: 5px">
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"
                             (salidaRellena)="salida.rellena = $event"></app-detalles-salidas>
-                        <button *appHasRole="'ROLE_ADMIN'" [disabled]="!btnSubmitActivado"
-                            (click)="deleteSalida(salida.id!)" class="btn-eliminar">
+                        <button [appConfirm]="'¿ESTÁS SEGURO DE BORRAR LA SALIDA?'" (confirmed)="deleteSalida(salida.id!)"
+                            *appHasRole="'ROLE_ADMIN'" [disabled]="!btnSubmitActivado"
+                            class="btn-eliminar">
                             <span class="text">BORRAR</span>
                             <span class="icon">
                                 <img src="../../../assets/icons/delete-bin.svg" />
                             </span>
                         </button>
-                        <button (click)="desactivarBtnSubmit()" 
+                        <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR LA ENTRADA?'" (confirmed)="setEnviada(salida.id!)" 
                                 [disabled]="!salida.rellena || !btnSubmitActivado"
-                                (click)="setEnviada(salida.id!)" 
                                 class="btn-grabar">
                             GRABAR
                         </button>

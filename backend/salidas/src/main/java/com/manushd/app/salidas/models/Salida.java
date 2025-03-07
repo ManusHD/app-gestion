@@ -39,6 +39,6 @@ public class Salida {
     private Date fechaEnvio;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "id_producto")
+    @JoinColumn(name = "salidaId")
     private Set<ProductoSalida> productos;
 }

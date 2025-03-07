@@ -9,3 +9,14 @@
 .tabla-paginator {
     width: 100%;
 }
+
+.btn-productos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bolder;
+}
+
+.btn-productos img{
+    margin-right: 0.5rem;
+}

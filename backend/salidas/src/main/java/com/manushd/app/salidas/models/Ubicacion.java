@@ -31,6 +31,6 @@ public class Ubicacion {
     private String nombre;
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "productoId")
+    @JoinColumn(name = "ubicacionId")
     private ArrayList<ProductoUbicacion> productos;
 }
