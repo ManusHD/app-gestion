@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Subject, finalize, takeUntil } from 'rxjs';
 import { PDV } from 'src/app/models/pdv.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
 import { ImportarExcelService } from 'src/app/services/importar-excel.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -22,6 +23,10 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
   editandoId: number | null = null;
   editandoPerfumeria: Perfumeria = { pdvs: [] };
   buscador: string = '';
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
+  buscando: boolean = false;
 
   // Variables para manejar la adición de Perfumerías en creación y edición
   pdvParaAgregar: string = '';
@@ -47,7 +52,8 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
   constructor(
     private importarES: ImportarExcelService,
     private perfumeriaService: DireccionesService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -70,6 +76,16 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
       }
     );
   }
+  
+    cambiarPagina(event: PageEvent) {
+      this.pageIndex = event.pageIndex; 
+      this.pageSize = event.pageSize;   
+      if(this.buscando){
+        this.buscarPerfumerias();
+      } else {
+        this.cargarPerfumerias();       
+      }
+    }
 
   onEnterKey(event: any) {
     if (event.keyCode === 13) {
@@ -82,35 +98,58 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
 
   resetearBuscador() {
     this.buscador = '';
+    this.pageIndex = 0;
+    this.buscando = false;
     this.cargarPerfumerias();
   }
 
   buscarPerfumerias() {
+    this.carga.show();
+    if(!this.buscando) {
+      this.pageIndex = 0;
+    }
+    this.buscando = true;
     this.perfumeriaService
-      .getPerfumeriasByNombre(this.buscador)
-      .subscribe((data: Perfumeria[]) => {
-        this.perfumerias = data;
+      .getPerfumeriasByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
+      .subscribe((data) => {
+        this.perfumerias = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourcePerfumerias.data = this.perfumerias;
-        this.dataSourcePerfumerias.paginator = this.paginatorPerfumerias;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       });
+      
   }
 
   cargarPerfumerias(): void {
-    this.perfumeriaService.getPerfumerias().subscribe(
-      (data: Perfumeria[]) => {
-        this.perfumerias = data;
+    this.carga.show();
+    this.perfumeriaService.getPerfumeriasPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.perfumerias = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourcePerfumerias.data = this.perfumerias;
-        this.dataSourcePerfumerias.paginator = this.paginatorPerfumerias;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar las perfumerías', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
+    
   }
 
   cargarPdvs() {
     this.perfumeriaService.getPdvs().subscribe(
-      (data: PDV[]) => {
+      (data) => {
         this.pdvs = data;
       }
     );
@@ -131,6 +170,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
         if(!this.nuevaPerfumeria.pdvs) {
           this.nuevaPerfumeria.pdvs = [];
         }
+        this.carga.show();
         this.perfumeriaService.createPerfumeria(this.nuevaPerfumeria).subscribe(
           (data: Perfumeria) => {
             this.perfumerias.push(data);
@@ -138,9 +178,15 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
             this.nuevaPerfumeria = { pdvs: [] };
             this.pdvParaAgregar = '';
             this.snackbar.snackBarExito('Perfumería creada con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             console.error('Error al crear la perfumería', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
       }
@@ -184,6 +230,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
 
       this.editandoPerfumeria.nombre = this.editandoPerfumeria.nombre.trim();
       
+      this.carga.show();
       this.perfumeriaService
         .updatePerfumeria(this.editandoPerfumeria)
         .subscribe(
@@ -199,6 +246,9 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
           (error) => {
             this.snackbar.snackBarError(error.error.message);
             console.error('Error al actualizar la perfumería', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
           }
         );
     }
@@ -211,13 +261,20 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
   }
 
   eliminarPerfumeria(id: number): void {
+    this.carga.show();
     this.perfumeriaService.deletePerfumeria(id).subscribe(
       () => {
         this.perfumerias = this.perfumerias.filter((p) => p.id !== id);
         this.dataSourcePerfumerias.data = [...this.perfumerias];
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al eliminar la perfumería', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -262,6 +319,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
 
   agregarPdvEdit() {
     if (this.pdvSeleccionadoEdit && this.editandoPerfumeria.id) {
+      this.carga.show();
       this.perfumeriaService
         .nuevoPdvPerfumeria(
           this.editandoPerfumeria.id,
@@ -277,10 +335,16 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
             this.pdvSeleccionadoEdit = null;
             this.snackbar.snackBarExito('PDV agregado con éxito');
         this.obtenerPDVsSelectEdit();
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
           },
           (error) => {
             console.error('Error al agregar EL PDV', error);
             this.snackbar.snackBarError('Error al agregar el PDV');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
     }
@@ -293,6 +357,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
       index >= 0 &&
       index < this.editandoPerfumeria.pdvs.length
     ) {
+      this.carga.show();
       const pdvAEliminar = this.editandoPerfumeria.pdvs[index];
       this.perfumeriaService
         .eliminarPdvPerfumeria(this.editandoPerfumeria.id, pdvAEliminar)
@@ -304,10 +369,16 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
               this.perfumerias[idx] = data;
             }
             this.snackbar.snackBarExito('PDV eliminado con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             console.error('Error al eliminar la perfumería', error);
             this.snackbar.snackBarError('Error al eliminar la perfumería');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
     }

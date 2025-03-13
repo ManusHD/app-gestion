@@ -5,22 +5,27 @@ import { Colaborador } from "../models/colaborador.model";
 import { PDV } from "../models/pdv.model";
 import { Perfumeria } from "../models/perfumeria.model";
 import { OtraDireccion } from "../models/otraDireccion.model";
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class DireccionesService {
-    private apiUrlColaboradores = 'http://localhost:8097/direcciones/colaboradores';
-    private apiUrlPdvs = 'http://localhost:8097/direcciones/pdvs';
-    private apiUrlPerfumerias = 'http://localhost:8097/direcciones/perfumerias';
-    private apiUrlOtrasDirecciones = 'http://localhost:8097/direcciones/otrasDirecciones';
+    private apiUrlColaboradores = environment.apiDirecciones + '/colaboradores';
+    private apiUrlPdvs = environment.apiDirecciones + '/pdvs';
+    private apiUrlPerfumerias = environment.apiDirecciones + '/perfumerias';
+    private apiUrlOtrasDirecciones = environment.apiDirecciones + '/otrasDirecciones';
 
     constructor(private http: HttpClient) {}
 
-    getColaboradores(): Observable<Colaborador[]> {
-        return this.http.get<Colaborador[]>(`${this.apiUrlColaboradores}`);
+    getColaboradores(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}`);
     }
 
-    getColaboradoresByNombre(nombre: string): Observable<Colaborador[]> {
-        return this.http.get<Colaborador[]>(`${this.apiUrlColaboradores}/byNombre/${nombre}`);
+    getColaboradoresPaginado(page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}/paginado?page=${page}&size=${size}`);
+    }
+
+    getColaboradoresByNombrePaginado(nombre: string, page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}/byNombre/${nombre}/paginado?page=${page}&size=${size}`);
     }
 
     getColaborador(nombre: String): Observable<Colaborador> {
@@ -39,12 +44,16 @@ export class DireccionesService {
         return this.http.delete(`${this.apiUrlColaboradores}/${id}`);
     }
 
-    getPdvs(): Observable<PDV[]> {
-        return this.http.get<PDV[]>(`${this.apiUrlPdvs}`);
+    getPdvs(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPdvs}`);
     }
 
-    getPdvsByNombre(nombre: string): Observable<PDV[]> {
-        return this.http.get<PDV[]>(`${this.apiUrlPdvs}/byNombre/${nombre}`);
+    getPdvsPaginado(page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPdvs}/paginado?page=${page}&size=${size}`);
+    }
+
+    getPdvsByNombrePaginado(nombre: string, page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPdvs}/byNombre/${nombre}/paginado?page=${page}&size=${size}`);
     }
     
     getPdv(nombre: string): Observable<PDV> {
@@ -63,16 +72,25 @@ export class DireccionesService {
         return this.http.delete<PDV>(`${this.apiUrlPdvs}/${id}`);
     }
     
-    getPerfumerias(): Observable<Perfumeria[]> {
-        return this.http.get<Perfumeria[]>(`${this.apiUrlPerfumerias}`);
+    getPerfumeriasPaginado(page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPerfumerias}/paginado?page=${page}&size=${size}`);
     }
     
-    getPerfumeriasByNombre(nombre: string): Observable<Perfumeria[]> {
-        return this.http.get<Perfumeria[]>(`${this.apiUrlPerfumerias}/byNombre/${nombre}`);
+    getPerfumeriasByNombrePaginado(nombre: string, page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPerfumerias}/byNombre/${nombre}/paginado?page=${page}&size=${size}`);
     }
     
-    getPerfumeriasActivas(): Observable<Perfumeria[]> {
-        return this.http.get<Perfumeria[]>(`${this.apiUrlPerfumerias}/activas`);
+    getPerfumeriasActivas(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPerfumerias}/activas`);
+    }
+    
+    getPerfumeriasActivasPaginado(page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlPerfumerias}/activas/paginado?page=${page}&size=${size}`);
+    }
+    
+    getPerfumeriasActivasByNombrePaginado(perfumeria: string, page: number, size: number): Observable<any> {
+        console.log(`${this.apiUrlPerfumerias}/activas/${perfumeria}/paginado?page=${page}&size=${size}`)
+        return this.http.get<any>(`${this.apiUrlPerfumerias}/activas/${perfumeria}/paginado?page=${page}&size=${size}`);
     }
     
     getPerfumeria(nombre: string): Observable<Perfumeria> {
@@ -112,12 +130,16 @@ export class DireccionesService {
         return this.http.delete<Perfumeria>(`${this.apiUrlPerfumerias}/${id}`);
     }
 
-    getOtrasDirecciones(): Observable<OtraDireccion[]> {
-        return this.http.get<OtraDireccion[]>(`${this.apiUrlOtrasDirecciones}`);
+    getOtrasDireccionesPaginado(page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlOtrasDirecciones}/paginado?page=${page}&size=${size}`);
     }
 
-    getOtrasDireccionesByNombre(nombre: string): Observable<OtraDireccion[]> {
-        return this.http.get<OtraDireccion[]>(`${this.apiUrlOtrasDirecciones}/byNombre/${nombre}`);
+    getOtrasDireccionesByNombre(nombre: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlOtrasDirecciones}/byNombre/${nombre}`);
+    }
+
+    getOtrasDireccionesByNombrePaginado(nombre: string, page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlOtrasDirecciones}/byNombre/${nombre}/paginado?page=${page}&size=${size}`);
     }
 
     getOtraDireccion(id: number): Observable<OtraDireccion> {

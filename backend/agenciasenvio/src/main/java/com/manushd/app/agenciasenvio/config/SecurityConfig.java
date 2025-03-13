@@ -51,7 +51,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("http://localhost:4200") // Permite más variantes de origen
+                        .allowedOriginPatterns("http://localhost:4200", "https://chanel.delim.es") // Permite más variantes de origen
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") 
                         .allowedHeaders("*")
                         .allowCredentials(true);

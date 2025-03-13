@@ -52,7 +52,7 @@ export class ReubicarPaletsComponent implements OnInit {
       bultos: [],
       unidadesPedidas: [],
       unidades: [],
-      ubicacion: ['', [Validators.required]],
+      ubicacion: [''],
       formaEnvio: [''],
       observaciones: [''],
       comprobado: [true],

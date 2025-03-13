@@ -3,10 +3,11 @@ import { Salida } from '../models/salida.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { from, Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class SalidaServices {
-  private apiUrl = 'http://localhost:8093/salidas';
+  private apiUrl =  environment.apiSalidas;
 
   constructor(private httpClient: HttpClient, private router: Router) {}
 

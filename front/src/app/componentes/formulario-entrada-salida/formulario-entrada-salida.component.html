@@ -1,4 +1,4 @@
-<div *ngIf="mostrarFormulario" class="flotar-medio">
+<div *ngIf="mostrarFormulario" class="flotar-medio" style="height: 1000px;">
     <div class="cuerpo-formulario">
         <form [formGroup]="entradaSalidaForm" (keydown)="onEnterKey($event)"
             #formularioNuevaEntradaSalida="ngForm">
@@ -16,13 +16,16 @@
                 <div class="direcciones">
                     <div class="campo-form">
                         <label>PERFUMERÍA</label>
-                        <select formControlName="perfumeria" (ngModelChange)="onPerfumeriaChange($event)"
-                            [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}">
-                            <option value=""></option>
-                            <option *ngFor="let perfumeria of perfumerias" [value]="perfumeria.nombre">
-                                {{perfumeria.nombre}}
-                            </option>
-                        </select>
+                        <div class="autocomplete-container">
+                            <input formControlName="perfumeria" type="text"
+                                [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
+                            <div class="autocomplete-dropdown" *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada">
+                                <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias"
+                                    (click)="selectPerfumeria(perfumeria)">
+                                    {{ perfumeria.nombre }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="campo-form">
@@ -51,8 +54,8 @@
                         <div class="autocomplete-container">
                             <input formControlName="otroOrigenDestino" type="text"
                                 [ngClass]="{'campo-vacio': !otroOrigenDestinoValido() && !previsionEsValidaCampoSimple()}" />
-                            <div class="autocomplete-dropdown" *ngIf="filteredOtrasDirecciones.length > 0">
-                                <div class="autocomplete-item" *ngFor="let direccion of filteredOtrasDirecciones"
+                            <div class="autocomplete-dropdown" *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada">
+                                <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones"
                                     (click)="selectOtraDireccion(direccion)">
                                     {{ direccion.nombre }}
                                 </div>

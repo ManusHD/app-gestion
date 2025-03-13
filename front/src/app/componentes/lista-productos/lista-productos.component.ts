@@ -3,6 +3,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { BehaviorSubject } from 'rxjs';
 import { Producto } from 'src/app/models/producto.model';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { ProductoServices } from 'src/app/services/producto.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
@@ -37,7 +38,8 @@ export class ListaProductosComponent implements OnInit {
 
   constructor(
     private productoService: ProductoServices,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -74,6 +76,7 @@ export class ListaProductosComponent implements OnInit {
   }
 
   buscarProductos() {
+    this.carga.show();
     if(!this.buscando) {
       this.pageIndex = 0;
     }
@@ -87,7 +90,16 @@ export class ListaProductosComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceStock.data = this.productos;
-        });
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        }
+      )
     } else if(this.tipoBusqueda === 'descripciones'){
       this.productoService
         .getProductosPorDescripcionPaginado(this.buscador, this.pageIndex, this.pageSize)
@@ -97,11 +109,21 @@ export class ListaProductosComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceStock.data = this.productos;
-        });
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        }
+      )
     }
   }
 
   cargarProductos() {
+    this.carga.show();
     this.productoService
       .getProductosPaginado(this.pageIndex, this.pageSize)
       .subscribe((data) => {
@@ -110,7 +132,16 @@ export class ListaProductosComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
         this.dataSourceStock.data = this.productos;
-      });
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      },
+      () => {
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      }
+    )
   }
 
   copiarReferencia(referencia: string) {

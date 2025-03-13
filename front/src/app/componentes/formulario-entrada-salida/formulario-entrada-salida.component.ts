@@ -10,13 +10,12 @@ import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { Producto } from 'src/app/models/producto.model';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
+import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
   templateUrl: './formulario-entrada-salida.component.html',
-  styleUrls: [
-    './formulario-entrada-salida.component.css',
-  ],
+  styleUrls: ['./formulario-entrada-salida.component.css'],
 })
 export class FormularioEntradaSalidaComponent
   extends FormularioEntradaSalidaService
@@ -26,25 +25,24 @@ export class FormularioEntradaSalidaComponent
   @Input() detallesES?: Entrada | Salida = undefined;
   enDetalles: boolean = false;
   agenciasTransporte: AgenciaTransporte[] = [];
-  filteredOtrasDirecciones: OtraDireccion[] = [];
   activeRowIndex: number | null = null;
 
   @ViewChild('observaciones', { static: false })
   observacionesInput!: ElementRef;
 
   ngOnInit() {
+    // this.carga.show();
     this.importarES.resetExcel();
     this.entradaSalidaForm = this.createForm();
 
     this.entradaSalidaForm.get('perfumeria')?.setValue('');
     this.entradaSalidaForm.get('pdv')?.setValue('');
 
-    this.cargarColaboradores();
-    this.cargarOtrasDirecciones();
-    this.cargarPerfumerias();
     if (this.esEntrada()) {
       this.cargarUbicaciones();
     }
+
+    this.cargarColaboradores();
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -69,10 +67,31 @@ export class FormularioEntradaSalidaComponent
 
     this.entradaSalidaForm
       .get('otroOrigenDestino')
-      ?.valueChanges.subscribe((value) => {
-        this.filterOtrasDirecciones(value);
-        if (!value) {
+      ?.valueChanges.pipe(
+        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+      )
+      .subscribe((value) => {
+        if (value == '') {
           this.limpiarCamposDireccion();
+          this.otrasDirecciones = [];
+          this.otraDireccionSeleccionada = null;
+        } else {
+          this.cargarOtrasDirecciones(value);
+        }
+      });
+
+    this.entradaSalidaForm
+      .get('perfumeria')
+      ?.valueChanges.pipe(
+        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+      )
+      .subscribe((value) => {
+        if (value == '' || value == null) {
+          this.limpiarCamposDireccion();
+          this.perfumerias = [];
+          this.perfumeriaSeleccionada = null;
+        } else {
+          this.cargarPerfumerias(value);
         }
       });
 
@@ -97,22 +116,28 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
-  cargarPerfumerias() {
-    this.direccionesService.getPerfumeriasActivas().subscribe({
-      next: (perfumeria: Perfumeria[]) => {
-        this.perfumerias = perfumeria;
-      },
-      error: (error) => {
-        console.error('Error al obtener las Perfumerías', error);
-      },
-    });
+  cargarPerfumerias(perfumeria: string) {
+    this.direccionesService
+      .getPerfumeriasActivasByNombrePaginado(
+        perfumeria,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe({
+        next: (data) => {
+          this.perfumerias = data.content;
+        },
+        error: (error) => {
+          console.error('Error al obtener las Perfumerías', error);
+        },
+      });
   }
 
-  cargarPDVs(nombrePerfumeria: string): Promise<void> {
+  cargarPDVs(): Promise<void> {
     const perfumeria = this.getCampoValue('perfumeria');
     if (perfumeria && perfumeria != '') {
       return new Promise((resolve, reject) => {
-        this.direccionesService.getPdvsPerfumeria(nombrePerfumeria).subscribe(
+        this.direccionesService.getPdvsPerfumeria(perfumeria).subscribe(
           (data: PDV[]) => {
             this.pdvs = data;
             resolve();
@@ -128,10 +153,18 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
+  cargarPDVPerfumeria(perfumeria: string) {
+    this.direccionesService.getPdvsPerfumeria(perfumeria).subscribe(
+      (data: PDV[]) => {
+        this.pdvs = data;
+      }
+    );
+  }
+
   cargarColaboradores() {
     this.direccionesService.getColaboradores().subscribe({
-      next: (colaboradores: Colaborador[]) => {
-        this.colaboradores = colaboradores;
+      next: (data) => {
+        this.colaboradores = data;
       },
       error: (error) => {
         console.error('Error al obtener colaboradores', error);
@@ -139,15 +172,24 @@ export class FormularioEntradaSalidaComponent
     });
   }
 
-  cargarOtrasDirecciones() {
-    this.direccionesService.getOtrasDirecciones().subscribe({
-      next: (otrasDirecciones: OtraDireccion[]) => {
-        this.otrasDirecciones = otrasDirecciones;
-      },
-      error: (error) => {
-        console.error('Error al obtener otras direcciones', error);
-      },
-    });
+  cargarOtrasDirecciones(direccion: string) {
+    this.direccionesService
+      .getOtrasDireccionesByNombrePaginado(
+        direccion,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe({
+        next: (data) => {
+          this.otrasDirecciones = data.content;
+          this.otrasDirecciones = this.otrasDirecciones.filter((d: any) =>
+            d.nombre.includes(direccion)
+          );
+        },
+        error: (error) => {
+          console.error('Error al obtener otras direcciones', error);
+        },
+      });
   }
 
   setProductoPendiente(index: number) {
@@ -182,7 +224,7 @@ export class FormularioEntradaSalidaComponent
         entradaSalidaFormulario.perfumeria || ''
       );
       if (entradaSalidaFormulario.perfumeria != '') {
-        this.cargarPDVs(entradaSalidaFormulario.perfumeria).then(() => {
+        this.cargarPDVs().then(() => {
           this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
         });
       }
@@ -204,7 +246,7 @@ export class FormularioEntradaSalidaComponent
         'perfumeria',
         entradaSalidaFormulario.perfumeria || ''
       );
-      this.cargarPDVs(entradaSalidaFormulario.perfumeria).then(() => {
+      this.cargarPDVs().then(() => {
         this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
       });
       this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
@@ -428,35 +470,22 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
-  onPerfumeriaChange(nombrePerfumeria: string) {
-    if (nombrePerfumeria) {
-      this.cargarPDVs(nombrePerfumeria);
-      // Limpiamos el PDV seleccionado y por tanto su dirección asociada
-      this.entradaSalidaForm.patchValue({
-        pdv: '',
-      });
-    } else {
-      this.pdvs = [];
-      if (this.currentPath.startsWith('/salidas')) {
-        this.limpiarCamposDireccion();
-      }
-    }
-  }
+  // onPerfumeriaChange(nombrePerfumeria: string) {
+  //   if (nombrePerfumeria) {
+  //     this.cargarPDVs(nombrePerfumeria);
+  //     // Limpiamos el PDV seleccionado y por tanto su dirección asociada
+  //     this.entradaSalidaForm.patchValue({
+  //       pdv: '',
+  //     });
+  //   } else {
+  //     this.pdvs = [];
+  //     if (this.currentPath.startsWith('/salidas')) {
+  //       this.limpiarCamposDireccion();
+  //     }
+  //   }
+  // }
 
-  // Método para filtrar las direcciones
-  filterOtrasDirecciones(value: string) {
-    if (!value) {
-      this.filteredOtrasDirecciones = [];
-      return;
-    }
-
-    const filterValue = value.toLowerCase();
-    this.filteredOtrasDirecciones = this.otrasDirecciones.filter((direccion) =>
-      direccion.nombre!.toLowerCase().includes(filterValue)
-    );
-  }
-
-  // Método actualizado para seleccionar una dirección
+  // Método para seleccionar una dirección
   selectOtraDireccion(direccion: OtraDireccion) {
     this.entradaSalidaForm.patchValue({
       otroOrigenDestino: direccion.nombre,
@@ -475,7 +504,21 @@ export class FormularioEntradaSalidaComponent
       });
     }
 
-    this.filteredOtrasDirecciones = [];
+    this.otraDireccionSeleccionada = direccion;
+  }
+
+  // Método para seleccionar una dirección
+  selectPerfumeria(perfumeria: Perfumeria) {
+    this.entradaSalidaForm.patchValue({
+      perfumeria: perfumeria.nombre,
+      // Limpiamos los otros campos que podrían tener dirección
+      otroOrigenDestino: '',
+      colaborador: '',
+    });
+
+    this.perfumeriaSeleccionada = perfumeria;
+
+    this.cargarPDVPerfumeria(perfumeria.nombre!);
   }
 
   selectVisual(i: number, visual: Producto) {

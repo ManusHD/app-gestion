@@ -23,7 +23,6 @@ export class EntradasPendientesComponent
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit() {
-    this.carga.show();
     this.cargarEntradas();
   }
     
@@ -34,6 +33,7 @@ export class EntradasPendientesComponent
   }
 
   cargarEntradas() {
+    this.carga.show();
     this.entradaService
       .getEntradasByEstadoPaginado(false, this.pageIndex, this.pageSize)
       .subscribe((data) => {
@@ -52,7 +52,6 @@ export class EntradasPendientesComponent
       });
   }
 
-  // Rest of the methods remain the same
   setRecibida(id: number) {
     this.btnSubmitActivado = false;
     this.carga.show();
@@ -97,6 +96,7 @@ export class EntradasPendientesComponent
         this.carga.hide();
         this.btnSubmitActivado = true;
         console.error(error);
+        this.snackBarError('No se puede borrar la entrada por un conflicto en la BBDD');
       }
     );
   }

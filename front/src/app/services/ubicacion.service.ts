@@ -3,10 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Ubicacion } from '../models/ubicacion.model';
 import { ReubicacionRequest } from '../models/ReubicacionRequest.model';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class UbicacionService {
-  private apiUrl = 'http://localhost:8095/ubicaciones';
+  private apiUrl =  environment.apiUbicaciones;
 
   constructor(private httpClient: HttpClient) {}
 

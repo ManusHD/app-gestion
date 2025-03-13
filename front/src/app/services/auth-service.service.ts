@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
 import { User } from '../models/user.model';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
   token: string;
@@ -19,7 +20,7 @@ interface JwtPayload {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8098/auth';
+  private apiUrl =  environment.apiAutenticacion;
   
   // BehaviorSubject para almacenar el token (inicialmente desde localStorage)
   private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem('token'));
@@ -31,6 +32,7 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<LoginResponse> {
+    console.log("API: ", this.apiUrl);
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { username, password }).pipe(
       tap(response => {
         localStorage.setItem('token', response.token);
@@ -72,5 +74,17 @@ export class AuthService {
           return decoded.roles.includes(role);
       }
       return false;
+  }
+
+  getUsers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/usuarios`);
+  }
+
+  updateUser(username: string, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/actualizar/${username}`, data);
+  }
+
+  deleteUser(username: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/eliminar/${username}`);
   }
 }

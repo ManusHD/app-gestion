@@ -3,10 +3,12 @@ package com.manushd.app.autenticacion.service;
 import com.manushd.app.autenticacion.models.User;
 import com.manushd.app.autenticacion.models.RegisterRequest;
 import com.manushd.app.autenticacion.models.Role;
+import com.manushd.app.autenticacion.models.UpdateUserRequest;
 import com.manushd.app.autenticacion.repository.RoleRepository;
 import com.manushd.app.autenticacion.repository.UserRepository;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,6 +33,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    public User save(User user) {
+        return userRepository.save(user);
+    }
+
+    public Iterable<User> getUsers() {
+        return userRepository.findAll();
+    }
 
     public User registerUser(RegisterRequest request) throws Exception {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -64,4 +74,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
     }
+
+    public User updateUser(String username, UpdateUserRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    
+        if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            Role newRole = roleRepository.findByName(request.getRole())
+                    .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + request.getRole()));
+            user.setRoles(Collections.singleton(newRole));
+        }
+    
+        return userRepository.save(user);
+    }
+    
+    public void deleteUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        userRepository.delete(user);
+    }
+    
+    
+    
+
 }

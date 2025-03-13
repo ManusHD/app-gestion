@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Colaborador } from 'src/app/models/colaborador.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -25,6 +26,10 @@ export class ColaboradoresComponent implements OnInit {
   editandoId: number | null = null;
   editandoColaborador: Colaborador = {};
   buscador: string = '';
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
+  buscando: boolean = false;
 
   columnasColaboradores: string[] = ['nombre', 'telefono', 'direccion', 'acciones'];
   dataSourceColaboradores = new MatTableDataSource<Colaborador>();
@@ -33,12 +38,23 @@ export class ColaboradoresComponent implements OnInit {
 
   constructor(
     private direccionesService: DireccionesService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
     this.cargarColaboradores();
   }
+  
+    cambiarPagina(event: PageEvent) {
+      this.pageIndex = event.pageIndex; 
+      this.pageSize = event.pageSize;   
+      if(this.buscando){
+        this.buscarColaboradores();
+      } else {
+        this.cargarColaboradores();         
+      }
+    }
 
   onEnterKey(event: any) {
     if (event.keyCode === 13) {
@@ -51,27 +67,55 @@ export class ColaboradoresComponent implements OnInit {
 
   resetearBuscador() {
     this.buscador = '';
+    this.pageIndex = 0;
+    this.buscando = false;
     this.cargarColaboradores();
   }
 
   buscarColaboradores() {
-    this.direccionesService.getColaboradoresByNombre(this.buscador)
-      .subscribe((data: Colaborador[]) => {
-        this.colaboradores = data;
+    this.carga.show();
+    if(!this.buscando) {
+      this.pageIndex = 0;
+    }
+    this.buscando = true;
+    this.direccionesService.getColaboradoresByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
+      .subscribe((data) => {
+        this.colaboradores = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourceColaboradores.data = this.colaboradores;
-        this.dataSourceColaboradores.paginator = this.paginatorColaboradores;
-      });
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      },
+      () => {
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      }
+    )
   }
 
   cargarColaboradores(): void {
-    this.direccionesService.getColaboradores().subscribe(
-      (data: Colaborador[]) => {
-        this.colaboradores = data;
+    this.carga.show();
+    this.direccionesService.getColaboradoresPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.colaboradores = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourceColaboradores.data = this.colaboradores;
-        this.dataSourceColaboradores.paginator = this.paginatorColaboradores;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar los colaboradores', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -83,7 +127,7 @@ export class ColaboradoresComponent implements OnInit {
       if (this.existe) {
         this.snackbar.snackBarError('Ya existe este colaborador');
       } else {
-        // El id no se modifica en la creación
+        this.carga.show();
         this.nuevaColaborador.nombre = this.nuevaColaborador.nombre.trim();
         this.direccionesService.createColaborador(this.nuevaColaborador).subscribe(
           (data: Colaborador) => {
@@ -91,10 +135,15 @@ export class ColaboradoresComponent implements OnInit {
             this.cargarColaboradores();
             this.nuevaColaborador = {};
             this.snackbar.snackBarExito('Colaborador creado con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
-            
             console.error('Error al crear el colaborador', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
       }
@@ -121,6 +170,7 @@ export class ColaboradoresComponent implements OnInit {
 
       this.editandoColaborador.nombre = this.editandoColaborador.nombre.trim();
 
+      this.carga.show();
       this.direccionesService.updateColaborador(this.editandoId, this.editandoColaborador)
         .subscribe(
           (data: Colaborador) => {
@@ -131,10 +181,16 @@ export class ColaboradoresComponent implements OnInit {
             this.cargarColaboradores();
             this.cancelarEdit();
             this.snackbar.snackBarExito('Colaborador actualizado con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             this.snackbar.snackBarError(error.error.message);
             console.error('Error al actualizar el colaborador', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
     }
@@ -146,13 +202,20 @@ export class ColaboradoresComponent implements OnInit {
   }
 
   eliminarColaborador(id: number): void {
+    this.carga.show();
     this.direccionesService.deleteColaborador(id).subscribe(
       () => {
         this.colaboradores = this.colaboradores.filter(c => c.id !== id);
         this.dataSourceColaboradores.data = [...this.colaboradores];
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al eliminar el colaborador', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }

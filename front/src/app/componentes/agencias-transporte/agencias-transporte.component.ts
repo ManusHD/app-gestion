@@ -5,6 +5,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { Router } from '@angular/router';
 import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
 import { AgenciasTransporteService } from 'src/app/services/agencias-transporte.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -30,7 +31,8 @@ export class AgenciasTransporteComponent implements OnInit {
 
   constructor(
     private agenciaService: AgenciasTransporteService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -52,24 +54,35 @@ export class AgenciasTransporteComponent implements OnInit {
   }
 
   buscarAgencias() {
+    this.carga.show();
     this.agenciaService
       .getAgenciasTransporteByNombre(this.buscador)
       .subscribe((data: AgenciaTransporte[]) => {
         this.agencias = data;
         this.dataSourceAgencias.data = this.agencias;
         this.dataSourceAgencias.paginator = this.paginatorAgencias;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       });
   }
 
   cargarAgencias(): void {
+    this.carga.show();
     this.agenciaService.getAgenciasTransporte().subscribe(
       (data: AgenciaTransporte[]) => {
         this.agencias = data;
         this.dataSourceAgencias.data = this.agencias;
         this.dataSourceAgencias.paginator = this.paginatorAgencias;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar las agencias de transporte', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -84,6 +97,7 @@ export class AgenciasTransporteComponent implements OnInit {
       if (this.existe) {
         this.snackbar.snackBarError('Ya existe esta agencia de transporte');
       } else {
+        this.carga.show();
         this.nuevaAgencia.activa = true;
         this.nuevaAgencia.nombre = this.nuevaAgencia.nombre?.trim();
         this.agenciaService.newAgenciaTransporte(this.nuevaAgencia).subscribe(
@@ -92,9 +106,15 @@ export class AgenciasTransporteComponent implements OnInit {
             this.cargarAgencias();
             this.nuevaAgencia = {};
             this.snackbar.snackBarExito('Agencia de transporte creada con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             console.error('Error al crear la agencia de transporte', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
       }
@@ -147,13 +167,20 @@ export class AgenciasTransporteComponent implements OnInit {
   }
 
   eliminarAgencia(id: number): void {
+    this.carga.show();
     this.agenciaService.deleteAgenciaTransporte(id).subscribe(
       () => {
         this.agencias = this.agencias.filter((p) => p.id !== id);
         this.dataSourceAgencias.data = [...this.agencias];
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al eliminar la agencia de transporte', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }

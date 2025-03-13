@@ -3,11 +3,12 @@ import { Entrada } from "../models/entrada.model";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Router } from "@angular/router";
 import { from, Observable } from "rxjs";
+import { environment } from '../../environments/environment';
 
 
 @Injectable()
 export class EntradaServices {
-  private apiUrl = 'http://localhost:8092/entradas';
+  private apiUrl =  environment.apiEntradas;
 
   constructor(private httpClient: HttpClient, private router: Router) {}
 

@@ -33,10 +33,16 @@ export class FormularioEntradaSalidaService {
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
   ubicaciones: String[] = [];
+
   perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
   colaboradores: Colaborador[] = [];
   otrasDirecciones: OtraDireccion[] = [];
+  otraDireccionSeleccionada: OtraDireccion | null = null;
+  perfumeriaSeleccionada: Perfumeria | null = null;
+  pdvSeleccionada: PDV | null = null;
+  colaboradorSeleccionada: Colaborador | null = null;
+
   btnSubmitActivado = true;
   currentPath: string = window.location.pathname;
   ubicacionesPorProducto: { [ref: string]: Ubicacion[] } = {};
@@ -58,7 +64,7 @@ export class FormularioEntradaSalidaService {
     protected cdr: ChangeDetectorRef,
     protected direccionesService: DireccionesService,
     protected importarES: ImportarExcelService,
-    protected carga: PantallaCargaService,
+    protected carga: PantallaCargaService
   ) {}
 
   createForm() {
@@ -148,7 +154,7 @@ export class FormularioEntradaSalidaService {
 
   // Resetear completamente el formulario
   resetForm() {
-    if(this.entradaSalidaForm) {
+    if (this.entradaSalidaForm) {
       this.entradaSalidaForm.reset();
       this.entradaSalidaForm.setControl(
         'productos',
@@ -212,7 +218,6 @@ export class FormularioEntradaSalidaService {
 
   // Método para guardar la entrada de productos
   onSubmitEntrada() {
-    
     // Crear el objeto Entrada
     const nuevaEntrada: Entrada = {
       origen: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
@@ -310,7 +315,10 @@ export class FormularioEntradaSalidaService {
         this.carga.hide();
         this.btnSubmitActivado = true;
         this.mostrarFormulario = true;
-        this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
+        this.setCampoValue(
+          'fechaRecepcionEnvio',
+          this.formatearFecha(new Date())
+        );
       },
       error: (error) => {
         console.error('Error al crear la salida:', error);
@@ -328,7 +336,10 @@ export class FormularioEntradaSalidaService {
         this.snackBarExito('Entrada guardada correctamente');
         this.resetForm();
         this.mostrarFormulario = true;
-        this.setCampoValue('fechaRecepcionEnvio', this.formatearFecha(new Date()));
+        this.setCampoValue(
+          'fechaRecepcionEnvio',
+          this.formatearFecha(new Date())
+        );
         this.carga.hide();
         this.btnSubmitActivado = true;
       },
@@ -344,15 +355,15 @@ export class FormularioEntradaSalidaService {
   }
 
   handleError(error: any) {
-    console.log("LLega: ", error)
+    console.log('LLega: ', error);
     try {
       const regex = /Ya existe [^"\\]+/;
       const coincidencia = error.error.message.match(regex);
-      
+
       if (coincidencia) {
         return coincidencia[0];
       }
-      
+
       // Si no encontramos el patrón específico, retornamos el mensaje original
       return error.error.message;
     } catch (e) {
@@ -603,7 +614,6 @@ export class FormularioEntradaSalidaService {
   esNuevo() {
     return this.currentPath.includes('/nuevo');
   }
-
 
   campoVacio(nombreCampo: string, index: number) {
     if (
@@ -901,41 +911,55 @@ export class FormularioEntradaSalidaService {
   }
 
   cargarVisuales() {
-    this.productoService.getVisualesPaginado(this.pageIndex, this.pageSize).subscribe(
-      (data) => {
-        this.visuales = data.content;
-      },
-      (error) => {
-        console.error('Error al obtener los Visuales', error);
-      }
-    );
+    this.productoService
+      .getVisualesPaginado(this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.visuales = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
   }
 
   cargarProductosSinReferencia() {
-    this.productoService.getProductosSinReferenciaPaginado(this.pageIndex, this.pageSize).subscribe(
-      (data) => {
-        this.productosSR = data.content;
-      },
-      (error) => {
-        console.error('Error al obtener los Visuales', error);
-      }
-    );
+    this.productoService
+      .getProductosSinReferenciaPaginado(this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.productosSR = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
   }
 
   cargarVisualesPorDescripcion(descripcion: string) {
-    this.productoService.getVisualesPorDescripcionPaginado(descripcion, this.pageIndex, this.pageSize).subscribe(
-      (data) => {
-        this.visuales = data.content;
-      },
-      (error) => {
-        console.error('Error al obtener los Visuales', error);
-      }
-    );
+    this.productoService
+      .getVisualesPorDescripcionPaginado(
+        descripcion,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe(
+        (data) => {
+          this.visuales = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
   }
 
   cargarProductosSinReferenciaPorDescripcion(descripcion: string) {
     this.productoService
-      .getProductosSinReferenciaPorDescripcionPaginado(descripcion, this.pageIndex, this.pageSize)
+      .getProductosSinReferenciaPorDescripcionPaginado(
+        descripcion,
+        this.pageIndex,
+        this.pageSize
+      )
       .subscribe(
         (data) => {
           console.log(data);

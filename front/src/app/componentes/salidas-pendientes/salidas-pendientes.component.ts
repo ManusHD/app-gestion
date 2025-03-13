@@ -23,7 +23,6 @@ export class SalidasPendientesComponent
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngOnInit() {
-    this.carga.show();
     this.cargarSalidas();
   }
       
@@ -34,6 +33,7 @@ export class SalidasPendientesComponent
   }
 
   cargarSalidas() {
+    this.carga.show();
     this.salidaService.getSalidasByEstadoPaginado(false, this.pageIndex, this.pageSize).subscribe((data) => {
       this.salidas = data.content;
       setTimeout(() => {
@@ -41,7 +41,9 @@ export class SalidasPendientesComponent
       });
       this.dataSource.data = this.salidas;
       this.cdr.detectChanges();
-      this.carga.hide();
+      setTimeout(() => {
+        this.carga.hide();
+      });
     });
   }
 
@@ -60,8 +62,8 @@ export class SalidasPendientesComponent
       )
       .subscribe(
         (data) => {
-          this.cargarSalidas();
           this.carga.hide();
+          this.cargarSalidas();
           console.log('Salida grabada con éxito');
           this.snackBarExito('Salida grabada con éxito');
           this.btnSubmitActivado = true;
@@ -79,8 +81,8 @@ export class SalidasPendientesComponent
     this.btnSubmitActivado = false;
     this.salidaService.deleteSalida(idSalida).subscribe(
       (data) => {
-        this.cargarSalidas();
         this.carga.hide();
+        this.cargarSalidas();
         console.log('Salida borrada con éxito');
         this.snackBarExito('Salida borrada con éxito');
         this.btnSubmitActivado = true;
@@ -89,6 +91,7 @@ export class SalidasPendientesComponent
         this.carga.hide();
         this.btnSubmitActivado = true;
         console.error(error);
+        this.snackBarError('No se puede borrar la salida por un conflicto en la BBDD');
       }
     );
   }

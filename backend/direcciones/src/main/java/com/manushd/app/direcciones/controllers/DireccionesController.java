@@ -3,6 +3,7 @@ package com.manushd.app.direcciones.controllers;
 import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,14 +53,21 @@ public class DireccionesController {
         return colaboradoresRepository.findAllByOrderByNombreAsc();
     }
 
+    @GetMapping("/colaboradores/paginado")
+    public Iterable<Colaborador> getAllColaboradoresPaginados(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return colaboradoresRepository.findAllByOrderByNombreAsc(PageRequest.of(page, size));
+    }
+
     @GetMapping("/colaboradores/{nombre}")
     public Colaborador getColaboradorByNombre(@PathVariable String nombre) {
         return colaboradoresRepository.findByNombre(nombre).orElse(null);
     }
 
-    @GetMapping("/colaboradores/byNombre/{nombre}")
-    public Iterable<Colaborador> getColaboradoresContainingIgnoreCaseByNombre(@PathVariable String nombre) {
-        return colaboradoresRepository.findByNombreContainingIgnoreCase(nombre);
+    @GetMapping("/colaboradores/byNombre/{nombre}/paginado")
+    public Iterable<Colaborador> getColaboradoresContainingIgnoreCaseByNombre(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return colaboradoresRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(PageRequest.of(page, size), nombre);
     }
 
     @PostMapping("/colaboradores")
@@ -103,6 +111,12 @@ public class DireccionesController {
         return pdvRepository.findAllByOrderByNombreAsc();
     }
 
+    @GetMapping("/pdvs/paginado")
+    public Iterable<PDV> getAllPdvs(@RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return pdvRepository.findAllByOrderByNombreAsc(PageRequest.of(page, size));
+    }
+
     @GetMapping("/pdvs/{nombre}")
     public PDV getPdvByNombre(@PathVariable String nombre) {
         return pdvRepository.findByNombre(nombre).orElse(null);
@@ -110,7 +124,13 @@ public class DireccionesController {
 
     @GetMapping("/pdvs/byNombre/{nombre}")
     public Iterable<PDV> getPdvByNombreContainingIgnoreCase(@PathVariable String nombre) {
-        return pdvRepository.findByNombreContainingIgnoreCase(nombre);
+        return pdvRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
+    }
+
+    @GetMapping("/pdvs/byNombre/{nombre}/paginado")
+    public Iterable<PDV> getPdvByNombreContainingIgnoreCase(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return pdvRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(PageRequest.of(page, size), nombre);
     }
 
     @PostMapping("/pdvs")
@@ -152,6 +172,12 @@ public class DireccionesController {
         return perfumeriaRepository.findAllByOrderByNombreAsc();
     }
 
+    @GetMapping("/perfumerias/paginado")
+    public Iterable<Perfumeria> getAllPerfumerias(@RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return perfumeriaRepository.findAllByOrderByNombreAsc(PageRequest.of(page, size));
+    }
+
     @GetMapping("/perfumerias/{nombre}")
     public Perfumeria getPerfumeriaByNombre(@PathVariable String nombre) {
         return perfumeriaRepository.findByNombre(nombre).orElse(null);
@@ -159,12 +185,33 @@ public class DireccionesController {
 
     @GetMapping("/perfumerias/byNombre/{nombre}")
     public Iterable<Perfumeria> getPerfumeriaByNombreContainingIgnoreCase(@PathVariable String nombre) {
-        return perfumeriaRepository.findByNombreContainingIgnoreCase(nombre);
+        return perfumeriaRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
+    }
+
+    @GetMapping("/perfumerias/byNombre/{nombre}/paginado")
+    public Iterable<Perfumeria> getPerfumeriaByNombreContainingIgnoreCase(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return perfumeriaRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(PageRequest.of(page, size), nombre);
     }
 
     @GetMapping("/perfumerias/activas")
     public Iterable<Perfumeria> getPerfumeriaActivas() {
         return perfumeriaRepository.findAllByActivaOrderByNombreAsc(true);
+    }
+
+    @GetMapping("/perfumerias/activas/paginado")
+    public Iterable<Perfumeria> getPerfumeriaActivas(@RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return perfumeriaRepository.findAllByActivaOrderByNombreAsc(PageRequest.of(page, size), true);
+    }
+
+    @GetMapping("/perfumerias/activas/{nombre}/paginado")
+    public Iterable<Perfumeria> getPerfumeriasActivasByNombreContainingIgnoreCase(
+        @PathVariable String nombre,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+        return perfumeriaRepository.findByActivaAndNombreContainingIgnoreCaseOrderByNombreAsc(
+            PageRequest.of(page, size), true, nombre);
     }
 
     @GetMapping("/perfumerias/{perfumeriaId}/pdvs")
@@ -189,16 +236,15 @@ public class DireccionesController {
     public Iterable<PDV> getPDVsPerfumeria(@PathVariable String nombre) {
         System.out.println("Nombre recibido: " + nombre);
         Perfumeria p = perfumeriaRepository.findByNombre(nombre).orElse(null);
-        if(p != null) {
+        if (p != null) {
             return perfumeriaRepository.findPDVsByPerfumeriaId(p.getId());
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe ninguna Perfumería con ese nombre");
     }
 
-
     @Autowired
     private EntityManager entityManager;
-    
+
     @PostMapping("/perfumerias")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -296,6 +342,12 @@ public class DireccionesController {
         return otrasDireccionesRepository.findAllByOrderByNombreAsc();
     }
 
+    @GetMapping("/otrasDirecciones/paginado")
+    public Iterable<OtrasDirecciones> getAllOtrasDirecciones(@RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return otrasDireccionesRepository.findAllByOrderByNombreAsc(PageRequest.of(page, size));
+    }
+
     @GetMapping("/otrasDirecciones/{nombre}")
     public OtrasDirecciones getOtrasDireccionesByNombre(@PathVariable String nombre) {
         return otrasDireccionesRepository.findByNombre(nombre).orElse(null);
@@ -303,7 +355,13 @@ public class DireccionesController {
 
     @GetMapping("/otrasDirecciones/byNombre/{nombre}")
     public Iterable<OtrasDirecciones> getOtrasDireccionesByNombreContainingIgnoreCase(@PathVariable String nombre) {
-        return otrasDireccionesRepository.findByNombreContainingIgnoreCase(nombre);
+        return otrasDireccionesRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
+    }
+
+    @GetMapping("/otrasDirecciones/byNombre/{nombre}/paginado")
+    public Iterable<OtrasDirecciones> getOtrasDireccionesByNombreContainingIgnoreCase(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return otrasDireccionesRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(PageRequest.of(page, size), nombre);
     }
 
     @PostMapping("/otrasDirecciones")

@@ -11,6 +11,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 
 @Component({
   selector: 'app-lista-ubicaciones',
@@ -45,7 +46,8 @@ export class ListaUbicacionesComponent implements OnInit {
 
   constructor(
     private ubicacionService: UbicacionService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -68,6 +70,7 @@ export class ListaUbicacionesComponent implements OnInit {
   }
 
   cambiarPagina(event: PageEvent) {
+    this.carga.show();
     this.pageIndex = event.pageIndex; 
     this.pageSize = event.pageSize;
     if(this.buscando){
@@ -85,6 +88,7 @@ export class ListaUbicacionesComponent implements OnInit {
   }
 
   buscarUbicaciones() {
+    this.carga.show();
     if(!this.buscando) {
       this.pageIndex = 0;
     }
@@ -97,6 +101,15 @@ export class ListaUbicacionesComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceUbicaciones.data = this.ubicaciones;
+    
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
         });
     } else if(this.tipoBusqueda === 'referencia') {
       this.ubicacionService.getUbicacionesByReferenciaProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
@@ -108,11 +121,21 @@ export class ListaUbicacionesComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-        });
+    
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+      () => {
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      });
     }
   }
 
   cargarUbicaciones(): void {
+    this.carga.show();
     this.ubicacionService.getUbicacionesOrderByNombrePaginadas(this.pageIndex, this.pageSize).subscribe(
       (data) => {
         this.ubicaciones = data.content;
@@ -120,9 +143,15 @@ export class ListaUbicacionesComponent implements OnInit {
           this.totalElementos = data.totalElements;
         });
         this.dataSourceUbicaciones.data = this.ubicaciones;
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar las ubicaciones', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -171,15 +200,22 @@ export class ListaUbicacionesComponent implements OnInit {
   }
 
   eliminarUbicacion(id: number): void {
+    this.carga.show();
     this.ubicacionService.deleteUbicacion(id).subscribe(
       () => {
         this.ubicaciones = this.ubicaciones.filter((u) => u.id !== id);
         this.dataSourceUbicaciones.data = [...this.ubicaciones];
         this.snackbar.snackBarExito('Ubicación eliminada con éxito');
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         this.snackbar.snackBarError('Error al eliminar la ubicación');
         console.error('Error al eliminar la ubicación', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }

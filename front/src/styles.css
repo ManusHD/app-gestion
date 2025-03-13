@@ -29,6 +29,17 @@
     --positive-color: #00b712;
     --negative-color: #ff4d4d;
     --warning-color: #ffc107;
+    --danger-color: #ff4d4d;
+    --form-bg: #01081fb3;
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-cream: #f6f5f3;
+    --color-beige: #e8e6e1;
+    --color-gold: #d4af37;
+    --font-primary: 'Montserrat', sans-serif;
+    --spacing-unit: 8px;
+    --border-radius: 2px;
+    --transition: all 0.3s ease;
 }
 
 @font-face {
@@ -120,22 +131,22 @@ body {
 
 /* Personalización de scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--letter-color);
-  border-radius: 5px;
+    background: var(--letter-color);
+    border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--table-primary);
+    background: var(--table-primary);
 }
 
 app-importar-excel {
@@ -155,7 +166,7 @@ table {
     margin: 20px 0 0;
     border-radius: 4px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  }
+}
 
 caption {
     background-color: var(--caption-color) !important;
@@ -188,20 +199,21 @@ tr:last-child {
 
 td {
     font-size: 14px;
-  }
-  
-  td input, td textarea {
+}
+
+td input,
+td textarea {
     width: 80%;
     margin: 0 10px;
-  }
-  
-  td select {
-    width: 100%;
-  }
+}
 
-  td > input[type="number"] {
+td select {
+    width: 100%;
+}
+
+td>input[type="number"] {
     width: 4vw;
-  }
+}
 
 .centrar {
     display: flex;
@@ -242,7 +254,8 @@ textarea:focus {
 /* ----------------------------------------
 -----------CSS para los Buscadores---------
 -----------------------------------------*/
-.buscador, .campos-gestor {
+.buscador,
+.campos-gestor {
     display: flex;
     align-items: center;
     margin: 30px 0;
@@ -260,8 +273,9 @@ textarea:focus {
     height: 39px;
 }
 
-.seccion-pdvs, .seccion-pdvs-edit {
-   display: flex; 
+.seccion-pdvs,
+.seccion-pdvs-edit {
+    display: flex;
 }
 
 .seccion-pdvs-edit {
@@ -276,7 +290,8 @@ select option {
     font-size: 12px;
 }
 
-.buscador input, .campos-gestor input {
+.buscador input,
+.campos-gestor input {
     color: white;
     background-color: #374151;
     border: 0.5px solid rgb(75 85 99);
@@ -293,7 +308,7 @@ input::placeholder {
 }
 
 .btn-buscar,
-.btn-resetear, 
+.btn-resetear,
 .btn-crear,
 .btn-agregar {
     display: flex;
@@ -309,7 +324,8 @@ input::placeholder {
     height: 39px;
 }
 
-.buscador .btn-buscar, .campos-gestor .btn-crear {
+.buscador .btn-buscar,
+.campos-gestor .btn-crear {
     border: 1px solid rgb(29 78 216);
     background-color: rgb(37 99 235);
 }
@@ -338,7 +354,7 @@ input::placeholder {
 ------------CSS para los Gestores----------
 -----------------------------------------*/
 
-.campos-gestor{
+.campos-gestor {
     height: fit-content;
     gap: 20px;
     flex-wrap: wrap;
@@ -364,7 +380,7 @@ input::placeholder {
 }
 
 .gestor-crear input[type="checkbox"],
-.editando-label input[type="checkbox"]{
+.editando-label input[type="checkbox"] {
     display: none;
 }
 
@@ -426,12 +442,14 @@ input::placeholder {
     font-weight: bold;
 }
 
-.btn-actualizar-gestor, .botones {
+.btn-actualizar-gestor,
+.botones {
     display: flex;
     gap: 10px;
 }
 
-.btn-actualizar-gestor button, .botones button {
+.btn-actualizar-gestor button,
+.botones button {
     color: white;
     border: none;
     padding: 6px 12px;
@@ -442,21 +460,25 @@ input::placeholder {
     transition: background-color 0.2s ease;
 }
 
-.btn-actualizar-gestor button:first-child, .botones button:first-child {
+.btn-actualizar-gestor button:first-child,
+.botones button:first-child {
     background-color: #45A049;
     color: white;
 }
 
-.btn-actualizar-gestor button:first-child:hover, .botones button:first-child:hover{
+.btn-actualizar-gestor button:first-child:hover,
+.botones button:first-child:hover {
     background-color: var(--checked-color);
 }
 
-.btn-actualizar-gestor button:last-child, .botones button:last-child {
+.btn-actualizar-gestor button:last-child,
+.botones button:last-child {
     background-color: #f44336;
     color: white;
 }
 
-.btn-actualizar-gestor button:last-child:hover, .botones button:last-child:hover {
+.btn-actualizar-gestor button:last-child:hover,
+.botones button:last-child:hover {
     background-color: #d81e1e;
 }
 
@@ -746,9 +768,10 @@ input::placeholder {
     gap: 15px;
     margin-top: 20px;
     flex-wrap: wrap;
-  }
-  
-  .add-producto, .crear-producto {
+}
+
+.add-producto,
+.crear-producto {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -759,38 +782,38 @@ input::placeholder {
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 14px;
-  }
-  
-  .add-producto {
+}
+
+.add-producto {
     background-color: transparent;
     color: var(--letter-color);
     border: 1px dashed var(--letter-color);
-  }
-  
-  .add-producto:hover {
+}
+
+.add-producto:hover {
     background-color: rgba(61, 126, 255, 0.1);
-  }
-  
-  .add-producto img {
+}
+
+.add-producto img {
     width: 16px;
     height: 16px;
     filter: invert(46%) sepia(85%) saturate(2383%) hue-rotate(213deg) brightness(98%) contrast(97%);
-  }
-  
-  .crear-producto {
+}
+
+.crear-producto {
     background: linear-gradient(135deg, var(--caption-color), var(--color-excel));
     color: var(--btn-color-w);
     box-shadow: 0 4px 15px rgba(0, 114, 83, 0.3);
-  }
-  
-  .crear-producto:hover {
+}
+
+.crear-producto:hover {
     background: linear-gradient(135deg, var(--caption-color), var(--color-excel-hover));
     transform: translateY(-2px);
-  }
-  
-  .crear-producto:disabled {
+}
+
+.crear-producto:disabled {
     background: var(--btn-inactive);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-  }
+}

@@ -29,7 +29,7 @@ public class AutenticacionApplication {
         return args -> {
             userRepository.findByUsername("admin").ifPresentOrElse(admin -> {
                 // Si el usuario ya existe, actualiza su contraseña (si es necesario)
-                String encodedPassword = passwordEncoder.encode("admin");
+                String encodedPassword = passwordEncoder.encode("adminDelim!2025");
                 if (!encodedPassword.equals(admin.getPassword())) { // Compara si la contraseña ya está hasheada
                     admin.setPassword(encodedPassword);
                     userRepository.save(admin);
@@ -38,7 +38,7 @@ public class AutenticacionApplication {
                 // Si no existe, crea el usuario
                 User admin = new User();
                 admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin"));
+                admin.setPassword(passwordEncoder.encode("adminDelim!2025"));
 
                 // ***SOLUCIÓN: Persiste el Role antes de asignarlo al User***
                 Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> { // Busca el rol por nombre o crea uno nuevo si no existe

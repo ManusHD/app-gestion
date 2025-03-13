@@ -10,11 +10,11 @@ set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
 set MICROSERVICIO_DIRECCIONES=backend\direcciones
 set MICROSERVICIO_AUTH=backend\autenticacion
 
-:: Ejecutar entradas en una nueva ventana   PORT = 8091
-start cmd /k "cd %MICROSERVICIO_ENTRADAS% && mvn clean package && mvn spring-boot:run"
-
-:: Ejecutar productos en una nueva ventana   PORT = 8092
+:: Ejecutar productos en una nueva ventana   PORT = 8091
 start cmd /k "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package && mvn spring-boot:run"
+
+:: Ejecutar entradas en una nueva ventana   PORT = 8092
+start cmd /k "cd %MICROSERVICIO_ENTRADAS% && mvn clean package && mvn spring-boot:run"
 
 :: Ejecutar salidas en una nueva ventana   PORT = 8093
 start cmd /k "cd %MICROSERVICIO_SALIDAS% && mvn clean package && mvn spring-boot:run"

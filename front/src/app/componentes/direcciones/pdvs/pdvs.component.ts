@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { PDV } from 'src/app/models/pdv.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
 import { ImportarExcelService } from 'src/app/services/importar-excel.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -28,6 +29,10 @@ export class PdvsComponent implements OnInit, OnDestroy {
   editandoId: number | null = null;
   editandoPdv: PDV = {};
   buscador: string = '';
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
+  buscando: boolean = false;
   
   pdvsImportacion: PDV[] = [];
   importando = false;
@@ -50,7 +55,8 @@ export class PdvsComponent implements OnInit, OnDestroy {
   constructor(
     private importarES: ImportarExcelService,
     private direccionesService: DireccionesService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +77,16 @@ export class PdvsComponent implements OnInit, OnDestroy {
         }
       });
   }
+  
+    cambiarPagina(event: PageEvent) {
+      this.pageIndex = event.pageIndex; 
+      this.pageSize = event.pageSize;   
+      if(this.buscando){
+        this.buscarPdvs();
+      } else {
+        this.cargarPdvs();         
+      }
+    }
 
   // Manejo de la tecla Enter en el buscador
   onEnterKey(event: any) {
@@ -84,31 +100,59 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   resetearBuscador() {
     this.buscador = '';
+    this.pageIndex = 0;
+    this.buscando = false;
     this.cargarPdvs();
   }
 
   buscarPdvs() {
-    this.direccionesService.getPdvsByNombre(this.buscador).subscribe(
-      (data: PDV[]) => {
-        this.pdvs = data;
+    this.carga.show();
+    if(!this.buscando) {
+      this.pageIndex = 0;
+    }
+    this.buscando = true;
+    this.direccionesService.getPdvsByNombrePaginado(this.buscador, this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.pdvs = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourcePdvs.data = this.pdvs;
-        this.dataSourcePdvs.paginator = this.paginatorPdvs;
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al buscar PDVs', error);
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
 
   cargarPdvs(): void {
-    this.direccionesService.getPdvs().subscribe(
-      (data: PDV[]) => {
-        this.pdvs = data;
+    this.carga.show();
+    this.direccionesService.getPdvsPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.pdvs = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourcePdvs.data = this.pdvs;
-        this.dataSourcePdvs.paginator = this.paginatorPdvs;
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar PDVs', error);
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -120,6 +164,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
       if (this.existe) {
         this.snackbar.snackBarError('Ya existe este PDV');
       } else {
+        this.carga.show();
         this.nuevoPdv.nombre = this.nuevoPdv.nombre.trim();
         this.direccionesService.createPdv(this.nuevoPdv).subscribe(
           (data: PDV) => {
@@ -128,9 +173,15 @@ export class PdvsComponent implements OnInit, OnDestroy {
             // Reiniciamos el formulario de creación
             this.nuevoPdv = {};
             this.snackbar.snackBarExito('PDV creado con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             console.error('Error al crear el PDV', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
       }
@@ -165,6 +216,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
         this.snackbar.snackBarError('El nombre no puede estar en blanco');
         return;
       }
+      this.carga.show();
       this.editandoPdv.nombre = this.editandoPdv.nombre.trim();
       this.direccionesService
         .updatePdv(this.editandoId, this.editandoPdv)
@@ -177,10 +229,16 @@ export class PdvsComponent implements OnInit, OnDestroy {
             this.cargarPdvs();
             this.cancelarEdit();
             this.snackbar.snackBarExito('PDV actualizado con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             this.snackbar.snackBarError(error.error.message);
             console.error('Error al actualizar el PDV', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
     }
@@ -192,13 +250,20 @@ export class PdvsComponent implements OnInit, OnDestroy {
   }
 
   eliminarPdv(id: number): void {
+    this.carga.show();
     this.direccionesService.deletePdv(id).subscribe(
       () => {
         this.pdvs = this.pdvs.filter((p) => p.id !== id);
         this.dataSourcePdvs.data = [...this.pdvs];
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al eliminar el PDV', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }

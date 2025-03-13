@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -21,6 +22,10 @@ export class OtrasDireccionesComponent implements OnInit {
   editandoId: number | null = null;
   editandoOtraDireccion: OtraDireccion = {};
   buscador: string = '';
+  pageSize = 10;
+  pageIndex = 0;
+  totalElementos = 0;
+  buscando: boolean = false;
 
   columnasOtrasDirecciones: string[] = ['nombre', 'telefono', 'direccion', 'acciones'];
   dataSourceOtrasDirecciones = new MatTableDataSource<OtraDireccion>();
@@ -29,12 +34,23 @@ export class OtrasDireccionesComponent implements OnInit {
 
   constructor(
     private direccionesService: DireccionesService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
     this.cargarOtrasDirecciones();
   }
+  
+    cambiarPagina(event: PageEvent) {
+      this.pageIndex = event.pageIndex; 
+      this.pageSize = event.pageSize;   
+      if(this.buscando){
+        this.buscarOtrasDirecciones();
+      } else {
+        this.cargarOtrasDirecciones();         
+      }
+    }
 
   onEnterKey(event: any) {
     if (event.keyCode === 13) {
@@ -47,31 +63,59 @@ export class OtrasDireccionesComponent implements OnInit {
 
   resetearBuscador() {
     this.buscador = '';
+    this.pageIndex = 0;
+    this.buscando = false;
     this.cargarOtrasDirecciones();
   }
 
   buscarOtrasDirecciones() {
-    this.direccionesService.getOtrasDireccionesByNombre(this.buscador).subscribe(
-      (data: OtraDireccion[]) => {
-        this.otrasDirecciones = data;
+    this.carga.show();
+    if(!this.buscando) {
+      this.pageIndex = 0;
+    }
+    this.buscando = true;
+    this.direccionesService.getOtrasDireccionesByNombrePaginado(this.buscador, this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.otrasDirecciones = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourceOtrasDirecciones.data = this.otrasDirecciones;
-        this.dataSourceOtrasDirecciones.paginator = this.paginatorOtrasDirecciones;
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al buscar otras direcciones', error);
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
 
   cargarOtrasDirecciones(): void {
-    this.direccionesService.getOtrasDirecciones().subscribe(
-      (data: OtraDireccion[]) => {
-        this.otrasDirecciones = data;
+    this.carga.show();
+    this.direccionesService.getOtrasDireccionesPaginado(this.pageIndex, this.pageSize).subscribe(
+      (data) => {
+        this.otrasDirecciones = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
         this.dataSourceOtrasDirecciones.data = this.otrasDirecciones;
-        this.dataSourceOtrasDirecciones.paginator = this.paginatorOtrasDirecciones;
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al cargar otras direcciones', error);
+    
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
@@ -83,6 +127,7 @@ export class OtrasDireccionesComponent implements OnInit {
       if (this.existe) {
         this.snackbar.snackBarError('Ya existe esta otra dirección');
       } else {
+        this.carga.show();
         this.nuevaOtraDireccion.nombre = this.nuevaOtraDireccion.nombre.trim();
         this.direccionesService.createOtraDireccion(this.nuevaOtraDireccion).subscribe(
           (data: OtraDireccion) => {
@@ -90,9 +135,15 @@ export class OtrasDireccionesComponent implements OnInit {
             this.cargarOtrasDirecciones();
             this.nuevaOtraDireccion = {};
             this.snackbar.snackBarExito('Otra dirección creada con éxito');
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           },
           (error) => {
             console.error('Error al crear la otra dirección', error);
+            setTimeout(() => {
+              this.carga.hide();
+            }); 
           }
         );
       }
@@ -119,6 +170,7 @@ export class OtrasDireccionesComponent implements OnInit {
 
       this.editandoOtraDireccion.nombre = this.editandoOtraDireccion.nombre.trim();
 
+      this.carga.show();
       this.direccionesService.updateOtraDireccion(this.editandoId, this.editandoOtraDireccion).subscribe(
         (data: OtraDireccion) => {
           const index = this.otrasDirecciones.findIndex(od => od.id === data.id);
@@ -128,10 +180,16 @@ export class OtrasDireccionesComponent implements OnInit {
           this.cargarOtrasDirecciones();
           this.cancelarEdit();
           this.snackbar.snackBarExito('Otra dirección actualizada con éxito');
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
         },
         (error) => {
           this.snackbar.snackBarError(error.error.message);
           console.error('Error al actualizar otra dirección', error);
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
         }
       );
     }
@@ -143,21 +201,28 @@ export class OtrasDireccionesComponent implements OnInit {
   }
 
   eliminarOtraDireccion(id: number): void {
+    this.carga.show();
     this.direccionesService.deleteOtraDireccion(id).subscribe(
       () => {
         this.otrasDirecciones = this.otrasDirecciones.filter(od => od.id !== id);
         this.dataSourceOtrasDirecciones.data = [...this.otrasDirecciones];
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       },
       (error) => {
         console.error('Error al eliminar otra dirección', error);
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
       }
     );
   }
 
   existeOtraDireccion(nombre: string) {
     if (nombre && nombre.trim() !== '') {
-      this.direccionesService.getOtrasDireccionesByNombre(nombre.trim()).subscribe(
-        (data: OtraDireccion[]) => {
+      this.direccionesService.getOtrasDireccionesByNombrePaginado(nombre.trim(), this.pageIndex, this.pageSize).subscribe(
+        (data) => {
           this.existe = data && data.length > 0;
         },
         (error) => {

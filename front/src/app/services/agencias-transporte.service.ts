@@ -2,10 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { AgenciaTransporte } from '../models/agencia-transporte.model';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AgenciasTransporteService {
-  private apiUrl: string = 'http://localhost:8096/agenciasEnvio';
+  
+  private apiUrl: string = environment.apiAgenciasTransporte;
 
   constructor(private http: HttpClient) {}
 

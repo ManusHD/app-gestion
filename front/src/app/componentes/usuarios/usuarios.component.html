@@ -1,0 +1,45 @@
+<div class="gestion-cuentas-container">
+  <h2>Gestión de Cuentas</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of usuarios">
+        <td>{{ user.username }}</td>
+        <td>{{ user.roles[0]?.name === 'ROLE_ADMIN' ? 'ADMINISTRADOR' : user.roles[0]?.name === 'ROLE_OPERADOR' ? 'USUARIO' : user.roles[0]?.name }}</td>
+        <td>
+          <button (click)="editUser(user)">Editar</button>
+          <button (click)="deleteUser(user.username)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="edit-user-form" *ngIf="selectedUser">
+    <h3>Editar Usuario</h3>
+    <form [formGroup]="userForm" (ngSubmit)="updateUser()">
+      <div>
+        <label>Nueva Contraseña:</label>
+        <input type="password" formControlName="newPassword">
+      </div>
+      
+      <div>
+        <label for="role">Rol</label>
+        <select id="role" formControlName="role">
+          <option value="ROLE_OPERADOR">Usuario</option>
+          <option value="ROLE_ADMIN">Administrador</option>
+        </select>
+      </div>
+
+      <div class="form-buttons">
+        <button type="submit" class="btn-actualizar">Actualizar</button>
+        <button type="button" class="btn-cancelar-form" (click)="cancelEdit()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

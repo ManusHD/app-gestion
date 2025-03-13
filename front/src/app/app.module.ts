@@ -74,6 +74,8 @@ import { HasRoleDirective } from './directivas/has-role.directive';
 import { ConfirmDialogComponent } from './componentes/confirm-dialog/confirm-dialog.component';
 import { ConfirmDialogService } from './services/confirm-dialog.service';
 import { ConfirmDirective } from './directivas/confirm.directive';
+import { UsuariosComponent } from './componentes/usuarios/usuarios.component';
+import { PerfilComponent } from './componentes/perfil/perfil.component';
 
 @NgModule({
   declarations: [
@@ -118,6 +120,8 @@ import { ConfirmDirective } from './directivas/confirm.directive';
     AuthenticatedDirective,
     ConfirmDialogComponent,
     ConfirmDirective,
+    UsuariosComponent,
+    PerfilComponent,
   ],
   imports: [
     AppRoutingModule,

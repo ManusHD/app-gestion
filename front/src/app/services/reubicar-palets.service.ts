@@ -2,11 +2,12 @@ import { Injectable } from "@angular/core";
 import { Entrada } from "../models/entrada.model";
 import { HttpClient } from "@angular/common/http";
 import { Salida } from "../models/salida.model";
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class ReubicarPaletsService {
-    private apiUrlEntradas = 'http://localhost:8092/entradas';
-    private apiUrlSalidas = 'http://localhost:8093/salidas';
+    private apiUrlEntradas =  environment.apiEntradas;
+    private apiUrlSalidas =  environment.apiSalidas;
     
     constructor(private httpClient: HttpClient) {}
 

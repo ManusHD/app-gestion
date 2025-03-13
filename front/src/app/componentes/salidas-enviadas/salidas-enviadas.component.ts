@@ -30,17 +30,20 @@ export class SalidasEnviadasComponent {
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
-      
+
   private salidasParaExportarSubject = new BehaviorSubject<Salida[]>([]);
   salidasParaExportar$ = this.salidasParaExportarSubject.asObservable();
 
-  constructor(private salidaServices: SalidaServices, private carga: PantallaCargaService, private snackbar: SnackBar) {}
+  constructor(
+    private salidaServices: SalidaServices,
+    private carga: PantallaCargaService,
+    private snackbar: SnackBar
+  ) {}
 
   ngOnInit(): void {
-    this.carga.show();
     this.cargarSalidas();
   }
-  
+
   onEnterKey(event: any) {
     if (event.keyCode === 13) {
       event.preventDefault();
@@ -49,19 +52,18 @@ export class SalidasEnviadasComponent {
       this.resetearBuscador();
     }
   }
-    
+
   cambiarPagina(event: PageEvent) {
     this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize; 
-    if(this.buscando){
+    this.pageSize = event.pageSize;
+    if (this.buscando) {
       this.buscarSalidas();
     } else {
-      this.cargarSalidas();         
+      this.cargarSalidas();
     }
   }
 
   resetearBuscador() {
-    this.resetearFecha();
     this.buscador = '';
     this.pageIndex = 0;
     this.buscando = false;
@@ -69,51 +71,72 @@ export class SalidasEnviadasComponent {
   }
 
   cargarSalidas() {
-    this.salidaServices.getSalidasByEstadoPaginado(true, this.pageIndex, this.pageSize).subscribe((data) => {
-      this.resetearFecha();
-      this.salidas = data.content;
-      setTimeout(() => {
-        this.totalElementos = data.totalElements;
-      });
-      this.dataSource.data = this.salidas;
-      this.carga.hide();
-    },
-    (error) => {
-      this.carga.hide();
-      this.snackbar.snackBarError(error.error.message || error.error);
-    });
+    this.carga.show();
+    this.salidaServices
+      .getSalidasByEstadoPaginado(true, this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.resetearFecha();
+          this.salidas = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
+          this.dataSource.data = this.salidas;
+          setTimeout(() => {
+            this.carga.hide();
+          });
+        },
+        (error) => {
+          setTimeout(() => {
+            this.carga.hide();
+          });
+          this.snackbar.snackBarError(error.error.message || error.error);
+        }
+      );
   }
 
   buscarSalidas() {
-    if(!this.buscando) {
+    this.carga.show();
+    if (!this.buscando) {
       this.pageIndex = 0;
     }
     this.buscando = true;
     if (!this.fechaInicio || !this.fechaFin) {
       console.error('Debe seleccionar un rango de fechas');
+      this.carga.hide();
       return;
     }
 
     if (this.fechaInicio && this.fechaFin) {
       this.salidaServices
-        .getFiltradasSalidasPaginadas(this.fechaInicio, this.fechaFin, this.tipoBusqueda, this.buscador, this.pageIndex, this.pageSize)
+        .getFiltradasSalidasPaginadas(
+          this.fechaInicio,
+          this.fechaFin,
+          this.tipoBusqueda,
+          this.buscador,
+          this.pageIndex,
+          this.pageSize
+        )
         .subscribe((data) => {
           this.salidas = data.content;
           setTimeout(() => {
             this.totalElementos = data.totalElements;
           });
           this.dataSource.data = this.salidas;
+          setTimeout(() => {
+            this.carga.hide();
+          });
         });
     } else {
-      // Podrías notificar al usuario que debe rellenar ambas fechas.
-      alert('Por favor, ingresa fecha de inicio y fecha fin.');
+      console.error('Debe seleccionar un rango de fechas');
+      this.carga.hide();
     }
   }
 
   resetearFecha() {
     const hoy = new Date();
     this.fechaFin = hoy.toISOString().split('T')[0];
-    
+
     const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 2);
     this.fechaInicio = primerDiaMes.toISOString().split('T')[0];
   }
@@ -123,15 +146,20 @@ export class SalidasEnviadasComponent {
     // Inicia con un arreglo vacío o los datos actuales de la página
     this.salidasParaExportarSubject.next(this.salidas);
     if (this.buscando) {
-      this.salidaServices.getFiltradasSalidas(this.fechaInicio, this.fechaFin, this.tipoBusqueda, this.buscador)
-      .subscribe((data) => {
-        this.salidasParaExportarSubject.next(data);
-      });
-    } else {
-      this.salidaServices.getSalidasByEstado(true)
-      .subscribe(data => {
-        console.log(data)
+      this.salidaServices
+        .getFiltradasSalidas(
+          this.fechaInicio,
+          this.fechaFin,
+          this.tipoBusqueda,
+          this.buscador
+        )
+        .subscribe((data) => {
           this.salidasParaExportarSubject.next(data);
+        });
+    } else {
+      this.salidaServices.getSalidasByEstado(true).subscribe((data) => {
+        console.log(data);
+        this.salidasParaExportarSubject.next(data);
       });
     }
   }
