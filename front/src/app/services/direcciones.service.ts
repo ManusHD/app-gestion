@@ -5,7 +5,7 @@ import { Colaborador } from "../models/colaborador.model";
 import { PDV } from "../models/pdv.model";
 import { Perfumeria } from "../models/perfumeria.model";
 import { OtraDireccion } from "../models/otraDireccion.model";
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment-dev';
 
 @Injectable()
 export class DireccionesService {

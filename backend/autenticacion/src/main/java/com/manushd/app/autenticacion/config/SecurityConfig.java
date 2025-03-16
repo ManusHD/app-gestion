@@ -59,7 +59,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // Puedes añadir varios orígenes permitidos
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://chanel.delim.es"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://chanel.delim.es", "https://api.chanel.delim.es"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

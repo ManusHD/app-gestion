@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
 import { User } from '../models/user.model';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment-dev';
 
 interface LoginResponse {
   token: string;

@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Entrada } from "../models/entrada.model";
 import { HttpClient } from "@angular/common/http";
 import { Salida } from "../models/salida.model";
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment-dev';
 
 @Injectable()
 export class ReubicarPaletsService {

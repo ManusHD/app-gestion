@@ -31,16 +31,21 @@ export class UbicacionesComponent {
       this.nuevaUbicacion.nombre = this.nuevaUbicacion.nombre?.trim();
       this.ubiService.newUbicacion(this.nuevaUbicacion).subscribe({
         next: (data) => {
-          this.carga.hide();
           console.log('Ubicación creada correctamente: ', data);
           this.snackBar.snackBarExito('Ubicación guardada correctamente');
           this.nuevaUbicacion.nombre = '';
           this.ubicacionCreada.emit();
+          setTimeout(() => {
+            this.carga.hide();
+          });
         },
         error: (error) => {
           this.carga.hide();
           console.error('Error al crear Ubicación', error);
           this.snackBar.snackBarError("Ya existe la ubicación: " + this.nuevaUbicacion.nombre);
+          setTimeout(() => {
+            this.carga.hide();
+          });
         },
       });
     

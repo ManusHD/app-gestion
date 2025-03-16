@@ -86,7 +86,6 @@
         <app-exportar-excel (click)="obtenerDatosAExportar()"
             *ngIf="currentPath == '/productos' && productos.length > 0" [data$]="productosParaExportar$"
             [nombreConjuntoExportado]="'PRODUCTOS'" [fileName]="'PRODUCTOS-EXPORTADOS'"></app-exportar-excel>
+            <app-pantalla-carga></app-pantalla-carga>
     </div>
 
-
-    <app-pantalla-carga></app-pantalla-carga>

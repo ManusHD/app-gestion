@@ -3,7 +3,7 @@ import { Salida } from '../models/salida.model';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { from, Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment-dev';
 
 @Injectable()
 export class SalidaServices {

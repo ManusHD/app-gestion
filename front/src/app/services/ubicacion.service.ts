@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Ubicacion } from '../models/ubicacion.model';
 import { ReubicacionRequest } from '../models/ReubicacionRequest.model';
-import { environment } from '../../environments/environment';
+import { environment } from '../../environments/environment-dev';
 
 @Injectable()
 export class UbicacionService {

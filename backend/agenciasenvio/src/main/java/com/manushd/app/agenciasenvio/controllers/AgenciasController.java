@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import org.springframework.web.server.ResponseStatusException;
@@ -22,43 +23,43 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RestController
-@CrossOrigin(value = "http://localhost:4200")
+@RequestMapping("/agenciasEnvio")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class AgenciasController {
     @Autowired
     private AgenciaRepository agenciaRepository;
 
-    @GetMapping("/agenciasEnvio")
+    @GetMapping("")
     public Iterable<Agencia> getAgencias() {
         return agenciaRepository.findAll();
     }
 
-    @GetMapping("/agenciasEnvio/byNombre")
+    @GetMapping("/byNombre")
     public Iterable<Agencia> getAgenciasOrderByNombre() {
         return agenciaRepository.findAllByOrderByNombreAsc();
     }
 
-    @GetMapping("/agenciasEnvio/activas")
+    @GetMapping("/activas")
     public Iterable<Agencia> getAgenciasActivas() {
         return agenciaRepository.findAllByActivaOrderByNombreAsc(true);
     }
 
-    @GetMapping("/agenciasEnvio/{id}")
+    @GetMapping("/{id}")
     public Agencia getAgenciaById(@PathVariable Long id) {
         return agenciaRepository.findById(id).orElse(null);
     }
 
-    @GetMapping("/agenciasEnvio/nombre/{nombre}")
+    @GetMapping("/nombre/{nombre}")
     public Agencia obtenerAgenciaPorNombre(@PathVariable String nombre) {
         return agenciaRepository.findByNombre(nombre).orElse(null);
     }
 
-    @GetMapping("/agenciasEnvio/byNombre/{nombre}")
+    @GetMapping("/byNombre/{nombre}")
     public Iterable<Agencia> obtenerAgenciasPorNombre(@PathVariable String nombre) {
         return agenciaRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
     }
 
-    @PostMapping("/agenciasEnvio")
+    @PostMapping("")
     @PreAuthorize("hasRole('ADMIN')")
     public Agencia addAgencia(@RequestBody Agencia agencia) {
         Agencia agenciaAux = agenciaRepository.findByNombre(agencia.getNombre()).orElse(null);
@@ -70,7 +71,7 @@ public class AgenciasController {
         return agenciaRepository.save(agencia);
     }   
 
-    @PutMapping("/agenciasEnvio")
+    @PutMapping("")
     @PreAuthorize("hasRole('ADMIN')")
     public Agencia updateAgencia(@RequestBody Agencia agencia) {
         Agencia agenciaAux = agenciaRepository.findById(agencia.getId()).orElse(null);
@@ -82,7 +83,7 @@ public class AgenciasController {
         return agenciaRepository.save(agencia);
     }
 
-    @DeleteMapping("/agenciasEnvio/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteAgencia(@PathVariable Long id) {
         Agencia agenciaAux = agenciaRepository.findById(id).orElse(null);

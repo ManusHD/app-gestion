@@ -34,7 +34,6 @@ import jakarta.persistence.EntityManager;
 
 @Controller
 @RestController
-@CrossOrigin(value = "http://localhost:4200")
 @RequestMapping("/direcciones")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class DireccionesController {

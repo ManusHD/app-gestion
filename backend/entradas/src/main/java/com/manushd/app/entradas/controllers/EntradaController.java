@@ -2,27 +2,17 @@ package com.manushd.app.entradas.controllers;
 
 import com.manushd.app.entradas.models.Entrada;
 import com.manushd.app.entradas.models.Producto;
-import com.manushd.app.entradas.models.ProductoDcs;
 import com.manushd.app.entradas.models.ProductoEntrada;
 import com.manushd.app.entradas.models.Ubicacion;
 import com.manushd.app.entradas.models.ProductoUbicacion;
-import com.manushd.app.entradas.models.DCS;
 import com.manushd.app.entradas.repository.EntradaRepository;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.IntStream;
-import java.util.Date;
-
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,36 +24,31 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 
 @Controller
 @RestController
-@CrossOrigin(value = "http://localhost:4200")
+@RequestMapping("/entradas")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class EntradaController {
 
     @Autowired
     private EntradaRepository entradasRepository;
 
-    @GetMapping("/entradas")
+    @GetMapping("")
     public Page<Entrada> getEntradas(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -72,17 +57,17 @@ public class EntradaController {
                 PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sort)));
     }
 
-    @GetMapping("/entradas/{id}")
+    @GetMapping("/{id}")
     public Entrada getEntradaById(@PathVariable Long id) {
         return entradasRepository.findById(id).orElse(null);
     }
 
-    @GetMapping("/entradas/estado/{estado}")
+    @GetMapping("/estado/{estado}")
     public Iterable<Entrada> getEntradasByEstado(@PathVariable boolean estado) {
         return entradasRepository.findAllByEstadoOrderByFechaRecepcionAsc(estado);
     }
 
-    @GetMapping("/entradas/estado/{estado}/paginado")
+    @GetMapping("/estado/{estado}/paginado")
     public Page<Entrada> getEntradasOrdenadasByEstado(
             @PathVariable boolean estado,
             @RequestParam(defaultValue = "0") int page,
@@ -91,7 +76,7 @@ public class EntradaController {
                 estado, PageRequest.of(page, size));
     }
 
-    @GetMapping("/entradas/filtrar/paginado")
+    @GetMapping("/filtrar/paginado")
     public ResponseEntity<Page<Entrada>> filtrarEntradasPaginado(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
@@ -140,7 +125,7 @@ public class EntradaController {
         }
     }
 
-    @GetMapping("/entradas/filtrar")
+    @GetMapping("/filtrar")
     public ResponseEntity<Iterable<Entrada>> filtrarEntradas(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
@@ -185,13 +170,13 @@ public class EntradaController {
         }
     }
 
-    @GetMapping("/entradas/paletsRecibidos")
+    @GetMapping("/paletsRecibidos")
     @PreAuthorize("hasRole('ADMIN')")
     public Integer getPaletsRecibidos() {
         return entradasRepository.sumPaletsByEstadoTrue();
     }
 
-    @PostMapping("/entradas/reubicarPalets")
+    @PostMapping("/reubicarPalets")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> reubicarPalets(@RequestBody Entrada entrada) {
 
@@ -233,7 +218,7 @@ public class EntradaController {
         return ResponseEntity.ok(e);
     }
 
-    @PostMapping("/entradas")
+    @PostMapping("")
     public ResponseEntity<?> addEntrada(@RequestBody Entrada entrada, @RequestHeader("Authorization") String token) {
         if (Boolean.TRUE.equals(entrada.getEstado())) {
             if (entrada.getProductos().isEmpty()) {
@@ -242,6 +227,9 @@ public class EntradaController {
             }
 
             RestTemplate restTemplate = new RestTemplate();
+
+            // URL base interna del microservicio de productos
+            String productosServiceUrl = "http://localhost:8091/productos";
 
             for (ProductoEntrada productoEntrada : entrada.getProductos()) {
                 String ref = productoEntrada.getRef();
@@ -262,7 +250,7 @@ public class EntradaController {
 
                     // Verificar existencia del producto
                     ResponseEntity<Producto> response = restTemplate.exchange(
-                            "http://localhost:8091/productos/referencia/" + ref,
+                            productosServiceUrl + "/referencia/" + ref, // HTTP interno
                             HttpMethod.GET,
                             entity,
                             Producto.class);
@@ -276,7 +264,7 @@ public class EntradaController {
 
                         HttpEntity<Producto> request = new HttpEntity<>(nuevoProducto, headers);
                         ResponseEntity<Producto> postResponse = restTemplate.exchange(
-                                "http://localhost:8091/productos",
+                                productosServiceUrl, // HTTP interno
                                 HttpMethod.POST,
                                 request,
                                 Producto.class);
@@ -289,7 +277,8 @@ public class EntradaController {
             }
 
             // LLAMADA AL MICROSERVICIO DE UBICACIONES CON TOKEN
-            crearUbicacion(entrada, token);
+            crearUbicacion(entrada, token); // Asegúrate de modificar esta función también
+
         }
 
         Entrada savedEntrada = entradasRepository.save(entrada);
@@ -349,7 +338,7 @@ public class EntradaController {
         }
     }
 
-    @PutMapping("/entradas/{id}")
+    @PutMapping("/{id}")
     public Entrada updateEntrada(@PathVariable Long id, @RequestBody Entrada entrada) {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
@@ -360,7 +349,7 @@ public class EntradaController {
         return null;
     }
 
-    @PutMapping("/entradas/{id}/recibir")
+    @PutMapping("/{id}/recibir")
     public ResponseEntity<?> setRecibida(@PathVariable Long id, @RequestHeader("Authorization") String token) {
         Entrada entradaAux = entradasRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
@@ -372,7 +361,7 @@ public class EntradaController {
         return null;
     }
 
-    @DeleteMapping("/entradas/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteById(@PathVariable Long id) {
         entradasRepository.deleteById(id);

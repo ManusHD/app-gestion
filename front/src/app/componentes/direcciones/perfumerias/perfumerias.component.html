@@ -152,7 +152,7 @@
                 <th class="header-paginator" *matHeaderCellDef> PDVs </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let perfumeria">
                   <ng-container *ngIf="editandoId !== perfumeria.id; else editPdvs">
-                    <span *ngFor="let pdv of perfumeria.pdvs; let last = last">
+                    <span class="pdv" *ngFor="let pdv of perfumeria.pdvs; let last = last">
                       {{ pdv.nombre }}<span *ngIf="!last">, </span>
                     </span>
                   </ng-container>

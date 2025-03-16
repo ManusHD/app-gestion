@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,13 +38,13 @@ import com.manushd.app.ubicaciones.repository.UbicacionesRepository;
 
 @Controller
 @RestController
-@CrossOrigin(value = "http://localhost:4200")
+@RequestMapping("/ubicaciones")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class UbicacionesController {
     @Autowired
     private UbicacionesRepository ubicacionesRepository;
 
-    @GetMapping("/ubicaciones/paginadas")
+    @GetMapping("/paginadas")
     public Page<Ubicacion> getUbicacionesOrderByNombrePaginadas(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -52,17 +53,17 @@ public class UbicacionesController {
             PageRequest.of(page, size));
     }
 
-    @GetMapping("/ubicaciones")
+    @GetMapping("")
     public Iterable<Ubicacion> getUbicacionesOrderByNombre() {
         return ubicacionesRepository.findAllByOrderByNombreAsc();
     }
 
-    @GetMapping("/ubicaciones/{id}")
+    @GetMapping("/{id}")
     public Ubicacion getUbicacionById(@PathVariable Long id) {
         return ubicacionesRepository.findById(id).orElse(null);
     }
 
-    @PostMapping("/ubicaciones")
+    @PostMapping("")
     public Ubicacion addUbicacion(@RequestBody Ubicacion ubicacion) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
         if (ubiAux != null) {
@@ -73,12 +74,12 @@ public class UbicacionesController {
         return ubicacionesRepository.save(ubicacion);
     }
 
-    @GetMapping("/ubicaciones/nombre/{nombre}")
+    @GetMapping("/nombre/{nombre}")
     public Ubicacion obtenerUbicacionPorNombre(@PathVariable String nombre) {
         return ubicacionesRepository.findByNombre(nombre).orElse(null);
     }
 
-    @GetMapping("/ubicaciones/nombre/{nombre}/coincidentes/paginado")
+    @GetMapping("/nombre/{nombre}/coincidentes/paginado")
     public Page<Ubicacion> obtenerUbicacionesPorNombre(
             @PathVariable String nombre,
             @RequestParam(defaultValue = "0") int page,
@@ -87,12 +88,12 @@ public class UbicacionesController {
             nombre, PageRequest.of(page, size));
     }
 
-    @GetMapping("/ubicaciones/nombre/{nombre}/coincidentes")
+    @GetMapping("/nombre/{nombre}/coincidentes")
     public Iterable<Ubicacion> obtenerUbicacionesPorNombre(@PathVariable String nombre) {
         return ubicacionesRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(nombre);
     }
 
-    @GetMapping("/ubicaciones/referenciaProducto/{ref}/paginado")
+    @GetMapping("/referenciaProducto/{ref}/paginado")
     public Page<Ubicacion> findByProductosRef(
             @PathVariable String ref,
             @RequestParam(defaultValue = "0") int page,
@@ -101,12 +102,12 @@ public class UbicacionesController {
             ref, PageRequest.of(page, size));
     }
 
-    @GetMapping("/ubicaciones/referenciaProducto/{ref}")
+    @GetMapping("/referenciaProducto/{ref}")
     public Iterable<Ubicacion> findByProductosRef(@PathVariable String ref) {
         return ubicacionesRepository.findByProductosRefOrderByNombreAsc(ref);
     }
 
-    @GetMapping("/ubicaciones/descripcionProducto/{description}/paginado")
+    @GetMapping("/descripcionProducto/{description}/paginado")
     public Page<Ubicacion> findByProductosDescription(
             @PathVariable String description,
             @RequestParam(defaultValue = "0") int page,
@@ -115,7 +116,7 @@ public class UbicacionesController {
             description, PageRequest.of(page, size));
     }
 
-    @GetMapping("/ubicaciones/descripcionProducto/{description}")
+    @GetMapping("/descripcionProducto/{description}")
     public Iterable<Ubicacion> findByProductosDescription(@PathVariable String description) {
         return ubicacionesRepository.findByProductosDescriptionOrderByNombreAsc(description);
     }
@@ -125,7 +126,7 @@ public class UbicacionesController {
      * - Para productos normales: se comprueba si ya existe en la ubicación y se suman las unidades.
      * - Para productos especiales ("VISUAL" o "SIN REFERENCIA"): se añade una nueva entrada y se crea un nuevo producto en el microservicio de Productos.
      */
-    @PostMapping("/ubicaciones/sumar")
+    @PostMapping("/sumar")
     public Ubicacion sumarUbicacion(@RequestBody Ubicacion ubicacion, @RequestHeader("Authorization") String token) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
 
@@ -185,7 +186,7 @@ public class UbicacionesController {
      * - Los productos especiales quedan en 0 unidades, se eliminan de la ubicación.
      * - Los productos normales se actualizan a 0 (no se elimina su información).
      */
-    @PostMapping("/ubicaciones/restar")
+    @PostMapping("/restar")
     public ResponseEntity<?> restarUbicacion(@RequestBody Ubicacion ubicacion, @RequestHeader("Authorization") String token) {
         try {
             Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
@@ -259,7 +260,7 @@ public class UbicacionesController {
         }
     }
 
-    @PostMapping("/ubicaciones/reubicar")
+    @PostMapping("/reubicar")
     public ResponseEntity<?> reubicarProducto(@RequestBody ReubicacionRequest request) {
         // Validar que se hayan enviado las ubicaciones y el producto
         if (request.getOrigen() == null || request.getOrigen().isBlank()) {
@@ -369,7 +370,7 @@ public class UbicacionesController {
         return ResponseEntity.ok("Producto reubicado correctamente.");
     }
 
-    @PutMapping("/ubicaciones/productos/updateDescripcion")
+    @PutMapping("/productos/updateDescripcion")
     public ResponseEntity<?> actualizarDescripcionProducto(@RequestBody ProductoDescripcionUpdateDTO dto, @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
         // Determinar si es producto especial utilizando el ref (el método esProductoEspecial usa el campo ref)
@@ -513,7 +514,7 @@ public class UbicacionesController {
     }
       
 
-    @PutMapping("/ubicaciones/{id}")
+    @PutMapping("/{id}")
     public Ubicacion actualizarUbicacion(@PathVariable Long id, @RequestBody Ubicacion ubicacionDetails) {
         Ubicacion ubicacion = ubicacionesRepository.findById(id).orElse(null);
         if (ubicacion != null) {
@@ -529,7 +530,7 @@ public class UbicacionesController {
         return null;
     }
 
-    @DeleteMapping("/ubicaciones/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteById(@PathVariable Long id) {
         Ubicacion ubicacionAux = ubicacionesRepository.findById(id).orElse(null);

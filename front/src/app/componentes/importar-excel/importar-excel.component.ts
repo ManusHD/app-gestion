@@ -11,7 +11,6 @@ export class ImportarExcelComponent extends FormularioEntradaSalidaService{
   
   // Método para manejar la importación de archivos Excel
   onFileChange(event: any) {
-    this.carga.show();
     const file = event.target.files[0];
 
     if (file) {

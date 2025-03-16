@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -32,19 +33,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 @RestController
-@CrossOrigin(value = "http://localhost:4200")
+@RequestMapping("/productos")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
 public class ProductosController {
 
     @Autowired
     private ProductoRepository productosRepository;
 
-    @GetMapping("/productos")
+    @GetMapping("")
     public Iterable<Producto> getProductos() {
         return productosRepository.findAllByOrderByReferenciaAsc();
     }
 
-    @GetMapping("/productos/byReferencia")
+    @GetMapping("/byReferencia")
     public Page<Producto> getProductosOrdenados(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -52,17 +53,17 @@ public class ProductosController {
             PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/{id}")
+    @GetMapping("/{id}")
     public Producto getProductoById(@PathVariable Long id) {
         return productosRepository.findById(id).orElse(null);
     }
 
-    @GetMapping("/productos/referencia/{referencia}")
+    @GetMapping("/referencia/{referencia}")
     public Producto obtenerProductoPorReferencia(@PathVariable String referencia) {
         return productosRepository.findByReferencia(referencia).orElse(null);
     }
 
-    @GetMapping("/productos/referencia/{referencia}/buscar/paginado")
+    @GetMapping("/referencia/{referencia}/buscar/paginado")
     public Page<Producto> getProductosByReferenciaContainingPaginado(
             @PathVariable String referencia,
             @RequestParam(defaultValue = "0") int page,
@@ -71,14 +72,14 @@ public class ProductosController {
             referencia, PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/referencia/{referencia}/buscar")
+    @GetMapping("/referencia/{referencia}/buscar")
     public Iterable<Producto> getProductosByReferenciaContaining(
             @PathVariable String referencia) {
         return productosRepository.findByReferenciaContainingIgnoreCaseOrderByReferenciaAsc(
             referencia);
     }
 
-    @GetMapping("/productos/description/{description}/paginado")
+    @GetMapping("/description/{description}/paginado")
     public Page<Producto> getProductosByDescriptionContainingPaginado(
             @PathVariable String description,
             @RequestParam(defaultValue = "0") int page,
@@ -87,14 +88,14 @@ public class ProductosController {
             description, PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/description/{description}")
+    @GetMapping("/description/{description}")
     public Iterable<Producto> getProductosByDescriptionContaining(
             @PathVariable String description) {
         return productosRepository.findByDescriptionContainingIgnoreCase(
             description);
     }
 
-    @GetMapping("/productos/sinreferencia")
+    @GetMapping("/sinreferencia")
     public Page<Producto> obtenerProductosSinReferencia(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
@@ -102,7 +103,7 @@ public class ProductosController {
                 "SIN REFERENCIA", PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/sinreferencia/{id}")
+    @GetMapping("/sinreferencia/{id}")
     public Producto obtenerProductosSinReferenciaPorId(@PathVariable Long id) {
         Producto p = productosRepository.findById(id).orElse(null);
         if (p != null && "SIN REFERENCIA".equalsIgnoreCase(p.getReferencia())) {
@@ -111,7 +112,7 @@ public class ProductosController {
         return null;
     }
 
-    @GetMapping("/productos/sinreferencia/descripcion/{description}")
+    @GetMapping("/sinreferencia/descripcion/{description}")
     public Page<Producto> obtenerProductosSinReferenciaPorDescripcion(
         @PathVariable String description,
         @RequestParam(defaultValue = "0") int page,
@@ -119,7 +120,7 @@ public class ProductosController {
         return productosRepository.findByReferenciaAndDescriptionContainingIgnoreCaseOrderByDescriptionAsc("SIN REFERENCIA", description, PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/visuales")
+    @GetMapping("/visuales")
     public Page<Producto> obtenerVisuales(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size) {
@@ -127,7 +128,7 @@ public class ProductosController {
                 "VISUAL", PageRequest.of(page, size));
     }
 
-    @GetMapping("/productos/visual/{id}")
+    @GetMapping("/visual/{id}")
     public Producto obtenerVisualesPorId(@PathVariable Long id) {
         Producto p = productosRepository.findById(id).orElse(null);
         if (p != null && "VISUAL".equalsIgnoreCase(p.getReferencia())) {
@@ -136,7 +137,7 @@ public class ProductosController {
         return null;
     }
 
-    @GetMapping("/productos/visuales/descripcion/{description}")
+    @GetMapping("/visuales/descripcion/{description}")
     public Page<Producto> obtenerVisualesPorDescripcion(
         @PathVariable String description,
         @RequestParam(defaultValue = "0") int page,
@@ -148,7 +149,7 @@ public class ProductosController {
      * Endpoint para crear un producto normal.
      * Se mantiene la lógica existente.
      */
-    @PostMapping("/productos")
+    @PostMapping("")
     public Producto addProducto(@RequestBody Producto producto) {
         Producto aux = productosRepository.findByReferencia(producto.getReferencia()).orElse(null);
         if (aux != null) {
@@ -163,7 +164,7 @@ public class ProductosController {
     /**
      * Endpoint para modificar la descripción de un producto.
      */
-    @PutMapping("/productos/{id}")
+    @PutMapping("/{id}")
 public ResponseEntity<?> modifyDescription(
         @PathVariable Long id,
         @RequestBody String newDescription,
@@ -184,7 +185,7 @@ public ResponseEntity<?> modifyDescription(
 
     // Configurar el RestTemplate y los headers incluyendo el token
     RestTemplate restTemplate = new RestTemplate();
-    String ubicacionesUrl = "http://localhost:8095/ubicaciones/productos/updateDescripcion";
+    String ubicacionesUrl = "http://localhost:8095/ubicaciones/updateDescripcion";
     
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", token);
@@ -217,7 +218,7 @@ public ResponseEntity<?> modifyDescription(
     /**
      * Endpoint para sumar stock a un producto normal.
      */
-    @PutMapping("/productos/{ref}/sumar")
+    @PutMapping("/{ref}/sumar")
     public Producto addStock(@PathVariable String ref, @RequestBody Integer cantidad) {
         Producto producto = productosRepository.findByReferencia(ref).orElse(null);
         if (producto != null) {
@@ -233,7 +234,7 @@ public ResponseEntity<?> modifyDescription(
     /**
      * Endpoint para restar stock a un producto normal.
      */
-    @PutMapping("/productos/{ref}/restar")
+    @PutMapping("/{ref}/restar")
     public Producto subtractStock(@PathVariable String ref, @RequestBody Integer cantidad) {
         Producto producto = productosRepository.findByReferencia(ref).orElse(null);
         if (producto != null) {
@@ -252,7 +253,7 @@ public ResponseEntity<?> modifyDescription(
      * REFERENCIA")
      * sin comprobar si ya existe.
      */
-    @PostMapping("/productos/especial")
+    @PostMapping("/especial")
     public Producto addProductoEspecial(@RequestBody Producto producto) {
         // Se asume que en el objeto producto ya se establecen:
         // - referencia ("VISUAL" o "SIN REFERENCIA")
@@ -289,7 +290,7 @@ public ResponseEntity<?> modifyDescription(
      * Endpoint para restar stock a un producto especial, identificado por su id.
      * Si tras restar el stock este queda en 0, se elimina el producto.
      */
-    @PutMapping("/productos/visual/restarEspecial/{description}")
+    @PutMapping("/visual/restarEspecial/{description}")
     public ResponseEntity<?> subtractStockEspecialVisual(@PathVariable String description, @RequestBody Integer cantidad) {
         Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("VISUAL", description);
         if (!optProducto.isPresent()) {
@@ -311,7 +312,7 @@ public ResponseEntity<?> modifyDescription(
         }
     }
 
-    @PutMapping("/productos/sinreferencia/restarEspecial/{description}")
+    @PutMapping("/sinreferencia/restarEspecial/{description}")
     public ResponseEntity<?> subtractStockEspecialSR(@PathVariable String description, @RequestBody Integer cantidad) {
         Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA", description);
         if (!optProducto.isPresent()) {
@@ -333,7 +334,7 @@ public ResponseEntity<?> modifyDescription(
         }
     }
 
-    @DeleteMapping("/productos/{id}")
+    @DeleteMapping("/{id}")
     public void deleteById(@PathVariable Long id) {
         Producto p = productosRepository.findById(id).orElse(null);
         if(p != null) {
