@@ -244,7 +244,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
             this.snackbar.snackBarExito('Perfumería actualizada con éxito');
           },
           (error) => {
-            this.snackbar.snackBarError(error.error.message);
+            this.snackbar.snackBarError(error.error.error);
             console.error('Error al actualizar la perfumería', error);
         setTimeout(() => {
           this.carga.hide();

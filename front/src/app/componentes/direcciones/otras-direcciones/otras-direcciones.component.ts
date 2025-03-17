@@ -185,7 +185,7 @@ export class OtrasDireccionesComponent implements OnInit {
           }); 
         },
         (error) => {
-          this.snackbar.snackBarError(error.error.message);
+          this.snackbar.snackBarError(error.error.error);
           console.error('Error al actualizar otra dirección', error);
           setTimeout(() => {
             this.carga.hide();

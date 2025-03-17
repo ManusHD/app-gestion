@@ -186,7 +186,7 @@ export class ColaboradoresComponent implements OnInit {
             }); 
           },
           (error) => {
-            this.snackbar.snackBarError(error.error.message);
+            this.snackbar.snackBarError(error.error.error);
             console.error('Error al actualizar el colaborador', error);
             setTimeout(() => {
               this.carga.hide();

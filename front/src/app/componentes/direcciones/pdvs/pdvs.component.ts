@@ -234,7 +234,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
             }); 
           },
           (error) => {
-            this.snackbar.snackBarError(error.error.message);
+            this.snackbar.snackBarError(error.error.error);
             console.error('Error al actualizar el PDV', error);
             setTimeout(() => {
               this.carga.hide();

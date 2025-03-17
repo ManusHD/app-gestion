@@ -14,7 +14,7 @@
         <td>{{ user.roles[0]?.name === 'ROLE_ADMIN' ? 'ADMINISTRADOR' : user.roles[0]?.name === 'ROLE_OPERADOR' ? 'USUARIO' : user.roles[0]?.name }}</td>
         <td>
           <button (click)="editUser(user)">Editar</button>
-          <button (click)="deleteUser(user.username)">Eliminar</button>
+          <button [appConfirm]="'¿ESTÁS SEGURO QUE QUIERES ELIMINAR ESTE USUARIO?'" (confirmed)="deleteUser(user.username)">Eliminar</button>
         </td>
       </tr>
     </tbody>
