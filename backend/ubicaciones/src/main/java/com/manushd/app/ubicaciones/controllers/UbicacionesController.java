@@ -371,8 +371,7 @@ public class UbicacionesController {
     }
 
     @PutMapping("/productos/updateDescripcion")
-    public ResponseEntity<?> actualizarDescripcionProducto(@RequestBody ProductoDescripcionUpdateDTO dto, @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<?> actualizarDescripcionProducto(@RequestBody ProductoDescripcionUpdateDTO dto) {
         // Determinar si es producto especial utilizando el ref (el método esProductoEspecial usa el campo ref)
         boolean esEspecial = esProductoEspecial(new ProductoUbicacion() {{
             setRef(dto.getRef());

@@ -4,7 +4,7 @@ import shutil
 # Ruta donde están los microservicios
 microservicios_dir = "D:\\Uni\\TFG\\app-gestion\\backend"  # Modifica esta ruta según corresponda
 # Ruta de destino
-destino_dir = "C:\\Users\\soloc\\Desktop\\jars"
+destino_dir = "C:\\Users\\Manu\\Desktop\\jars"
 
 # Crear la carpeta de destino si no existe
 os.makedirs(destino_dir, exist_ok=True)
