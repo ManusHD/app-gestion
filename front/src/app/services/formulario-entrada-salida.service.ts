@@ -705,7 +705,7 @@ export class FormularioEntradaSalidaService {
 
   dcsValido() {
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
-    const dcsValido = /^[0-9]{9}$/.test(dcs);
+    const dcsValido = /^[0-9]{10}$/.test(dcs);
     if (dcsValido) {
       return true;
     }
@@ -720,7 +720,7 @@ export class FormularioEntradaSalidaService {
     const otroOrigenDestino =
       this.entradaSalidaForm.get('otroOrigenDestino')?.value;
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
-    const dcsValido = /^[0-9]{9}$/.test(dcs);
+    const dcsValido = /^[0-9]{10}$/.test(dcs);
 
     const casosOrigenDestino = [
       perfumeria && pdv,

@@ -40,6 +40,9 @@ public interface PerfumeriaRepository extends PagingAndSortingRepository<Perfume
         @Query("SELECT p.pdvs FROM Perfumeria p WHERE p.id = :perfumeriaId")
         Iterable<PDV> findPDVsByPerfumeriaId(@Param("perfumeriaId") Long perfumeriaId);
 
+        @Query("SELECT pdv FROM PDV pdv WHERE pdv NOT IN (SELECT p.pdvs FROM Perfumeria p) ORDER BY pdv.nombre")
+        Iterable<PDV> findPDVsNotRelatedToAnyPerfumeria();
+
         Iterable<Perfumeria> findAll();
     
         Optional<Perfumeria> findById(Long id);

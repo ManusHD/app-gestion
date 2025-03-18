@@ -148,7 +148,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
   }
 
   cargarPdvs() {
-    this.perfumeriaService.getPdvs().subscribe(
+    this.perfumeriaService.getPdvsSinAsignar().subscribe(
       (data) => {
         this.pdvs = data;
       }
@@ -242,6 +242,7 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
             this.cargarPerfumerias();
             this.cancelarEdit();
             this.snackbar.snackBarExito('Perfumería actualizada con éxito');
+            this.cargarPdvs();
           },
           (error) => {
             this.snackbar.snackBarError(error.error.error);
@@ -264,11 +265,8 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
     this.carga.show();
     this.perfumeriaService.deletePerfumeria(id).subscribe(
       () => {
-        this.perfumerias = this.perfumerias.filter((p) => p.id !== id);
-        this.dataSourcePerfumerias.data = [...this.perfumerias];
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
+        this.cargarPerfumerias(); 
+        this.snackbar.snackBarExito('Perfumería eliminada con éxito');
       },
       (error) => {
         console.error('Error al eliminar la perfumería', error);
@@ -449,10 +447,10 @@ export class PerfumeriasComponent implements OnInit, OnDestroy {
     this.importacionCompletada = true;
     
     if (this.perfumeriasConError === 0) {
-      this.snackbar.snackBarExito(`Se han importado ${this.perfumeriasImportadosOK} PDVs correctamente`);
+      this.snackbar.snackBarExito(`Se han importado ${this.perfumeriasImportadosOK} Perfumerias correctamente`);
       this.perfumerias = this.perfumeriasImportacion;
     } else {
-      this.snackbar.snackBarError(`Importación con errores: ${this.perfumeriasImportadosOK} PDVs correctos, ${this.perfumeriasConError} con errores`);
+      this.snackbar.snackBarError(`Importación con errores: ${this.perfumeriasImportadosOK} Perfumerias correctas, ${this.perfumeriasConError} con errores`);
     }
   }
 

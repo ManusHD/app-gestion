@@ -253,11 +253,8 @@ export class PdvsComponent implements OnInit, OnDestroy {
     this.carga.show();
     this.direccionesService.deletePdv(id).subscribe(
       () => {
-        this.pdvs = this.pdvs.filter((p) => p.id !== id);
-        this.dataSourcePdvs.data = [...this.pdvs];
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
+        this.cargarPdvs();
+        this.snackbar.snackBarExito('PDV eliminado con éxito');
       },
       (error) => {
         console.error('Error al eliminar el PDV', error);

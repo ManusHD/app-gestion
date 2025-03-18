@@ -241,6 +241,11 @@ public class DireccionesController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No existe ninguna Perfumería con ese nombre");
     }
 
+    @GetMapping("perfumerias/pdvsSinAsignar")
+    public Iterable<PDV> getPDVsSinAsignar() {
+        return perfumeriaRepository.findPDVsNotRelatedToAnyPerfumeria();
+    }
+
     @Autowired
     private EntityManager entityManager;
 

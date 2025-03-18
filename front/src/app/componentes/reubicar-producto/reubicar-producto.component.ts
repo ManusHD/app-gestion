@@ -139,7 +139,7 @@ export class ReubicarProductoComponent implements OnInit {
           this.productosReubicadosOK++;
         },
         error: (error) => {
-          console.error('Error al importar PDV:', error);
+          console.error('Error al reubicar un producto:', error);
           this.productosConError++;
         },
       });

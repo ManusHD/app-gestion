@@ -8,7 +8,7 @@
         <span *ngIf="!enRecibidas" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" class="close">&times;</span>
         <span *ngIf="enRecibidas" (click)="cerrarModal()" class="close">&times;</span>
         <h2 *ngIf="enRecibidas" >ORIGEN: <span class="titulo-modal">
-            {{entrada.origen || entrada.colaborador || entrada.pdv}} 
+            {{entrada.origen || entrada.colaborador || entrada.pdv || entrada.dcs}} 
         </span></h2>
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">

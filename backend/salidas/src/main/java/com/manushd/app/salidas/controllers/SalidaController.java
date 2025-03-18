@@ -391,7 +391,7 @@ public class SalidaController {
                 try {
                     HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headers);
                     ResponseEntity<Ubicacion> response = restTemplate.exchange(
-                            "http://localhost:8091/ubicaciones/restar",
+                            "http://localhost:8095/ubicaciones/restar",
                             HttpMethod.POST,
                             requestEntity,
                             Ubicacion.class);

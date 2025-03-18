@@ -114,6 +114,10 @@ export class DireccionesService {
         return this.http.get<PDV[]>(`${this.apiUrlPerfumerias}/${nombre}/pdvsPerfumeria`);
     }
     
+    getPdvsSinAsignar() {
+        return this.http.get<PDV[]>(`${this.apiUrlPerfumerias}/pdvsSinAsignar`);
+    }
+    
     getPerfumeriasByNombrePDV(nombre: string) {
         return this.http.get<Perfumeria>(`${this.apiUrlPerfumerias}/byNombrePdv/${nombre}`);
     }

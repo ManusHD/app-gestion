@@ -100,8 +100,7 @@
                     <div class="campo-form " *ngIf="currentPath.startsWith('/entradas')">
                         <label>DCS</label>
                         <input formControlName="dcs"
-                            [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="number"
-                            max="9999999999" />
+                            [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="text" maxlength="10" />
                     </div>
                 </div>
 
@@ -132,7 +131,7 @@
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
-                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
+                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" maxlength="10"
                                 [ngClass]="{'campo-vacio': !refValida(i)}" />
                         </td>
                         <td>
