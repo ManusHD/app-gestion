@@ -16,8 +16,8 @@ export class DireccionesService {
 
     constructor(private http: HttpClient) {}
 
-    getColaboradores(): Observable<any> {
-        return this.http.get<any>(`${this.apiUrlColaboradores}`);
+    getColaboradoresActivos(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}/activos`);
     }
 
     getColaboradoresPaginado(page: number, size: number): Observable<any> {
@@ -89,7 +89,6 @@ export class DireccionesService {
     }
     
     getPerfumeriasActivasByNombrePaginado(perfumeria: string, page: number, size: number): Observable<any> {
-        console.log(`${this.apiUrlPerfumerias}/activas/${perfumeria}/paginado?page=${page}&size=${size}`)
         return this.http.get<any>(`${this.apiUrlPerfumerias}/activas/${perfumeria}/paginado?page=${page}&size=${size}`);
     }
     
@@ -110,7 +109,6 @@ export class DireccionesService {
     }
     
     getPdvsPerfumeria(nombre: string) {
-        console.log("Nombre enviado: ", nombre);
         return this.http.get<PDV[]>(`${this.apiUrlPerfumerias}/${nombre}/pdvsPerfumeria`);
     }
     

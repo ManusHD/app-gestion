@@ -28,7 +28,7 @@ export class DetallesSalidasComponent implements OnInit {
   }
 
   iniciarSalidas() {
-    this.formatearFecha(this.salida.fechaEnvio);
+    this.salida.fechaEnvio = this.salida.fechaEnvio || this.formatearFecha(new Date()) || undefined;
     this.salidaRellena.emit(this.todosLosCamposRellenos());
   }
 
@@ -50,7 +50,6 @@ export class DetallesSalidasComponent implements OnInit {
         producto.description &&
         producto.unidades &&
         producto.unidades > 0 &&
-        this.salida.fechaEnvio &&
         producto.ubicacion &&
         producto.ubicacion != '' &&
         producto.palets! >= 0 &&

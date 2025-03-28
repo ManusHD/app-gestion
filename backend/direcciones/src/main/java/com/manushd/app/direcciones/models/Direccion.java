@@ -26,7 +26,6 @@ public abstract class Direccion{
     private String direccion;
     private String poblacion;
     private String provincia;
-    private String codigoPostal;
     private String telefono;
     private String cp;
 }

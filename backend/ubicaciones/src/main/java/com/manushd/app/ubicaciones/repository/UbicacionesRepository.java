@@ -20,11 +20,11 @@ public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicac
         Page<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre, Pageable pageable);
         Iterable<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
 
-        Page<Ubicacion> findByProductosRefOrderByNombreAsc(String ref, Pageable pageable);
-        Iterable<Ubicacion> findByProductosRefOrderByNombreAsc(String ref);
+        Page<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref, Pageable pageable);
+        Iterable<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref);
 
-        Page<Ubicacion> findByProductosDescriptionOrderByNombreAsc(String description, Pageable pageable);
-        Iterable<Ubicacion> findByProductosDescriptionOrderByNombreAsc(String description);
+        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(String description, Pageable pageable);
+        Iterable<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(String description);
 
         Optional<Ubicacion> findById(Long id);
 

@@ -38,7 +38,7 @@ export class ListaUbicacionesComponent implements OnInit {
   editingId: number | null = null;
   editingUbicacion: Ubicacion = {};
 
-  columnasUbicaciones: string[] = ['nombre', 'reubicacion', 'detalles'];
+  columnasUbicaciones: string[] = ['nombre', 'detalles'];
   dataSourceUbicaciones = new MatTableDataSource<Ubicacion>();
   @ViewChild(MatPaginator) paginatorUbicaciones!: MatPaginator;
 
@@ -54,6 +54,11 @@ export class ListaUbicacionesComponent implements OnInit {
     this.cargarUbicaciones();
     if(this.currentPath == '/ubicaciones') {
       this.columnasUbicaciones.push('acciones');
+      this.ubicacionCreada.subscribe(() => {
+        this.cargarUbicaciones();
+      });
+    } else if (this.currentPath == '/inventario') {
+      this.columnasUbicaciones.push('reubicacion');
       this.ubicacionCreada.subscribe(() => {
         this.cargarUbicaciones();
       });
@@ -114,8 +119,24 @@ export class ListaUbicacionesComponent implements OnInit {
     } else if(this.tipoBusqueda === 'referencia') {
       this.ubicacionService.getUbicacionesByReferenciaProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
-          console.log("Entro")
-          console.log(data)
+          this.ubicaciones = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
+          this.dataSourceUbicaciones.data = this.ubicaciones;
+    
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+      () => {
+        setTimeout(() => {
+          this.carga.hide();
+        }); 
+      });
+    } else if(this.tipoBusqueda === 'descripcion') {
+      this.ubicacionService.getUbicacionesByDescripcionProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
+        .subscribe((data) => {
           this.ubicaciones = data.content;
           setTimeout(() => {
             this.totalElementos = data.totalElements;

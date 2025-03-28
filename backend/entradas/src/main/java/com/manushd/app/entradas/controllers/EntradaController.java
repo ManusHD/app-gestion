@@ -54,7 +54,7 @@ public class EntradaController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "fechaRecepcion") String sort) {
         return entradasRepository.findAll(
-                PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sort)));
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort)));
     }
 
     @GetMapping("/{id}")
@@ -64,7 +64,7 @@ public class EntradaController {
 
     @GetMapping("/estado/{estado}")
     public Iterable<Entrada> getEntradasByEstado(@PathVariable boolean estado) {
-        return entradasRepository.findAllByEstadoOrderByFechaRecepcionAsc(estado);
+        return entradasRepository.findAllByEstadoOrderByFechaRecepcionDesc(estado);
     }
 
     @GetMapping("/estado/{estado}/paginado")
@@ -72,7 +72,7 @@ public class EntradaController {
             @PathVariable boolean estado,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return entradasRepository.findAllByEstadoOrderByFechaRecepcionAsc(
+        return entradasRepository.findAllByEstadoOrderByFechaRecepcionDesc(
                 estado, PageRequest.of(page, size));
     }
 
@@ -101,26 +101,26 @@ public class EntradaController {
 
         // Si no hay texto de búsqueda, solo filtrar por fechas
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionAsc(
+            return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionDesc(
                     fechaInicio, fechaFin, true, pageable);
         }
 
         // Si hay texto, filtrar según el tipo de búsqueda
         switch (tipoBusqueda) {
             case "referencia":
-                return entradasRepository.findByFechaAndReferenciaOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndReferenciaOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "descripcion":
-                return entradasRepository.findByFechaAndDescripcionOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndDescripcionOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "observacion":
-                return entradasRepository.findByFechaAndObservacionOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndObservacionOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "origen":
-                return entradasRepository.findByFechaAndOrigenOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndOrigenOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             default:
-                return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, true, pageable);
         }
     }
@@ -146,26 +146,26 @@ public class EntradaController {
 
         // Si no hay texto de búsqueda, solo filtrar por fechas
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionAsc(
+            return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionDesc(
                     fechaInicio, fechaFin, true);
         }
 
         // Si hay texto, filtrar según el tipo de búsqueda
         switch (tipoBusqueda) {
             case "referencia":
-                return entradasRepository.findByFechaAndReferenciaOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndReferenciaOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "descripcion":
-                return entradasRepository.findByFechaAndDescripcionOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndDescripcionOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "observacion":
-                return entradasRepository.findByFechaAndObservacionOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndObservacionOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "origen":
-                return entradasRepository.findByFechaAndOrigenOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaAndOrigenOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             default:
-                return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionAsc(
+                return entradasRepository.findByFechaRecepcionBetweenAndEstadoOrderByFechaRecepcionDesc(
                         fechaInicio, fechaFin, true);
         }
     }

@@ -20,8 +20,8 @@ public interface SalidaRepository extends PagingAndSortingRepository<Salida, Lon
         Page<Salida> findAllByEstado(boolean estado, Pageable pageable);
         Iterable<Salida> findAllByEstado(boolean estado);
 
-        Page<Salida> findAllByEstadoOrderByFechaEnvioAsc(boolean estado, Pageable pageable);
-        Iterable<Salida> findAllByEstadoOrderByFechaEnvioAsc(boolean estado);
+        Page<Salida> findAllByEstadoOrderByFechaEnvioDesc(boolean estado, Pageable pageable);
+        Iterable<Salida> findAllByEstadoOrderByFechaEnvioDesc(boolean estado);
 
         Optional<Salida> findById(Long id);
 
@@ -33,32 +33,32 @@ public interface SalidaRepository extends PagingAndSortingRepository<Salida, Lon
         Integer sumPaletsByEstadoTrue();
 
         // Buscar salidas solo por rango de fechas
-        @Query("SELECT e FROM Salida e WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaEnvio ASC")
-        Page<Salida> findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+        @Query("SELECT e FROM Salida e WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaEnvio DESC")
+        Page<Salida> findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("estado") boolean estado,
                         Pageable pageable);
 
         // Buscar por referencia dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Page<Salida> findByFechaAndReferenciaOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Page<Salida> findByFechaAndReferenciaOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("referencia") String referencia,
                         Pageable pageable);
 
         // Buscar por descripción dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Page<Salida> findByFechaAndDescripcionOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Page<Salida> findByFechaAndDescripcionOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("descripcion") String descripcion,
                         Pageable pageable);
 
         // Buscar por observación dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.observaciones) LIKE LOWER(CONCAT('%', :observacion, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Page<Salida> findByFechaAndObservacionOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.observaciones) LIKE LOWER(CONCAT('%', :observacion, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Page<Salida> findByFechaAndObservacionOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("observacion") String observacion,
@@ -78,37 +78,37 @@ public interface SalidaRepository extends PagingAndSortingRepository<Salida, Lon
                         "LOWER(s.cp) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
                         "LOWER(s.telefono) LIKE LOWER(CONCAT('%', :textoBusqueda, '%'))) " +
                         "AND s.estado = true " +
-                        "ORDER BY s.fechaEnvio ASC")
-                        Page<Salida> findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                        "ORDER BY s.fechaEnvio DESC")
+                        Page<Salida> findByFechaEnvioAndCamposOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("textoBusqueda") String textoBusqueda,
                         Pageable pageable);
 
         // Buscar salidas solo por rango de fechas
-        @Query("SELECT e FROM Salida e WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaEnvio ASC")
-        Iterable<Salida> findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+        @Query("SELECT e FROM Salida e WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND e.estado = :estado ORDER BY e.fechaEnvio DESC")
+        Iterable<Salida> findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("estado") boolean estado);
 
         // Buscar por referencia dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Iterable<Salida> findByFechaAndReferenciaOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Iterable<Salida> findByFechaAndReferenciaOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("referencia") String referencia);
 
         // Buscar por descripción dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Iterable<Salida> findByFechaAndDescripcionOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Iterable<Salida> findByFechaAndDescripcionOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("descripcion") String descripcion);
 
         // Buscar por observación dentro de un rango de fechas
-        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.observaciones) LIKE LOWER(CONCAT('%', :observacion, '%')) AND e.estado = true ORDER BY e.fechaEnvio ASC")
-        Iterable<Salida> findByFechaAndObservacionOrderByFechaEnvioAsc(
+        @Query("SELECT DISTINCT e FROM Salida e JOIN e.productos p WHERE DATE(e.fechaEnvio) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.observaciones) LIKE LOWER(CONCAT('%', :observacion, '%')) AND e.estado = true ORDER BY e.fechaEnvio DESC")
+        Iterable<Salida> findByFechaAndObservacionOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("observacion") String observacion);
@@ -127,8 +127,8 @@ public interface SalidaRepository extends PagingAndSortingRepository<Salida, Lon
                         "LOWER(s.cp) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
                         "LOWER(s.telefono) LIKE LOWER(CONCAT('%', :textoBusqueda, '%'))) " +
                         "AND s.estado = true " +
-                        "ORDER BY s.fechaEnvio ASC")
-                        Iterable<Salida> findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                        "ORDER BY s.fechaEnvio DESC")
+                        Iterable<Salida> findByFechaEnvioAndCamposOrderByFechaEnvioDesc(
                         @Param("fechaInicio") LocalDate fechaInicio,
                         @Param("fechaFin") LocalDate fechaFin,
                         @Param("textoBusqueda") String textoBusqueda);

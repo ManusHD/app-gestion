@@ -9,8 +9,6 @@ import com.manushd.app.salidas.repository.SalidaRepository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -69,7 +66,7 @@ public class SalidaController {
     public Iterable<Salida> getSalidasByEstado(
             @PathVariable boolean estado) {
 
-        return salidasRepository.findAllByEstadoOrderByFechaEnvioAsc(
+        return salidasRepository.findAllByEstadoOrderByFechaEnvioDesc(
                 estado);
     }
 
@@ -79,7 +76,7 @@ public class SalidaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        return salidasRepository.findAllByEstadoOrderByFechaEnvioAsc(
+        return salidasRepository.findAllByEstadoOrderByFechaEnvioDesc(
                 estado, PageRequest.of(page, size));
     }
 
@@ -107,26 +104,26 @@ public class SalidaController {
             Pageable pageable) {
 
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                     fechaInicio, fechaFin, true, pageable);
         }
 
         // Si hay texto, filtrar según el tipo de búsqueda
         switch (tipoBusqueda) {
             case "referencia":
-                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "descripcion":
-                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "observacion":
-                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "destino":
-                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             default:
-                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, true, pageable);
         }
     }
@@ -151,26 +148,26 @@ public class SalidaController {
             String textoBusqueda) {
 
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+            return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                     fechaInicio, fechaFin, true);
         }
 
         // Si hay texto, filtrar según el tipo de búsqueda
         switch (tipoBusqueda) {
             case "referencia":
-                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndReferenciaOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "descripcion":
-                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndDescripcionOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "observacion":
-                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaAndObservacionOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "destino":
-                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaEnvioAndCamposOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             default:
-                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioAsc(
+                return salidasRepository.findByFechaEnvioBetweenAndEstadoOrderByFechaEnvioDesc(
                         fechaInicio, fechaFin, true);
         }
     }

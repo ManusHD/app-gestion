@@ -12,9 +12,9 @@ export class DetallesUbicacionComponent {
   currentPath = window.location.pathname;
   mostrarModal: boolean = false;
   @Input() ubicacion!: Ubicacion;
-  ubicaciones: Ubicacion[] = [];
 
   mostrarDetalles() {
+    this.ubicacion.productos = this.ubicacion.productos!.sort((a, b) => (a.ref?.toString() ?? '').localeCompare(b.ref?.toString() ?? ''));
     this.mostrarModal = true;
   }
 

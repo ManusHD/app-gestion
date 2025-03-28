@@ -98,13 +98,13 @@ public class UbicacionesController {
             @PathVariable String ref,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ubicacionesRepository.findByProductosRefOrderByNombreAsc(
+        return ubicacionesRepository.findByProductosRefContainingIgnoreCaseOrderByNombreAsc(
             ref, PageRequest.of(page, size));
     }
 
     @GetMapping("/referenciaProducto/{ref}")
     public Iterable<Ubicacion> findByProductosRef(@PathVariable String ref) {
-        return ubicacionesRepository.findByProductosRefOrderByNombreAsc(ref);
+        return ubicacionesRepository.findByProductosRefContainingIgnoreCaseOrderByNombreAsc(ref);
     }
 
     @GetMapping("/descripcionProducto/{description}/paginado")
@@ -112,13 +112,13 @@ public class UbicacionesController {
             @PathVariable String description,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ubicacionesRepository.findByProductosDescriptionOrderByNombreAsc(
+        return ubicacionesRepository.findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(
             description, PageRequest.of(page, size));
     }
 
     @GetMapping("/descripcionProducto/{description}")
     public Iterable<Ubicacion> findByProductosDescription(@PathVariable String description) {
-        return ubicacionesRepository.findByProductosDescriptionOrderByNombreAsc(description);
+        return ubicacionesRepository.findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(description);
     }
 
     /**
@@ -381,10 +381,10 @@ public class UbicacionesController {
         List<Ubicacion> ubicaciones;
         if (esEspecial) {
             // Para productos especiales, buscamos por la descripción antigua
-            ubicaciones = (List<Ubicacion>) ubicacionesRepository.findByProductosDescriptionOrderByNombreAsc(dto.getOldDescription());
+            ubicaciones = (List<Ubicacion>) ubicacionesRepository.findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(dto.getOldDescription());
         } else {
             // Para productos normales, buscamos por referencia
-            ubicaciones = (List<Ubicacion>) ubicacionesRepository.findByProductosRefOrderByNombreAsc(dto.getRef());
+            ubicaciones = (List<Ubicacion>) ubicacionesRepository.findByProductosRefContainingIgnoreCaseOrderByNombreAsc(dto.getRef());
         }
 
         if (ubicaciones.isEmpty()) {

@@ -58,6 +58,11 @@ public class DireccionesController {
         return colaboradoresRepository.findAllByOrderByNombreAsc(PageRequest.of(page, size));
     }
 
+    @GetMapping("/colaboradores/activos")
+    public Iterable<Colaborador> getAllColaboradoresActivos() {
+        return colaboradoresRepository.findAllByActivaOrderByNombreAsc(true);
+    }
+
     @GetMapping("/colaboradores/{nombre}")
     public Colaborador getColaboradorByNombre(@PathVariable String nombre) {
         return colaboradoresRepository.findByNombre(nombre).orElse(null);
@@ -89,10 +94,11 @@ public class DireccionesController {
             Colaborador existeColaborador = colaboradoresRepository.findByNombre(colaboradorDetails.getNombre())
                     .orElse(null);
             if (existeColaborador != null) {
-                if (colaboradorDetails.getId() != existeColaborador.getId() &&
-                        colaboradorDetails.getNombre().equals(existeColaborador.getNombre())) {
+                if (!colaboradorDetails.getId().equals(existeColaborador.getId()) &&
+                colaboradorDetails.getNombre().equals(existeColaborador.getNombre())) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este colaborador ya existe");
                 }
+
             }
             return colaboradoresRepository.save(colaboradorDetails);
         }
@@ -326,7 +332,6 @@ public class DireccionesController {
             if (existePerfumeria != null) {
                 if (perfumeriaDetails.getId() != existePerfumeria.getId()
                         && perfumeriaDetails.getNombre().equals(existePerfumeria.getNombre())) {
-                    System.out.println("Entro");
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta perfumería ya existe");
                 }
             }
@@ -389,8 +394,8 @@ public class DireccionesController {
             OtrasDirecciones existeOtrasDirecciones = otrasDireccionesRepository
                     .findByNombre(otrasDireccionesDetails.getNombre()).orElse(null);
             if (existeOtrasDirecciones != null) {
-                if (otrasDireccionesDetails.getId() != existeOtrasDirecciones.getId() &&
-                        otrasDireccionesDetails.getNombre().equals(existeOtrasDirecciones.getNombre())) {
+                if (!otrasDireccionesDetails.getId().equals(existeOtrasDirecciones.getId()) &&
+                otrasDireccionesDetails.getNombre().equals(existeOtrasDirecciones.getNombre())) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta dirección ya existe");
                 }
             }

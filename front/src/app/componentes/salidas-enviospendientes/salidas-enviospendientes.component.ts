@@ -1,20 +1,19 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { throwError, catchError } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 import { Salida } from 'src/app/models/salida.model';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
 
 @Component({
-  selector: 'app-salidas-pendientes',
-  templateUrl: './salidas-pendientes.component.html',
+  selector: 'app-salidas-enviospendientes',
+  templateUrl: './salidas-enviospendientes.component.html',
   styleUrls: [
     '../../../assets/styles/paginator.css',
-    './salidas-pendientes.component.css',
-  ],
+    './salidas-enviospendientes.component.css' , 
+    '../salidas-pendientes/salidas-pendientes.component.css']
 })
-export class SalidasPendientesComponent
-  extends FormularioEntradaSalidaService
+export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaService
   implements OnInit
 {
   salidas: Salida[] = [];
@@ -35,9 +34,9 @@ export class SalidasPendientesComponent
   cargarSalidas() {
     this.carga.show();
     this.salidaService.getSalidasByEstadoPaginado(false, this.pageIndex, this.pageSize).subscribe((data) => {
-      this.salidas = data.content.filter((salida: Salida) => salida.rellena !== false); // Filtra las salidas con rellena = false
+      this.salidas = data.content;
       setTimeout(() => {
-        this.totalElementos = this.salidas.length; // Ajusta el total de elementos visibles
+        this.totalElementos = data.totalElements;
       });
       this.dataSource.data = this.salidas;
       this.cdr.detectChanges();
@@ -46,19 +45,36 @@ export class SalidasPendientesComponent
       });
     });
   }
-  
-  handleRellena(salida: Salida, isRellena: boolean): void {
-    // Actualizamos el valor de la propiedad en el objeto salida
-    salida.rellena = isRellena;
-  
-    if (isRellena) {
-      this.salidas = this.salidas.filter(item => item.id !== salida.id);
-      this.dataSource.data = this.salidas;
-      this.totalElementos = this.salidas.length;
-      this.cdr.detectChanges();
-    }
+
+  setEnviada(id: number) {
+    this.btnSubmitActivado = false;
+    this.carga.show();
+    this.salidaService
+      .setEnviada(id)
+      .pipe(
+        catchError((error) => {
+          this.snackBarError(error.error || "Algunos artículos no tienen suficiente Stock");
+          this.carga.hide();
+          this.btnSubmitActivado = true;
+          return throwError(error);
+        })
+      )
+      .subscribe(
+        (data) => {
+          this.carga.hide();
+          this.cargarSalidas();
+          console.log('Salida grabada con éxito');
+          this.snackBarExito('Salida grabada con éxito');
+          this.btnSubmitActivado = true;
+        },
+        (error) => {
+          this.carga.hide();
+          this.btnSubmitActivado = true;
+          console.error(error);
+        }
+      );
   }
-  
+
   deleteSalida(idSalida: number) {
     this.carga.show();
     this.btnSubmitActivado = false;
@@ -77,5 +93,17 @@ export class SalidasPendientesComponent
         this.snackBarError('No se puede borrar la salida por un conflicto en la BBDD');
       }
     );
+  }
+
+  handleRellena(salida: Salida, isRellena: boolean): void {
+    // Actualizamos el valor de la propiedad en el objeto salida
+    salida.rellena = isRellena;
+  
+    if (!isRellena) {
+      this.salidas = this.salidas.filter(item => item.id !== salida.id);
+      this.dataSource.data = this.salidas;
+      this.totalElementos = this.salidas.length;
+      this.cdr.detectChanges();
+    }
   }
 }

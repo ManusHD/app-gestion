@@ -7,9 +7,10 @@
                 <div class="fechas">
                     <div class="campo-form" *ngIf="!pestanaPadre.startsWith('prevision')">
                         <label *ngIf="currentPath.startsWith('/entradas')">FECHA RECEPCIÓN</label>
-                        <label *ngIf="currentPath.startsWith('/salidas')">FECHA ENVÍO</label>
-                        <input formControlName="fechaRecepcionEnvio" type="date"
+                        <label *ngIf="currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')">FECHA ENVÍO</label>
+                        <input *ngIf="(currentPath.startsWith('/entradas') || (currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')))" formControlName="fechaRecepcionEnvio" type="date"
                             [ngClass]="{'campo-vacio': campoSimpleVacio('fechaRecepcionEnvio')}" />
+
                     </div>
                 </div>
 
@@ -131,7 +132,7 @@
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
-                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" maxlength="10"
+                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" maxlength="14"
                                 [ngClass]="{'campo-vacio': !refValida(i)}" />
                         </td>
                         <td>
@@ -220,7 +221,7 @@
                         </td>
                         <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">
                             <select formControlName="formaEnvio"
-                                [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}">
+                                [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}" (change)="sincronizarFormasEnvio(i)" >
                                 <option value=""></option>
                                 <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
                                     {{agencia.nombre}}</option>
@@ -232,7 +233,7 @@
 
                         <td>
                             <div class="centrar">
-                                <label class="checkbox-comprobado">
+                                <label *ngIf="currentPath != '/salidas' && currentPath != '/entradas'" class="checkbox-comprobado">
                                     <input formControlName="comprobado" type="checkbox" />
                                     <svg viewBox="0 0 44 44" class="sizer checkmark">
                                         <path

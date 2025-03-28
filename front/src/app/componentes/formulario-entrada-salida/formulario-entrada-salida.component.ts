@@ -157,12 +157,13 @@ export class FormularioEntradaSalidaComponent
     this.direccionesService.getPdvsPerfumeria(perfumeria).subscribe(
       (data: PDV[]) => {
         this.pdvs = data;
+        console.log(this.pdvs);
       }
     );
   }
 
   cargarColaboradores() {
-    this.direccionesService.getColaboradores().subscribe({
+    this.direccionesService.getColaboradoresActivos().subscribe({
       next: (data) => {
         this.colaboradores = data;
       },
@@ -285,7 +286,7 @@ export class FormularioEntradaSalidaComponent
     });
   }
 
-  // Cuando voy a ver los Detalles de las Entradas Pendientes
+  // Cuando voy a ver los Detalles de las Entradas/Salidas Pendientes
   private inicializarDetalleEntradaSalida() {
     this.mostrarFormulario = true;
     this.enDetalles = true;
@@ -294,6 +295,11 @@ export class FormularioEntradaSalidaComponent
     this.marcarCamposInvalidos();
 
     setTimeout(() => {
+      this.productosControls.controls.sort((a, b) => {
+        const refA = a.get('ref')?.value || '';
+        const refB = b.get('ref')?.value || '';
+        return refA.localeCompare(refB);
+      });
       if (this.esSalida()) {
         this.cargarAgenciasTransporte();
         this.productosControls.controls.forEach((control, index) => {

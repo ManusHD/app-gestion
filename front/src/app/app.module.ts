@@ -76,6 +76,7 @@ import { ConfirmDialogService } from './services/confirm-dialog.service';
 import { ConfirmDirective } from './directivas/confirm.directive';
 import { UsuariosComponent } from './componentes/usuarios/usuarios.component';
 import { PerfilComponent } from './componentes/perfil/perfil.component';
+import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
 
 @NgModule({
   declarations: [
@@ -122,6 +123,7 @@ import { PerfilComponent } from './componentes/perfil/perfil.component';
     ConfirmDirective,
     UsuariosComponent,
     PerfilComponent,
+    SalidasEnviospendientesComponent,
   ],
   imports: [
     AppRoutingModule,

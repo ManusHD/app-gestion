@@ -3,6 +3,7 @@
         <div class="buscador" (keyup)="onEnterKey($event)">
             <select [(ngModel)]="tipoBusqueda" class="select-buscador">
                 <option value="referencia">Búsqueda por REFERENCIA</option>
+                <option value="descripcion">Búsqueda por DESCRIPCIÓN</option>
                 <option value="ubicaciones">Búsqueda por UBICACIÓN</option>
             </select>
             <input type="text" placeholder="Buscar..." [(ngModel)]="buscador" />

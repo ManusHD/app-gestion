@@ -24,6 +24,7 @@ import { authGuard } from './guardianes/auth.guard';
 import { roleGuard } from './guardianes/role.guard';
 import { RegistrarComponent } from './componentes/registrar/registrar.component';
 import { PerfilComponent } from './componentes/perfil/perfil.component';
+import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -33,6 +34,7 @@ const routes: Routes = [
   {path: 'entradas/nuevo', component:EntradasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'salidas', component:SalidasPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'salidas/pendientes', component:SalidasPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'salidas/envios', component:SalidasEnviospendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'salidas/enviadas', component:SalidasEnviadasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'inventario', component:InventarioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},

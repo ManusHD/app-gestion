@@ -17,6 +17,9 @@ public interface ColaboradoresRepository extends PagingAndSortingRepository<Cola
         Page<Colaborador> findAllByOrderByNombreAsc(Pageable pageable);
         Iterable<Colaborador> findAllByOrderByNombreAsc();
 
+        Page<Colaborador> findAllByActivaOrderByNombreAsc(boolean activa, Pageable pageable);
+        Iterable<Colaborador> findAllByActivaOrderByNombreAsc(boolean activa);
+
         Iterable<Colaborador> findByNombreContainingIgnoreCase(String nombre);
 
         Page<Colaborador> findByNombreContainingIgnoreCaseOrderByNombreAsc(Pageable pageable, String nombre);

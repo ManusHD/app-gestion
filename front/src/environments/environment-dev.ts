@@ -10,3 +10,16 @@ export const environment = {
   apiDirecciones: direccion + '8097/direcciones',
   apiAutenticacion: direccion + '8098/auth',
 };
+
+// const direccion = 'https://api.chanel.delim.es';
+
+// export const environment = {
+//   production: true,
+//   apiAgenciasTransporte: direccion + '/agenciasEnvio',
+//   apiDirecciones: direccion + '/direcciones',
+//   apiEntradas: direccion + '/entradas',
+//   apiSalidas: direccion + '/salidas',
+//   apiUbicaciones: direccion + '/ubicaciones',
+//   apiProductos: direccion + '/productos',
+//   apiAutenticacion: direccion + '/auth',
+// };

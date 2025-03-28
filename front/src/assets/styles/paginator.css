@@ -1,4 +1,8 @@
-
+.btns-acciones {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
 
 .centrar {
     flex-wrap: nowrap;

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Injectable } from '@angular/core';
+import { ChangeDetectorRef, ElementRef, HostListener, Injectable, ViewChild } from '@angular/core';
 import { inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -102,10 +102,11 @@ export class FormularioEntradaSalidaService {
       comprobado: [!this.esNuevo() ? false : true],
     });
   }
-
+  
   onEnterKey(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       event.preventDefault(); // Evita que el formulario se envíe accidentalmente
+  
       const form = event.target as HTMLElement;
       const inputs = Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -113,16 +114,25 @@ export class FormularioEntradaSalidaService {
         )
       );
       const index = inputs.indexOf(form);
-
+  
       if (index >= 0 && index < inputs.length - 1) {
-        inputs[index + 1].focus();
+        const nextElement = inputs[index + 1];
+  
+        // Si el siguiente elemento es el botón de añadir línea, ejecuta la función
+        if (nextElement.classList.contains('add-producto')) {
+          this.agregarProducto();
+        } else {
+          nextElement.focus();
+        }
       }
     }
-
-    if (event.altKey && event.key === '+') {
+  
+    if (event.ctrlKey && event.key === '+') {
+      event.preventDefault();
       this.agregarProducto();
     }
   }
+  
 
   // Getter para acceder fácilmente al FormArray de productos
   get productosControls() {
@@ -132,6 +142,15 @@ export class FormularioEntradaSalidaService {
   // Método para añadir un nuevo producto
   agregarProducto() {
     this.productosControls.push(this.createProductoGroup());
+    
+    setTimeout(() => {
+      const inputsRef = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          'input[formControlName="ref"]'
+        )
+      );
+      inputsRef[inputsRef.length - 1].focus();
+    });
   }
 
   // Método para eliminar un producto
@@ -171,6 +190,17 @@ export class FormularioEntradaSalidaService {
 
       this.productosControls.controls.forEach((producto) => {
         producto.get('ubicacion')!.setValue(ubicacion);
+      });
+    }
+  }
+
+  sincronizarFormasEnvio(posicion: number) {
+    if (posicion == 0) {
+      const primerProducto = this.productosControls.at(0);
+      const envio = primerProducto.get('formaEnvio')!.value;
+
+      this.productosControls.controls.forEach((producto) => {
+        producto.get('formaEnvio')!.setValue(envio);
       });
     }
   }
@@ -811,7 +841,7 @@ export class FormularioEntradaSalidaService {
         ref === 'VISUAL' ||
         ref === 'SIN REFERENCIA';
       const descriptionValida = description && description.trim().length > 0;
-      const unidadesPedidasValidas = unidadesPedidas > 0;
+      const unidadesPedidasValidas = unidadesPedidas >= 0;
       const unidadesValidas =
         unidades > 0 ||
         (this.esSalida() &&
@@ -829,7 +859,7 @@ export class FormularioEntradaSalidaService {
         this.esSalida() &&
         !this.currentPath.startsWith('/salidas/nuevo')
       ) {
-        this.snackBarError('Las UNIDADES PEDIDAS deben ser mayor que 0');
+        this.snackBarError('Las UNIDADES PEDIDAS deben ser mayor o igual que 0');
       } else if (!unidadesValidas) {
         this.snackBarError('Las UNIDADES deben ser mayor que 0');
       }
