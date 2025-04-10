@@ -30,6 +30,8 @@ export class FormularioEntradaSalidaComponent
   @ViewChild('observaciones', { static: false })
   observacionesInput!: ElementRef;
 
+  productosSalidaUbicacion: any[] = [];
+
   ngOnInit() {
     // this.carga.show();
     this.importarES.resetExcel();
@@ -52,6 +54,13 @@ export class FormularioEntradaSalidaComponent
     // pestanaPadre es 'detallePrevisionSalida' cuando se visualizan los detalles de una Salida
     // En el if entro cuando creo una nueva Entrada/Salida o la importo desde Excel
     if (!this.detallesES) {
+      this.salidaUbicacionService.productos$.subscribe((productos) => {
+        if (productos.length > 0) {
+          this.productosSalidaUbicacion = productos;
+          this.actualizarProductos(productos); // función para mapear a tu formulario
+        }
+      });
+
       this.cargarAgenciasTransporte();
       if (
         this.pestanaPadre !== 'nuevaEntrada' &&
@@ -114,6 +123,11 @@ export class FormularioEntradaSalidaComponent
           }
         });
     }
+  }
+
+  ngOnDestroy() {
+    this.entradaSalidaForm.reset();
+    this.salidaUbicacionService.resetProductos();
   }
 
   cargarPerfumerias(perfumeria: string) {
@@ -271,7 +285,7 @@ export class FormularioEntradaSalidaComponent
         ref: row.referencia || row.ref,
         description: row.descripcion || row.description,
         unidades: row.unidades || row.unidadesPedidas,
-        unidadesPedidas: row.unidadesPedidas,
+        unidadesPedidas: row.unidadesPedidas || row.unidades,
         ubicacion: row.ubicacion,
         palets: row.palets || 0,
         bultos: row.bultos || 0,

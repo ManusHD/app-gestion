@@ -23,9 +23,9 @@ public interface ProductoRepository extends PagingAndSortingRepository<Producto,
     Page<Producto> findByReferenciaContainingIgnoreCaseOrderByDescriptionAsc(
             String referencia, Pageable pageable);
 
-    Page<Producto> findByDescriptionContainingIgnoreCase(
+    Page<Producto> findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(
             String description, Pageable pageable);
-    Iterable<Producto> findByDescriptionContainingIgnoreCase(
+    Iterable<Producto> findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(
             String description);
 
     Page<Producto> findByReferenciaContainingIgnoreCase(

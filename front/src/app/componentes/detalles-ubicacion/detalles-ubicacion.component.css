@@ -48,3 +48,31 @@ td {
     padding: 10px;
 }
 
+.ubicacion-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border: 2px solid var(--letter-color);
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--letter-color);
+    font-family: var(--font-primary);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+}
+
+.ubicacion-button:hover {
+    background-color: rgba(61, 126, 255, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.button-text {
+    position: relative;
+    z-index: 1;
+}

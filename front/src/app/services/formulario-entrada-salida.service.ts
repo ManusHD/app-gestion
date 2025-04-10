@@ -25,6 +25,7 @@ import { Producto } from '../models/producto.model';
 import { PantallaCargaService } from './pantalla-carga.service';
 import { DireccionesService } from './direcciones.service';
 import { ImportarExcelService } from './importar-excel.service';
+import { SalidaUbicacionService } from './salida-ubicacion.service';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -64,7 +65,8 @@ export class FormularioEntradaSalidaService {
     protected cdr: ChangeDetectorRef,
     protected direccionesService: DireccionesService,
     protected importarES: ImportarExcelService,
-    protected carga: PantallaCargaService
+    protected carga: PantallaCargaService,
+    protected salidaUbicacionService: SalidaUbicacionService
   ) {}
 
   createForm() {

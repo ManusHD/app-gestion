@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -226,63 +229,112 @@ public class EntradaController {
                         .body("No se han recibido productos en la entrada");
             }
 
-            RestTemplate restTemplate = new RestTemplate();
+            Set<ProductoEntrada> comprobadosTrue = new HashSet<>();
+            Set<ProductoEntrada> comprobadosFalse = new HashSet<>();
 
-            // URL base interna del microservicio de productos
-            String productosServiceUrl = "http://localhost:8091/productos";
-
-            for (ProductoEntrada productoEntrada : entrada.getProductos()) {
-                String ref = productoEntrada.getRef();
-
-                if (productoEntrada.getUnidades() <= 0) {
+            for (ProductoEntrada producto : entrada.getProductos()) {
+                if (producto.getUnidades() <= 0) {
                     throw new IllegalArgumentException("Los productos deben tener al menos 1 unidad");
                 }
 
-                if (productoEntrada.getComprobado() != null && !productoEntrada.getComprobado()) {
-                    throw new IllegalArgumentException("Faltan productos por comprobar");
-                }
-
-                if (!"SIN REFERENCIA".equals(ref) && !"VISUAL".equals(ref)) {
-                    // Construir headers con el token
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.set("Authorization", token);
-                    HttpEntity<String> entity = new HttpEntity<>(headers);
-
-                    // Verificar existencia del producto
-                    ResponseEntity<Producto> response = restTemplate.exchange(
-                            productosServiceUrl + "/referencia/" + ref, // HTTP interno
-                            HttpMethod.GET,
-                            entity,
-                            Producto.class);
-
-                    // Si no existe, crearlo
-                    if (response.getBody() == null) {
-                        Producto nuevoProducto = new Producto();
-                        nuevoProducto.setReferencia(ref);
-                        nuevoProducto.setDescription(productoEntrada.getDescription());
-                        nuevoProducto.setStock(0);
-
-                        HttpEntity<Producto> request = new HttpEntity<>(nuevoProducto, headers);
-                        ResponseEntity<Producto> postResponse = restTemplate.exchange(
-                                productosServiceUrl, // HTTP interno
-                                HttpMethod.POST,
-                                request,
-                                Producto.class);
-
-                        if (!postResponse.getStatusCode().is2xxSuccessful()) {
-                            throw new RuntimeException("Error al crear producto en el microservicio Productos");
-                        }
-                    }
+                if (Boolean.FALSE.equals(producto.getComprobado())) {
+                    comprobadosFalse.add(producto);
+                } else {
+                    comprobadosTrue.add(producto);
                 }
             }
 
-            // LLAMADA AL MICROSERVICIO DE UBICACIONES CON TOKEN
-            crearUbicacion(entrada, token); // Asegúrate de modificar esta función también
+            List<Entrada> entradasParaGuardar = new ArrayList<>();
+            Entrada saved = null;
 
+            // Crear entrada con comprobados = true, solo si hay productos comprobados
+            if (!comprobadosTrue.isEmpty()) {
+                Entrada entradaComprobadosTrue = copiarEntradaSinProductos(entrada);
+                entradaComprobadosTrue.setEstado(true);
+                entradaComprobadosTrue.setProductos(comprobadosTrue);
+
+                verificarYCrearProductos(comprobadosTrue, token);
+                crearUbicacion(entradaComprobadosTrue, token);
+
+                saved = entradasRepository.save(entradaComprobadosTrue);
+                entradasParaGuardar.add(saved); // Guardar la entrada con comprobados=true
+            }
+
+            // Crear entrada con comprobados = false, solo si hay productos no comprobados
+            if (!comprobadosFalse.isEmpty()) {
+                Entrada entradaComprobadosFalse = copiarEntradaSinProductos(entrada);
+                entradaComprobadosFalse.setEstado(false);
+                entradaComprobadosFalse.setProductos(comprobadosFalse);
+
+                saved = entradasRepository.save(entradaComprobadosFalse);
+                entradasParaGuardar.add(saved); // Guardar la entrada con comprobados=false
+            }
+
+            // Si no se guardaron entradas con estado=true, entonces evitar la creación de entradas vacías
+            if (entradasParaGuardar.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pueden crear entradas sin productos");
+            }
+
+            deleteById(entrada.getId());
+            
+            return ResponseEntity.ok(entradasParaGuardar);
+        } else {
+            // Si estado != true, comportamiento original
+            Entrada savedEntrada = entradasRepository.save(entrada);
+            return ResponseEntity.ok(savedEntrada);
         }
+    }
 
-        Entrada savedEntrada = entradasRepository.save(entrada);
-        return ResponseEntity.ok(savedEntrada);
+    // Copia todos los datos de una entrada, excepto productos e id
+    private Entrada copiarEntradaSinProductos(Entrada original) {
+        Entrada copia = new Entrada();
+        copia.setOrigen(original.getOrigen());
+        copia.setFechaRecepcion(original.getFechaRecepcion());
+        copia.setPerfumeria(original.getPerfumeria());
+        copia.setPdv(original.getPdv());
+        copia.setColaborador(original.getColaborador());
+        copia.setDcs(original.getDcs());
+        return copia;
+    }
+
+    // Reutiliza la lógica de verificación y creación de productos
+    private void verificarYCrearProductos(Set<ProductoEntrada> productos, String token) {
+        RestTemplate restTemplate = new RestTemplate();
+        String productosServiceUrl = "http://localhost:8091/productos";
+
+        for (ProductoEntrada productoEntrada : productos) {
+            String ref = productoEntrada.getRef();
+
+            if (!"SIN REFERENCIA".equals(ref) && !"VISUAL".equals(ref)) {
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", token);
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                ResponseEntity<Producto> response = restTemplate.exchange(
+                        productosServiceUrl + "/referencia/" + ref,
+                        HttpMethod.GET,
+                        entity,
+                        Producto.class);
+
+                if (response.getBody() == null) {
+                    Producto nuevoProducto = new Producto();
+                    nuevoProducto.setReferencia(ref);
+                    nuevoProducto.setDescription(productoEntrada.getDescription());
+                    nuevoProducto.setStock(0);
+
+                    HttpEntity<Producto> request = new HttpEntity<>(nuevoProducto, headers);
+                    ResponseEntity<Producto> postResponse = restTemplate.exchange(
+                            productosServiceUrl,
+                            HttpMethod.POST,
+                            request,
+                            Producto.class);
+
+                    if (!postResponse.getStatusCode().is2xxSuccessful()) {
+                        throw new RuntimeException("Error al crear producto en el microservicio Productos");
+                    }
+                }
+            }
+        }
     }
 
     /**

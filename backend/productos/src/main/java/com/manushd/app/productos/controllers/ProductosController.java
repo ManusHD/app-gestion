@@ -83,14 +83,14 @@ public class ProductosController {
             @PathVariable String description,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return productosRepository.findByDescriptionContainingIgnoreCase(
+        return productosRepository.findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(
                 description, PageRequest.of(page, size));
     }
 
     @GetMapping("/description/{description}")
     public Iterable<Producto> getProductosByDescriptionContaining(
             @PathVariable String description) {
-        return productosRepository.findByDescriptionContainingIgnoreCase(
+        return productosRepository.findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(
                 description);
     }
 

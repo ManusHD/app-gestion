@@ -14,8 +14,14 @@
               placeholder="Nombre"
               (keyup)="existeColaborador(nuevaColaborador.nombre!)"/>
             <input
+              [(ngModel)]="nuevaColaborador.dni"
+              placeholder="DNI"/>
+            <input
               [(ngModel)]="nuevaColaborador.telefono"
               placeholder="Teléfono" />
+            <input
+              [(ngModel)]="nuevaColaborador.telefono2"
+              placeholder="Teléfono 2" />
             <input
               [(ngModel)]="nuevaColaborador.direccion"
               placeholder="Dirección" />

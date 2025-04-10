@@ -26,5 +26,8 @@
                 </tbody>
             </table>
         </div>
+        <button *ngIf="ubicacion.productos!.length > 0" class="ubicacion-button" [appConfirm]="'¿QUIERES CREAR UNA PREVISIÓN DE SALIDA CON ESTA UBICACION?'" (confirmed)="sacarUbicacion()">
+            <span class="button-text">Sacar ubicación</span>
+        </button>
     </div>
 </div>

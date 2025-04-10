@@ -131,6 +131,7 @@ export class ColaboradoresComponent implements OnInit {
       } else {
         this.carga.show();
         this.nuevaColaborador.nombre = this.nuevaColaborador.nombre.trim();
+        this.nuevaColaborador.activa = true;
         this.direccionesService.createColaborador(this.nuevaColaborador).subscribe(
           (data: Colaborador) => {
             this.colaboradores.push(data);

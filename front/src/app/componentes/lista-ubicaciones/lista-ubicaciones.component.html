@@ -89,7 +89,7 @@
             (page)="cambiarPagina($event)">
         </mat-paginator>
 
-        <app-exportar-excel (click)="obtenerDatosAExportar()" *ngIf="currentPath == '/ubicaciones' && ubicaciones.length > 0" [data$]="ubicacionesParaExportar$" [nombreConjuntoExportado]="'UBICACIONES'" [fileName]="'UBICACIONES-EXPORTADAS'" ></app-exportar-excel>
+        <app-exportar-excel (click)="obtenerDatosAExportar()" [data$]="ubicacionesParaExportar$" [nombreConjuntoExportado]="'UBICACIONES'" [fileName]="'UBICACIONES-EXPORTADAS'" ></app-exportar-excel>
     </div>
     
 </div>

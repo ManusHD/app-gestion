@@ -46,7 +46,7 @@
                             </span>
                         </button>
                         <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR LA ENTRADA?'" (confirmed)="setRecibida(entrada.id!)"
-                                [disabled]="!entrada.rellena || !btnSubmitActivado"
+                                [disabled]="!btnSubmitActivado"
                                 class="btn-grabar">
                                 GRABAR
                             </button>
