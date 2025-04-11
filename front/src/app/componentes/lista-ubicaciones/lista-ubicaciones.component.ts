@@ -138,6 +138,7 @@ export class ListaUbicacionesComponent implements OnInit {
       this.ubicacionService.getUbicacionesByDescripcionProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
           this.ubicaciones = data.content;
+          console.log(this.ubicaciones);
           setTimeout(() => {
             this.totalElementos = data.totalElements;
           });

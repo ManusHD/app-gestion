@@ -2,7 +2,9 @@ package com.manushd.app.ubicaciones.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import org.springframework.data.rest.core.annotation.RestResource;
@@ -19,11 +21,13 @@ public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicac
 
         Page<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre, Pageable pageable);
         Iterable<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
-
+        
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.ref) LIKE LOWER(CONCAT('%', :ref, '%')) ORDER BY u.nombre")
         Page<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref, Pageable pageable);
         Iterable<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref);
 
-        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(String description, Pageable pageable);
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')) ORDER BY u.nombre")
+        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(@Param("description") String description, Pageable pageable);
         Iterable<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(String description);
 
         Optional<Ubicacion> findById(Long id);

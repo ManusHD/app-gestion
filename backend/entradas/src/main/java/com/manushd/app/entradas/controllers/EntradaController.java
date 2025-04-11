@@ -229,6 +229,11 @@ public class EntradaController {
                         .body("No se han recibido productos en la entrada");
             }
 
+            if(entrada.getFechaRecepcion() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("La entrada no tiene fecha de recepción");
+            }
+
             Set<ProductoEntrada> comprobadosTrue = new HashSet<>();
             Set<ProductoEntrada> comprobadosFalse = new HashSet<>();
 
@@ -240,6 +245,15 @@ public class EntradaController {
                 if (Boolean.FALSE.equals(producto.getComprobado())) {
                     comprobadosFalse.add(producto);
                 } else {
+                    if(producto.getUnidades() <= 0) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener al menos 1 unidad");
+                    }
+                    if(producto.getDescription() == null || producto.getDescription().isEmpty() || "".equals(producto.getDescription())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener una descripción asignada");
+                    }
+                    if(producto.getUbicacion() == null || producto.getUbicacion().isEmpty() || "".equals(producto.getUbicacion())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener una ubicación asignada");
+                    }
                     comprobadosTrue.add(producto);
                 }
             }
@@ -258,6 +272,8 @@ public class EntradaController {
 
                 saved = entradasRepository.save(entradaComprobadosTrue);
                 entradasParaGuardar.add(saved); // Guardar la entrada con comprobados=true
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Todos los productos están sin checkear");
             }
 
             // Crear entrada con comprobados = false, solo si hay productos no comprobados
@@ -270,12 +286,14 @@ public class EntradaController {
                 entradasParaGuardar.add(saved); // Guardar la entrada con comprobados=false
             }
 
+            if (entradasRepository.findById(entrada.getId()) != null) {
+                deleteById(entrada.getId());
+            }
+
             // Si no se guardaron entradas con estado=true, entonces evitar la creación de entradas vacías
             if (entradasParaGuardar.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pueden crear entradas sin productos");
             }
-
-            deleteById(entrada.getId());
             
             return ResponseEntity.ok(entradasParaGuardar);
         } else {
@@ -369,8 +387,11 @@ public class EntradaController {
             productoUbicacion.setRef(productoEntrada.getRef());
             productoUbicacion.setUnidades(productoEntrada.getUnidades());
             productoUbicacion.setDescription(productoEntrada.getDescription());
+            System.out.println("Producto agregado: " + productoUbicacion);
             ubicacion.getProductos().add(productoUbicacion);
         }
+
+        System.out.println("Ubicaciones a enviar: " + listaUbicaciones);
 
         String url = "http://localhost:8095/ubicaciones/sumar";
 
