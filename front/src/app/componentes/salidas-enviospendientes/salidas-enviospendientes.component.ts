@@ -33,12 +33,13 @@ export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaSer
 
   cargarSalidas() {
     this.carga.show();
-    this.salidaService.getSalidasByEstadoPaginado(false, this.pageIndex, this.pageSize).subscribe((data) => {
+    this.salidaService.getSalidasByEstadoRellenaPaginado(false, true, this.pageIndex, this.pageSize).subscribe((data) => {
       this.salidas = data.content;
       setTimeout(() => {
         this.totalElementos = data.totalElements;
       });
       this.dataSource.data = this.salidas;
+      console.log(data)
       this.cdr.detectChanges();
       setTimeout(() => {
         this.carga.hide();

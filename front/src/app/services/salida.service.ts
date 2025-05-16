@@ -22,6 +22,10 @@ export class SalidaServices {
   getSalidasByEstadoPaginado(estado: boolean, page: number, size: number): Observable<any> {
     return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/paginado?page=${page}&size=${size}`);
   }
+
+  getSalidasByEstadoRellenaPaginado(estado: boolean, rellena: boolean, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/rellena/${rellena}/paginado?page=${page}&size=${size}`);
+  }
   
   getFiltradasSalidasPaginadas(fechaInicio: string, fechaFin: string, tipoBusqueda: string, texto: string, page: number, size: number): Observable<any> {
     let params = new HttpParams()
@@ -58,6 +62,7 @@ export class SalidaServices {
   }
 
   updateSalida(salida: Salida): Observable<Salida> {
+    console.log("Salida enviada: " + salida);
     return this.httpClient.put<Salida>(`${this.apiUrl}/${salida.id}`, salida);
   }
 

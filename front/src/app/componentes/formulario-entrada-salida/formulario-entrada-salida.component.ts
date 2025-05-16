@@ -411,10 +411,11 @@ export class FormularioEntradaSalidaComponent
         telefono: this.entradaSalidaForm.get('telefono')!.value,
         estado: !this.pendiente,
         productos: productosSalida,
-        rellena: false,
         fechaEnvio: this.entradaSalidaForm.get('fechaRecepcionEnvio')!.value,
+        rellena: false,
       };
 
+      salidaActualizada.rellena = this.todosLosCamposRellenos(salidaActualizada);
       console.log(salidaActualizada);
 
       this.salidaService.updateSalida(salidaActualizada).subscribe({
@@ -426,6 +427,22 @@ export class FormularioEntradaSalidaComponent
         error: (err) => console.error('Error al actualizar la salida:', err),
       });
     }
+  }
+
+  todosLosCamposRellenos(salida: Salida): boolean {
+    return salida.productos!.every(
+      (producto) =>
+        producto.description &&
+        producto.unidades &&
+        producto.unidades > 0 &&
+        producto.ubicacion &&
+        producto.ubicacion != '' &&
+        producto.palets! >= 0 &&
+        producto.bultos! >= 0 &&
+        producto.formaEnvio &&
+        producto.formaEnvio.trim() !== '' &&
+        producto.comprobado
+    );
   }
 
   cargarAgenciasTransporte() {

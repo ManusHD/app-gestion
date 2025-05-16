@@ -18,10 +18,16 @@ import com.manushd.app.salidas.models.Salida;
 public interface SalidaRepository extends PagingAndSortingRepository<Salida, Long> {
 
         Page<Salida> findAllByEstado(boolean estado, Pageable pageable);
-        Iterable<Salida> findAllByEstado(boolean estado);
+        
+        @Query("SELECT s FROM Salida s LEFT JOIN FETCH s.productos WHERE s.estado = false")
+        List<Salida> findAllByEstado(@Param("estado") Boolean estado);
+
 
         Page<Salida> findAllByEstadoOrderByFechaEnvioDesc(boolean estado, Pageable pageable);
         Iterable<Salida> findAllByEstadoOrderByFechaEnvioDesc(boolean estado);
+
+        Page<Salida> findAllByEstadoAndRellenaOrderByDireccionAsc(boolean estado, Boolean rellena, Pageable pageable);
+        Iterable<Salida> findAllByEstadoAndRellenaOrderByDireccionAsc(boolean estado, Boolean rellena);
 
         Optional<Salida> findById(Long id);
 

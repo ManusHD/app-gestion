@@ -36,6 +36,7 @@ public class Salida {
     private String cp; 
     private String telefono; 
     private Boolean estado; // false = pendiente, true = recibida
+    private Boolean rellena; // false = no rellena, true = rellena
     private Date fechaEnvio;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

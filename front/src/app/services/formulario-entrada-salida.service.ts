@@ -439,7 +439,8 @@ export class FormularioEntradaSalidaService {
           descriptionControl.value
         );
       }
-    } else if (/^(?:\d|R)/.test(refControl!.value)) {
+    } else {
+      // else if (/^(?:\d|R)/.test(refControl!.value))
       refControl!.valueChanges
         .pipe(
           debounceTime(300),
@@ -509,7 +510,7 @@ export class FormularioEntradaSalidaService {
     return this.productosNuevos.has(index);
   }
 
-  // Se llama al insertar el Excel
+  // Se llama al IMPORTAR el Excel
   indice = 0;
   buscarDescripcionProducto(formGroup: FormGroup, ref: String) {
     if (ref !== 'VISUAL' && ref !== 'SIN REFERENCIA') {
@@ -678,15 +679,28 @@ export class FormularioEntradaSalidaService {
     return false;
   }
 
-  refValida(i: number) {
+  refValidaIndex(i: number) {
     const ref = this.productosControls.at(i).get('ref')!.value;
+    return this.refValida(ref);
+  }
+
+  // Referencia estándar de Chanel
+  refValida(ref: string) {
     const refValida =
       /^[0-9]{7}$/.test(ref) ||
       /^R[0-9]{7}$/.test(ref) ||
-      /^[0-9]{10}$/.test(ref) ||
+      /^[A-Za-z0-9]{10}$/.test(ref) ||
       ref === 'VISUAL' ||
       ref === 'SIN REFERENCIA';
     return refValida;
+  }
+
+  // Referencia local creada por Francia, no viene de arriba de Chanel
+  refLocal(ref: string) {
+    if(/^[a-zA-Z]$/.test(ref.charAt(0))) {
+      return true;
+    }
+    return false;
   }
 
   descriptionValida(i: number) {
@@ -836,12 +850,7 @@ export class FormularioEntradaSalidaService {
       const unidades = producto.get('unidades')?.value;
       const unidadesPedidas = producto.get('unidadesPedidas')?.value;
 
-      const refValida =
-        /^[0-9]{7}$/.test(ref) ||
-        /^R[0-9]{7}$/.test(ref) ||
-        /^[0-9]{10}$/.test(ref) ||
-        ref === 'VISUAL' ||
-        ref === 'SIN REFERENCIA';
+      const refValida = this.refValida(ref);
       const descriptionValida = description && description.trim().length > 0;
       const unidadesPedidasValidas = unidadesPedidas >= 0;
       const unidadesValidas =
@@ -852,7 +861,7 @@ export class FormularioEntradaSalidaService {
 
       if (!refValida) {
         this.snackBarError(
-          'Las Referencias deben tener 7 dígitos, R seguida de 7 dígitos o 10 dígitos'
+          'Las Referencias deben tener 7 dígitos, R seguida de 7 dígitos o 10 caracteres'
         );
       } else if (!descriptionValida) {
         this.snackBarError('Las descripciones no pueden estar en blanco');

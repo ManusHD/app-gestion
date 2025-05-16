@@ -133,7 +133,7 @@
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
                             <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" maxlength="14"
-                                [ngClass]="{'campo-vacio': !refValida(i)}" />
+                                [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
                         </td>
                         <td>
                             <div class="centrar">

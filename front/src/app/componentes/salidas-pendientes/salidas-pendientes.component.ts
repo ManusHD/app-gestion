@@ -34,12 +34,14 @@ export class SalidasPendientesComponent
 
   cargarSalidas() {
     this.carga.show();
-    this.salidaService.getSalidasByEstadoPaginado(false, this.pageIndex, this.pageSize).subscribe((data) => {
-      this.salidas = data.content.filter((salida: Salida) => salida.rellena !== false); // Filtra las salidas con rellena = false
+    this.salidaService.getSalidasByEstadoRellenaPaginado(false, false, this.pageIndex, this.pageSize).subscribe((data) => {
+      this.salidas = data.content; // Filtra las salidas con rellena = false
       setTimeout(() => {
-        this.totalElementos = this.salidas.length; // Ajusta el total de elementos visibles
+        this.totalElementos = data.totalElements; // Ajusta el total de elementos visibles
       });
       this.dataSource.data = this.salidas;
+      console.log(this.dataSource.data);
+      console.log(data)
       this.cdr.detectChanges();
       setTimeout(() => {
         this.carga.hide();

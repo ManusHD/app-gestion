@@ -80,6 +80,17 @@ public class SalidaController {
                 estado, PageRequest.of(page, size));
     }
 
+    @GetMapping("/estado/{estado}/rellena/{rellena}/paginado")
+    public Page<Salida> getSalidasByEstadoRellena(
+            @PathVariable boolean estado,
+            @PathVariable boolean rellena,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return salidasRepository.findAllByEstadoAndRellenaOrderByDireccionAsc(
+                estado, rellena, PageRequest.of(page, size));
+    }
+
     @GetMapping("/filtrar/paginado")
     public ResponseEntity<Page<Salida>> filtrarSalidasPaginado(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
@@ -217,6 +228,25 @@ public class SalidaController {
 
         Salida s = salidasRepository.save(salida);
         return ResponseEntity.ok(s);
+    }
+
+    private boolean todosLosCamposRellenos(Salida salida) {
+        if (salida.getProductos() == null || salida.getProductos().isEmpty()) return false;
+
+        return salida.getProductos().stream().allMatch(producto ->
+            producto.getDescription() != null &&
+            producto.getUnidades() != null &&
+            producto.getUnidades() > 0 &&
+            producto.getUbicacion() != null &&
+            !producto.getUbicacion().isEmpty() &&
+            producto.getPalets() != null &&
+            producto.getPalets() >= 0 &&
+            producto.getBultos() != null &&
+            producto.getBultos() >= 0 &&
+            producto.getFormaEnvio() != null &&
+            !producto.getFormaEnvio().trim().isEmpty() &&
+            Boolean.TRUE.equals(producto.getComprobado())
+        );
     }
 
     /**
