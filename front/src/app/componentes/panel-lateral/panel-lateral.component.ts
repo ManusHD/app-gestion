@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth-service.service';
@@ -22,6 +22,8 @@ export class PanelLateralComponent implements OnInit, OnDestroy {
     isAdmin: false,
     isOperador: false
   };
+  isMobile = false;
+  sidebarVisible = true;
   
   private subscription: Subscription = new Subscription();
 
@@ -32,6 +34,7 @@ export class PanelLateralComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.checkScreenSize();
     // Obtener el username cuando cambia el token
     this.subscription.add(
       this.auth.getTokenObservable().subscribe(token => {
@@ -73,6 +76,28 @@ export class PanelLateralComponent implements OnInit, OnDestroy {
       event.preventDefault(); // Previene la navegación al routerLink genérico (/salidas)
       this.router.navigate(['/salidas/pendientes']);
     }
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkScreenSize();
+  }
+
+  checkScreenSize() {
+    this.isMobile = window.innerWidth <= 768;
+    if (this.isMobile) {
+      this.sidebarVisible = false;
+    } else {
+      this.sidebarVisible = true;
+    }
+  }
+
+  toggleSidebar() {
+    this.sidebarVisible = !this.sidebarVisible;
+  }
+
+  onCheckboxChange(event: any) {
+    this.sidebarVisible = event.target.checked;
   }
 }
 

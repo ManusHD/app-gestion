@@ -10,29 +10,31 @@ export interface UserRoles {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RoleService {
   private rolesSubject = new BehaviorSubject<UserRoles>({
     isLoggedIn: false,
     isAdmin: false,
-    isOperador: false
+    isOperador: false,
   });
 
   constructor(private authService: AuthService) {
     // Suscribirse al token observable del AuthService
-    this.authService.getTokenObservable().subscribe(token => {
-      if (token) {
+    this.authService.getTokenObservable().subscribe((token) => {
+      const isValid = token && this.authService.isTokenValid(token);
+
+      if (isValid) {
         this.rolesSubject.next({
           isLoggedIn: true,
           isAdmin: this.authService.hasRole('ROLE_ADMIN'),
-          isOperador: this.authService.hasRole('ROLE_OPERADOR')
+          isOperador: this.authService.hasRole('ROLE_OPERADOR'),
         });
       } else {
         this.rolesSubject.next({
           isLoggedIn: false,
           isAdmin: false,
-          isOperador: false
+          isOperador: false,
         });
       }
     });
@@ -46,8 +48,8 @@ export class RoleService {
   // Obtener Observable para un rol específico
   hasRole(role: string): Observable<boolean> {
     return this.getRoles().pipe(
-      map(roles => {
-        switch(role) {
+      map((roles) => {
+        switch (role) {
           case 'ROLE_ADMIN':
             return roles.isAdmin;
           case 'ROLE_OPERADOR':
@@ -58,16 +60,16 @@ export class RoleService {
       })
     );
   }
-
+  
   // Obtener Observable para saber si está logueado
   isLoggedIn(): Observable<boolean> {
-    return this.getRoles().pipe(map(roles => roles.isLoggedIn));
+    return this.getRoles().pipe(map((roles) => roles.isLoggedIn));
   }
 
   // Método sincrónico para verificar roles en caso de necesidad inmediata
   hasRoleSync(role: string): boolean {
     const currentRoles = this.rolesSubject.value;
-    switch(role) {
+    switch (role) {
       case 'ROLE_ADMIN':
         return currentRoles.isAdmin;
       case 'ROLE_OPERADOR':

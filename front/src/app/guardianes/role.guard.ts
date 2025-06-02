@@ -15,8 +15,8 @@ export const roleGuard: CanActivateFn = (
 
   return authService.getTokenObservable().pipe(
     take(1),
-    map(token => {
-      if (!token) {
+    map((token) => {
+      if (!token || !authService.isTokenValid(token)) {
         // Si no hay token, redirige a login.
         return router.parseUrl('/login');
       }
@@ -25,7 +25,7 @@ export const roleGuard: CanActivateFn = (
       const userRoles = decoded.roles as string[];
       
       // Comprueba si el usuario tiene al menos uno de los roles requeridos.
-      if (requiredRoles && requiredRoles.some(role => userRoles.includes(role))) {
+      if (requiredRoles && requiredRoles.some((role) => userRoles.includes(role))) {
         return true;
       }
       // Si no cumple, redirige a una página de acceso denegado o a otra ruta.

@@ -1,4 +1,17 @@
-<div id="panel-lateral">
+<!-- Botón hamburguesa para móvil -->
+<div *ngIf="isMobile" class="hamburger-container">
+  <input type="checkbox" id="checkbox" [checked]="sidebarVisible" (change)="onCheckboxChange($event)">
+  <label for="checkbox" class="toggle">
+      <div class="bars" id="bar1"></div>
+      <div class="bars" id="bar2"></div>
+      <div class="bars" id="bar3"></div>
+  </label>
+</div>
+
+<!-- Overlay para cerrar sidebar en móvil -->
+<div *ngIf="isMobile && sidebarVisible" class="sidebar-overlay" (click)="toggleSidebar()"></div>
+
+<div id="panel-lateral" [class.sidebar-hidden]="!sidebarVisible" [class.sidebar-mobile]="isMobile">
     <div class="principal">
         <a class="logo" routerLink="">
             <img src="../../../assets/imagenes/delim.jpg" />
@@ -15,7 +28,7 @@
                       routerLink="/entradas" 
                       routerLinkActive="active" 
                       [routerLinkActiveOptions]="{ exact: false }" 
-                      (click)="onEntradasClick($event)">
+                      (click)="onEntradasClick($event); isMobile && toggleSidebar()">
                       ENTRADAS
                     </a>
                   </li>
@@ -25,31 +38,25 @@
                       routerLink="/salidas" 
                       routerLinkActive="active" 
                       [routerLinkActiveOptions]="{ exact: false }" 
-                      (click)="onSalidasClick($event)">
+                      (click)="onSalidasClick($event); isMobile && toggleSidebar()">
                       SALIDAS
                     </a>
                   </li>
-                <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario">INVENTARIO</a></li>
+                <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario" (click)="isMobile && toggleSidebar()">INVENTARIO</a></li>
                 <details *appHasRole="'ROLE_ADMIN'">
                     <summary
                         [ngClass]="{'summary-active': isActive('/ubicaciones') || isActive('/agencias') || isActive('/perfumerias') || isActive('/pdv') || isActive('/colaboradores') || isActive('/otrasDirecciones')}">
                         <span class="summary-content">GESTORES</span>
                         <span class="summary-marker">►</span>
                     </summary>
-                    <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones">UBICACIONES
-                            ALMACÉN</a></li>
-                    <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias">AGENCIAS DE
-                            TRANSPORTE</a>
-                    </li>
-                    <li id="perfumerias"><a routerLinkActive="active" class="" routerLink="perfumerias">PERFUMERÍAS</a>
-                    </li>
-                    <li id="pdv"><a routerLinkActive="active" class="" routerLink="pdv">PDV</a></li>
-                    <li id="colaboradores"><a routerLinkActive="active" class=""
-                            routerLink="colaboradores">COLABORADORES</a></li>
-                    <li id="otrasDirecciones"><a routerLinkActive="active" class="" routerLink="otrasDirecciones">OTRAS
-                            DIRECCIONES</a></li>
-                    <li id="productos"><a routerLinkActive="active" class="" routerLink="productos">PRODUCTOS</a></li>
-                    <li id="reubicar-palets"><a routerLinkActive="active" class="" routerLink="reubicarPalets">AJUSTE DE PALETS</a></li>
+                    <li id="ubicaciones"><a routerLinkActive="active" class="" routerLink="ubicaciones" (click)="isMobile && toggleSidebar()">UBICACIONES ALMACÉN</a></li>
+                    <li id="agencias"><a routerLinkActive="active" class="" routerLink="agencias" (click)="isMobile && toggleSidebar()">AGENCIAS DE TRANSPORTE</a></li>
+                    <li id="perfumerias"><a routerLinkActive="active" class="" routerLink="perfumerias" (click)="isMobile && toggleSidebar()">PERFUMERÍAS</a></li>
+                    <li id="pdv"><a routerLinkActive="active" class="" routerLink="pdv" (click)="isMobile && toggleSidebar()">PDV</a></li>
+                    <li id="colaboradores"><a routerLinkActive="active" class="" routerLink="colaboradores" (click)="isMobile && toggleSidebar()">COLABORADORES</a></li>
+                    <li id="otrasDirecciones"><a routerLinkActive="active" class="" routerLink="otrasDirecciones" (click)="isMobile && toggleSidebar()">OTRAS DIRECCIONES</a></li>
+                    <li id="productos"><a routerLinkActive="active" class="" routerLink="productos" (click)="isMobile && toggleSidebar()">PRODUCTOS</a></li>
+                    <li id="reubicar-palets"><a routerLinkActive="active" class="" routerLink="reubicarPalets" (click)="isMobile && toggleSidebar()">AJUSTE DE PALETS</a></li>
                 </details>
             </ul>
         </ng-container>
@@ -90,5 +97,4 @@
             </div>
         </div>
     </ng-template>
-
 </div>

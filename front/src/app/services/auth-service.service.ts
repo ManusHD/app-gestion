@@ -17,14 +17,16 @@ interface JwtPayload {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl =  environment.apiAutenticacion;
-  
+  private apiUrl = environment.apiAutenticacion;
+
   // BehaviorSubject para almacenar el token (inicialmente desde localStorage)
-  private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem('token'));
-  
+  private tokenSubject = new BehaviorSubject<string | null>(
+    localStorage.getItem('token')
+  );
+
   constructor(private http: HttpClient, private router: Router) {}
 
   register(user: User): Observable<any> {
@@ -32,18 +34,20 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { username, password }).pipe(
-      tap(response => {
-        localStorage.setItem('token', response.token);
-        this.tokenSubject.next(response.token); // Notificar a los suscriptores
-      })
-    );
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/login`, { username, password })
+      .pipe(
+        tap((response) => {
+          localStorage.setItem('token', response.token);
+          this.tokenSubject.next(response.token); // Notificar a los suscriptores
+        })
+      );
   }
 
   logout(): void {
     localStorage.removeItem('token');
     this.tokenSubject.next(null); // Notificar que el usuario cerró sesión
-    this.router.navigate(["/login"]);
+    this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
@@ -65,14 +69,25 @@ export class AuthService {
     return this.tokenSubject.asObservable();
   }
 
+  isTokenValid(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiry = payload.exp;
+      const now = Math.floor(Date.now() / 1000);
+      return expiry > now;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Función para verificar si el usuario tiene un rol específico
   hasRole(role: string): boolean {
-      const token = localStorage.getItem('token');
-      if (token) {
-          const decoded = jwtDecode<JwtPayload>(token);
-          return decoded.roles.includes(role);
-      }
-      return false;
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decoded = jwtDecode<JwtPayload>(token);
+      return decoded.roles.includes(role);
+    }
+    return false;
   }
 
   getUsers(): Observable<any[]> {

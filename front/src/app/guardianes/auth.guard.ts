@@ -1,5 +1,11 @@
 import { inject } from '@angular/core';
-import { Router, UrlTree, ActivatedRouteSnapshot, RouterStateSnapshot, CanActivateFn } from '@angular/router';
+import {
+  Router,
+  UrlTree,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+  CanActivateFn,
+} from '@angular/router';
 import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth-service.service';
@@ -12,14 +18,14 @@ export const authGuard: CanActivateFn = (
   const router = inject(Router);
   
   return authService.getTokenObservable().pipe(
-    take(1), // Tomamos el valor actual del token
+    take(1),
     map(token => {
-      if (token) {
+      if (token && authService.isTokenValid(token)) {
         return true;
       } else {
-        // Redirigir a la ruta de login si no hay token
         return router.parseUrl('/login');
       }
     })
   );
 };
+
