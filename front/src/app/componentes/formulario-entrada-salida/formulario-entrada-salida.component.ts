@@ -26,6 +26,7 @@ export class FormularioEntradaSalidaComponent
   enDetalles: boolean = false;
   agenciasTransporte: AgenciaTransporte[] = [];
   activeRowIndex: number | null = null;
+  activeCampoUnico: string | null = null;
 
   @ViewChild('observaciones', { static: false })
   observacionesInput!: ElementRef;
@@ -45,6 +46,8 @@ export class FormularioEntradaSalidaComponent
     }
 
     this.cargarColaboradores();
+    this.cargarPerfumerias('a');
+    this.cargarOtrasDirecciones('A');
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -82,7 +85,7 @@ export class FormularioEntradaSalidaComponent
       .subscribe((value) => {
         if (value == '') {
           this.limpiarCamposDireccion();
-          this.otrasDirecciones = [];
+          // this.otrasDirecciones = [];
           this.otraDireccionSeleccionada = null;
         } else {
           this.cargarOtrasDirecciones(value);
@@ -97,7 +100,7 @@ export class FormularioEntradaSalidaComponent
       .subscribe((value) => {
         if (value == '' || value == null) {
           this.limpiarCamposDireccion();
-          this.perfumerias = [];
+          // this.perfumerias = [];
           this.perfumeriaSeleccionada = null;
         } else {
           this.cargarPerfumerias(value);
@@ -625,4 +628,15 @@ export class FormularioEntradaSalidaComponent
       this.activeRowIndex = null;
     }, 200);
   }
+  
+  setActiveCampoUnico(campo: string): void {
+    this.activeCampoUnico = campo;
+  }
+  
+  clearActiveCampoUnico(): void {
+    setTimeout(() => {
+      this.activeCampoUnico = null;
+    }, 200);
+  }
+
 }

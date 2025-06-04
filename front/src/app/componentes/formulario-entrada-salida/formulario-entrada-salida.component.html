@@ -1,14 +1,16 @@
 <div *ngIf="mostrarFormulario" class="flotar-medio" style="height: 1000px;">
     <div class="cuerpo-formulario">
-        <form [formGroup]="entradaSalidaForm" (keydown)="onEnterKey($event)"
-            #formularioNuevaEntradaSalida="ngForm">
+        <form [formGroup]="entradaSalidaForm" (keydown)="onEnterKey($event)" #formularioNuevaEntradaSalida="ngForm">
 
             <div class="formulario-no-repetido">
                 <div class="fechas">
                     <div class="campo-form" *ngIf="!pestanaPadre.startsWith('prevision')">
                         <label *ngIf="currentPath.startsWith('/entradas')">FECHA RECEPCIÓN</label>
-                        <label *ngIf="currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')">FECHA ENVÍO</label>
-                        <input *ngIf="(currentPath.startsWith('/entradas') || (currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')))" formControlName="fechaRecepcionEnvio" type="date"
+                        <label *ngIf="currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')">FECHA
+                            ENVÍO</label>
+                        <input
+                            *ngIf="(currentPath.startsWith('/entradas') || (currentPath.startsWith('/salidas') && !currentPath.includes('/pendientes')))"
+                            formControlName="fechaRecepcionEnvio" type="date"
                             [ngClass]="{'campo-vacio': campoSimpleVacio('fechaRecepcionEnvio')}" />
 
                     </div>
@@ -17,10 +19,11 @@
                 <div class="direcciones">
                     <div class="campo-form">
                         <label>PERFUMERÍA</label>
+                        <input (focus)="setActiveCampoUnico('perfumeria')" (blur)="clearActiveCampoUnico()" formControlName="perfumeria" type="text"
+                            [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
                         <div class="autocomplete-container">
-                            <input formControlName="perfumeria" type="text"
-                                [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
-                            <div class="autocomplete-dropdown" *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada && activeCampoUnico == 'perfumeria'">
                                 <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias"
                                     (click)="selectPerfumeria(perfumeria)">
                                     {{ perfumeria.nombre }}
@@ -53,9 +56,10 @@
                         <label *ngIf="currentPath.startsWith('/salidas')">OTROS DESTINOS</label>
                         <label *ngIf="currentPath.startsWith('/entradas')">OTROS ORIGENES</label>
                         <div class="autocomplete-container">
-                            <input formControlName="otroOrigenDestino" type="text"
+                            <input (focus)="setActiveCampoUnico('otroOrigenDestino')" (blur)="clearActiveCampoUnico()" formControlName="otroOrigenDestino" type="text"
                                 [ngClass]="{'campo-vacio': !otroOrigenDestinoValido() && !previsionEsValidaCampoSimple()}" />
-                            <div class="autocomplete-dropdown" *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada && activeCampoUnico == 'otroOrigenDestino'">
                                 <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones"
                                     (click)="selectOtraDireccion(direccion)">
                                     {{ direccion.nombre }}
@@ -101,7 +105,8 @@
                     <div class="campo-form " *ngIf="currentPath.startsWith('/entradas')">
                         <label>DCS</label>
                         <input formControlName="dcs"
-                            [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="text" maxlength="10" />
+                            [ngClass]="{'campo-vacio': !dcsValido() && !previsionEsValidaCampoSimple()}" type="text"
+                            maxlength="10" />
                     </div>
                 </div>
 
@@ -132,42 +137,42 @@
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
                         [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
                         <td>
-                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text" maxlength="14"
-                                [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
+                            <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
+                                maxlength="14" [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
                         </td>
                         <td>
                             <div class="centrar">
 
                                 <textarea formControlName="description" (keyup)="buscarProductoEspecial(i)"
-                                (focus)="setActiveRow(i)" (blur)="clearActiveRow()" type="text"
-                                [ngClass]="{'campo-vacio': !descriptionValida(i)}"
-                                [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)" 
-                                class=".description"></textarea>
+                                    (focus)="setActiveRow(i)" (blur)="clearActiveRow()" type="text"
+                                    [ngClass]="{'campo-vacio': !descriptionValida(i)}"
+                                    [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)"
+                                    class="description"></textarea>
 
                                 <!-- Dropdown para VISUAL -->
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
+                                <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
                             && visuales.length > 0 
                             && activeRowIndex === i" class="autocomplete-container">
-                            <div class="autocomplete-dropdown">
-                                <div class="autocomplete-item" *ngFor="let visual of visuales"
-                                (click)="selectVisual(i, visual)">
-                                {{ visual.description }}
-                            </div>
-                        </div>
-                    </div>
+                                    <div class="autocomplete-dropdown">
+                                        <div class="autocomplete-item" *ngFor="let visual of visuales"
+                                            (click)="selectVisual(i, visual)">
+                                            {{ visual.description }}
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <!-- Dropdown para SIN REFERENCIA -->
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                                <!-- Dropdown para SIN REFERENCIA -->
+                                <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
                                         && productosSR.length > 0 
                                         && activeRowIndex === i" class="autocomplete-container">
-                                <div class="autocomplete-dropdown">
-                                    <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR"
-                                        (click)="selectProductosSR(i, sinReferencia)">
-                                        {{ sinReferencia.description }}
+                                    <div class="autocomplete-dropdown">
+                                        <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR"
+                                            (click)="selectProductosSR(i, sinReferencia)">
+                                            {{ sinReferencia.description }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                                    </div>
                         </td>
 
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
@@ -221,7 +226,8 @@
                         </td>
                         <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision')">
                             <select formControlName="formaEnvio"
-                                [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}" (change)="sincronizarFormasEnvio(i)" >
+                                [ngClass]="{'campo-vacio': campoVacio('formaEnvio', i)}"
+                                (change)="sincronizarFormasEnvio(i)">
                                 <option value=""></option>
                                 <option *ngFor="let agencia of agenciasTransporte" [value]="agencia.nombre">
                                     {{agencia.nombre}}</option>
@@ -233,7 +239,8 @@
 
                         <td>
                             <div class="centrar">
-                                <label *ngIf="currentPath != '/salidas' && currentPath != '/entradas'" class="checkbox-comprobado">
+                                <label *ngIf="currentPath != '/salidas' && currentPath != '/entradas'"
+                                    class="checkbox-comprobado">
                                     <input formControlName="comprobado" type="checkbox" />
                                     <svg viewBox="0 0 44 44" class="sizer checkmark">
                                         <path

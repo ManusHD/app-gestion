@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -286,9 +287,14 @@ public class EntradaController {
                 entradasParaGuardar.add(saved); // Guardar la entrada con comprobados=false
             }
 
-            if (entradasRepository.findById(entrada.getId()) != null) {
-                deleteById(entrada.getId());
+            if (entrada.getId() != null) {
+                Optional<Entrada> entradaAntigua = entradasRepository.findById(entrada.getId());
+                if (entradaAntigua.isPresent()) {
+                    deleteById(entrada.getId());
+                }
             }
+
+
 
             // Si no se guardaron entradas con estado=true, entonces evitar la creación de entradas vacías
             if (entradasParaGuardar.isEmpty()) {

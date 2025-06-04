@@ -129,19 +129,23 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
     this.dataCompleta.forEach((salida: Salida) => {
       salida.productos.forEach((producto) => {
         data.push({
-          Destino: salida.destino ?? '',
-          Perfumería: salida.perfumeria ?? '',
-          PDV: salida.pdv ?? '',
-          Colaborador: salida.colaborador ?? '',
           // Estado: salida.estado ? 'Recibida' : 'Pendiente',
           'Fecha Envío': salida.fechaEnvio ? new Date(salida.fechaEnvio).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', }) : '',
           Referencia: producto.ref ?? '',
           Descripción: producto.description ?? '',
-          Unidades: producto.unidades ?? '',
-          Ubicación: producto.ubicacion ?? '',
           Palets: producto.palets ?? '',
           Bultos: producto.bultos ?? '',
+          Unidades: producto.unidades ?? '',
+          Destino: salida.destino ?? '',
+          Perfumería: salida.perfumeria ?? '',
+          PDV: salida.pdv ?? '',
+          Colaborador: salida.colaborador ?? '',
+          Direccion: [salida.direccion, salida.poblacion, salida.provincia, salida.cp]
+            .filter(Boolean)
+            .join(', ') || '',
+          'AGENCIA DE TRANSPORTE': producto.formaEnvio ?? '',
           Observaciones: producto.observaciones ?? '',
+          Ubicación: producto.ubicacion ?? '',
         });
       });
     });
