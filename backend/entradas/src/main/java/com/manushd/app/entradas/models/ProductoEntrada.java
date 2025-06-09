@@ -28,4 +28,5 @@ public class ProductoEntrada {
     private Integer bultos;
     private String observaciones;
     private Boolean comprobado;
+    private String estado;
 }

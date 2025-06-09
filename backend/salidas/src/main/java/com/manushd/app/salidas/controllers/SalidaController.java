@@ -335,6 +335,7 @@ public class SalidaController {
                     productoUbicacion.setRef(ref);
                     productoUbicacion.setUnidades(productoSalida.getUnidades());
                     productoUbicacion.setDescription(productoSalida.getDescription());
+                    productoUbicacion.setEstado(productoSalida.getEstado());
 
                     // Agregar el producto a la ubicación
                     ubicacion.getProductos().add(productoUbicacion);

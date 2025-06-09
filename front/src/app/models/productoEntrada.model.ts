@@ -1,6 +1,6 @@
 export class ProductoEntrada {
     id?: number;
-    ref?: String;
+    ref?: string;
     description?: String;
     unidades?: number;
     ubicacion?: String;
@@ -8,4 +8,5 @@ export class ProductoEntrada {
     bultos?: number;
     observaciones?: String;
     comprobado: boolean = true;
+    estado?: String;
 }

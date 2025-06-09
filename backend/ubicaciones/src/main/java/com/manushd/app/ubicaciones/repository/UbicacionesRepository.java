@@ -15,19 +15,24 @@ import com.manushd.app.ubicaciones.models.Ubicacion;
 public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicacion, Long> {
 
         Page<Ubicacion> findAllByOrderByNombreAsc(Pageable pageable);
+
         Iterable<Ubicacion> findAllByOrderByNombreAsc();
 
         Optional<Ubicacion> findByNombre(String nombre);
 
         Page<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre, Pageable pageable);
+
         Iterable<Ubicacion> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
-        
+
         @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.ref) LIKE LOWER(CONCAT('%', :ref, '%')) ORDER BY u.nombre")
         Page<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref, Pageable pageable);
+
         Iterable<Ubicacion> findByProductosRefContainingIgnoreCaseOrderByNombreAsc(String ref);
 
         @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')) ORDER BY u.nombre")
-        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(@Param("description") String description, Pageable pageable);
+        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(
+                        @Param("description") String description, Pageable pageable);
+
         Iterable<Ubicacion> findByProductosDescriptionContainingIgnoreCaseOrderByNombreAsc(String description);
 
         Optional<Ubicacion> findById(Long id);
@@ -35,4 +40,21 @@ public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicac
         Ubicacion save(Ubicacion ubicacion);
 
         void deleteById(Long id);
+
+        // NUEVOS métodos para búsqueda por referencia y estado
+        @Query("SELECT u FROM Ubicacion u JOIN u.productos p WHERE p.ref = :referencia AND p.estado = :estado")
+        Page<Ubicacion> findByProductosRefAndEstado(@Param("referencia") String referencia,
+                        @Param("estado") String estado,
+                        Pageable pageable);
+
+        @Query("SELECT u FROM Ubicacion u JOIN u.productos p WHERE p.ref = :referencia AND p.estado = :estado")
+        Iterable<Ubicacion> findByProductosRefAndEstado(@Param("referencia") String referencia,
+                        @Param("estado") String estado);
+
+        // NUEVO método para búsqueda por estado
+        @Query("SELECT u FROM Ubicacion u JOIN u.productos p WHERE p.estado = :estado")
+        Page<Ubicacion> findByProductosEstado(@Param("estado") String estado, Pageable pageable);
+
+        @Query("SELECT u FROM Ubicacion u JOIN u.productos p WHERE p.estado = :estado")
+        Iterable<Ubicacion> findByProductosEstado(@Param("estado") String estado);
 }

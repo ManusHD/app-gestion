@@ -118,6 +118,7 @@
                     <tr>
                         <th>REFERENCIA</th>
                         <th>DESCRIPCIÓN</th>
+                        <th>ESTADO</th>
                         <th *ngIf="!pestanaPadre.startsWith('prevision')">PALETS</th>
                         <th *ngIf="!pestanaPadre.startsWith('prevision')">BULTOS</th>
                         <th *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('nuevaSalida')">
@@ -174,7 +175,13 @@
                                 </div>
                             </div>
                         </td>
-
+                        <td>
+                            <select formControlName="estado" [ngClass]="{'campo-vacio': campoVacio('estado', i)}">
+                                <option value=""></option>
+                                <option *ngFor="let estado of estados" [value]="estado.nombre">{{estado.nombre}}
+                                </option>
+                            </select>
+                        </td>
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
                             <input formControlName="palets" type="number"
                                 [ngClass]="{'campo-vacio': campoVacio('palets', i)}" min="0" />

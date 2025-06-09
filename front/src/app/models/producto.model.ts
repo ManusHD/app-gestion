@@ -1,6 +1,7 @@
 export class Producto {
     id?: number;
-    referencia?: String;
-    description?: String;
+    referencia?: string;
+    description?: string;
     stock?: number;
+    estado?: string;
 }

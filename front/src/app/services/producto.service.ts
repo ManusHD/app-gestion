@@ -3,10 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Producto } from '../models/producto.model';
 import { environment } from '../../environments/environment-dev';
+import { Estado } from '../models/estado.model';
+import { TransferirEstadoDTO } from '../models/TransferirEstadoDTO.interface';
+import { MigrarEstadoDTO } from '../models/MigrarEstadoDTO';
 
 @Injectable()
 export class ProductoServices {
-  private apiUrl =  environment.apiProductos;
+  private apiUrl = environment.apiProductos;
+  private apiUrlEstados = environment.apiEstados;
 
   constructor(private http: HttpClient) {}
 
@@ -15,7 +19,9 @@ export class ProductoServices {
   }
 
   getProductosPaginado(page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/byReferencia?page=${page}&size=${size}`);
+    return this.http.get<any>(
+      `${this.apiUrl}/byReferencia?page=${page}&size=${size}`
+    );
   }
 
   getProductoPorReferencia(referencia: String): Observable<Producto> {
@@ -23,47 +29,63 @@ export class ProductoServices {
   }
 
   getVisualesPaginado(page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/visuales?page=${page}&size=${size}`);
+    return this.http.get<any>(
+      `${this.apiUrl}/visuales?page=${page}&size=${size}`
+    );
   }
 
-  getVisualesPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
-    console.log(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`)
-    return this.http.get<any>(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`);
+  getVisualesPorDescripcionPaginado(
+    descripcion: string,
+    page: number,
+    size: number
+  ): Observable<any> {
+    console.log(
+      `${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`
+    );
+    return this.http.get<any>(
+      `${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`
+    );
   }
 
-  getProductosSinReferenciaPaginado(page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/sinreferencia?page=${page}&size=${size}`);
+  getProductosSinReferenciaPaginado(
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/sinreferencia?page=${page}&size=${size}`
+    );
   }
 
-  getProductosSinReferenciaPorDescripcionPaginado(description: string, page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${description}?page=${page}&size=${size}`);
+  getProductosSinReferenciaPorDescripcionPaginado(
+    description: string,
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/sinreferencia/descripcion/${description}?page=${page}&size=${size}`
+    );
   }
 
-  getProductosPorDescripcionPaginado(descripcion: String, page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/description/${descripcion}/paginado?page=${page}&size=${size}`);
+  getProductosPorDescripcionPaginado(
+    descripcion: String,
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/description/${descripcion}/paginado?page=${page}&size=${size}`
+    );
   }
 
-  getProductosPorReferenciaPaginado(referencia: String, page: number, size: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/referencia/${referencia}/buscar/paginado?page=${page}&size=${size}`);
+  getProductosPorReferenciaPaginado(
+    referencia: String,
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/referencia/${referencia}/buscar/paginado?page=${page}&size=${size}`
+    );
   }
-
-  // getVisualesPaginado(page: number, size: number): Observable<any> {
-  //   return this.http.get<any>(`${this.apiUrl}/visuales?page=${page}&size=${size}`);
-  // }
-
-  // getVisualesPorDescripcionPaginado(descripcion: string, page: number, size: number): Observable<any> {
-  //   console.log(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`)
-  //   return this.http.get<any>(`${this.apiUrl}/visuales/descripcion/${descripcion}?page=${page}&size=${size}`);
-  // }
-
-  // getProductosSinReferenciaPaginado(page: number, size: number): Observable<any> {
-  //   return this.http.get<any>(`${this.apiUrl}/sinreferencia?page=${page}&size=${size}`);
-  // }
-
-  // getProductosSinReferenciaPorDescripcionPaginado(descripcion: string): Observable<any> {
-  //   return this.http.get<any>(`${this.apiUrl}/sinreferencia/descripcion/${descripcion}`);
-  // }
-
+  
   getProductosPorDescripcion(descripcion: String): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/description/${descripcion}`);
   }
@@ -79,10 +101,30 @@ export class ProductoServices {
 
   putProducto(id: number, producto: Producto): Observable<Producto> {
     console.log(producto.description);
-    return this.http.put<Producto>(`${this.apiUrl}/${id}`, producto.description);
+    return this.http.put<Producto>(
+      `${this.apiUrl}/${id}`,
+      producto.description
+    );
   }
 
   deleteProducto(id: number): Observable<Producto> {
     return this.http.delete<Producto>(`${this.apiUrl}/${id}`);
+  }
+
+  transferirEstado(dto: TransferirEstadoDTO): Observable<string> {
+    return this.http.put(`${this.apiUrl}/transferir-estado`, dto, {
+      responseType: 'text',
+    });
+  }
+
+  // AGREGAR en ProductoServices
+  eliminarGrupoProductos(referencia: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/grupo/${referencia}`);
+  }
+
+  migrarProductosSinEstado(dto: MigrarEstadoDTO): Observable<string> {
+    return this.http.post(`${this.apiUrl}/migrar-sin-estado`, dto, {
+      responseType: 'text',
+    });
   }
 }

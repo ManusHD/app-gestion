@@ -48,6 +48,7 @@ export class FormularioEntradaSalidaComponent
     this.cargarColaboradores();
     this.cargarPerfumerias('a');
     this.cargarOtrasDirecciones('A');
+    this.cargarEstaddos();
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -131,6 +132,18 @@ export class FormularioEntradaSalidaComponent
   ngOnDestroy() {
     this.entradaSalidaForm.reset();
     this.salidaUbicacionService.resetProductos();
+  }
+
+  cargarEstaddos() {
+    this.estadosService.getEstados().subscribe({
+      next: (data) => {
+        console.log(data)
+        this.estados = data;
+      },
+      error: (error) => {
+        console.error('Error al obtener los estados', error);
+      },
+    })
   }
 
   cargarPerfumerias(perfumeria: string) {
@@ -295,6 +308,7 @@ export class FormularioEntradaSalidaComponent
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
         comprobado: row.comprobado || false,
+        estado: row.estado || null,
       });
       if (row.ref) {
         this.buscarDescripcionProducto(productoFormGroup, row.ref);
@@ -348,6 +362,7 @@ export class FormularioEntradaSalidaComponent
             bultos: producto.bultos,
             observaciones: producto.observaciones,
             comprobado: producto.comprobado,
+            estado: producto.estado || null,
           };
         });
 
@@ -362,8 +377,7 @@ export class FormularioEntradaSalidaComponent
         estado: !this.pendiente,
         productos: productosEntrada,
         rellena: false,
-        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!
-          .value,
+        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!.value,
       };
 
       this.entradaService.updateEntrada(entradaActualizada).subscribe({
@@ -397,6 +411,7 @@ export class FormularioEntradaSalidaComponent
             observaciones: producto.observaciones,
             formaEnvio: producto.formaEnvio,
             comprobado: producto.comprobado,
+            estado: producto.estado || null,
           };
         });
 
@@ -444,7 +459,8 @@ export class FormularioEntradaSalidaComponent
         producto.bultos! >= 0 &&
         producto.formaEnvio &&
         producto.formaEnvio.trim() !== '' &&
-        producto.comprobado
+        producto.comprobado &&
+        producto.estado != null
     );
   }
 
@@ -509,21 +525,6 @@ export class FormularioEntradaSalidaComponent
       });
     }
   }
-
-  // onPerfumeriaChange(nombrePerfumeria: string) {
-  //   if (nombrePerfumeria) {
-  //     this.cargarPDVs(nombrePerfumeria);
-  //     // Limpiamos el PDV seleccionado y por tanto su dirección asociada
-  //     this.entradaSalidaForm.patchValue({
-  //       pdv: '',
-  //     });
-  //   } else {
-  //     this.pdvs = [];
-  //     if (this.currentPath.startsWith('/salidas')) {
-  //       this.limpiarCamposDireccion();
-  //     }
-  //   }
-  // }
 
   // Método para seleccionar una dirección
   selectOtraDireccion(direccion: OtraDireccion) {

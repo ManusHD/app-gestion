@@ -9,6 +9,7 @@ set MICROSERVICIO_UBICACIONES=backend\ubicaciones
 set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
 set MICROSERVICIO_DIRECCIONES=backend\direcciones
 set MICROSERVICIO_AUTH=backend\autenticacion
+set MICROSERVICIO_ESTADOS=backend\estados
 
 :: Ejecutar productos en una nueva ventana   PORT = 8091
 start cmd /k "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package"
@@ -30,3 +31,6 @@ start cmd /k "cd %MICROSERVICIO_DIRECCIONES% && mvn clean package"
 
 :: Ejecutar dcs en una nueva ventana   PORT = 8098
 start cmd /k "cd %MICROSERVICIO_AUTH% && mvn clean package" 
+
+:: Ejecutar dcs en una nueva ventana   PORT = 8099
+start cmd /k "cd %MICROSERVICIO_ESTADOS% && mvn clean package" 

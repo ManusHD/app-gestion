@@ -28,6 +28,7 @@ import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { ToastrModule } from 'ngx-toastr';
 import { MatTableModule } from '@angular/material/table';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { EntradaServices } from './services/entrada.service';
@@ -77,6 +78,8 @@ import { ConfirmDirective } from './directivas/confirm.directive';
 import { UsuariosComponent } from './componentes/usuarios/usuarios.component';
 import { PerfilComponent } from './componentes/perfil/perfil.component';
 import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
+import { EstadosComponent } from './componentes/estados/estados.component';
+import { EstadoService } from './services/estado.service';
 
 @NgModule({
   declarations: [
@@ -89,6 +92,7 @@ import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospe
     EntradasPendientesComponent,
     EntradasRecibidasComponent,
     EntradasNuevoComponent,
+    EstadosComponent,
     SalidasPendientesComponent,
     SalidasNuevoComponent,
     SalidasEnviadasComponent,
@@ -135,6 +139,7 @@ import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospe
     MatButtonModule,
     MatDialogModule,
     MatDatepickerModule,
+    MatExpansionModule,
     MatIconModule,
     MatInputModule,
     MatNativeDateModule,
@@ -152,6 +157,7 @@ import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospe
     DCSService,
     DireccionesService,
     EntradaServices,
+    EstadoService,
     FormularioEntradaSalidaService,
     ImportarExcelService,
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },

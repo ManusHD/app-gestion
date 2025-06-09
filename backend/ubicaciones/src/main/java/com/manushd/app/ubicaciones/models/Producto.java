@@ -23,4 +23,5 @@ public class Producto {
     private String referencia; // 7 dígitos
     private String description;
     private Integer stock;
+    private String estado;
 }

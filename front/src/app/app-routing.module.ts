@@ -25,6 +25,7 @@ import { roleGuard } from './guardianes/role.guard';
 import { RegistrarComponent } from './componentes/registrar/registrar.component';
 import { PerfilComponent } from './componentes/perfil/perfil.component';
 import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
+import { EstadosComponent } from './componentes/estados/estados.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -48,6 +49,7 @@ const routes: Routes = [
   {path: 'reubicarPalets', component:ReubicarPaletsComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'login', component:LoginComponent},
   {path: 'perfil', component:PerfilComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'estados', component:EstadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
 ];
 
 @NgModule({

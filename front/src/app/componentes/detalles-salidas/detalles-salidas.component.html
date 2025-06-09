@@ -16,6 +16,7 @@
                     <tr>
                         <th>REFERENCIA</th>
                         <th>DESCRIPCIÓN</th>
+                        <th>ESTADO</th>
                         <th>UNIDADES</th>
                         <th>UBICACIÓN</th>
                         <th>PALETS</th>
@@ -28,6 +29,7 @@
                     <tr *ngFor="let producto of salida.productos">
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
+                        <td>{{producto.estado}} </td>
                         <td>{{producto.unidades}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>

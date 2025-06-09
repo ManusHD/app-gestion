@@ -1,6 +1,8 @@
 export class ProductoUbicacion {
     id?: number;
-    ref?: String;
+    ref?: string;
     unidades?: number;
     description?: string;
+    estado?: string;
+    estadoSeleccionado?: string;
 }

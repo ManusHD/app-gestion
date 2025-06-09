@@ -1,12 +1,28 @@
+<!-- MODIFICAR el template de ubicaciones para incluir búsqueda por estado -->
 <div id="lista-ubicaciones" class="centrar">
     <div>
         <div class="buscador" (keyup)="onEnterKey($event)">
             <select [(ngModel)]="tipoBusqueda" class="select-buscador">
                 <option value="referencia">Búsqueda por REFERENCIA</option>
                 <option value="descripcion">Búsqueda por DESCRIPCIÓN</option>
+                <option value="estado">Búsqueda por ESTADO</option>  <!-- NUEVA opción -->
                 <option value="ubicaciones">Búsqueda por UBICACIÓN</option>
             </select>
-            <input type="text" placeholder="Buscar..." [(ngModel)]="buscador" />
+            
+            <!-- NUEVO: selector de estado cuando se busca por estado -->
+            <select *ngIf="tipoBusqueda === 'estado'" [(ngModel)]="buscador" class="select-buscador">
+                <option value="">Seleccionar estado</option>
+                <option *ngFor="let estado of estados" [value]="estado.nombre">
+                    {{ estado.nombre }}
+                </option>
+            </select>
+            
+            <!-- Input de texto para otros tipos de búsqueda -->
+            <input *ngIf="tipoBusqueda !== 'estado'" 
+                   type="text" 
+                   placeholder="Buscar..." 
+                   [(ngModel)]="buscador" />
+            
             <button (click)="buscarUbicaciones()" class="btn-buscar">
                 <img src="../../../assets/icons/lupa-blanca.svg" alt="">
                 <span class="letra-buscador">Buscar</span>
@@ -15,7 +31,8 @@
         </div>
     
         <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSourceUbicaciones">
-            <caption>STOCK POR UBICACIONES Y REFERENCIAS</caption>
+            <caption>STOCK POR UBICACIONES Y REFERENCIAS (CON ESTADOS)</caption>
+            
             <ng-container matColumnDef="nombre">
                 <th class="header-paginator" *matHeaderCellDef> UBICACIÓN </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
@@ -33,13 +50,17 @@
             <ng-container matColumnDef="reubicacion">
                 <th class="header-paginator" *matHeaderCellDef> REUBICACIÓN DE PALETS </th>
                 <td class="fila-paginator centrar" mat-cell *matCellDef="let ubicacion">
-                    <app-reubicar-producto [tipoReubicacion]="'completa'" [productosPalet]="ubicacion.productos" [ubicacionActual]="ubicacion.nombre"></app-reubicar-producto>
+                    <app-reubicar-producto [tipoReubicacion]="'completa'" 
+                                          [productosPalet]="ubicacion.productos" 
+                                          [ubicacionActual]="ubicacion.nombre">
+                    </app-reubicar-producto>
                 </td>
             </ng-container>
     
             <ng-container matColumnDef="detalles">
                 <th class="header-paginator" *matHeaderCellDef> DETALLES </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
+                    <!-- USAR el nuevo componente de detalles con estados -->
                     <app-detalles-ubicacion [ubicacion]="ubicacion"></app-detalles-ubicacion>
                 </td>
             </ng-container>
@@ -49,7 +70,9 @@
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
                     <div class="centrar">
                         <ng-container *ngIf="editingId !== ubicacion.id; else editActions">
-                            <button class="btn-editar" (click)="startEditing(ubicacion)">EDITAR NOMBRE UBICACIÓN</button>
+                            <button class="btn-editar" (click)="startEditing(ubicacion)">
+                                EDITAR NOMBRE UBICACIÓN
+                            </button>
                         </ng-container>
                         <ng-template #editActions>
                             <div class="btn-actualizar-gestor">
@@ -58,7 +81,9 @@
                             </div>
                         </ng-template>
                         
-                        <button type="button" (click)="eliminarUbicacion(ubicacion.id!)" class="deleteButton">
+                        <button type="button" 
+                                (click)="eliminarUbicacion(ubicacion.id!)" 
+                                class="deleteButton">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
                                 <path fill="#B5BAC1"
                                     d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z">
@@ -79,6 +104,7 @@
             <tr mat-header-row *matHeaderRowDef="columnasUbicaciones"></tr>
             <tr mat-row *matRowDef="let row; columns: columnasUbicaciones;"></tr>
         </table>
+        
         <mat-paginator
             class="paginator"
             [pageSize]="pageSize"
@@ -89,9 +115,12 @@
             (page)="cambiarPagina($event)">
         </mat-paginator>
 
-        <app-exportar-excel (click)="obtenerDatosAExportar()" [data$]="ubicacionesParaExportar$" [nombreConjuntoExportado]="'UBICACIONES'" [fileName]="'UBICACIONES-EXPORTADAS'" ></app-exportar-excel>
+        <app-exportar-excel (click)="obtenerDatosAExportar()" 
+            [data$]="ubicacionesParaExportar$" 
+            [nombreConjuntoExportado]="'UBICACIONES'" 
+            [fileName]="'UBICACIONES-EXPORTADAS'">
+        </app-exportar-excel>
     </div>
-    
 </div>
 
 <app-pantalla-carga></app-pantalla-carga>

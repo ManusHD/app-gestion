@@ -26,6 +26,8 @@ import { PantallaCargaService } from './pantalla-carga.service';
 import { DireccionesService } from './direcciones.service';
 import { ImportarExcelService } from './importar-excel.service';
 import { SalidaUbicacionService } from './salida-ubicacion.service';
+import { Estado } from '../models/estado.model';
+import { EstadoService } from './estado.service';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -34,6 +36,7 @@ export class FormularioEntradaSalidaService {
   productosNuevos: Set<number> = new Set();
   mostrarFormulario: boolean = false;
   ubicaciones: String[] = [];
+  estados: Estado[] = [];
 
   perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
@@ -66,7 +69,8 @@ export class FormularioEntradaSalidaService {
     protected direccionesService: DireccionesService,
     protected importarES: ImportarExcelService,
     protected carga: PantallaCargaService,
-    protected salidaUbicacionService: SalidaUbicacionService
+    protected salidaUbicacionService: SalidaUbicacionService,
+    protected estadosService: EstadoService,
   ) {}
 
   createForm() {
@@ -102,6 +106,7 @@ export class FormularioEntradaSalidaService {
       formaEnvio: ['', Validators.required],
       observaciones: [''],
       comprobado: [!this.esNuevo() ? false : true],
+      estado: [null, Validators.required]
     });
   }
   
@@ -295,6 +300,7 @@ export class FormularioEntradaSalidaService {
           formaEnvio: producto.formaEnvio,
           observaciones: producto.observaciones,
           comprobado: producto.comprobado,
+          estado: producto.estado,
         };
       });
 

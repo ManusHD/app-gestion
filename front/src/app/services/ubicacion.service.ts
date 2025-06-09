@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Ubicacion } from '../models/ubicacion.model';
 import { ReubicacionRequest } from '../models/ReubicacionRequest.model';
 import { environment } from '../../environments/environment-dev';
+import { TransferirEstadoUbicacionDTO } from '../models/TransferirEstadoUbicacionDTO';
 
 @Injectable()
 export class UbicacionService {
@@ -62,5 +63,41 @@ export class UbicacionService {
 
   deleteUbicacion(id: number): Observable<Ubicacion> {
     return this.httpClient.delete(`${this.apiUrl}/${id}`);
+  }
+
+  getUbicacionesByEstado(estado: string): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/estado/${estado}`);
+  }
+
+  getUbicacionesByEstadoPaginado(estado: string, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/paginado?page=${page}&size=${size}`);
+  }
+
+  // Métodos para búsqueda por referencia y estado
+  getUbicacionesByReferenciaAndEstado(referencia: string, estado: string): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}`);
+  }
+
+  getUbicacionesByReferenciaAndEstadoPaginado(referencia: string, estado: string, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}/paginado?page=${page}&size=${size}`);
+  }
+
+  // Método para transferir estado en ubicación
+  transferirEstadoEnUbicacion(dto: TransferirEstadoUbicacionDTO): Observable<string> {
+    const dtoLimpio = {
+      ubicacionNombre: dto.ubicacionNombre,
+      referencia: dto.referencia,
+      estadoOrigen: dto.estadoOrigen,
+      estadoDestino: dto.estadoDestino,
+      cantidad: dto.cantidad
+    };
+    
+    console.log('DTO enviado (sin token):', dtoLimpio);
+    return this.httpClient.put(`${this.apiUrl}/transferir-estado`, dtoLimpio, {responseType: 'text'});
+  }
+
+  // Método para eliminar grupo de productos en ubicaciones
+  eliminarGrupoProductosEnUbicaciones(referencia: string): Observable<any> {
+    return this.httpClient.delete<any>(`${this.apiUrl}/productos/grupo/${referencia}`);
   }
 }

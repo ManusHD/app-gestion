@@ -73,7 +73,7 @@ body {
 
 .mat-mdc-snack-bar-container {
     position: fixed !important;
-    z-index: 200;
+    z-index: 2000;
     justify-content: right !important;
 }
 

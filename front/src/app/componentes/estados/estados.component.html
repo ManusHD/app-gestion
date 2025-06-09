@@ -1,0 +1,86 @@
+<div class="centrar">
+    <h2 class="gestor-titulo">GESTIÓN DE ESTADOS</h2>
+</div>
+
+<div id="center">
+    <div class="contenedor-gestor">
+
+        <div class="centrar">
+            <div class="gestor-crear">
+                <h3>Crear NUEVO estado</h3>
+                <div class="buscador campos-gestor">
+                    <input [(ngModel)]="nuevoEstado.nombre" placeholder="Nombre" type="text">
+                    <button (click)="crearEstado()" class="btn-crear" [disabled]="nuevoEstado.nombre == '' || nuevoEstado.nombre == undefined">CREAR</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="estados">
+
+    <div id="estados">
+        <div>
+            <!-- 🔍 Buscador -->
+            <div class="buscador" (keyup)="onEnterKey($event)">
+                <input type="text" placeholder="Buscar estado" [(ngModel)]="buscador" />
+                <button (click)="buscarEstados()" class="btn-buscar">
+                    <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+        <span class="letra-buscador">Buscar</span>
+      </button>
+      <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+    </div>
+
+    <!-- 📋 Tabla -->
+    <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': estados.length > 0}" mat-table [dataSource]="dataSourceEstado">
+      <caption>LISTADO DE ESTADOS</caption>
+
+      <!-- Columna: Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th class="header-paginator" mat-header-cell *matHeaderCellDef> Nombre </th>
+        <td class="fila-paginator" mat-cell *matCellDef="let estado">
+          <ng-container *ngIf="editingId !== estado.id; else editNombre">
+            {{estado.nombre}}
+          </ng-container>
+          <ng-template #editNombre>
+            <textarea [(ngModel)]="editingEstado.nombre" placeholder="Nombre del estado" class="nombre-editando"></textarea>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <!-- Columna: Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th class="header-paginator" mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td class="fila-paginator" mat-cell *matCellDef="let estado">
+          <div class="centrar">
+            <ng-container *ngIf="editingId !== estado.id; else editActions">
+              <button class="btn-editar" (click)="editarEstado(estado)">EDITAR</button>
+            </ng-container>
+            <ng-template #editActions>
+              <div class="btn-actualizar-gestor">
+                <button class="btn-guardar" (click)="guardarEdicion()">GUARDAR</button>
+                <button class="btn-cancelar" (click)="cancelarEdicion()">CANCELAR</button>
+              </div>
+            </ng-template>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnasEstado.concat('acciones')"></tr>
+      <tr mat-row *matRowDef="let row; columns: columnasEstado.concat('acciones')"></tr>
+    </table>
+
+    <!-- 📄 Paginador -->
+    <div class="centrar">
+      <mat-paginator class="paginator" [pageSize]="pageSize" [pageIndex]="pageIndex" [length]="totalElementos"
+        [hidePageSize]="true" showFirstLastButtons (page)="cambiarPagina($event)">
+      </mat-paginator>
+    </div>
+
+    <app-pantalla-carga></app-pantalla-carga>
+  </div>
+</div>
+
+
+        </div>

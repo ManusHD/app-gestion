@@ -1,6 +1,12 @@
 package com.manushd.app.productos.controllers;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import java.util.Comparator;
+import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -10,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,8 +32,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
+import com.manushd.app.productos.models.MigrarEstadoDTO;
 import com.manushd.app.productos.models.Producto;
 import com.manushd.app.productos.models.ProductoDescripcionUpdateDTO;
+import com.manushd.app.productos.models.TransferirEstadoDTO;
 import com.manushd.app.productos.repository.ProductoRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -41,14 +50,14 @@ public class ProductosController {
 
     @GetMapping("")
     public Iterable<Producto> getProductos() {
-        return productosRepository.findAllByOrderByReferenciaAsc();
+        return productosRepository.findProductosNormalesOrderByReferenciaAndEstado();
     }
 
     @GetMapping("/byReferencia")
     public Page<Producto> getProductosOrdenados(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return productosRepository.findAllByOrderByReferenciaAsc(
+        return productosRepository.findProductosNormalesOrderByReferenciaAndEstado(
                 PageRequest.of(page, size));
     }
 
@@ -152,14 +161,29 @@ public class ProductosController {
      */
     @PostMapping("")
     public Producto addProducto(@RequestBody Producto producto) {
-        Producto aux = productosRepository.findByReferencia(producto.getReferencia()).orElse(null);
-        if (aux != null) {
-            throw new IllegalArgumentException("Ya existe un producto con la misma referencia");
-        } else if (producto.getReferencia() == null || producto.getDescription() == null
-                || producto.getReferencia().length() < 1 || producto.getDescription().length() < 1) {
-            throw new IllegalArgumentException("La referencia y descripción no pueden estar vacíos");
+        // Verificar si ya existe un producto con la misma referencia y estado
+        Optional<Producto> existente = productosRepository.findByReferenciaAndEstado(
+                producto.getReferencia(), producto.getEstado());
+
+        if (existente.isPresent()) {
+            throw new IllegalArgumentException("Ya existe un producto con la misma referencia y estado");
         }
+
+        if (producto.getReferencia() == null || producto.getDescription() == null ||
+                producto.getEstado() == null ||
+                producto.getReferencia().length() < 1 || producto.getDescription().length() < 1 ||
+                producto.getEstado().length() < 1) {
+            throw new IllegalArgumentException("La referencia, descripción y estado no pueden estar vacíos");
+        }
+
         producto.setReferencia(producto.getReferencia().trim());
+        producto.setDescription(producto.getDescription().trim());
+        producto.setEstado(producto.getEstado().trim());
+
+        if (producto.getStock() == null) {
+            producto.setStock(0);
+        }
+
         return productosRepository.save(producto);
     }
 
@@ -345,6 +369,68 @@ public class ProductosController {
         }
     }
 
+    @PutMapping("/transferir-estado")
+    public ResponseEntity<?> transferirEstado(@RequestBody TransferirEstadoDTO dto) {
+        try {
+            // Corregir como indicaste: null sigue siendo null
+            String estadoOrigenBuscar = dto.getEstadoOrigen() == null ? null : dto.getEstadoOrigen();
+            String estadoDestinoBuscar = dto.getEstadoDestino() == null ? null : dto.getEstadoDestino();
+
+            Optional<Producto> productoOrigenOpt = productosRepository.findByReferenciaAndEstado(
+                    dto.getReferencia(), estadoOrigenBuscar);
+
+            if (!productoOrigenOpt.isPresent()) {
+                return ResponseEntity.badRequest()
+                        .body("No se encontró producto con referencia " + dto.getReferencia() +
+                                " y estado " + (dto.getEstadoOrigen() == null ? "SIN ESTADO" : dto.getEstadoOrigen()));
+            }
+
+            Producto productoOrigen = productoOrigenOpt.get();
+
+            // Verificar que hay suficiente stock
+            if (productoOrigen.getStock() < dto.getCantidad()) {
+                return ResponseEntity.badRequest()
+                        .body("Stock insuficiente. Stock actual: " + productoOrigen.getStock());
+            }
+
+            // Buscar o crear producto destino
+            Optional<Producto> productoDestinoOpt = productosRepository.findByReferenciaAndEstado(
+                    dto.getReferencia(), estadoDestinoBuscar);
+
+            Producto productoDestino;
+            if (productoDestinoOpt.isPresent()) {
+                productoDestino = productoDestinoOpt.get();
+            } else {
+                // Crear nuevo producto con el estado destino
+                productoDestino = new Producto();
+                productoDestino.setReferencia(dto.getReferencia());
+                productoDestino.setDescription(productoOrigen.getDescription());
+                productoDestino.setEstado(estadoDestinoBuscar); // Puede ser null
+                productoDestino.setStock(0);
+            }
+
+            // Actualizar stocks
+            productoOrigen.setStock(productoOrigen.getStock() - dto.getCantidad());
+            productoDestino.setStock(productoDestino.getStock() + dto.getCantidad());
+
+            // Guardar cambios
+            productosRepository.save(productoDestino);
+
+            // Si el producto origen queda sin stock, eliminarlo
+            if (productoOrigen.getStock() == 0) {
+                productosRepository.delete(productoOrigen);
+            } else {
+                productosRepository.save(productoOrigen);
+            }
+
+            return ResponseEntity.ok("Transferencia realizada correctamente");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al transferir estado: " + e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{id}")
     public void deleteById(@PathVariable Long id) {
         Producto p = productosRepository.findById(id).orElse(null);
@@ -356,6 +442,110 @@ public class ProductosController {
             }
         } else {
             throw new IllegalArgumentException("El producto no existe");
+        }
+    }
+
+    // NUEVO ENDPOINT en ProductosController para eliminar grupo completo
+    @DeleteMapping("/grupo/{referencia}")
+    public ResponseEntity<?> eliminarGrupoProductos(@PathVariable String referencia) {
+        try {
+            // Buscar todos los productos con esa referencia
+            List<Producto> productos = productosRepository.findByReferenciaExcludingSpecial(referencia);
+
+            if (productos.isEmpty()) {
+                return ResponseEntity.badRequest().body("No se encontraron productos con la referencia: " + referencia);
+            }
+
+            // Verificar que no hay stock en ningún estado
+            boolean tieneStock = productos.stream().anyMatch(p -> p.getStock() > 0);
+            if (tieneStock) {
+                return ResponseEntity.badRequest()
+                        .body("No se puede eliminar: existe stock en uno o más estados");
+            }
+
+            // Eliminar todos los productos
+            productos.forEach(producto -> productosRepository.delete(producto));
+
+            return ResponseEntity.ok("Grupo de productos eliminado correctamente");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al eliminar grupo de productos: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/migrar-sin-estado")
+    public ResponseEntity<?> migrarProductosSinEstado(@RequestBody MigrarEstadoDTO dto,
+            @RequestHeader("Authorization") String token) {
+        try {
+            // Buscar productos sin estado con esa referencia
+            List<Producto> productosSinEstado = productosRepository.findByReferenciaAndEstadoOrderByReferenciaAsc(dto.getReferencia(),
+                    null);
+
+            if (productosSinEstado.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("No se encontraron productos sin estado con referencia: " + dto.getReferencia());
+            }
+
+            // Transferir todos los productos sin estado al estado especificado
+            for (Producto producto : productosSinEstado) {
+                // Buscar si ya existe un producto con el estado destino
+                Optional<Producto> productoDestinoOpt = productosRepository.findByReferenciaAndEstado(
+                        dto.getReferencia(), dto.getEstadoDestino());
+
+                if (productoDestinoOpt.isPresent()) {
+                    // Sumar el stock al existente
+                    Producto productoDestino = productoDestinoOpt.get();
+                    productoDestino.setStock(productoDestino.getStock() + producto.getStock());
+                    productosRepository.save(productoDestino);
+                    // Eliminar el producto sin estado
+                    productosRepository.delete(producto);
+                } else {
+                    // Simplemente asignar el estado al producto existente
+                    producto.setEstado(dto.getEstadoDestino());
+                    productosRepository.save(producto);
+                }
+            }
+
+            // MODIFICADO: Pasar el token de autorización
+            actualizarEstadoEnUbicaciones(dto.getReferencia(), dto.getEstadoDestino(), token);
+
+            return ResponseEntity
+                    .ok("Productos y ubicaciones migrados correctamente al estado: " + dto.getEstadoDestino());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al migrar productos: " + e.getMessage());
+        }
+    }
+
+    private void actualizarEstadoEnUbicaciones(String referencia, String estadoDestino, String token) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8095/ubicaciones/productos/migrar-estado";
+
+        MigrarEstadoDTO dto = new MigrarEstadoDTO();
+        dto.setReferencia(referencia);
+        dto.setEstadoDestino(estadoDestino);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", token); // AGREGAR TOKEN
+
+        HttpEntity<MigrarEstadoDTO> requestEntity = new HttpEntity<>(dto, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, requestEntity, String.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("Ubicaciones actualizadas correctamente: " + response.getBody());
+            } else {
+                System.err.println(
+                        "Error al actualizar ubicaciones: " + response.getStatusCode() + " - " + response.getBody());
+            }
+        } catch (Exception e) {
+            // Log más detallado del error
+            System.err.println("Error al actualizar ubicaciones durante migración: " + e.getClass().getSimpleName()
+                    + " - " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

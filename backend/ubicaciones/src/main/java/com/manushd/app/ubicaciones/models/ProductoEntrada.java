@@ -30,4 +30,5 @@ public class ProductoEntrada {
     private Integer bultos;
     private String observaciones;
     private Boolean pendiente; // false = recibida, true = pendiente
+    private String estado;
 }

@@ -1,0 +1,12 @@
+#estados {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.tabla-paginator, mat-paginator {
+    width: 100%;
+    max-width: 576px;
+    height: fit-content;
+}

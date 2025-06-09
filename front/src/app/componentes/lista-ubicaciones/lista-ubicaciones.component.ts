@@ -12,6 +12,8 @@ import { Ubicacion } from 'src/app/models/ubicacion.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { UbicacionService } from 'src/app/services/ubicacion.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
+import { EstadoService } from 'src/app/services/estado.service';
+import { Estado } from 'src/app/models/estado.model';
 
 @Component({
   selector: 'app-lista-ubicaciones',
@@ -30,6 +32,7 @@ export class ListaUbicacionesComponent implements OnInit {
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
+  estados: Estado[] = [];
   
   private ubicacionesParaExportarSubject = new BehaviorSubject<Ubicacion[]>([]);
   ubicacionesParaExportar$ = this.ubicacionesParaExportarSubject.asObservable();
@@ -46,11 +49,13 @@ export class ListaUbicacionesComponent implements OnInit {
 
   constructor(
     private ubicacionService: UbicacionService,
+    private estadoService: EstadoService,
     private snackbar: SnackBar,
     private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
+    this.cargarEstados();
     this.cargarUbicaciones();
     if(this.currentPath == '/ubicaciones') {
       this.columnasUbicaciones.push('acciones');
@@ -63,6 +68,17 @@ export class ListaUbicacionesComponent implements OnInit {
         this.cargarUbicaciones();
       });
     }
+  }
+
+  cargarEstados() {
+    this.estadoService.getEstados().subscribe(
+      (data: Estado[]) => {
+        this.estados = data;
+      },
+      (error) => {
+        console.error('Error al cargar estados', error);
+      }
+    );
   }
 
   onEnterKey(event: any) {
@@ -98,6 +114,7 @@ export class ListaUbicacionesComponent implements OnInit {
       this.pageIndex = 0;
     }
     this.buscando = true;
+    
     if (this.tipoBusqueda === 'ubicaciones') {
       this.ubicacionService.getUbicacionesByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
@@ -106,7 +123,6 @@ export class ListaUbicacionesComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-    
           setTimeout(() => {
             this.carga.hide();
           }); 
@@ -124,35 +140,51 @@ export class ListaUbicacionesComponent implements OnInit {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-    
           setTimeout(() => {
             this.carga.hide();
           }); 
         },
-      () => {
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
-      });
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        });
     } else if(this.tipoBusqueda === 'descripcion') {
       this.ubicacionService.getUbicacionesByDescripcionProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
           this.ubicaciones = data.content;
-          console.log(this.ubicaciones);
           setTimeout(() => {
             this.totalElementos = data.totalElements;
           });
           this.dataSourceUbicaciones.data = this.ubicaciones;
-    
           setTimeout(() => {
             this.carga.hide();
           }); 
         },
-      () => {
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
-      });
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        });
+    } else if(this.tipoBusqueda === 'estado') {
+      // NUEVA búsqueda por estado
+      this.ubicacionService.getUbicacionesByEstadoPaginado(this.buscador, this.pageIndex, this.pageSize)
+        .subscribe((data) => {
+          this.ubicaciones = data.content;
+          console.log(this.ubicaciones)
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
+          this.dataSourceUbicaciones.data = this.ubicaciones;
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+        () => {
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        });
     }
   }
 
@@ -208,7 +240,8 @@ export class ListaUbicacionesComponent implements OnInit {
             this.snackbar.snackBarExito('Ubicación actualizada con éxito');
           },
           (error) => {
-            this.snackbar.snackBarError(error.error.message);
+            const mensajeError = error?.error?.message || 'Ya existe una ubicación con ese nombre';
+            this.snackbar.snackBarError(mensajeError);
             console.error('Error al actualizar la ubicación', error);
           }
         );
@@ -244,7 +277,6 @@ export class ListaUbicacionesComponent implements OnInit {
 
   // Método para obtener datos para exportar
   obtenerDatosAExportar() {
-    // Inicia con un arreglo vacío o los datos actuales de la página
     this.ubicacionesParaExportarSubject.next(this.ubicaciones);
     if (this.buscando) {
       if (this.tipoBusqueda === 'ubicaciones') {
@@ -254,6 +286,17 @@ export class ListaUbicacionesComponent implements OnInit {
         });
       } else if(this.tipoBusqueda === 'referencia') {
         this.ubicacionService.getUbicacionesByReferenciaProducto(this.buscador)
+        .subscribe(data => {
+          this.ubicacionesParaExportarSubject.next(data);
+        });
+      } else if(this.tipoBusqueda === 'descripcion') {
+        this.ubicacionService.getUbicacionesByDescripcionProducto(this.buscador)
+        .subscribe(data => {
+          this.ubicacionesParaExportarSubject.next(data);
+        });
+      } else if(this.tipoBusqueda === 'estado') {
+        // NUEVA exportación por estado
+        this.ubicacionService.getUbicacionesByEstado(this.buscador)
         .subscribe(data => {
           this.ubicacionesParaExportarSubject.next(data);
         });

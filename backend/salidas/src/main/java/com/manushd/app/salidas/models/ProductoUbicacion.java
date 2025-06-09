@@ -21,4 +21,5 @@ public class ProductoUbicacion {
     private String ref;
     private String description;
     private Integer unidades;
+    private String estado;
 }

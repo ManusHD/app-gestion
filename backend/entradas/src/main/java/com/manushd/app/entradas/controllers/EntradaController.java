@@ -240,7 +240,11 @@ public class EntradaController {
 
             for (ProductoEntrada producto : entrada.getProductos()) {
                 if (producto.getUnidades() <= 0) {
-                    throw new IllegalArgumentException("Los productos deben tener al menos 1 unidad");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos deben tener al menos 1 unidad");
+                }
+
+                if (producto.getEstado() == null || producto.getEstado().isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos deben tener un estado asignado");
                 }
 
                 if (Boolean.FALSE.equals(producto.getComprobado())) {
@@ -294,8 +298,6 @@ public class EntradaController {
                 }
             }
 
-
-
             // Si no se guardaron entradas con estado=true, entonces evitar la creación de entradas vacías
             if (entradasParaGuardar.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pueden crear entradas sin productos");
@@ -345,6 +347,7 @@ public class EntradaController {
                     nuevoProducto.setReferencia(ref);
                     nuevoProducto.setDescription(productoEntrada.getDescription());
                     nuevoProducto.setStock(0);
+                    nuevoProducto.setEstado(productoEntrada.getEstado());
 
                     HttpEntity<Producto> request = new HttpEntity<>(nuevoProducto, headers);
                     ResponseEntity<Producto> postResponse = restTemplate.exchange(
@@ -393,6 +396,7 @@ public class EntradaController {
             productoUbicacion.setRef(productoEntrada.getRef());
             productoUbicacion.setUnidades(productoEntrada.getUnidades());
             productoUbicacion.setDescription(productoEntrada.getDescription());
+            productoUbicacion.setEstado(productoEntrada.getEstado());
             System.out.println("Producto agregado: " + productoUbicacion);
             ubicacion.getProductos().add(productoUbicacion);
         }

@@ -28,4 +28,5 @@ public class ProductoSalida {
     private String formaEnvio;
     private String observaciones;
     private Boolean comprobado;
+    private String estado;
 }
