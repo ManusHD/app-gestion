@@ -47,6 +47,8 @@ public interface ProductoRepository extends PagingAndSortingRepository<Producto,
 
         Optional<Producto> findById(Long id);
 
+        List<Producto> findByEstado(String estado);
+
         Producto save(Producto producto);
 
         Producto saveAll(Iterable<Producto> productos);
@@ -69,4 +71,7 @@ public interface ProductoRepository extends PagingAndSortingRepository<Producto,
         // Buscar productos por referencia (excluyendo especiales)
         @Query("SELECT p FROM Producto p WHERE p.referencia = :referencia AND p.referencia NOT IN ('VISUAL', 'SIN REFERENCIA') ORDER BY p.estado ASC")
         List<Producto> findByReferenciaExcludingSpecial(@Param("referencia") String referencia);
+
+        @Query("SELECT p FROM Producto p WHERE p.referencia = :referencia ORDER BY COALESCE(p.estado, 'SIN ESTADO') ASC")
+        List<Producto> findByReferenciaOrderByEstadoAsc(@Param("referencia") String referencia);
 }

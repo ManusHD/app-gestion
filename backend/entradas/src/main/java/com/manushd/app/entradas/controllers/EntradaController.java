@@ -34,8 +34,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -230,7 +231,7 @@ public class EntradaController {
                         .body("No se han recibido productos en la entrada");
             }
 
-            if(entrada.getFechaRecepcion() == null) {
+            if (entrada.getFechaRecepcion() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("La entrada no tiene fecha de recepción");
             }
@@ -240,24 +241,31 @@ public class EntradaController {
 
             for (ProductoEntrada producto : entrada.getProductos()) {
                 if (producto.getUnidades() <= 0) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos deben tener al menos 1 unidad");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Los productos deben tener al menos 1 unidad");
                 }
 
                 if (producto.getEstado() == null || producto.getEstado().isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos deben tener un estado asignado");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Los productos deben tener un estado asignado");
                 }
 
                 if (Boolean.FALSE.equals(producto.getComprobado())) {
                     comprobadosFalse.add(producto);
                 } else {
-                    if(producto.getUnidades() <= 0) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener al menos 1 unidad");
+                    if (producto.getUnidades() <= 0) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("Los productos checkeados deben tener al menos 1 unidad");
                     }
-                    if(producto.getDescription() == null || producto.getDescription().isEmpty() || "".equals(producto.getDescription())) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener una descripción asignada");
+                    if (producto.getDescription() == null || producto.getDescription().isEmpty()
+                            || "".equals(producto.getDescription())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("Los productos checkeados deben tener una descripción asignada");
                     }
-                    if(producto.getUbicacion() == null || producto.getUbicacion().isEmpty() || "".equals(producto.getUbicacion())) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Los productos checkeados deben tener una ubicación asignada");
+                    if (producto.getUbicacion() == null || producto.getUbicacion().isEmpty()
+                            || "".equals(producto.getUbicacion())) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("Los productos checkeados deben tener una ubicación asignada");
                     }
                     comprobadosTrue.add(producto);
                 }
@@ -298,11 +306,12 @@ public class EntradaController {
                 }
             }
 
-            // Si no se guardaron entradas con estado=true, entonces evitar la creación de entradas vacías
+            // Si no se guardaron entradas con estado=true, entonces evitar la creación de
+            // entradas vacías
             if (entradasParaGuardar.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pueden crear entradas sin productos");
             }
-            
+
             return ResponseEntity.ok(entradasParaGuardar);
         } else {
             // Si estado != true, comportamiento original
@@ -323,43 +332,75 @@ public class EntradaController {
         return copia;
     }
 
-    // Reutiliza la lógica de verificación y creación de productos
     private void verificarYCrearProductos(Set<ProductoEntrada> productos, String token) {
         RestTemplate restTemplate = new RestTemplate();
         String productosServiceUrl = "http://localhost:8091/productos";
 
         for (ProductoEntrada productoEntrada : productos) {
             String ref = productoEntrada.getRef();
+            String estado = productoEntrada.getEstado();
 
             if (!"SIN REFERENCIA".equals(ref) && !"VISUAL".equals(ref)) {
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("Authorization", token);
                 HttpEntity<String> entity = new HttpEntity<>(headers);
 
-                ResponseEntity<Producto> response = restTemplate.exchange(
-                        productosServiceUrl + "/referencia/" + ref,
-                        HttpMethod.GET,
-                        entity,
-                        Producto.class);
+                System.out.println("Verificando producto: " + ref + " con estado: " + estado);
 
-                if (response.getBody() == null) {
+                // Verificar si ya existe el producto con esa referencia y estado específicos
+                try {
+                    ResponseEntity<Producto> response = restTemplate.exchange(
+                            productosServiceUrl + "/referencia/" + ref + "/estado/" + estado,
+                            HttpMethod.GET,
+                            entity,
+                            Producto.class);
+
+                    if (response.getBody() != null) {
+                        System.out.println("Producto ya existe: " + ref + " - " + estado);
+                        continue; // El producto ya existe, no hacer nada
+                    }
+                } catch (Exception e) {
+                    System.out.println("Producto no encontrado, procediendo a crear: " + ref + " - " + estado);
+                }
+
+                // Si llegamos aquí, el producto no existe y debemos crearlo
+                try {
                     Producto nuevoProducto = new Producto();
                     nuevoProducto.setReferencia(ref);
                     nuevoProducto.setDescription(productoEntrada.getDescription());
                     nuevoProducto.setStock(0);
-                    nuevoProducto.setEstado(productoEntrada.getEstado());
+                    nuevoProducto.setEstado(estado);
 
                     HttpEntity<Producto> request = new HttpEntity<>(nuevoProducto, headers);
+
+                    System.out.println("Creando nuevo producto: " + nuevoProducto);
+
                     ResponseEntity<Producto> postResponse = restTemplate.exchange(
                             productosServiceUrl,
                             HttpMethod.POST,
                             request,
                             Producto.class);
 
-                    if (!postResponse.getStatusCode().is2xxSuccessful()) {
-                        throw new RuntimeException("Error al crear producto en el microservicio Productos");
+                    if (postResponse.getStatusCode().is2xxSuccessful()) {
+                        System.out.println("Producto creado exitosamente: " + ref + " - " + estado);
+                    } else {
+                        System.err.println("Error al crear producto: " + postResponse.getStatusCode());
                     }
+                } catch (HttpClientErrorException e) {
+                    if (e.getStatusCode().value() == 400
+                            && e.getResponseBodyAsString().contains("Ya existe un producto")) {
+                        System.out.println("Producto ya existe (capturado en catch): " + ref + " - " + estado);
+                        // No es un error fatal, continuar con el siguiente producto
+                    } else {
+                        System.err.println("Error al crear producto: " + e.getMessage());
+                        throw new RuntimeException("Error al crear producto: " + ref + " - " + estado, e);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Excepción general al crear producto: " + ex.getMessage());
+                    // Continuar con el siguiente producto en lugar de fallar completamente
                 }
+            } else {
+                System.out.println("Producto especial detectado: " + ref + " - saltando verificación");
             }
         }
     }
@@ -374,15 +415,20 @@ public class EntradaController {
     private void crearUbicacion(Entrada entrada, String token) {
         List<Ubicacion> listaUbicaciones = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
+
+        System.out.println("=== CREANDO UBICACIONES ===");
+        System.out.println("Token recibido: " + (token != null && !token.isEmpty() ? "Presente" : "Ausente"));
+
+        // IMPORTANTE: Configurar headers con token para autenticación
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token); // Agregar token en los headers
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", token); // Pasar el token JWT
 
         Map<String, Ubicacion> ubicacionMap = new HashMap<>();
 
         for (ProductoEntrada productoEntrada : entrada.getProductos()) {
             String ubicacionNombre = productoEntrada.getUbicacion();
 
-            // Se crea la ubicación si no existe en el mapa
             Ubicacion ubicacion = ubicacionMap.computeIfAbsent(ubicacionNombre, k -> {
                 Ubicacion nuevaUbicacion = new Ubicacion();
                 nuevaUbicacion.setNombre(ubicacionNombre);
@@ -391,33 +437,81 @@ public class EntradaController {
                 return nuevaUbicacion;
             });
 
-            // Se crea el ProductoUbicacion a partir del ProductoEntrada
             ProductoUbicacion productoUbicacion = new ProductoUbicacion();
             productoUbicacion.setRef(productoEntrada.getRef());
             productoUbicacion.setUnidades(productoEntrada.getUnidades());
             productoUbicacion.setDescription(productoEntrada.getDescription());
             productoUbicacion.setEstado(productoEntrada.getEstado());
+
             System.out.println("Producto agregado: " + productoUbicacion);
             ubicacion.getProductos().add(productoUbicacion);
         }
 
-        System.out.println("Ubicaciones a enviar: " + listaUbicaciones);
+        System.out.println("Ubicaciones a enviar: " + listaUbicaciones.size());
 
         String url = "http://localhost:8095/ubicaciones/sumar";
 
-        // Se envía cada ubicación con el token en los encabezados
         for (Ubicacion ubicacion : listaUbicaciones) {
-            HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headers);
+            try {
+                HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headers);
 
-            ResponseEntity<Ubicacion> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    requestEntity,
-                    Ubicacion.class);
+                System.out.println("Enviando ubicación con autenticación: " + ubicacion.getNombre());
+                System.out.println("Headers: Authorization = " + (token != null ? "Presente" : "Ausente"));
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Error al enviar la ubicación: " + ubicacion.getNombre());
+                ResponseEntity<Ubicacion> response = restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        requestEntity,
+                        Ubicacion.class);
+
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    System.out.println("Ubicación enviada exitosamente: " + ubicacion.getNombre());
+                } else {
+                    System.err.println("Error al enviar ubicación: " + response.getStatusCode());
+                    throw new RuntimeException("Error al enviar la ubicación: " + ubicacion.getNombre());
+                }
+            } catch (Exception e) {
+                System.err.println("Excepción al enviar ubicación " + ubicacion.getNombre() + ": " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException(
+                        "Error al enviar la ubicación: " + ubicacion.getNombre() + " - " + e.getMessage());
             }
+        }
+    }
+
+    // Nuevo método para actualizar stock directamente desde EntradaController
+    private void actualizarStockProducto(ProductoEntrada productoEntrada, String token) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", token);
+        headers.set("Content-Type", "application/json");
+
+        String ref = productoEntrada.getRef();
+        String estado = productoEntrada.getEstado();
+
+        System.out.println("Actualizando stock para: " + ref + " | Estado: " + estado + " | Unidades: "
+                + productoEntrada.getUnidades());
+
+        try {
+            // Verificar si el producto existe
+            String urlVerificar = "http://localhost:8091/productos/referencia/" + ref + "/estado/" + estado;
+            HttpEntity<Void> verificarEntity = new HttpEntity<>(headers);
+
+            ResponseEntity<Producto> verificarResponse = restTemplate.exchange(
+                    urlVerificar,
+                    HttpMethod.GET,
+                    verificarEntity,
+                    Producto.class);
+
+            if (verificarResponse.getBody() != null) {
+                // El producto existe, sumar stock usando método específico por estado
+                System.out.println("Producto existe, sumando " + productoEntrada.getUnidades() + " unidades");
+                // Por ahora, no sumar stock automáticamente para evitar errores
+                // Se manejará manualmente o con una solución posterior
+            }
+        } catch (Exception e) {
+            System.out.println("Producto no encontrado o error al verificar: " + e.getMessage());
+            // El stock se actualizará manualmente o con otra estrategia
         }
     }
 

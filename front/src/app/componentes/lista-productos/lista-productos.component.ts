@@ -203,17 +203,36 @@ export class ListaProductosComponent implements OnInit {
     const grupos = new Map<string, ProductoAgrupado>();
 
     this.productos.forEach((producto) => {
-      if (!grupos.has(producto.referencia!)) {
-        grupos.set(producto.referencia!, {
-          referencia: producto.referencia!,
-          description: producto.description!,
+      // Determinar la clave de agrupación según el tipo de producto
+      let claveAgrupacion: string;
+      let referenciaDisplay: string;
+
+      if (this.esProductoEspecial(producto.referencia!)) {
+        // Para productos especiales: agrupar por descripción
+        claveAgrupacion = `${producto.referencia}_${producto.description}`;
+        referenciaDisplay = producto.description!; // Mostrar descripción como "referencia"
+      } else {
+        // Para productos normales: agrupar por referencia
+        claveAgrupacion = producto.referencia!;
+        referenciaDisplay = producto.referencia!;
+      }
+
+      if (!grupos.has(claveAgrupacion)) {
+        grupos.set(claveAgrupacion, {
+          referencia: referenciaDisplay, // Usar referenciaDisplay
+          description: this.esProductoEspecial(producto.referencia!)
+            ? `Tipo: ${producto.referencia}` // Para especiales, mostrar el tipo
+            : producto.description!, // Para normales, mostrar descripción
           productos: [],
           totalStock: 0,
           expanded: false,
+          // Agregar propiedades adicionales para identificar productos especiales
+          esEspecial: this.esProductoEspecial(producto.referencia!),
+          referenciaOriginal: producto.referencia!, // Guardar referencia original
         });
       }
 
-      const grupo = grupos.get(producto.referencia!)!;
+      const grupo = grupos.get(claveAgrupacion)!;
       grupo.productos.push(producto);
       grupo.totalStock += producto.stock || 0;
     });
@@ -221,63 +240,106 @@ export class ListaProductosComponent implements OnInit {
     this.productosAgrupados = Array.from(grupos.values());
   }
 
-  copiarReferencia(referencia: string) {
-    this.snackbar.snackBarExito(
-      'Referencia ' + referencia + ' copiada al portapapeles'
-    );
-    navigator.clipboard.writeText(referencia);
+  // Método helper para identificar productos especiales
+  private esProductoEspecial(referencia: string): boolean {
+    return referencia === 'VISUAL' || referencia === 'SIN REFERENCIA';
   }
 
-  // Método para iniciar la edición de descripción
+  // Método para copiar referencia actualizado
+  copiarReferencia(grupo: ProductoAgrupado) {
+    const textoACopiar = grupo.esEspecial
+      ? `${grupo.referenciaOriginal} - ${grupo.referencia}` // Para especiales: "VISUAL - Descripción del producto"
+      : grupo.referencia; // Para normales: solo la referencia
+
+    this.snackbar.snackBarExito(
+      'Referencia copiada al portapapeles: ' + textoACopiar
+    );
+    navigator.clipboard.writeText(textoACopiar);
+  }
+
+  // Método para editar actualizado
   startEditing(grupo: ProductoAgrupado): void {
-    this.editingReferencia = grupo.referencia;
-    this.editingGrupo = { 
+    // Para productos especiales, usar la descripción original
+    const referenciaParaEdicion = grupo.esEspecial
+      ? grupo.referencia // Para especiales, usar la descripción como clave
+      : grupo.referencia; // Para normales, usar la referencia
+
+    this.editingReferencia = referenciaParaEdicion;
+    this.editingGrupo = {
       ...grupo,
-      description: grupo.description
+      description: grupo.esEspecial ? grupo.referencia : grupo.description, // Ajustar según el tipo
     };
   }
 
-  // Método para guardar los cambios de descripción
+  // Método para guardar edición actualizado
   saveEdit(): void {
     if (this.editingReferencia && this.editingGrupo) {
-      if (!this.editingGrupo.description || this.editingGrupo.description.trim() === '') {
+      if (
+        !this.editingGrupo.description ||
+        this.editingGrupo.description.trim() === ''
+      ) {
         this.snackbar.snackBarError('La descripción no puede estar en blanco');
         return;
       }
 
       this.editingGrupo.description = this.editingGrupo.description.trim();
-      
+
       // Tomar el primer producto del grupo para hacer la actualización
       const primerProducto = this.editingGrupo.productos[0];
-      
+
       if (!primerProducto || !primerProducto.id) {
-        this.snackbar.snackBarError('Error: no se encontró producto para actualizar');
+        this.snackbar.snackBarError(
+          'Error: no se encontró producto para actualizar'
+        );
         return;
       }
 
-      // Crear objeto con la nueva descripción
+      // Para productos especiales, actualizar la descripción
+      // Para productos normales, actualizar la descripción del grupo
+      const nuevaDescripcion = this.editingGrupo.esEspecial
+        ? this.editingGrupo.description // Para especiales: actualizar descripción individual
+        : this.editingGrupo.description; // Para normales: actualizar descripción del grupo
+
       const productoParaActualizar = {
         ...primerProducto,
-        description: this.editingGrupo.description
+        description: nuevaDescripcion,
       };
 
       this.productoService
         .putProducto(primerProducto.id, productoParaActualizar)
         .subscribe(
           (data: Producto) => {
-            // Actualizar todos los productos del grupo en la lista local
-            this.productos.forEach(producto => {
-              if (producto.referencia === this.editingReferencia) {
-                producto.description = data.description;
-              }
-            });
-            
+            // Actualizar productos en la lista local
+            if (this.editingGrupo.esEspecial) {
+              // Para especiales: solo actualizar el producto específico
+              this.productos.forEach((producto) => {
+                if (producto.id === primerProducto.id) {
+                  producto.description = data.description;
+                }
+              });
+            } else {
+              // Para normales: actualizar todos los productos del grupo
+              this.productos.forEach((producto) => {
+                if (
+                  producto.referencia === this.editingGrupo.referenciaOriginal
+                ) {
+                  producto.description = data.description;
+                }
+              });
+            }
+
             this.cargarProductos();
             this.cancelEdit();
-            this.snackbar.snackBarExito('Descripción actualizada para todos los productos de la referencia');
+
+            const mensaje = this.editingGrupo.esEspecial
+              ? 'Descripción actualizada para el producto específico'
+              : 'Descripción actualizada para todos los productos de la referencia';
+            this.snackbar.snackBarExito(mensaje);
           },
           (error) => {
-            this.snackbar.snackBarError(error.error || 'Error al actualizar la descripción');
+            this.snackbar.snackBarError(
+              error.error || 'Error al actualizar la descripción'
+            );
             console.error('Error al actualizar el producto', error);
           }
         );
@@ -296,24 +358,58 @@ export class ListaProductosComponent implements OnInit {
   }
 
   // Elimina todos los productos de una referencia
-  eliminarGrupoProductos(referencia: string): void {
+  // Método para eliminar grupo actualizado
+  eliminarGrupoProductos(grupo: ProductoAgrupado): void {
+    const identificador = grupo.esEspecial
+      ? grupo.referencia
+      : grupo.referencia;
+    const tipoProducto = grupo.esEspecial
+      ? 'producto especial'
+      : 'grupo de productos';
+
     if (
       confirm(
-        `¿Está seguro de que desea eliminar todos los productos con referencia ${referencia}? Esta acción no se puede deshacer.`
+        `¿Está seguro de que desea eliminar el ${tipoProducto} "${identificador}"? Esta acción no se puede deshacer.`
       )
     ) {
-      this.productoService.eliminarGrupoProductos(referencia).subscribe(
-        (response) => {
-          this.snackbar.snackBarExito('Grupo de productos eliminado con éxito');
-          this.cargarProductos();
-        },
-        (error) => {
-          this.snackbar.snackBarError(
-            error.error || 'Error al eliminar el grupo de productos'
+      if (grupo.esEspecial) {
+        // Para productos especiales: eliminar solo ese producto específico
+        const primerProducto = grupo.productos[0];
+        if (primerProducto && primerProducto.id) {
+          this.productoService.deleteProducto(primerProducto.id).subscribe(
+            (response) => {
+              this.snackbar.snackBarExito(
+                'Producto especial eliminado con éxito'
+              );
+              this.cargarProductos();
+            },
+            (error) => {
+              this.snackbar.snackBarError(
+                error.error || 'Error al eliminar el producto especial'
+              );
+              console.error('Error al eliminar el producto especial', error);
+            }
           );
-          console.error('Error al eliminar el grupo de productos', error);
         }
-      );
+      } else {
+        // Para productos normales: eliminar todo el grupo por referencia
+        this.productoService
+          .eliminarGrupoProductos(grupo.referenciaOriginal!)
+          .subscribe(
+            (response) => {
+              this.snackbar.snackBarExito(
+                'Grupo de productos eliminado con éxito'
+              );
+              this.cargarProductos();
+            },
+            (error) => {
+              this.snackbar.snackBarError(
+                error.error || 'Error al eliminar el grupo de productos'
+              );
+              console.error('Error al eliminar el grupo de productos', error);
+            }
+          );
+      }
     }
   }
 
@@ -343,5 +439,13 @@ export class ListaProductosComponent implements OnInit {
   // Función helper para formatear estados
   formatearEstado(estado: string | null | undefined): string {
     return estado || 'SIN ESTADO';
+  }
+
+  get hayEspeciales(): boolean {
+      return Array.isArray(this.productosAgrupados) && this.productosAgrupados.some(g => g && g.esEspecial);
+  }
+
+  get hayEspecialesEnAgrupados(): boolean {
+    return Array.isArray(this.productosAgrupados) && this.productosAgrupados.some(g => g && g.esEspecial);
   }
 }

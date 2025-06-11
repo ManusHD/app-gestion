@@ -176,9 +176,12 @@
                             </div>
                         </td>
                         <td>
-                            <select formControlName="estado" [ngClass]="{'campo-vacio': campoVacio('estado', i)}">
-                                <option value=""></option>
-                                <option *ngFor="let estado of estados" [value]="estado.nombre">{{estado.nombre}}
+                            <select formControlName="estado" 
+                                    [ngClass]="{'campo-vacio': esEstadoRequerido(i) && campoVacio('estado', i)}"
+                                    (change)="onEstadoChange(i)">
+                                <option value="">{{ esEstadoRequerido(i) ? 'Seleccionar estado' : 'Sin estado' }}</option>
+                                <option *ngFor="let estado of getEstadosDisponibles(i, esSalida())" [value]="estado">
+                                    {{ estado }}
                                 </option>
                             </select>
                         </td>
@@ -196,16 +199,29 @@
                                     [ngClass]="{'campo-vacio': campoVacio('unidadesPedidas', i)}" min="0" />
                             </div>
                         </td>
-                        <td
-                            *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision') || currentPath.startsWith('/entradas')">
+                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision') || currentPath.startsWith('/entradas')">
                             <div class="centrar">
-                                <input formControlName="unidades" type="number"
-                                    [ngClass]="{'campo-vacio': campoVacio('unidades', i)}" min="0" />
+                                <input formControlName="unidades" 
+                                    type="number"
+                                    [ngClass]="{
+                                        'campo-vacio': campoVacio('unidades', i),
+                                        'stock-excedido': unidadesExcedenStock(i)
+                                    }" 
+                                    min="0" />
+                                
+                                <!-- Mostrar stock disponible para salidas -->
+                                <small *ngIf="currentPath.startsWith('/salidas') && getMensajeStock(i)" 
+                                    class="stock-info"
+                                    [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
+                                    {{ getMensajeStock(i) }}
+                                </small>
                             </div>
                         </td>
+                        <!-- Campo de UBICACIÓN con evento onchange -->
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
-                            <select formControlName="ubicacion" (change)="sincronizarUbicaciones(i)"
-                                [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
+                            <select formControlName="ubicacion" 
+                                    (change)="sincronizarUbicaciones(i); onUbicacionChange(i)"
+                                    [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
                                 <option value=""></option>
                                 <ng-container *ngIf="esEntrada(); else ubiSalida">
                                     <option *ngFor="let ubicacion of ubicaciones; let i = index" [value]="ubicacion">
@@ -213,21 +229,17 @@
                                     </option>
                                 </ng-container>
                                 <ng-template #ubiSalida>
-                                    <ng-container
-                                        *ngIf="productosControls.at(i).get('ref')?.value !== 'VISUAL' && productosControls.at(i).get('ref')?.value !== 'SIN REFERENCIA'; else ubisEspeciales">
-                                        <option
-                                            *ngFor="let ubicacion of ubicacionesPorProducto[productosControls.at(i).get('ref')?.value]"
-                                            [value]="ubicacion.nombre">
-                                            {{ubicacion.nombre}}
-                                        </option>
-                                    </ng-container>
-                                    <ng-template #ubisEspeciales>
-                                        <option
-                                            *ngFor="let ubicacion of ubicacionesPorProducto[productosControls.at(i).get('description')?.value]"
-                                            [value]="ubicacion.nombre">
-                                            {{ubicacion.nombre}}
-                                        </option>
-                                    </ng-template>
+                                    <option *ngFor="let ubicacion of getUbicacionesPorIndice(i)" [value]="ubicacion.nombre">
+                                        {{ubicacion.nombre}}
+                                        <!-- Mostrar stock específico en la opción si está disponible -->
+                                        <span *ngIf="currentPath.startsWith('/salidas') && 
+                                                productosControls.at(i).get('ref')?.value && 
+                                                productosControls.at(i).get('estado')?.value">
+                                            ({{ obtenerStockEspecifico(productosControls.at(i).get('ref')?.value, 
+                                                                    productosControls.at(i).get('estado')?.value, 
+                                                                    ubicacion.nombre!) }} disponibles)
+                                        </span>
+                                    </option>
                                 </ng-template>
                             </select>
                         </td>

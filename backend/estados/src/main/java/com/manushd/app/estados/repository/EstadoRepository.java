@@ -22,9 +22,9 @@ public interface EstadoRepository extends PagingAndSortingRepository<Estado, Lon
 
     Page<Estado> findAllByNombre(String nombre, Pageable pageable);
 
-    Iterable<Estado> findAllByNombreOrderByNombreAsc(String nombre);
+    Iterable<Estado> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);
 
-    Page<Estado> findAllByNombreOrderByNombreAsc(String nombre, Pageable pageable);
+    Page<Estado> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre, Pageable pageable);
 
     Optional<Estado> findById(Long id);
 
@@ -35,7 +35,5 @@ public interface EstadoRepository extends PagingAndSortingRepository<Estado, Lon
     Estado save(Estado estado);
 
     void deleteById(Long id);
-
-
-
+ 
 }

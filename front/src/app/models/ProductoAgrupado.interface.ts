@@ -6,4 +6,6 @@ export interface ProductoAgrupado {
   productos: Producto[];
   totalStock: number;
   expanded: boolean;
+  esEspecial?: boolean;
+  referenciaOriginal?: string;
 }

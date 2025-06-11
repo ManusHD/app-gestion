@@ -34,11 +34,6 @@
 h2 {
     margin: 0;
     font-family: 'Nunito-ExtraBold';
-    color: var(--letter-color);
-}
-
-.titulo-modal {
-    color: white;
 }
 
 .close {
@@ -74,3 +69,98 @@ h2 {
       justify-content: center;
     }
   }
+
+  .modal {
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    margin: 3% auto;
+    max-width: 1400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { 
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header del Modal */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: linear-gradient(135deg, var(--main-color), var(--bg-color));
+    border-bottom: 2px solid var(--letter-color);
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-family: 'Nunito-ExtraBold';
+    color: var(--letter-color);
+    font-size: 24px;
+}
+
+.modal-icon {
+    width: 28px;
+    height: 28px;
+    padding: 6px;
+    background-color: var(--letter-color);
+    border-radius: 6px;
+    filter: brightness(0) invert(1);
+}
+
+.titulo-modal {
+    color: var(--letter-color);
+    font-weight: 600;
+}
+
+.titulo-detalles {
+    color: white;
+    font-weight: 600;
+}
+
+.close {
+    color: var(--letter-color-off);
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 5px 10px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.close:hover,
+.close:focus {
+    color: var(--btn-color-w);
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+}
+
+/* Contenido del Modal */
+.modal-body {
+    padding: 30px;
+}

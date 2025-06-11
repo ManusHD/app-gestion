@@ -1,15 +1,14 @@
-<!-- MODIFICAR el template de ubicaciones para incluir búsqueda por estado -->
 <div id="lista-ubicaciones" class="centrar">
     <div>
         <div class="buscador" (keyup)="onEnterKey($event)">
-            <select [(ngModel)]="tipoBusqueda" class="select-buscador">
+            <select [(ngModel)]="tipoBusqueda" class="select-buscador" (change)="onTipoBusquedaChange()">
                 <option value="referencia">Búsqueda por REFERENCIA</option>
                 <option value="descripcion">Búsqueda por DESCRIPCIÓN</option>
-                <option value="estado">Búsqueda por ESTADO</option>  <!-- NUEVA opción -->
+                <option value="estado">Búsqueda por ESTADO</option>
                 <option value="ubicaciones">Búsqueda por UBICACIÓN</option>
             </select>
             
-            <!-- NUEVO: selector de estado cuando se busca por estado -->
+            <!-- Selector de estado cuando se busca por estado -->
             <select *ngIf="tipoBusqueda === 'estado'" [(ngModel)]="buscador" class="select-buscador">
                 <option value="">Seleccionar estado</option>
                 <option *ngFor="let estado of estados" [value]="estado.nombre">
@@ -17,8 +16,28 @@
                 </option>
             </select>
             
-            <!-- Input de texto para otros tipos de búsqueda -->
-            <input *ngIf="tipoBusqueda !== 'estado'" 
+            <!-- Input de texto para referencia y descripción -->
+            <input *ngIf="tipoBusqueda === 'referencia' || tipoBusqueda === 'descripcion'" 
+                   type="text" 
+                   placeholder="Buscar..." 
+                   [(ngModel)]="buscador" />
+            
+            <!-- Checkbox para aplicar filtro de estado en referencia/descripción -->
+            <div *ngIf="tipoBusqueda === 'referencia' || tipoBusqueda === 'descripcion'" class="filtro-estado">
+                <label>
+                    <input type="checkbox" [(ngModel)]="aplicarFiltroEstado" />
+                    Filtrar por estado
+                </label>
+                <select *ngIf="aplicarFiltroEstado" [(ngModel)]="estadoSeleccionado" class="select-estado-filtro">
+                    <option value="">Seleccionar estado</option>
+                    <option *ngFor="let estado of estados" [value]="estado.nombre">
+                        {{ estado.nombre }}
+                    </option>
+                </select>
+            </div>
+            
+            <!-- Input de texto para ubicaciones -->
+            <input *ngIf="tipoBusqueda === 'ubicaciones'" 
                    type="text" 
                    placeholder="Buscar..." 
                    [(ngModel)]="buscador" />
@@ -68,7 +87,7 @@
             <ng-container *ngIf="currentPath == '/ubicaciones'" matColumnDef="acciones">
                 <th class="header-paginator" *matHeaderCellDef> ACCIONES </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let ubicacion">
-                    <div class="centrar">
+                    <div class="centrar botones-acciones">
                         <ng-container *ngIf="editingId !== ubicacion.id; else editActions">
                             <button class="btn-editar" (click)="startEditing(ubicacion)">
                                 EDITAR NOMBRE UBICACIÓN

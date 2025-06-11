@@ -10,6 +10,7 @@
         <h2 *ngIf="enRecibidas">DESTINO: <span class="titulo-modal">
             {{salida.destino || salida.colaborador || salida.pdv}}
         </span></h2>
+        <h2 *ngIf="enRecibidas">FECHA RECEPCIÓN: <span class="titulo-modal">{{salida.fechaEnvio | date: 'dd/MM/yyyy'}}</span></h2>
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
@@ -29,7 +30,8 @@
                     <tr *ngFor="let producto of salida.productos">
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
-                        <td>{{producto.estado}} </td>
+                        <td *ngIf="producto.estado != 'null'">{{producto.estado}}</td>
+                        <td *ngIf="producto.estado == 'null'"></td>
                         <td>{{producto.unidades}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>

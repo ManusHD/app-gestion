@@ -10,6 +10,7 @@
         <h2 *ngIf="enRecibidas" >ORIGEN: <span class="titulo-modal">
             {{entrada.origen || entrada.colaborador || entrada.pdv || entrada.dcs}} 
         </span></h2>
+        <h2 *ngIf="enRecibidas">FECHA RECEPCIÓN: <span class="titulo-modal">{{entrada.fechaRecepcion | date: 'dd/MM/yyyy'}}</span></h2>
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
@@ -28,7 +29,8 @@
                     <tr *ngFor="let producto of entrada.productos">
                         <td>{{producto.ref}} </td>
                         <td>{{producto.description}} </td>
-                        <td>{{producto.estado}} </td>
+                        <td *ngIf="producto.ref == 'SIN REFERENCIA' || producto.ref == 'VISUAL'"></td>
+                        <td *ngIf="producto.ref != 'SIN REFERENCIA' && producto.ref != 'VISUAL'">{{producto.estado}}</td>
                         <td>{{producto.unidades}} </td>
                         <td>{{producto.ubicacion}} </td>
                         <td>{{producto.palets}} </td>

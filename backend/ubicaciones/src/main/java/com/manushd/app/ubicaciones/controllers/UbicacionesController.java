@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.manushd.app.ubicaciones.models.Ubicacion;
@@ -36,6 +37,7 @@ import com.manushd.app.ubicaciones.models.ProductoUbicacion;
 import com.manushd.app.ubicaciones.models.ReubicacionRequest;
 import com.manushd.app.ubicaciones.models.TransferirEstadoDTO;
 import com.manushd.app.ubicaciones.models.TransferirEstadoUbicacionDTO;
+import com.manushd.app.ubicaciones.models.CambioEstadoRequest;
 import com.manushd.app.ubicaciones.models.MigrarEstadoUbicacionDTO;
 import com.manushd.app.ubicaciones.models.Producto;
 import com.manushd.app.ubicaciones.models.ProductoDescripcionUpdateDTO;
@@ -135,14 +137,49 @@ public class UbicacionesController {
      */
     @PostMapping("/sumar")
     public Ubicacion sumarUbicacion(@RequestBody Ubicacion ubicacion, @RequestHeader("Authorization") String token) {
+        System.out.println("=== ENDPOINT /ubicaciones/sumar LLAMADO ===");
+        System.out.println("Ubicación recibida: " + (ubicacion != null ? ubicacion.getNombre() : "null"));
+        System.out.println("Token recibido: " + (token != null ? "Presente" : "Ausente"));
+
+        if (ubicacion != null && ubicacion.getProductos() != null) {
+            System.out.println("Productos en ubicación: " + ubicacion.getProductos().size());
+            ubicacion.getProductos().forEach(p -> System.out.println(
+                    "  - Producto: " + p.getRef() + " | Estado: " + p.getEstado() + " | Unidades: " + p.getUnidades()));
+        }
+
+        try {
+            Ubicacion resultado = procesarSumaUbicacion(ubicacion, token);
+            System.out.println("Ubicación procesada exitosamente: " + resultado.getNombre());
+            return resultado;
+        } catch (Exception e) {
+            System.err.println("Error al procesar ubicación: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    /**
+     * Lógica principal para procesar suma de productos en ubicaciones.
+     * Maneja tanto productos nuevos como existentes correctamente.
+     */
+    private Ubicacion procesarSumaUbicacion(Ubicacion ubicacion, String token) {
         Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
 
         if (ubiAux != null) {
+            System.out.println("Ubicación existente encontrada: " + ubiAux.getNombre());
+            System.out.println("Productos actuales en ubicación: " + ubiAux.getProductos().size());
+
             for (ProductoUbicacion nuevoProducto : ubicacion.getProductos()) {
+                System.out.println("Procesando: " + nuevoProducto.getRef() + " | Estado: " + nuevoProducto.getEstado()
+                        + " | Unidades: " + nuevoProducto.getUnidades());
+
                 if (esProductoEspecial(nuevoProducto)) {
                     // Productos especiales no tienen estado, mantener lógica original
-                    addProductoEspecial(nuevoProducto, token);
+                    if (token != null) {
+                        addProductoEspecial(nuevoProducto, token);
+                    }
                     ubiAux.getProductos().add(nuevoProducto);
+                    System.out.println("✅ Producto especial agregado: " + nuevoProducto.getRef());
                 } else {
                     // Producto normal: buscar por referencia Y estado (considerando nulos)
                     ProductoUbicacion productoExistente = ubiAux.getProductos()
@@ -153,30 +190,67 @@ public class UbicacionesController {
                             .orElse(null);
 
                     if (productoExistente != null) {
-                        productoExistente.setUnidades(productoExistente.getUnidades() + nuevoProducto.getUnidades());
+                        // PRODUCTO EXISTE: SUMAR unidades
+                        int unidadesAntes = productoExistente.getUnidades();
+                        int unidadesASumar = nuevoProducto.getUnidades();
+                        int unidadesDespues = unidadesAntes + unidadesASumar;
+
+                        productoExistente.setUnidades(unidadesDespues);
+
+                        System.out.println("✅ PRODUCTO EXISTENTE - UNIDADES SUMADAS:");
+                        System.out.println("   Ref: " + productoExistente.getRef() + " | Estado: "
+                                + productoExistente.getEstado());
+                        System.out.println("   Antes: " + unidadesAntes + " + Sumando: " + unidadesASumar
+                                + " = Después: " + unidadesDespues);
                     } else {
+                        // PRODUCTO NO EXISTE: AGREGAR nuevo
                         ubiAux.getProductos().add(nuevoProducto);
+                        System.out.println("✅ PRODUCTO NUEVO AGREGADO: " + nuevoProducto.getRef() + " | Estado: "
+                                + nuevoProducto.getEstado() + " | Unidades: " + nuevoProducto.getUnidades());
                     }
                 }
             }
 
-            // Actualizar stock en microservicio de productos
-            for (ProductoUbicacion p : ubicacion.getProductos()) {
-                if (!esProductoEspecial(p)) {
-                    sumarStockProductoNormalConEstado(p, token);
+            // Actualizar stock en microservicio de productos solo si hay token
+            if (token != null) {
+                for (ProductoUbicacion p : ubicacion.getProductos()) {
+                    if (!esProductoEspecial(p)) {
+                        try {
+                            sumarStockProductoNormalConEstado(p, token);
+                        } catch (Exception e) {
+                            System.err.println("Error al actualizar stock en productos para " + p.getRef() + ": "
+                                    + e.getMessage());
+                            // No detener el proceso por errores de stock
+                        }
+                    }
                 }
+            } else {
+                System.out.println("Sin token - saltando actualización de stock en microservicio de productos");
             }
+
             return ubicacionesRepository.save(ubiAux);
         } else {
             // Ubicación nueva
-            for (ProductoUbicacion nuevoProducto : ubicacion.getProductos()) {
-                if (esProductoEspecial(nuevoProducto)) {
-                    addProductoEspecial(nuevoProducto, token);
+            System.out.println("Ubicación nueva, creando: " + ubicacion.getNombre());
+
+            if (token != null) {
+                for (ProductoUbicacion nuevoProducto : ubicacion.getProductos()) {
+                    if (esProductoEspecial(nuevoProducto)) {
+                        try {
+                            addProductoEspecial(nuevoProducto, token);
+                        } catch (Exception e) {
+                            System.err.println("Error al crear producto especial: " + e.getMessage());
+                        }
+                    }
                 }
-            }
-            for (ProductoUbicacion p : ubicacion.getProductos()) {
-                if (!esProductoEspecial(p)) {
-                    sumarStockProductoNormalConEstado(p, token);
+                for (ProductoUbicacion p : ubicacion.getProductos()) {
+                    if (!esProductoEspecial(p)) {
+                        try {
+                            sumarStockProductoNormalConEstado(p, token);
+                        } catch (Exception e) {
+                            System.err.println("Error al actualizar stock para producto nuevo: " + e.getMessage());
+                        }
+                    }
                 }
             }
             return ubicacionesRepository.save(ubicacion);
@@ -218,7 +292,7 @@ public class UbicacionesController {
                         ProductoUbicacion prodExistente = ubiAux.getProductos()
                                 .stream()
                                 .filter(p -> p.getRef().equals(prodRestar.getRef()) &&
-                                        p.getEstado().equals(prodRestar.getEstado()))
+                                        Objects.equals(p.getEstado(), prodRestar.getEstado()))
                                 .findFirst()
                                 .orElse(null);
 
@@ -279,36 +353,34 @@ public class UbicacionesController {
                     .body("El número de unidades a reubicar debe ser mayor a 0.");
         }
 
-        // Recuperar la ubicación de origen
+        // Recuperar ubicaciones
         Ubicacion origen = ubicacionesRepository.findByNombre(request.getOrigen()).orElse(null);
         if (origen == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("La ubicación de origen no puede estar vacía");
         }
 
-        // Recuperar la ubicación de destino
         Ubicacion destino = ubicacionesRepository.findByNombre(request.getDestino()).orElse(null);
         if (destino == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("La ubicación destino no puede estar vacía");
         }
 
-        // Determinar si el producto es especial o normal
         ProductoUbicacion productoRequest = request.getProducto();
         boolean esEspecial = esProductoEspecial(productoRequest);
 
         // Buscar el producto en la ubicación de origen
-        ProductoUbicacion prodOrigen = null;
+        ProductoUbicacion prodOrigen;
         if (esEspecial) {
-            // Para productos especiales se busca por description (comparación exacta)
             prodOrigen = origen.getProductos().stream()
                     .filter(p -> p.getDescription() != null
                             && p.getDescription().equals(productoRequest.getDescription()))
                     .findFirst().orElse(null);
         } else {
-            // Para productos normales se busca por ref
+            // Para productos normales, buscar por referencia Y estado
             prodOrigen = origen.getProductos().stream()
-                    .filter(p -> p.getRef() != null && p.getRef().equals(productoRequest.getRef()))
+                    .filter(p -> p.getRef() != null && p.getRef().equals(productoRequest.getRef()) &&
+                            Objects.equals(p.getEstado(), productoRequest.getEstado()))
                     .findFirst().orElse(null);
         }
 
@@ -317,7 +389,7 @@ public class UbicacionesController {
                     .body("El producto no existe en la ubicación de origen: " + request.getOrigen());
         }
 
-        // Validar que la ubicación de origen tenga suficientes unidades
+        // Validar stock suficiente
         if (prodOrigen.getUnidades() < productoRequest.getUnidades()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("No hay unidades suficientes en la ubicación de origen '" + origen.getNombre()
@@ -327,14 +399,13 @@ public class UbicacionesController {
         // Realizar la resta en la ubicación de origen
         int unidadesRestantes = prodOrigen.getUnidades() - productoRequest.getUnidades();
         if (unidadesRestantes == 0) {
-            // Se elimina la entrada
+            // Se elimina la entrada completamente
             origen.getProductos().remove(prodOrigen);
         } else {
             prodOrigen.setUnidades(unidadesRestantes);
         }
 
         // Procesar la suma en la ubicación de destino
-        // Asegurarse de que la colección de productos no sea nula
         if (destino.getProductos() == null) {
             destino.setProductos(new HashSet<>());
         }
@@ -346,27 +417,33 @@ public class UbicacionesController {
                             && p.getDescription().equals(productoRequest.getDescription()))
                     .findFirst().orElse(null);
         } else {
+            // Para productos normales, buscar por referencia Y estado (mantener el estado
+            // original)
             prodDestino = destino.getProductos().stream()
-                    .filter(p -> p.getRef() != null && p.getRef().equals(productoRequest.getRef()))
+                    .filter(p -> p.getRef() != null && p.getRef().equals(productoRequest.getRef()) &&
+                            Objects.equals(p.getEstado(), prodOrigen.getEstado()))
                     .findFirst().orElse(null);
         }
 
         if (prodDestino != null) {
-            // Se suman las unidades a la entrada existente
+            // Sumar unidades a la entrada existente
             prodDestino.setUnidades(prodDestino.getUnidades() + productoRequest.getUnidades());
         } else {
-            // No existe entrada en la ubicación destino: se crea una nueva
+            // Crear nueva entrada manteniendo el estado original
             ProductoUbicacion nuevoProducto = new ProductoUbicacion();
             nuevoProducto.setRef(productoRequest.getRef());
             nuevoProducto.setDescription(productoRequest.getDescription());
             nuevoProducto.setUnidades(productoRequest.getUnidades());
-            // Para productos especiales, conservar el productoId (ya asignado en la
-            // ubicación origen)
+
+            // IMPORTANTE: Mantener el estado del producto original
+            if (!esEspecial) {
+                nuevoProducto.setEstado(prodOrigen.getEstado());
+            }
 
             destino.getProductos().add(nuevoProducto);
         }
 
-        // Se guardan los cambios en ambas ubicaciones
+        // Guardar cambios
         ubicacionesRepository.save(origen);
         ubicacionesRepository.save(destino);
 
@@ -560,7 +637,6 @@ public class UbicacionesController {
             System.out.println("=== TRANSFERENCIA DE ESTADO EN UBICACIÓN ===");
             System.out.println("DTO recibido: " + dto.getReferencia() + " - " + dto.getEstadoOrigen() + " -> "
                     + dto.getEstadoDestino());
-            System.out.println("Token recibido: " + (token != null ? "Presente" : "Ausente"));
 
             // Buscar la ubicación
             Ubicacion ubicacion = ubicacionesRepository.findByNombre(dto.getUbicacionNombre()).orElse(null);
@@ -568,12 +644,12 @@ public class UbicacionesController {
                 return ResponseEntity.badRequest().body("Ubicación no encontrada: " + dto.getUbicacionNombre());
             }
 
-            // Corregir: null sigue siendo null
-            String estadoOrigenBuscar = dto.getEstadoOrigen() == null ? null : dto.getEstadoOrigen();
-            String estadoDestinoBuscar = dto.getEstadoDestino() == null ? null : dto.getEstadoDestino();
+            String estadoOrigenBuscar = dto.getEstadoOrigen();
+            String estadoDestinoBuscar = dto.getEstadoDestino();
 
-            System.out.println("Buscando producto con estado origen: "
-                    + (estadoOrigenBuscar == null ? "NULL" : estadoOrigenBuscar));
+            System.out.println("Productos en ubicación antes de transferencia: " + ubicacion.getProductos().size());
+            ubicacion.getProductos().forEach(p -> System.out.println("  - " + p.getRef() + " | Estado: " + p.getEstado()
+                    + " | Unidades: " + p.getUnidades() + " | ID: " + p.getId()));
 
             // Buscar el producto origen en la ubicación
             ProductoUbicacion productoOrigen = ubicacion.getProductos().stream()
@@ -590,7 +666,8 @@ public class UbicacionesController {
                                 + " en la ubicación");
             }
 
-            System.out.println("Producto origen encontrado con " + productoOrigen.getUnidades() + " unidades");
+            System.out.println("Producto origen encontrado - ID: " + productoOrigen.getId() + ", Unidades: "
+                    + productoOrigen.getUnidades());
 
             // Verificar stock suficiente
             if (productoOrigen.getUnidades() < dto.getCantidad()) {
@@ -607,16 +684,19 @@ public class UbicacionesController {
 
             if (productoDestino == null) {
                 System.out.println("Creando nuevo producto con estado destino");
-                // Crear nuevo ProductoUbicacion con el estado destino
                 productoDestino = new ProductoUbicacion();
                 productoDestino.setRef(dto.getReferencia());
                 productoDestino.setDescription(productoOrigen.getDescription());
-                productoDestino.setEstado(estadoDestinoBuscar); // Puede ser null
+                productoDestino.setEstado(estadoDestinoBuscar);
                 productoDestino.setUnidades(0);
                 ubicacion.getProductos().add(productoDestino);
             } else {
-                System.out.println("Producto destino ya existe con " + productoDestino.getUnidades() + " unidades");
+                System.out.println("Producto destino ya existe - ID: " + productoDestino.getId() + ", Unidades: "
+                        + productoDestino.getUnidades());
             }
+
+            // IMPORTANTE: Capturar el ID antes de modificar las unidades
+            final Long idProductoAEliminar = productoOrigen.getId();
 
             // Actualizar cantidades
             productoOrigen.setUnidades(productoOrigen.getUnidades() - dto.getCantidad());
@@ -625,16 +705,24 @@ public class UbicacionesController {
             System.out.println("Nuevas cantidades - Origen: " + productoOrigen.getUnidades() + ", Destino: "
                     + productoDestino.getUnidades());
 
-            // Eliminar producto origen si queda sin stock
+            // Eliminar producto origen si queda sin stock usando removeIf()
+            boolean productoEliminado = false;
             if (productoOrigen.getUnidades() == 0) {
                 System.out.println("Eliminando producto origen por stock 0");
-                ubicacion.getProductos().remove(productoOrigen);
+                System.out.println("ID del producto a eliminar: " + idProductoAEliminar);
+
+                // Usar removeIf() con el ID para eliminar de forma segura
+                productoEliminado = ubicacion.getProductos()
+                        .removeIf(p -> p.getId() != null && p.getId().equals(idProductoAEliminar));
+
+                System.out.println("Producto eliminado del Set: " + productoEliminado);
+                System.out.println("Productos restantes en ubicación: " + ubicacion.getProductos().size());
             }
 
             // Llamar al microservicio de productos para actualizar el stock
             TransferirEstadoDTO dtoProductos = new TransferirEstadoDTO();
             dtoProductos.setReferencia(dto.getReferencia());
-            dtoProductos.setEstadoOrigen(dto.getEstadoOrigen()); // Mantener tal como viene (null o string)
+            dtoProductos.setEstadoOrigen(dto.getEstadoOrigen());
             dtoProductos.setEstadoDestino(dto.getEstadoDestino());
             dtoProductos.setCantidad(dto.getCantidad());
 
@@ -642,8 +730,13 @@ public class UbicacionesController {
             transferirEstadoEnProductos(dtoProductos, token);
 
             // Guardar cambios en ubicación
-            ubicacionesRepository.save(ubicacion);
+            Ubicacion ubicacionGuardada = ubicacionesRepository.save(ubicacion);
             System.out.println("Ubicación guardada correctamente");
+
+            // Verificar que se guardó correctamente
+            System.out.println("Productos en ubicación después de guardar: " + ubicacionGuardada.getProductos().size());
+            ubicacionGuardada.getProductos().forEach(p -> System.out.println("  - " + p.getRef() + " | Estado: "
+                    + p.getEstado() + " | Unidades: " + p.getUnidades() + " | ID: " + p.getId()));
 
             return ResponseEntity.ok("Transferencia de estado realizada correctamente en la ubicación");
 
@@ -718,40 +811,114 @@ public class UbicacionesController {
 
     private void sumarStockProductoNormalConEstado(ProductoUbicacion productoUbicacion, String token) {
         RestTemplate restTemplate = new RestTemplate();
-
-        // Crear el producto con estado si no existe
-        String urlCrear = "http://localhost:8091/productos";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
+        headers.set("Content-Type", "application/json");
 
-        Producto producto = new Producto();
-        producto.setReferencia(productoUbicacion.getRef());
-        producto.setDescription(productoUbicacion.getDescription());
-        producto.setEstado(productoUbicacion.getEstado());
-        producto.setStock(productoUbicacion.getUnidades());
+        String ref = productoUbicacion.getRef();
+        String estado = productoUbicacion.getEstado();
+        Integer unidades = productoUbicacion.getUnidades();
 
-        HttpEntity<Producto> requestEntity = new HttpEntity<>(producto, headers);
+        System.out.println("Actualizando stock para: " + ref + " | Estado: " + estado + " | Unidades: " + unidades);
+
+        // Verificar si el producto con ese estado específico existe
+        String urlVerificar = "http://localhost:8091/productos/referencia/" + ref + "/estado/" + estado;
 
         try {
-            restTemplate.postForEntity(urlCrear, requestEntity, Producto.class);
+            HttpEntity<Void> verificarEntity = new HttpEntity<>(headers);
+            ResponseEntity<Producto> verificarResponse = restTemplate.exchange(
+                    urlVerificar,
+                    HttpMethod.GET,
+                    verificarEntity,
+                    Producto.class);
+
+            if (verificarResponse.getBody() != null) {
+                // El producto ya existe, sumar stock usando el NUEVO endpoint específico por
+                // estado
+                System.out.println("Producto existe, sumando stock usando endpoint específico...");
+                String urlSumar = "http://localhost:8091/productos/" + ref + "/estado/" + estado + "/sumar";
+                HttpEntity<Integer> sumarEntity = new HttpEntity<>(unidades, headers);
+
+                try {
+                    ResponseEntity<Producto> sumarResponse = restTemplate.exchange(
+                            urlSumar, HttpMethod.PUT, sumarEntity, Producto.class);
+
+                    if (sumarResponse.getStatusCode().is2xxSuccessful()) {
+                        System.out.println("Stock sumado exitosamente");
+                    } else {
+                        System.err.println("Error al sumar stock: " + sumarResponse.getStatusCode());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error al sumar stock: " + e.getMessage());
+                }
+            }
         } catch (Exception e) {
-            // Si ya existe, sumar stock
-            String urlSumar = "http://localhost:8091/productos/" + productoUbicacion.getRef() + "/sumar";
-            HttpEntity<Integer> sumarEntity = new HttpEntity<>(productoUbicacion.getUnidades(), headers);
-            restTemplate.exchange(urlSumar, HttpMethod.PUT, sumarEntity, Producto.class);
+            // El producto no existe, crearlo
+            System.out.println("Producto no existe, creando...");
+            String urlCrear = "http://localhost:8091/productos";
+
+            Producto producto = new Producto();
+            producto.setReferencia(ref);
+            producto.setDescription(productoUbicacion.getDescription());
+            producto.setEstado(estado);
+            producto.setStock(unidades);
+
+            HttpEntity<Producto> crearEntity = new HttpEntity<>(producto, headers);
+
+            try {
+                ResponseEntity<Producto> crearResponse = restTemplate.postForEntity(urlCrear, crearEntity,
+                        Producto.class);
+                if (crearResponse.getStatusCode().is2xxSuccessful()) {
+                    System.out.println("Producto creado exitosamente con estado " + estado);
+                }
+            } catch (HttpClientErrorException ex) {
+                if (ex.getResponseBodyAsString().contains("Ya existe un producto")) {
+                    System.out.println("Producto ya existe (creado por otro proceso), sumando stock...");
+                    // Intentar sumar stock usando el endpoint específico
+                    String urlSumar = "http://localhost:8091/productos/" + ref + "/estado/" + estado + "/sumar";
+                    HttpEntity<Integer> sumarEntity = new HttpEntity<>(unidades, headers);
+
+                    try {
+                        restTemplate.exchange(urlSumar, HttpMethod.PUT, sumarEntity, Producto.class);
+                        System.out.println("Stock sumado exitosamente después de detectar producto existente");
+                    } catch (Exception sumException) {
+                        System.err.println("Error al sumar stock después de crear: " + sumException.getMessage());
+                    }
+                } else {
+                    System.err.println("Error al crear producto: " + ex.getMessage());
+                }
+            } catch (Exception ex) {
+                System.err.println("Error general al crear producto: " + ex.getMessage());
+            }
         }
     }
 
     private void restarStockProductoNormalConEstado(ProductoUbicacion productoUbicacion, String token) {
         RestTemplate restTemplate = new RestTemplate();
-        String url = "http://localhost:8091/productos/" + productoUbicacion.getRef() + "/restar";
+        String ref = productoUbicacion.getRef();
+        String estado = productoUbicacion.getEstado();
+        Integer unidades = productoUbicacion.getUnidades();
+
+        // Usar el NUEVO endpoint específico por estado
+        String url = "http://localhost:8091/productos/" + ref + "/estado/" + estado + "/restar";
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
-        HttpEntity<Integer> requestEntity = new HttpEntity<>(productoUbicacion.getUnidades(), headers);
+        HttpEntity<Integer> requestEntity = new HttpEntity<>(unidades, headers);
 
-        restTemplate.exchange(url, HttpMethod.PUT, requestEntity, Producto.class);
+        try {
+            ResponseEntity<Producto> response = restTemplate.exchange(url, HttpMethod.PUT, requestEntity,
+                    Producto.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("Stock restado exitosamente para " + ref + " estado " + estado);
+            } else {
+                System.err.println("Error al restar stock: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error al restar stock: " + e.getMessage());
+        }
     }
 
     @GetMapping("/estado/{estado}/paginado")
@@ -857,6 +1024,89 @@ public class UbicacionesController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al migrar estado en ubicaciones: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/descripcionProducto/{description}/estado/{estado}/paginado")
+    public Page<Ubicacion> findByProductosDescriptionAndEstado(
+            @PathVariable String description,
+            @PathVariable String estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ubicacionesRepository.findByProductosDescriptionContainingIgnoreCaseAndEstado(
+                description, estado, PageRequest.of(page, size));
+    }
+
+    @GetMapping("/descripcionProducto/{description}/estado/{estado}")
+    public Iterable<Ubicacion> findByProductosDescriptionAndEstado(
+            @PathVariable String description,
+            @PathVariable String estado) {
+        return ubicacionesRepository.findByProductosDescriptionContainingIgnoreCaseAndEstado(description, estado);
+    }
+
+    // Búsqueda por referencia y estado (mejorado)
+    @GetMapping("/referenciaProducto/{ref}/estado/{estado}/paginado")
+    public Page<Ubicacion> findByProductosRefAndEstado(
+            @PathVariable String ref,
+            @PathVariable String estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ubicacionesRepository.findByProductosRefContainingIgnoreCaseAndEstado(
+                ref, estado, PageRequest.of(page, size));
+    }
+
+    @GetMapping("/referenciaProducto/{ref}/estado/{estado}")
+    public Iterable<Ubicacion> findByProductosRefAndEstado(
+            @PathVariable String ref,
+            @PathVariable String estado) {
+        return ubicacionesRepository.findByProductosRefContainingIgnoreCaseAndEstado(ref, estado);
+    }
+
+    @PostMapping("/actualizar-estado")
+    public ResponseEntity<?> actualizarEstado(@RequestBody CambioEstadoRequest request) {
+        try {
+            int productosActualizados = 0;
+            Iterable<Ubicacion> ubicaciones = ubicacionesRepository.findAll();
+
+            for (Ubicacion ubicacion : ubicaciones) {
+                boolean huboCambios = false;
+                for (ProductoUbicacion producto : ubicacion.getProductos()) {
+                    if (request.getNombreAnterior().equals(producto.getEstado())) {
+                        producto.setEstado(request.getNombreNuevo());
+                        productosActualizados++;
+                        huboCambios = true;
+                    }
+                }
+                if (huboCambios) {
+                    ubicacionesRepository.save(ubicacion);
+                }
+            }
+
+            return ResponseEntity.ok("Estados actualizados en ubicaciones: " + productosActualizados + " productos");
+        } catch (Exception e) {
+            System.err.println("Error actualizando estados en ubicaciones: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error actualizando estados en ubicaciones");
+        }
+    }
+
+    @GetMapping("/verificar-estado/{estado}")
+    public ResponseEntity<Boolean> verificarEstadoEnUso(@PathVariable String estado) {
+        try {
+            Iterable<Ubicacion> ubicaciones = ubicacionesRepository.findAll();
+
+            for (Ubicacion ubicacion : ubicaciones) {
+                for (ProductoUbicacion producto : ubicacion.getProductos()) {
+                    if (estado.equals(producto.getEstado())) {
+                        return ResponseEntity.ok(true);
+                    }
+                }
+            }
+
+            return ResponseEntity.ok(false);
+        } catch (Exception e) {
+            System.err.println("Error verificando estado en ubicaciones: " + e.getMessage());
+            return ResponseEntity.ok(true); // Ser conservador en caso de error
         }
     }
 }

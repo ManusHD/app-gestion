@@ -51,7 +51,7 @@ export class ReubicarProductoComponent implements OnInit {
   cerrarModal() {
     this.mostrarModal = false;
 
-    if(this.reubicacionCompletada) {
+    if (this.reubicacionCompletada) {
       location.reload();
     }
   }
@@ -60,11 +60,16 @@ export class ReubicarProductoComponent implements OnInit {
     this.btnSubmitActivado = false;
     this.productoReubicado.ref = this.productoActual.ref;
     this.productoReubicado.description = this.productoActual.description;
+
+    // IMPORTANTE: Mantener el estado del producto original
+    this.productoReubicado.estado = this.productoActual.estado;
+
     this.reubicacion = {
       producto: this.productoReubicado,
       origen: this.ubicacionActual,
       destino: this.ubicacionDestino,
     };
+
     this.ubiService.reubicar(this.reubicacion).subscribe(
       (data) => {
         console.log('Reubicación Recibida', data);
@@ -91,6 +96,7 @@ export class ReubicarProductoComponent implements OnInit {
         ref: row.ref,
         description: row.description,
         unidades: row.unidades,
+        estado: row.estado, // IMPORTANTE: Mantener el estado original
       };
 
       reubicacionRequest.producto = producto;

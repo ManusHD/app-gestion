@@ -37,6 +37,7 @@ export class UbicacionService {
   }
 
   getUbicacionesByReferenciaProductoPaginado(referenciaProducto: String, page: number, size: number ): Observable<any> {
+    console.log(referenciaProducto)
     return this.httpClient.get<any>(`${this.apiUrl}/referenciaProducto/${referenciaProducto}/paginado?page=${page}&size=${size}`);
   }
 
@@ -73,15 +74,6 @@ export class UbicacionService {
     return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/paginado?page=${page}&size=${size}`);
   }
 
-  // Métodos para búsqueda por referencia y estado
-  getUbicacionesByReferenciaAndEstado(referencia: string, estado: string): Observable<Ubicacion[]> {
-    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}`);
-  }
-
-  getUbicacionesByReferenciaAndEstadoPaginado(referencia: string, estado: string, page: number, size: number): Observable<any> {
-    return this.httpClient.get<any>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}/paginado?page=${page}&size=${size}`);
-  }
-
   // Método para transferir estado en ubicación
   transferirEstadoEnUbicacion(dto: TransferirEstadoUbicacionDTO): Observable<string> {
     const dtoLimpio = {
@@ -99,5 +91,22 @@ export class UbicacionService {
   // Método para eliminar grupo de productos en ubicaciones
   eliminarGrupoProductosEnUbicaciones(referencia: string): Observable<any> {
     return this.httpClient.delete<any>(`${this.apiUrl}/productos/grupo/${referencia}`);
+  }
+
+  getUbicacionesByDescripcionAndEstado(descripcion: string, estado: string): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/descripcionProducto/${descripcion}/estado/${estado}`);
+  }
+  
+  getUbicacionesByDescripcionAndEstadoPaginado(descripcion: string, estado: string, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/descripcionProducto/${descripcion}/estado/${estado}/paginado?page=${page}&size=${size}`);
+  }
+  
+  // Métodos para búsqueda por referencia y estado (mejorados)
+  getUbicacionesByReferenciaAndEstado(referencia: string, estado: string): Observable<Ubicacion[]> {
+    return this.httpClient.get<Ubicacion[]>(`${this.apiUrl}/referenciaProducto/${referencia}/estado/${estado}`);
+  }
+  
+  getUbicacionesByReferenciaAndEstadoPaginado(referencia: string, estado: string, page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/referenciaProducto/${referencia}/estado/${estado}/paginado?page=${page}&size=${size}`);
   }
 }

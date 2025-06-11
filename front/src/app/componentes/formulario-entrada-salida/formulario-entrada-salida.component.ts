@@ -48,7 +48,7 @@ export class FormularioEntradaSalidaComponent
     this.cargarColaboradores();
     this.cargarPerfumerias('a');
     this.cargarOtrasDirecciones('A');
-    this.cargarEstaddos();
+    this.cargarEstados();
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -134,7 +134,7 @@ export class FormularioEntradaSalidaComponent
     this.salidaUbicacionService.resetProductos();
   }
 
-  cargarEstaddos() {
+  cargarEstados() {
     this.estadosService.getEstados().subscribe({
       next: (data) => {
         console.log(data)
@@ -331,15 +331,36 @@ export class FormularioEntradaSalidaComponent
         const refB = b.get('ref')?.value || '';
         return refA.localeCompare(refB);
       });
+      
       if (this.esSalida()) {
         this.cargarAgenciasTransporte();
         this.productosControls.controls.forEach((control, index) => {
           const ref = control.get('ref')?.value;
+          const estado = control.get('estado')?.value;
           const descripcion = control.get('description')?.value;
-          if (ref) {
-            this.obtenerUbicacionesProductoSalida(ref);
-          }
-          if (descripcion) {
+          
+          if (ref && !this.esProductoEspecial(ref)) {
+            // Para productos normales, cargar estados disponibles
+            this.productoService.getEstadosDisponiblesPorReferencia(ref)
+              .subscribe(estados => {
+                this.estadosDisponiblesPorProducto[index] = estados;
+              });
+            
+            // Si ya tiene estado y ubicación, validar stock específico
+            if (estado) {
+              this.cargarUbicacionesPorReferenciaYEstado(ref, estado, index);
+              
+              const ubicacion = control.get('ubicacion')?.value;
+              if (ubicacion) {
+                // Validar stock específico después de cargar ubicaciones
+                setTimeout(() => {
+                  this.validarStockEspecifico(index);
+                  this.actualizarValidadoresUnidades(index);
+                }, 500);
+              }
+            }
+          } else if (this.esProductoEspecial(ref) && descripcion) {
+            // Para productos especiales, usar descripción
             this.obtenerUbicacionesProductoEspecial(ref, descripcion);
           }
         });
@@ -640,4 +661,61 @@ export class FormularioEntradaSalidaComponent
     }, 200);
   }
 
+  // Método para manejar cambio de estado (llamado desde template)
+  override onEstadoChange(index: number) {
+    super.onEstadoChange(index);
+  }
+
+  // Método para obtener estados disponibles (llamado desde template)
+  override getEstadosDisponibles(index: number, esSalida: boolean): string[] {
+      return super.getEstadosDisponibles(index, esSalida);
+  }
+
+  // Método para obtener ubicaciones por índice (llamado desde template)
+  override getUbicacionesPorIndice(index: number): Ubicacion[] {
+    return super.getUbicacionesPorIndice(index);
+  }
+
+  // Método para verificar si el estado es requerido (llamado desde template)
+  override esEstadoRequerido(index: number): boolean {
+    return super.esEstadoRequerido(index);
+  }
+
+  // Método para manejar cambio de ubicación (llamado desde template)
+  override onUbicacionChange(index: number) {
+    super.onUbicacionChange(index);
+  }
+
+  // Método para verificar si las unidades exceden el stock (llamado desde template)
+  override unidadesExcedenStock(index: number): boolean {
+    return super.unidadesExcedenStock(index);
+  }
+
+  // Método para obtener stock disponible (llamado desde template)
+  override getStockDisponible(index: number): number {
+    return super.getStockDisponible(index);
+  }
+
+  // Método para mostrar mensaje de stock disponible
+  getMensajeStock(index: number): string {
+    if (!this.esSalida()) {
+      return '';
+    }
+
+    const refControl = this.productosControls.at(index).get('ref');
+    const estadoControl = this.productosControls.at(index).get('estado');
+    const ubicacionControl = this.productosControls.at(index).get('ubicacion');
+
+    const referencia = refControl?.value;
+    const estado = estadoControl?.value;
+    const ubicacion = ubicacionControl?.value;
+
+    if (referencia && estado && ubicacion && !this.esProductoEspecial(referencia)) {
+      const stockDisponible = this.getStockDisponible(index);
+      return `Stock disponible: ${stockDisponible}`;
+    }
+
+    return '';
+  }
+  
 }

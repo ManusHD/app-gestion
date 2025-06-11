@@ -1,9 +1,13 @@
-
 #lista-ubicaciones {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
     flex-wrap: wrap;
     width: 100%;
+}
+
+#lista-ubicaciones > div {
+    width: 100%;
+    max-width: 1400px;
 }
 
 .tabla-paginator {
@@ -20,3 +24,89 @@
 .btn-productos img{
     margin-right: 0.5rem;
 }
+
+/* Filtro de Estado */
+.filtro-estado {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.filtro-estado label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--btn-color-w);
+    font-family: 'Nunito-Medium';
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.filtro-estado input[type="checkbox"] {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--letter-color);
+    border-radius: 4px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.filtro-estado input[type="checkbox"]:checked {
+    background-color: var(--letter-color);
+    border-color: var(--letter-color);
+}
+
+.filtro-estado input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.select-estado-filtro {
+    background-color: #374151;
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'Nunito-Medium';
+    font-size: 12px;
+    min-width: 150px;
+}
+
+/* Botón Editar Mejorado */
+.botones-acciones {
+    align-items: center;
+}
+
+.btn-editar {
+    background: linear-gradient(135deg, var(--color-detalles), #f4c842);
+    color: var(--btn-color-b);
+    border: none;
+    padding: 10px 16px;
+    font-family: 'Nunito-Bold';
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 10px rgba(235, 185, 52, 0.3);
+}
+
+.btn-editar:hover {
+    background: linear-gradient(135deg, #f4c842, var(--color-detalles));
+    box-shadow: 0 5px 15px rgba(235, 185, 52, 0.4);
+}
+

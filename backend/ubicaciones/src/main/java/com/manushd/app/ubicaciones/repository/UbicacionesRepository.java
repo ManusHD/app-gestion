@@ -37,6 +37,8 @@ public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicac
 
         Optional<Ubicacion> findById(Long id);
 
+        Iterable<Ubicacion> findAll();
+
         Ubicacion save(Ubicacion ubicacion);
 
         void deleteById(Long id);
@@ -57,4 +59,27 @@ public interface UbicacionesRepository extends PagingAndSortingRepository<Ubicac
 
         @Query("SELECT u FROM Ubicacion u JOIN u.productos p WHERE p.estado = :estado")
         Iterable<Ubicacion> findByProductosEstado(@Param("estado") String estado);
+
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')) AND p.estado = :estado ORDER BY u.nombre")
+        Page<Ubicacion> findByProductosDescriptionContainingIgnoreCaseAndEstado(
+                @Param("description") String description, 
+                @Param("estado") String estado, 
+                Pageable pageable);
+
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')) AND p.estado = :estado ORDER BY u.nombre")
+        Iterable<Ubicacion> findByProductosDescriptionContainingIgnoreCaseAndEstado(
+                @Param("description") String description, 
+                @Param("estado") String estado);
+
+        // Búsqueda por referencia y estado (ya existe pero verificar)
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.ref) LIKE LOWER(CONCAT('%', :ref, '%')) AND p.estado = :estado ORDER BY u.nombre")
+        Page<Ubicacion> findByProductosRefContainingIgnoreCaseAndEstado(
+                @Param("ref") String ref, 
+                @Param("estado") String estado, 
+                Pageable pageable);
+
+        @Query("SELECT DISTINCT u FROM Ubicacion u JOIN u.productos p WHERE LOWER(p.ref) LIKE LOWER(CONCAT('%', :ref, '%')) AND p.estado = :estado ORDER BY u.nombre")
+        Iterable<Ubicacion> findByProductosRefContainingIgnoreCaseAndEstado(
+                @Param("ref") String ref, 
+                @Param("estado") String estado);
 }

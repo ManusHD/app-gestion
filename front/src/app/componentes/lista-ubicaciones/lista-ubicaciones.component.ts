@@ -34,6 +34,10 @@ export class ListaUbicacionesComponent implements OnInit {
   buscando: boolean = false;
   estados: Estado[] = [];
   
+  // Propiedades para filtros combinados
+  estadoSeleccionado: string = '';
+  aplicarFiltroEstado: boolean = false;
+
   private ubicacionesParaExportarSubject = new BehaviorSubject<Ubicacion[]>([]);
   ubicacionesParaExportar$ = this.ubicacionesParaExportarSubject.asObservable();
 
@@ -118,74 +122,75 @@ export class ListaUbicacionesComponent implements OnInit {
     if (this.tipoBusqueda === 'ubicaciones') {
       this.ubicacionService.getUbicacionesByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
-          this.ubicaciones = data.content;
-          setTimeout(() => {
-            this.totalElementos = data.totalElements;
-          });
-          this.dataSourceUbicaciones.data = this.ubicaciones;
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
-        },
-        () => {
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
+          this.procesarResultadosBusqueda(data);
+        }, () => {
+          this.carga.hide();
         });
     } else if(this.tipoBusqueda === 'referencia') {
-      this.ubicacionService.getUbicacionesByReferenciaProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
-        .subscribe((data) => {
-          this.ubicaciones = data.content;
-          setTimeout(() => {
-            this.totalElementos = data.totalElements;
+      if (this.aplicarFiltroEstado && this.estadoSeleccionado) {
+        // Búsqueda por referencia + estado
+        this.ubicacionService.getUbicacionesByReferenciaAndEstadoPaginado(
+          this.buscador, this.estadoSeleccionado, this.pageIndex, this.pageSize)
+          .subscribe((data) => {
+            this.procesarResultadosBusqueda(data);
+          }, () => {
+            this.carga.hide();
           });
-          this.dataSourceUbicaciones.data = this.ubicaciones;
-          setTimeout(() => {
+      } else {
+        // Búsqueda solo por referencia
+        this.ubicacionService.getUbicacionesByReferenciaProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
+          .subscribe((data) => {
+            this.procesarResultadosBusqueda(data);
+          }, () => {
             this.carga.hide();
-          }); 
-        },
-        () => {
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
-        });
+          });
+      }
     } else if(this.tipoBusqueda === 'descripcion') {
-      this.ubicacionService.getUbicacionesByDescripcionProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
-        .subscribe((data) => {
-          this.ubicaciones = data.content;
-          setTimeout(() => {
-            this.totalElementos = data.totalElements;
+      if (this.aplicarFiltroEstado && this.estadoSeleccionado) {
+        // Búsqueda por descripción + estado
+        this.ubicacionService.getUbicacionesByDescripcionAndEstadoPaginado(
+          this.buscador, this.estadoSeleccionado, this.pageIndex, this.pageSize)
+          .subscribe((data) => {
+            this.procesarResultadosBusqueda(data);
+          }, () => {
+            this.carga.hide();
           });
-          this.dataSourceUbicaciones.data = this.ubicaciones;
-          setTimeout(() => {
+      } else {
+        // Búsqueda solo por descripción
+        this.ubicacionService.getUbicacionesByDescripcionProductoPaginado(this.buscador, this.pageIndex, this.pageSize)
+          .subscribe((data) => {
+            this.procesarResultadosBusqueda(data);
+          }, () => {
             this.carga.hide();
-          }); 
-        },
-        () => {
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
-        });
+          });
+      }
     } else if(this.tipoBusqueda === 'estado') {
-      // NUEVA búsqueda por estado
       this.ubicacionService.getUbicacionesByEstadoPaginado(this.buscador, this.pageIndex, this.pageSize)
         .subscribe((data) => {
-          this.ubicaciones = data.content;
-          console.log(this.ubicaciones)
-          setTimeout(() => {
-            this.totalElementos = data.totalElements;
-          });
-          this.dataSourceUbicaciones.data = this.ubicaciones;
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
-        },
-        () => {
-          setTimeout(() => {
-            this.carga.hide();
-          }); 
+          this.procesarResultadosBusqueda(data);
+        }, () => {
+          this.carga.hide();
         });
     }
+  }
+
+  private procesarResultadosBusqueda(data: any) {
+    this.ubicaciones = data.content;
+    setTimeout(() => {
+      this.totalElementos = data.totalElements;
+    });
+    this.dataSourceUbicaciones.data = this.ubicaciones;
+    setTimeout(() => {
+      this.carga.hide();
+    });
+  }
+
+  // Método para actualizar el buscador según el tipo
+  onTipoBusquedaChange() {
+    this.resetearBuscador();
+    this.aplicarFiltroEstado = false;
+    this.estadoSeleccionado = '';
+    this.buscador = '';
   }
 
   cargarUbicaciones(): void {
@@ -285,17 +290,30 @@ export class ListaUbicacionesComponent implements OnInit {
           this.ubicacionesParaExportarSubject.next(data);
         });
       } else if(this.tipoBusqueda === 'referencia') {
-        this.ubicacionService.getUbicacionesByReferenciaProducto(this.buscador)
-        .subscribe(data => {
-          this.ubicacionesParaExportarSubject.next(data);
-        });
+        if (this.aplicarFiltroEstado && this.estadoSeleccionado) {
+          this.ubicacionService.getUbicacionesByReferenciaAndEstado(this.buscador, this.estadoSeleccionado)
+          .subscribe(data => {
+            this.ubicacionesParaExportarSubject.next(data);
+          });
+        } else {
+          this.ubicacionService.getUbicacionesByReferenciaProducto(this.buscador)
+          .subscribe(data => {
+            this.ubicacionesParaExportarSubject.next(data);
+          });
+        }
       } else if(this.tipoBusqueda === 'descripcion') {
-        this.ubicacionService.getUbicacionesByDescripcionProducto(this.buscador)
-        .subscribe(data => {
-          this.ubicacionesParaExportarSubject.next(data);
-        });
+        if (this.aplicarFiltroEstado && this.estadoSeleccionado) {
+          this.ubicacionService.getUbicacionesByDescripcionAndEstado(this.buscador, this.estadoSeleccionado)
+          .subscribe(data => {
+            this.ubicacionesParaExportarSubject.next(data);
+          });
+        } else {
+          this.ubicacionService.getUbicacionesByDescripcionProducto(this.buscador)
+          .subscribe(data => {
+            this.ubicacionesParaExportarSubject.next(data);
+          });
+        }
       } else if(this.tipoBusqueda === 'estado') {
-        // NUEVA exportación por estado
         this.ubicacionService.getUbicacionesByEstado(this.buscador)
         .subscribe(data => {
           this.ubicacionesParaExportarSubject.next(data);

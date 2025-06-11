@@ -324,6 +324,28 @@ input::placeholder {
     height: 39px;
 }
 
+.btn-buscar {
+    background: linear-gradient(135deg, var(--table-primary), #2563eb);
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-buscar:hover {
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+.btn-resetear {
+    background: linear-gradient(135deg, var(--error-color), #dc2626);
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-resetear:hover {
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
 .buscador .btn-buscar,
 .campos-gestor .btn-crear {
     border: 1px solid rgb(29 78 216);
@@ -817,3 +839,4 @@ input::placeholder {
     transform: none;
     box-shadow: none;
 }
+

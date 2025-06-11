@@ -1,14 +1,20 @@
-<button class="btn-productos" (click)="mostrarDetalles()">VER PRODUCTOS</button>
+<button class="btn-productos" (click)="mostrarDetalles()">
+    VER PRODUCTOS
+</button>
 
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
+        <!-- Header mejorado del modal -->
         <span class="close" (click)="cerrarModal()">&times;</span>
         <h2>Productos: <span class="titulo-modal">{{ubicacion.nombre}}</span></h2>
-        <div class="flotar-medio columna">
-            
+
+        <!-- Cuerpo del modal -->
+        <div class="modal-body">
             <!-- Productos Especiales -->
-            <div *ngIf="tieneProductosEspeciales()" class="productos-especiales-section">
-                <h3>Productos Especiales</h3>
+            <div *ngIf="tieneProductosEspeciales()" class="productos-especiales-section productos-section">
+                <h3>
+                    Productos Especiales
+                </h3>
                 <table class="tabla-especiales">
                     <thead>
                         <tr>
@@ -20,9 +26,9 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let producto of getProductosEspeciales()">
-                            <td>{{producto.ref}}</td>
+                            <td><strong>{{producto.ref}}</strong></td>
                             <td>{{producto.description}}</td>
-                            <td>{{producto.unidades}}</td>
+                            <td><strong>{{producto.unidades}}</strong></td>
                             <td class="centrar transparente">
                                 <app-reubicar-producto [productoActual]="producto" [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
                             </td>
@@ -32,24 +38,26 @@
             </div>
 
             <!-- Productos Normales Agrupados por Estado -->
-            <div *ngIf="productosAgrupados.length > 0" class="productos-normales-section">
-                <h3>Productos Normales (por Estado)</h3>
+            <div *ngIf="productosAgrupados.length > 0" class="productos-normales-section productos-section">
+                <h3>
+                    Productos Normales (por Estado)
+                </h3>
                 
                 <div *ngFor="let grupo of productosAgrupados" class="grupo-producto-modal">
                     <div class="cabecera-grupo-modal" (click)="toggleExpand(grupo.referencia)">
-                        <span class="expand-icon">{{ grupo.expanded ? '▼' : '▶' }}</span>
+                        <span class="expand-icon" [style.transform]="grupo.expanded ? 'rotate(90deg)' : 'rotate(0deg)'">▶</span>
                         <strong>{{ grupo.referencia }}</strong> - {{ grupo.description }}
-                        <span class="total-unidades-modal">(Total: {{ grupo.totalUnidades }} unidades)</span>
+                        <span *ngFor="let producto of grupo.productos" class="estado-chip">
+                            {{ producto.estado || 'Sin estado' }}: {{ producto.unidades }}
+                        </span>
+                        <span class="total-unidades-modal">{{ grupo.totalUnidades }} unidades</span>
                     </div>
                     
                     <!-- Vista resumida cuando está contraído -->
-                    <div *ngIf="!grupo.expanded" class="vista-resumida">
+                    <!-- <div *ngIf="!grupo.expanded" class="vista-resumida">
                         <div class="estados-resumidos">
-                            <span *ngFor="let producto of grupo.productos" class="estado-chip">
-                                {{ producto.estado }}: {{ producto.unidades }}
-                            </span>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <!-- Vista detallada cuando está expandido -->
                     <div *ngIf="grupo.expanded" class="detalle-estados-modal">
@@ -70,6 +78,7 @@
                                             {{ formatearEstado(producto.estado) }}
                                         </span>
                                         <ng-container *ngIf="!producto.estado">
+                                            <br><br>
                                             <select [(ngModel)]="estadoDestinoSinEstado" class="select-estado-modal" title="Asignar estado a productos sin estado">
                                                 <option value="" disabled selected>Selecciona estado</option>
                                                 <option *ngFor="let estado of estados" [value]="estado.nombre">
@@ -80,13 +89,14 @@
                                                 [disabled]="!estadoDestinoSinEstado"
                                                 (click)="migrarProductosSinEstado(grupo.referencia)"
                                                 class="btn-migrar"
-                                                title="Asignar estado seleccionado">
+                                                title="Asignar estado seleccionado"
+                                                style="margin-top: 8px;">
                                                 ASIGNAR ESTADO
                                             </button>
                                         </ng-container>
                                     </td>
                                     <td><strong>{{ producto.unidades }}</strong></td>
-                                    <td class="">
+                                    <td>
                                         <button *ngIf="!mostrarTransferencia[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre]"
                                                 (click)="mostrarFormularioTransferencia(grupo.referencia, producto.estado!)"
                                                 class="btn-transferir-modal">
@@ -110,11 +120,12 @@
                                                        [(ngModel)]="transferirData[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre].cantidad"
                                                        [max]="producto.unidades!"
                                                        min="1"
+                                                       placeholder="Cantidad"
                                                        class="input-cantidad-modal">
                                                 <button (click)="ejecutarTransferencia(grupo.referencia, producto.estado!)"
-                                                        class="btn-confirmar-modal">✓</button>
+                                                        class="btn-confirmar-modal" title="Confirmar transferencia">✓</button>
                                                 <button (click)="cancelarTransferencia(grupo.referencia, producto.estado!)"
-                                                        class="btn-cancelar-modal">✗</button>
+                                                        class="btn-cancelar-modal" title="Cancelar">✗</button>
                                             </div>
                                         </div>
                                     </td>
@@ -134,11 +145,14 @@
             </div>
         </div>
         
-        <button *ngIf="ubicacion.productos!.length > 0" 
-                class="ubicacion-button" 
-                [appConfirm]="'¿QUIERES CREAR UNA PREVISIÓN DE SALIDA CON ESTA UBICACION?'" 
-                (confirmed)="sacarUbicacion()">
-            <span class="button-text">DAR SALIDA A LA UBICACIÓN</span>
-        </button>
+        <!-- Botón de acción principal -->
+        <div style="text-align: center; padding: 0 30px 30px;">
+            <button *ngIf="ubicacion.productos!.length > 0" 
+                    class="ubicacion-button" 
+                    [appConfirm]="'¿QUIERES CREAR UNA PREVISIÓN DE SALIDA CON ESTA UBICACION?'" 
+                    (confirmed)="sacarUbicacion()">
+                <span class="button-text">DAR SALIDA A LA UBICACIÓN</span>
+            </button>
+        </div>
     </div>
 </div>

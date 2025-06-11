@@ -10,6 +10,7 @@ import com.manushd.app.salidas.repository.SalidaRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -230,25 +231,6 @@ public class SalidaController {
         return ResponseEntity.ok(s);
     }
 
-    private boolean todosLosCamposRellenos(Salida salida) {
-        if (salida.getProductos() == null || salida.getProductos().isEmpty()) return false;
-
-        return salida.getProductos().stream().allMatch(producto ->
-            producto.getDescription() != null &&
-            producto.getUnidades() != null &&
-            producto.getUnidades() > 0 &&
-            producto.getUbicacion() != null &&
-            !producto.getUbicacion().isEmpty() &&
-            producto.getPalets() != null &&
-            producto.getPalets() >= 0 &&
-            producto.getBultos() != null &&
-            producto.getBultos() >= 0 &&
-            producto.getFormaEnvio() != null &&
-            !producto.getFormaEnvio().trim().isEmpty() &&
-            Boolean.TRUE.equals(producto.getComprobado())
-        );
-    }
-
     /**
      * Método para agregar una salida.
      * Se valida cada producto;
@@ -261,12 +243,10 @@ public class SalidaController {
         List<Ubicacion> ubicacionesList = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        // Crear los headers con el token para reutilizarlos en las llamadas
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
         if (Boolean.TRUE.equals(salida.getEstado())) {
-            // Lista para almacenar las ubicaciones (únicas) de la salida
             List<String> nombresUbicaciones = new ArrayList<>();
 
             // Validar cada producto de la salida
@@ -285,44 +265,58 @@ public class SalidaController {
                     if (productoSalida.getComprobado() == null || !productoSalida.getComprobado()) {
                         throw new IllegalArgumentException("Faltan productos por comprobar.");
                     }
+                    if (productoSalida.getEstado() == null || productoSalida.getEstado().isBlank()) {
+                        throw new IllegalArgumentException("El estado del producto no puede estar en blanco.");
+                    }
 
                     String ref = productoSalida.getRef();
+                    String estado = productoSalida.getEstado();
 
-                    // Para productos normales se valida existencia y stock en el microservicio de
-                    // Productos
+                    // Para productos normales se valida existencia y stock
                     if (!isProductoEspecial(ref)) {
-                        // Se utiliza el token en los headers de la petición
+                        System.out.println("Validando producto: " + ref + " con estado: " + estado);
+
+                        // USAR EL NUEVO ENDPOINT ESPECÍFICO POR ESTADO
                         HttpEntity<?> entity = new HttpEntity<>(headers);
                         ResponseEntity<Producto> response = restTemplate.exchange(
-                                "http://localhost:8091/productos/referencia/" + ref,
+                                "http://localhost:8091/productos/referencia/" + ref + "/estado/" + estado,
                                 HttpMethod.GET,
                                 entity,
                                 Producto.class);
+
                         Producto producto = response.getBody();
+                        System.out.println("Producto encontrado: " + producto);
+
                         if (producto == null) {
                             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                    .body("El producto con referencia " + ref + " no existe.");
+                                    .body("El producto con referencia " + ref + " y estado " + estado + " no existe.");
+                        } else if (producto.getStock() == null) {
+                            System.out.println("============ El stock del producto con referencia " + ref + " y estado "
+                                    + estado + " no está disponible. ============");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                    .body("El stock del producto con referencia " + ref + " y estado " + estado
+                                            + " no está disponible.");
                         } else if (producto.getStock() < productoSalida.getUnidades()) {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("No hay suficiente stock del producto con referencia "
-                                            + ref + " en la ubicación " + productoSalida.getUbicacion());
+                                    .body("No hay suficiente stock del producto con referencia " + ref +
+                                            " y estado " + estado + " (Stock disponible: " + producto.getStock() +
+                                            ", Solicitado: " + productoSalida.getUnidades() + ")");
                         }
+
+                        System.out.println("✅ Validación exitosa para " + ref + " estado " + estado +
+                                " - Stock: " + producto.getStock() + " >= Solicitado: " + productoSalida.getUnidades());
                     }
 
-                    // Para productos especiales se omite la validación en el servicio de Productos
                     // Construir u obtener la Ubicación correspondiente
                     String ubicacionNombre = productoSalida.getUbicacion();
                     Ubicacion ubicacion = null;
                     if (!nombresUbicaciones.contains(ubicacionNombre)) {
                         nombresUbicaciones.add(ubicacionNombre);
                         ubicacion = new Ubicacion();
-                        // Se utiliza ArrayList para evitar deduplicación automática de productos
-                        // especiales
                         ubicacion.setProductos(new ArrayList<>());
                         ubicacion.setNombre(ubicacionNombre);
                         ubicacionesList.add(ubicacion);
                     } else {
-                        // Buscar la ubicación ya creada en la lista
                         for (Ubicacion u : ubicacionesList) {
                             if (u.getNombre().equals(ubicacionNombre)) {
                                 ubicacion = u;
@@ -330,29 +324,32 @@ public class SalidaController {
                             }
                         }
                     }
+
                     // Crear un ProductoUbicacion a partir del ProductoSalida
                     ProductoUbicacion productoUbicacion = new ProductoUbicacion();
                     productoUbicacion.setRef(ref);
                     productoUbicacion.setUnidades(productoSalida.getUnidades());
                     productoUbicacion.setDescription(productoSalida.getDescription());
-                    productoUbicacion.setEstado(productoSalida.getEstado());
+                    productoUbicacion.setEstado(productoSalida.getEstado()); // IMPORTANTE: Incluir estado
 
-                    // Agregar el producto a la ubicación
                     ubicacion.getProductos().add(productoUbicacion);
 
                 } catch (HttpClientErrorException.NotFound e) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("El producto con referencia " + productoSalida.getRef() + " no existe.");
+                            .body("El producto con referencia " + productoSalida.getRef() +
+                                    " y estado " + productoSalida.getEstado() + " no existe.");
                 } catch (IllegalArgumentException e) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(e.getMessage());
                 } catch (Exception e) {
+                    System.err.println("Error al procesar producto " + productoSalida.getRef() + ": " + e.getMessage());
+                    e.printStackTrace();
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body("Error al procesar la salida: " + e.getMessage());
                 }
             }
 
-            // Obtener todas las ubicaciones actuales desde el microservicio de Ubicaciones
+            // Validar stock en ubicaciones (actualizado para estados)
             HttpEntity<?> ubicacionesEntity = new HttpEntity<>(headers);
             ResponseEntity<Ubicacion[]> responseUbicaciones = restTemplate.exchange(
                     "http://localhost:8095/ubicaciones",
@@ -365,19 +362,18 @@ public class SalidaController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body("Error al obtener las ubicaciones.");
             } else {
-                // Para cada ubicación de la salida se comprueba el stock existente en el
-                // almacén
+                // Validar stock en ubicaciones considerando estados
                 for (Ubicacion ubicacionSalida : ubicacionesList) {
                     boolean ubicacionEncontrada = false;
                     for (Ubicacion ubicacionActual : ubicacionesArray) {
                         if (ubicacionActual.getNombre().equals(ubicacionSalida.getNombre())) {
                             ubicacionEncontrada = true;
-                            // Para cada producto solicitado en la salida
+
                             for (ProductoUbicacion productoSalidaUb : ubicacionSalida.getProductos()) {
                                 boolean stockSuficiente = false;
-                                // Si el producto es especial se delega la comprobación en el microservicio
+
                                 if (isProductoEspecial(productoSalidaUb.getRef())) {
-                                    // Buscar en la ubicación actual un producto especial con la misma referencia
+                                    // Lógica para productos especiales (sin cambios)
                                     for (ProductoUbicacion pu : ubicacionActual.getProductos()) {
                                         if (isProductoEspecial(pu.getRef()) &&
                                                 pu.getRef().equalsIgnoreCase(productoSalidaUb.getRef()) &&
@@ -387,19 +383,31 @@ public class SalidaController {
                                         }
                                     }
                                 } else {
-                                    // Buscar en la ubicación actual un producto con la misma referencia
+                                    // PRODUCTOS NORMALES: Buscar por referencia Y estado
                                     for (ProductoUbicacion pu : ubicacionActual.getProductos()) {
                                         if (pu.getRef().equals(productoSalidaUb.getRef()) &&
+                                                Objects.equals(pu.getEstado(), productoSalidaUb.getEstado()) &&
                                                 pu.getUnidades() >= productoSalidaUb.getUnidades()) {
                                             stockSuficiente = true;
+                                            System.out.println(
+                                                    "✅ Stock suficiente en ubicación " + ubicacionActual.getNombre() +
+                                                            " para " + pu.getRef() + " estado " + pu.getEstado() +
+                                                            " - Disponible: " + pu.getUnidades() + " >= Solicitado: "
+                                                            + productoSalidaUb.getUnidades());
                                             break;
                                         }
                                     }
                                 }
+
                                 if (!stockSuficiente) {
+                                    System.err.println(
+                                            "❌ Stock insuficiente en ubicación " + ubicacionSalida.getNombre() +
+                                                    " para " + productoSalidaUb.getRef() + " estado "
+                                                    + productoSalidaUb.getEstado());
                                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                             .body("No hay suficiente stock del producto con referencia "
-                                                    + productoSalidaUb.getRef() + " en la ubicación "
+                                                    + productoSalidaUb.getRef() +
+                                                    " y estado " + productoSalidaUb.getEstado() + " en la ubicación "
                                                     + ubicacionSalida.getNombre());
                                 }
                             }
@@ -417,25 +425,31 @@ public class SalidaController {
             // /ubicaciones/restar
             for (Ubicacion ubicacion : ubicacionesList) {
                 try {
+                    System.out.println("Restando stock de ubicación: " + ubicacion.getNombre());
+                    ubicacion.getProductos().forEach(p -> System.out.println("  - Producto: " + p.getRef()
+                            + " | Estado: " + p.getEstado() + " | Unidades: " + p.getUnidades()));
+
                     HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headers);
                     ResponseEntity<Ubicacion> response = restTemplate.exchange(
                             "http://localhost:8095/ubicaciones/restar",
                             HttpMethod.POST,
                             requestEntity,
                             Ubicacion.class);
-                    // Se puede procesar la respuesta si es necesario
+
+                    System.out.println("✅ Stock restado exitosamente de ubicación: " + ubicacion.getNombre());
                 } catch (HttpClientErrorException e) {
                     String errorMessage = e.getResponseBodyAsString();
-                    return ResponseEntity.status(e.getStatusCode())
-                            .body(errorMessage);
+                    System.err.println("Error al restar stock: " + errorMessage);
+                    return ResponseEntity.status(e.getStatusCode()).body(errorMessage);
                 } catch (Exception e) {
+                    System.err.println("Error inesperado al restar stock: " + e.getMessage());
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .body("Error inesperado: " + e.getMessage());
                 }
             }
         }
 
-        // Guardar la salida (ya con estado true) y retornar la respuesta
+        // Guardar la salida
         Salida savedSalida = salidasRepository.save(salida);
         return ResponseEntity.ok(savedSalida);
     }

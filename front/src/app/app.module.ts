@@ -80,6 +80,7 @@ import { PerfilComponent } from './componentes/perfil/perfil.component';
 import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
 import { EstadosComponent } from './componentes/estados/estados.component';
 import { EstadoService } from './services/estado.service';
+import { FacturacionComponent } from './componentes/facturacion/facturacion.component';
 
 @NgModule({
   declarations: [
@@ -128,6 +129,7 @@ import { EstadoService } from './services/estado.service';
     UsuariosComponent,
     PerfilComponent,
     SalidasEnviospendientesComponent,
+    FacturacionComponent,
   ],
   imports: [
     AppRoutingModule,

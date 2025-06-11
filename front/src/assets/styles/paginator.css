@@ -8,7 +8,6 @@
     flex-wrap: nowrap;
 }
 
-
 .tabla-paginator {
     width: 100%;
     border-collapse: separate;
@@ -16,9 +15,9 @@
     max-width: 1200px;
     background-color: var(--main-color);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-  
-  .tabla-paginator caption {
+}
+
+.tabla-paginator caption {
     background-color: var(--caption-color);
     color: white;
     font-weight: bold;
@@ -28,9 +27,11 @@
     letter-spacing: 1px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-  }
-  
-  .header-paginator {
+    letter-spacing: 1.2px;
+    text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+}
+
+.header-paginator {
     background-color: var(--thead-bgcolor);
     color: var(--thead-color);
     font-weight: 600;
@@ -39,17 +40,17 @@
     position: sticky;
     top: 0;
     font-size: 18px;
-  }
-  
-  tr:first-child th:first-child {
+}
+
+tr:first-child th:first-child {
     border-top-left-radius: 0;
-  }
-  
-  tr:first-child th:last-child {
+}
+
+tr:first-child th:last-child {
     border-top-right-radius: 0;
-  }
-  
-  .fila-paginator {
+}
+
+.fila-paginator {
     padding: 12px 20px;
     font-size: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -57,11 +58,11 @@
     color: white;
     font-family: 'Nunito-SemiBold';
     text-align: center;
-  }
-  
-  tr:hover .fila-paginator {
+}
+
+tr:hover .fila-paginator {
     background-color: rgba(61, 126, 255, 0.15);
-  }
+}
 
 .nombre-editando {
     border: 1px solid white;
@@ -94,8 +95,9 @@
 
 .paginator {
     color: white;
-    background-color: var(--main-color);
     border-radius: 5px;
+    background: linear-gradient(135deg, var(--main-color), var(--bg-color));
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .btn-productos,
@@ -158,14 +160,14 @@ input {
 
 .mdc-data-table__cell {
     overflow: visible;
-    
+
 }
 
-@media (max-width: 768px) { 
-    
+@media (max-width: 768px) {
+
     .fila-paginator {
-      padding: 10px 8px;
-      font-size: 13px;
+        padding: 10px 8px;
+        font-size: 13px;
     }
 
 }

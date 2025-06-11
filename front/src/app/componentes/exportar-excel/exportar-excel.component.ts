@@ -87,22 +87,10 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
     this.dataCompleta.forEach((entrada: Entrada) => {
       entrada.productos.forEach((producto) => {
         data.push({
-          // Origen: entrada.origen ?? '',
-          // Perfumería: entrada.perfumeria ?? '',
-          // PDV: entrada.pdv ?? '',
-          // Colaborador: entrada.colaborador ?? '',
-          // DCS: entrada.dcs ?? '',
-          // 'Fecha Recepción': entrada.fechaRecepcion ?? '',
-          // Referencia: producto.ref ?? '',
-          // Descripción: producto.description ?? '',
-          // Unidades: producto.unidades ?? '',
-          // Ubicación: producto.ubicacion ?? '',
-          // Palets: producto.palets ?? '',
-          // Bultos: producto.bultos ?? '',
-          // Observaciones: producto.observaciones ?? '',
           'Fecha Recepción': entrada.fechaRecepcion ? new Date(entrada.fechaRecepcion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', }) : '',
           Referencia: producto.ref ?? '',
           Descripción: producto.description ?? '',
+          Estado: producto.ref == 'SIN REFERENCIA' || producto.ref == 'VISUAL' ? '' : producto.estado,
           Palets: producto.palets ?? '',
           Bultos: producto.bultos ?? '',
           Unidades: producto.unidades ?? '',
@@ -129,10 +117,10 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
     this.dataCompleta.forEach((salida: Salida) => {
       salida.productos.forEach((producto) => {
         data.push({
-          // Estado: salida.estado ? 'Recibida' : 'Pendiente',
           'Fecha Envío': salida.fechaEnvio ? new Date(salida.fechaEnvio).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', }) : '',
           Referencia: producto.ref ?? '',
           Descripción: producto.description ?? '',
+          Estado: producto.ref == 'SIN REFERENCIA' || producto.ref == 'VISUAL' ? '' : producto.estado,
           Palets: producto.palets ?? '',
           Bultos: producto.bultos ?? '',
           Unidades: producto.unidades ?? '',

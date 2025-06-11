@@ -28,6 +28,16 @@ export class ProductoServices {
     return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}`);
   }
 
+  // Nuevo método para obtener estados disponibles
+  getEstadosDisponiblesPorReferencia(referencia: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/referencia/${referencia}/estados`);
+  }
+  
+  // Nuevo método para obtener producto específico por referencia y estado
+  getProductoPorReferenciaYEstado(referencia: string, estado: string): Observable<Producto> {
+    return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}`);
+  }
+
   getVisualesPaginado(page: number, size: number): Observable<any> {
     return this.http.get<any>(
       `${this.apiUrl}/visuales?page=${page}&size=${size}`

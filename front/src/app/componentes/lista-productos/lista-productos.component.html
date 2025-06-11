@@ -12,31 +12,44 @@
             </button>
             <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
         </div>
-        
+
         <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': productosAgrupados.length > 0}" mat-table
             [dataSource]="dataSourceStock">
             <caption>STOCK POR ARTICULOS (AGRUPADOS POR ESTADO)</caption>
-            
+
             <!-- Referencia Column -->
             <ng-container matColumnDef="referencia">
-                <th class="header-paginator" *matHeaderCellDef> Ref </th>
+                <th class="header-paginator" *matHeaderCellDef>
+                    <span>Ref</span>
+                </th>
                 <td class="fila-paginator" style="cursor: pointer;" mat-cell *matCellDef="let grupo"
-                    (click)="copiarReferencia(grupo.referencia)"> 
-                        {{ grupo.referencia }}
+                    (click)="copiarReferencia(grupo)">
+                        {{ grupo.referenciaOriginal }}
                 </td>
             </ng-container>
 
             <!-- Descripción Column -->
             <ng-container matColumnDef="description">
-                <th class="header-paginator" mat-header-cell *matHeaderCellDef> Descripción </th>
+                <th class="header-paginator" mat-header-cell *matHeaderCellDef>
+                    <span>Descripción</span>
+                </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let grupo">
                     <ng-container *ngIf="!isEditingGroup(grupo.referencia); else editNombre">
-                        {{ grupo.description }}
+                        <ng-container *ngIf="grupo.esEspecial; else noEspecial">
+                            <span [ngClass]="{'tipo-especial': grupo.esEspecial}">
+                                {{ grupo.referencia }}
+                            </span>
+                        </ng-container>
+                        <ng-template #noEspecial>
+                            <span [ngClass]="{'tipo-especial': grupo.esEspecial}">
+                                {{ grupo.description }}
+                            </span>
+                        </ng-template>
                     </ng-container>
                     <ng-template #editNombre>
-                        <textarea [(ngModel)]="editingGrupo.description" 
-                                  placeholder="Descripción"
-                                  class="nombre-editando"></textarea>
+                        <textarea [(ngModel)]="editingGrupo.description"
+                            [placeholder]="grupo.esEspecial ? 'Descripción del producto especial' : 'Descripción'"
+                            class="nombre-editando"></textarea>
                     </ng-template>
                 </td>
             </ng-container>
@@ -45,18 +58,18 @@
             <ng-container matColumnDef="estados">
                 <th class="header-paginator" mat-header-cell *matHeaderCellDef> Estados </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let grupo">
-                        <div *ngIf="!grupo.expanded">
-                            <span *ngFor="let producto of grupo.productos">
-                                {{ formatearEstado(producto.estado) }}: {{ producto.stock }}
-                            </span>
-                        </div>
+                    <div *ngIf="!grupo.expanded">
+                        <span *ngFor="let producto of grupo.productos">
+                            {{ formatearEstado(producto.estado) }}: {{ producto.stock }}
+                        </span>
+                    </div>
                 </td>
             </ng-container>
 
             <!-- Total Stock Column -->
             <ng-container matColumnDef="totalStock">
                 <th class="header-paginator" mat-header-cell *matHeaderCellDef> Stock Total </th>
-                <td class="fila-paginator" mat-cell *matCellDef="let grupo"> 
+                <td class="fila-paginator" mat-cell *matCellDef="let grupo">
                     <strong>{{ grupo.totalStock }}</strong>
                 </td>
             </ng-container>
@@ -77,12 +90,10 @@
                                 <button class="btn-cancelar" (click)="cancelEdit()">CANCELAR</button>
                             </div>
                         </ng-template>
-                        
-                        <button type="button" 
-                                (click)="eliminarGrupoProductos(grupo.referencia)" 
-                                class="deleteButton"
-                                [disabled]="grupo.totalStock > 0"
-                                [title]="grupo.totalStock > 0 ? 'No se puede eliminar con stock' : 'Eliminar todos los estados'">
+
+                        <button type="button" (click)="eliminarGrupoProductos(grupo)" class="deleteButton"
+                            [disabled]="grupo.totalStock > 0" [title]="grupo.totalStock > 0 ? 'No se puede eliminar con stock' : 
+                            (grupo.esEspecial ? 'Eliminar producto especial' : 'Eliminar todos los estados')">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
                                 <path fill="#B5BAC1"
                                     d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z">
@@ -103,15 +114,14 @@
             <tr mat-header-row *matHeaderRowDef="columnasStock"></tr>
             <tr mat-row *matRowDef="let row; columns: columnasStock;"></tr>
         </table>
-        
+
         <div class="centrar">
             <mat-paginator class="paginator" [pageSize]="pageSize" [pageIndex]="pageIndex" [length]="totalElementos"
                 [hidePageSize]="true" showFirstLastButtons (page)="cambiarPagina($event)">
             </mat-paginator>
         </div>
 
-        <app-exportar-excel (click)="obtenerDatosAExportar()"
-            [data$]="productosParaExportar$"
+        <app-exportar-excel (click)="obtenerDatosAExportar()" [data$]="productosParaExportar$"
             [nombreConjuntoExportado]="'PRODUCTOS'" [fileName]="'PRODUCTOS-EXPORTADOS'"></app-exportar-excel>
         <app-pantalla-carga></app-pantalla-carga>
     </div>

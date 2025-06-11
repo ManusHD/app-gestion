@@ -34,4 +34,8 @@ export class EstadoService {
         return this.http.delete(`${this.apiUrl}/${id}`);
     }
 
+    verificarEstadoEnUso(id: number): Observable<boolean> {
+        return this.http.get<boolean>(`${this.apiUrl}/${id}/en-uso`);
+    }
+
 }

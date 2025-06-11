@@ -32,9 +32,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
 
+import com.manushd.app.productos.models.CambioEstadoRequest;
+import com.manushd.app.productos.models.EstadoStockDTO;
 import com.manushd.app.productos.models.MigrarEstadoDTO;
 import com.manushd.app.productos.models.Producto;
 import com.manushd.app.productos.models.ProductoDescripcionUpdateDTO;
+import com.manushd.app.productos.models.ProductoMultipleEstadosDTO;
 import com.manushd.app.productos.models.TransferirEstadoDTO;
 import com.manushd.app.productos.repository.ProductoRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -67,8 +70,63 @@ public class ProductosController {
     }
 
     @GetMapping("/referencia/{referencia}")
-    public Producto obtenerProductoPorReferencia(@PathVariable String referencia) {
-        return productosRepository.findByReferencia(referencia).orElse(null);
+    public ResponseEntity<?> obtenerProductoPorReferencia(@PathVariable String referencia) {
+        try {
+            
+            System.err.println(referencia);
+
+            // Usar el nuevo método que devuelve una lista ordenada por estado
+            List<Producto> productos = productosRepository.findByReferenciaOrderByEstadoAsc(referencia);
+
+            System.err.println("================= Productos encontrados: =================");
+            System.err.println(productos);
+            
+            if (productos.isEmpty()) {
+                System.err.println("================= isEmpty =================");
+                return ResponseEntity.ok(null);
+            }
+            
+            if (productos.size() == 1) {
+                // Si solo hay un producto, devolverlo directamente (comportamiento original)
+                System.err.println("================= Hay 1 =================");
+                return ResponseEntity.ok(productos.get(0));
+            }
+            
+            // Si hay múltiples productos (diferentes estados), devolver información
+            // estructurada
+            ProductoMultipleEstadosDTO response = new ProductoMultipleEstadosDTO();
+            response.setReferencia(referencia);
+            response.setDescription(productos.get(0).getDescription()); // Todos tendrán la misma descripción
+            response.setEstados(productos.stream()
+            .map(p -> new EstadoStockDTO(p.getEstado(), p.getStock()))
+            .collect(Collectors.toList()));
+            
+            System.err.println("================= Hay muchos =================");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("Error al buscar producto por referencia " + referencia + ": " + e.getMessage());
+            return ResponseEntity.ok(null); // Devolver null en caso de error para mantener compatibilidad
+        }
+    }
+
+    // endpoint específico para obtener estados disponibles por referencia
+    @GetMapping("/referencia/{referencia}/estados")
+    public List<String> obtenerEstadosDisponibles(@PathVariable String referencia) {
+        List<Producto> productos = productosRepository.findByReferenciaOrderByEstadoAsc(referencia);
+        return productos.stream()
+                .map(Producto::getEstado)
+                .filter(estado -> estado != null)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    // endpoint para obtener producto específico por referencia y estado
+    @GetMapping("/referencia/{referencia}/estado/{estado}")
+    public Producto obtenerProductoPorReferenciaYEstado(
+            @PathVariable String referencia,
+            @PathVariable String estado) {
+        return productosRepository.findByReferenciaAndEstado(referencia, estado).orElse(null);
     }
 
     @GetMapping("/referencia/{referencia}/buscar/paginado")
@@ -241,36 +299,133 @@ public class ProductosController {
     }
 
     /**
-     * Endpoint para sumar stock a un producto normal.
+     * Endpoint NUEVO para sumar stock a un producto específico por referencia y
+     * estado
      */
-    @PutMapping("/{ref}/sumar")
-    public Producto addStock(@PathVariable String ref, @RequestBody Integer cantidad) {
-        Producto producto = productosRepository.findByReferencia(ref).orElse(null);
-        if (producto != null) {
+    @PutMapping("/{ref}/estado/{estado}/sumar")
+    public ResponseEntity<?> addStockByReferenciaAndEstado(
+            @PathVariable String ref,
+            @PathVariable String estado,
+            @RequestBody Integer cantidad) {
+
+        System.out.println("Sumando " + cantidad + " unidades a producto: " + ref + " con estado: " + estado);
+
+        Optional<Producto> productoOpt = productosRepository.findByReferenciaAndEstado(ref, estado);
+
+        if (productoOpt.isPresent()) {
+            Producto producto = productoOpt.get();
             Integer nuevoStock = producto.getStock() + cantidad;
             producto.setStock(nuevoStock);
-            return productosRepository.save(producto);
+            Producto actualizado = productosRepository.save(producto);
+
+            System.out.println("Stock actualizado para " + ref + " estado " + estado + ": " + nuevoStock);
+            return ResponseEntity.ok(actualizado);
         } else {
-            System.out.println("El producto con referencia: " + ref + " no existe");
+            System.out.println("No se encontró producto con referencia: " + ref + " y estado: " + estado);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se encontró producto con referencia " + ref + " y estado " + estado);
         }
-        return null;
     }
 
     /**
-     * Endpoint para restar stock a un producto normal.
+     * Endpoint NUEVO para restar stock a un producto específico por referencia y
+     * estado
      */
-    @PutMapping("/{ref}/restar")
-    public Producto subtractStock(@PathVariable String ref, @RequestBody Integer cantidad) {
-        Producto producto = productosRepository.findByReferencia(ref).orElse(null);
-        if (producto != null) {
+    @PutMapping("/{ref}/estado/{estado}/restar")
+    public ResponseEntity<?> subtractStockByReferenciaAndEstado(
+            @PathVariable String ref,
+            @PathVariable String estado,
+            @RequestBody Integer cantidad) {
+
+        System.out.println("Restando " + cantidad + " unidades a producto: " + ref + " con estado: " + estado);
+
+        Optional<Producto> productoOpt = productosRepository.findByReferenciaAndEstado(ref, estado);
+
+        if (productoOpt.isPresent()) {
+            Producto producto = productoOpt.get();
             Integer nuevoStock = producto.getStock() - cantidad;
+
             if (nuevoStock >= 0) {
                 producto.setStock(nuevoStock);
-                return productosRepository.save(producto);
+                Producto actualizado = productosRepository.save(producto);
+
+                System.out.println("Stock reducido para " + ref + " estado " + estado + ": " + nuevoStock);
+                return ResponseEntity.ok(actualizado);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Stock insuficiente. Stock actual: " + producto.getStock() + ", intentando restar: "
+                                + cantidad);
             }
-            return null;
+        } else {
+            System.out.println("No se encontró producto con referencia: " + ref + " y estado: " + estado);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se encontró producto con referencia " + ref + " y estado " + estado);
         }
-        return null;
+    }
+
+    /**
+     * Endpoint LEGACY (mantener para compatibilidad) - Solo funciona si hay UN
+     * producto con esa referencia
+     */
+    @PutMapping("/{ref}/sumar")
+    public ResponseEntity<?> addStock(@PathVariable String ref, @RequestBody Integer cantidad) {
+        List<Producto> productos = productosRepository.findByReferenciaOrderByEstadoAsc(ref);
+
+        if (productos.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se encontró producto con referencia: " + ref);
+        }
+
+        if (productos.size() > 1) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Existen múltiples productos con la referencia " + ref +
+                            ". Use el endpoint /productos/{ref}/estado/{estado}/sumar para especificar el estado");
+        }
+
+        // Solo hay un producto con esa referencia
+        Producto producto = productos.get(0);
+        Integer nuevoStock = producto.getStock() + cantidad;
+        producto.setStock(nuevoStock);
+        Producto actualizado = productosRepository.save(producto);
+
+        System.out.println("Stock actualizado para " + ref + " estado " + producto.getEstado() + ": " + nuevoStock);
+        return ResponseEntity.ok(actualizado);
+    }
+
+    /**
+     * Endpoint LEGACY (mantener para compatibilidad) - Solo funciona si hay UN
+     * producto con esa referencia
+     */
+    @PutMapping("/{ref}/restar")
+    public ResponseEntity<?> subtractStock(@PathVariable String ref, @RequestBody Integer cantidad) {
+        List<Producto> productos = productosRepository.findByReferenciaOrderByEstadoAsc(ref);
+
+        if (productos.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No se encontró producto con referencia: " + ref);
+        }
+
+        if (productos.size() > 1) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Existen múltiples productos con la referencia " + ref +
+                            ". Use el endpoint /productos/{ref}/estado/{estado}/restar para especificar el estado");
+        }
+
+        // Solo hay un producto con esa referencia
+        Producto producto = productos.get(0);
+        Integer nuevoStock = producto.getStock() - cantidad;
+
+        if (nuevoStock >= 0) {
+            producto.setStock(nuevoStock);
+            Producto actualizado = productosRepository.save(producto);
+
+            System.out.println("Stock reducido para " + ref + " estado " + producto.getEstado() + ": " + nuevoStock);
+            return ResponseEntity.ok(actualizado);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Stock insuficiente. Stock actual: " + producto.getStock() + ", intentando restar: "
+                            + cantidad);
+        }
     }
 
     /**
@@ -479,7 +634,8 @@ public class ProductosController {
             @RequestHeader("Authorization") String token) {
         try {
             // Buscar productos sin estado con esa referencia
-            List<Producto> productosSinEstado = productosRepository.findByReferenciaAndEstadoOrderByReferenciaAsc(dto.getReferencia(),
+            List<Producto> productosSinEstado = productosRepository.findByReferenciaAndEstadoOrderByReferenciaAsc(
+                    dto.getReferencia(),
                     null);
 
             if (productosSinEstado.isEmpty()) {
@@ -546,6 +702,36 @@ public class ProductosController {
             System.err.println("Error al actualizar ubicaciones durante migración: " + e.getClass().getSimpleName()
                     + " - " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    @PostMapping("/actualizar-estado")
+    public ResponseEntity<?> actualizarEstado(@RequestBody CambioEstadoRequest request) {
+        try {
+            List<Producto> productos = productosRepository.findByEstado(request.getNombreAnterior());
+            
+            for (Producto producto : productos) {
+                producto.setEstado(request.getNombreNuevo());
+                productosRepository.save(producto);
+            }
+            
+            return ResponseEntity.ok("Estados actualizados: " + productos.size() + " productos");
+        } catch (Exception e) {
+            System.err.println("Error actualizando estados en productos: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error actualizando estados");
+        }
+    }
+
+    @GetMapping("/verificar-estado/{estado}")
+    public ResponseEntity<Boolean> verificarEstadoEnUso(@PathVariable String estado) {
+        try {
+            // Usar el método existente o crear uno nuevo en el repository
+            List<Producto> productos = productosRepository.findByEstado(estado);
+            return ResponseEntity.ok(!productos.isEmpty());
+        } catch (Exception e) {
+            System.err.println("Error verificando estado: " + e.getMessage());
+            return ResponseEntity.ok(true); // Ser conservador en caso de error
         }
     }
 }
