@@ -137,4 +137,10 @@ export class ProductoServices {
       responseType: 'text',
     });
   }
+
+  sincronizarProductosDesdeUbicaciones(): Observable<string> {
+    return this.http.post(`${this.apiUrl}/sincronizar-desde-ubicaciones`, {}, {
+      responseType: 'text'
+    });
+  }
 }

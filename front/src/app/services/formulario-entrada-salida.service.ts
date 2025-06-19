@@ -890,14 +890,6 @@ export class FormularioEntradaSalidaService {
     }
   }
 
-  esEstadoRequerido(index: number): boolean {
-    const refControl = this.productosControls.at(index).get('ref');
-    const referencia = refControl?.value;
-
-    // El estado no es requerido para productos especiales
-    return !this.esProductoEspecial(referencia);
-  }
-
   buscarProductoEspecial(index: number) {
     if (this.esSalida()) {
       const refControl = this.productosControls.at(index).get('ref');
@@ -1224,22 +1216,21 @@ export class FormularioEntradaSalidaService {
     const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
     const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
-    const otroOrigenDestino =
-      this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const otroOrigenDestino = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
     const hayProductos = this.productosControls.length > 0;
     const productosValidos = this.productosPrevisionSonValidos();
     const dcsValido = /^[0-9]{10}$/.test(dcs);
-
+  
     // Verificar que Perfumería y PDV van juntos
     const perfumeriaPdvValido = (!perfumeria && !pdv) || (perfumeria && pdv);
     const tienePerfumeriaPdv = perfumeria && pdv;
-
+  
     // Casos válidos de origen/destino (ahora permite combinaciones)
     const tieneColaborador = !!colaborador;
     const tieneOtroOrigenDestino = !!otroOrigenDestino;
     const tieneDcs = !!dcs && dcsValido;
-
+  
     // Verificar que hay al menos un origen válido
     const tieneAlgunOrigen =
       tienePerfumeriaPdv ||
@@ -1247,21 +1238,25 @@ export class FormularioEntradaSalidaService {
       (tieneOtroOrigenDestino && !tieneColaborador && !tienePerfumeriaPdv) ||
       (tienePerfumeriaPdv && tieneColaborador && !tieneOtroOrigenDestino) ||
       (tienePerfumeriaPdv && tieneOtroOrigenDestino && !tieneColaborador);
-
+  
     // Combinaciones válidas
     const combinacionValida =
       (tieneDcs && !tieneAlgunOrigen) || (!tieneDcs && tieneAlgunOrigen);
-
+  
     // NUEVA VALIDACIÓN: Verificar líneas duplicadas
     const hayDuplicados = this.hayLineasDuplicadas();
-
+  
+    // NUEVA VALIDACIÓN: Verificar estados de productos
+    const estadosValidos = this.validarEstadosProductos();
+  
     let previsionValida =
       combinacionValida &&
       perfumeriaPdvValido &&
       hayProductos &&
       productosValidos &&
-      !hayDuplicados; // Agregar esta condición
-
+      !hayDuplicados &&
+      estadosValidos; // Agregar esta validación
+  
     // Mensajes de error específicos
     if (!perfumeriaPdvValido) {
       this.snackBarError('Perfumeria y PDV deben estar rellenos conjuntamente');
@@ -1279,6 +1274,8 @@ export class FormularioEntradaSalidaService {
       this.snackBarError('Debe haber al menos 1 producto');
     } else if (dcs && !dcsValido) {
       this.snackBarError('El DCS debe tener 10 dígitos');
+    } else if (!estadosValidos) {
+      this.snackBarError('Los productos normales deben tener estado asignado');
     } else if (hayDuplicados) {
       // Mostrar detalles de las líneas duplicadas
       const duplicados = this.obtenerLineasDuplicadas();
@@ -1288,14 +1285,38 @@ export class FormularioEntradaSalidaService {
             `Líneas ${d.indices.map((i) => i + 1).join(', ')}: ${d.detalle}`
         )
         .join('\n');
-
+  
       this.snackBarError(
         `Hay líneas duplicadas. Combine las unidades en una sola línea:\n${mensajeDuplicados}`
       );
       this.carga.hide();
     }
-
+  
     return previsionValida;
+  }
+  
+  // NUEVO método para validar estados
+  private validarEstadosProductos(): boolean {
+    return this.productosControls.controls.every((producto) => {
+      const ref = producto.get('ref')?.value;
+      const estado = producto.get('estado')?.value;
+      
+      // Si es producto especial, el estado puede ser null
+      if (this.esProductoEspecial(ref)) {
+        return true;
+      }
+      
+      // Si es producto normal, debe tener estado
+      return estado != null && estado.trim() !== '';
+    });
+  }
+  
+  esEstadoRequerido(index: number): boolean {
+    const refControl = this.productosControls.at(index).get('ref');
+    const referencia = refControl?.value;
+  
+    // El estado no es requerido para productos especiales
+    return !this.esProductoEspecial(referencia);
   }
 
   productosPrevisionSonValidos(): boolean {

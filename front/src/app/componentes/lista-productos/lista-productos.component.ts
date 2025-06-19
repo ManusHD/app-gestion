@@ -29,6 +29,7 @@ export class ListaProductosComponent implements OnInit {
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
+  btnSubmitActivado = true;
 
   productosAgrupados: ProductoAgrupado[] = [];
   estados: Estado[] = [];
@@ -447,5 +448,27 @@ export class ListaProductosComponent implements OnInit {
 
   get hayEspecialesEnAgrupados(): boolean {
     return Array.isArray(this.productosAgrupados) && this.productosAgrupados.some(g => g && g.esEspecial);
+  }
+
+  sincronizarProductos() {
+    if (confirm('¿Estás seguro de que quieres sincronizar productos desde ubicaciones? Esta operación puede tardar varios minutos.')) {
+      this.carga.show();
+      this.btnSubmitActivado = false;
+      this.productoService.sincronizarProductosDesdeUbicaciones().subscribe({
+        next: (mensaje) => {
+          this.snackbar.snackBarExito(mensaje);
+          this.carga.hide();
+          // Recargar datos si es necesario
+          this.cargarProductos();
+          this.btnSubmitActivado = true;
+        },
+        error: (error) => {
+          this.btnSubmitActivado = true;
+          console.error('Error en sincronización:', error);
+          this.snackbar.snackBarError('Error en la sincronización: ' + (error.error || error.message));
+          this.carga.hide();
+        }
+      });
+    }
   }
 }

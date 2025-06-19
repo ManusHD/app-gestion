@@ -1,11 +1,13 @@
 package com.manushd.app.productos.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,9 @@ import com.manushd.app.productos.models.MigrarEstadoDTO;
 import com.manushd.app.productos.models.Producto;
 import com.manushd.app.productos.models.ProductoDescripcionUpdateDTO;
 import com.manushd.app.productos.models.ProductoMultipleEstadosDTO;
+import com.manushd.app.productos.models.ProductoUbicacion;
 import com.manushd.app.productos.models.TransferirEstadoDTO;
+import com.manushd.app.productos.models.Ubicacion;
 import com.manushd.app.productos.repository.ProductoRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -72,7 +76,7 @@ public class ProductosController {
     @GetMapping("/referencia/{referencia}")
     public ResponseEntity<?> obtenerProductoPorReferencia(@PathVariable String referencia) {
         try {
-            
+
             System.err.println(referencia);
 
             // Usar el nuevo método que devuelve una lista ordenada por estado
@@ -80,27 +84,27 @@ public class ProductosController {
 
             System.err.println("================= Productos encontrados: =================");
             System.err.println(productos);
-            
+
             if (productos.isEmpty()) {
                 System.err.println("================= isEmpty =================");
                 return ResponseEntity.ok(null);
             }
-            
+
             if (productos.size() == 1) {
                 // Si solo hay un producto, devolverlo directamente (comportamiento original)
                 System.err.println("================= Hay 1 =================");
                 return ResponseEntity.ok(productos.get(0));
             }
-            
+
             // Si hay múltiples productos (diferentes estados), devolver información
             // estructurada
             ProductoMultipleEstadosDTO response = new ProductoMultipleEstadosDTO();
             response.setReferencia(referencia);
             response.setDescription(productos.get(0).getDescription()); // Todos tendrán la misma descripción
             response.setEstados(productos.stream()
-            .map(p -> new EstadoStockDTO(p.getEstado(), p.getStock()))
-            .collect(Collectors.toList()));
-            
+                    .map(p -> new EstadoStockDTO(p.getEstado(), p.getStock()))
+                    .collect(Collectors.toList()));
+
             System.err.println("================= Hay muchos =================");
             return ResponseEntity.ok(response);
 
@@ -709,12 +713,12 @@ public class ProductosController {
     public ResponseEntity<?> actualizarEstado(@RequestBody CambioEstadoRequest request) {
         try {
             List<Producto> productos = productosRepository.findByEstado(request.getNombreAnterior());
-            
+
             for (Producto producto : productos) {
                 producto.setEstado(request.getNombreNuevo());
                 productosRepository.save(producto);
             }
-            
+
             return ResponseEntity.ok("Estados actualizados: " + productos.size() + " productos");
         } catch (Exception e) {
             System.err.println("Error actualizando estados en productos: " + e.getMessage());
@@ -733,5 +737,182 @@ public class ProductosController {
             System.err.println("Error verificando estado: " + e.getMessage());
             return ResponseEntity.ok(true); // Ser conservador en caso de error
         }
+    }
+
+    @PostMapping("/sincronizar-desde-ubicaciones")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> sincronizarDesdeUbicaciones(@RequestHeader("Authorization") String token) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+
+            // Obtener todas las ubicaciones
+            String urlUbicaciones = "http://localhost:8095/ubicaciones";
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+            ResponseEntity<Ubicacion[]> responseUbicaciones = restTemplate.exchange(
+                    urlUbicaciones, HttpMethod.GET, requestEntity, Ubicacion[].class);
+
+            if (responseUbicaciones.getBody() == null) {
+                return ResponseEntity.badRequest().body("No se pudieron obtener las ubicaciones");
+            }
+
+            // Para productos normales: Clave = "referencia|estado"
+            Map<String, Map<String, Object>> stockProductosNormales = new HashMap<>();
+
+            // Para productos especiales: Clave = "referencia|descripcion" (sin estado)
+            Map<String, Map<String, Object>> stockProductosEspeciales = new HashMap<>();
+
+            // Procesar todas las ubicaciones y productos
+            for (Ubicacion ubicacion : responseUbicaciones.getBody()) {
+                if (ubicacion.getProductos() != null) {
+                    for (ProductoUbicacion pu : ubicacion.getProductos()) {
+
+                        if (esProductoEspecial(pu.getRef())) {
+                            // PRODUCTOS ESPECIALES: "SIN REFERENCIA" o "VISUAL"
+                            // Clave única por descripción (pueden tener la misma descripción que productos
+                            // normales)
+                            String claveEspecial = pu.getRef() + "|" + pu.getDescription();
+
+                            Map<String, Object> datos = stockProductosEspeciales.computeIfAbsent(claveEspecial,
+                                    k -> new HashMap<>());
+                            datos.merge("stock", pu.getUnidades(), (a, b) -> (Integer) a + (Integer) b);
+                            datos.put("descripcion", pu.getDescription());
+                            datos.put("referencia", pu.getRef());
+                            datos.put("estado", null); // Los productos especiales no tienen estado
+
+                        } else {
+                            // PRODUCTOS NORMALES: referencia + estado
+                            String claveNormal = pu.getRef() + "|" + (pu.getEstado() != null ? pu.getEstado() : "NULL");
+
+                            Map<String, Object> datos = stockProductosNormales.computeIfAbsent(claveNormal,
+                                    k -> new HashMap<>());
+                            datos.merge("stock", pu.getUnidades(), (a, b) -> (Integer) a + (Integer) b);
+                            datos.put("descripcion", pu.getDescription());
+                            datos.put("referencia", pu.getRef());
+                            datos.put("estado", pu.getEstado());
+                        }
+                    }
+                }
+            }
+
+            int productosCreados = 0;
+            int productosActualizados = 0;
+            int duplicadosEliminados = 0;
+
+            // 1. SINCRONIZAR PRODUCTOS NORMALES
+            for (Map.Entry<String, Map<String, Object>> entry : stockProductosNormales.entrySet()) {
+                String[] partes = entry.getKey().split("\\|", 2);
+                String referencia = partes[0];
+                String estado = partes[1].equals("NULL") ? null : partes[1];
+                Integer stockTotal = (Integer) entry.getValue().get("stock");
+                String descripcion = (String) entry.getValue().get("descripcion");
+
+                if (stockTotal > 0) {
+                    List<Producto> productosExistentes = productosRepository
+                            .findByReferenciaAndEstadoOrderByReferenciaAsc(referencia, estado);
+
+                    if (!productosExistentes.isEmpty()) {
+                        // Actualizar el primero, eliminar duplicados
+                        Producto productoAConservar = productosExistentes.get(0);
+                        productoAConservar.setStock(stockTotal);
+                        productoAConservar.setDescription(descripcion);
+                        productosRepository.save(productoAConservar);
+                        productosActualizados++;
+
+                        // Eliminar duplicados
+                        for (int i = 1; i < productosExistentes.size(); i++) {
+                            productosRepository.delete(productosExistentes.get(i));
+                            duplicadosEliminados++;
+                        }
+                    } else {
+                        // Crear nuevo producto normal
+                        Producto nuevoProducto = new Producto();
+                        nuevoProducto.setReferencia(referencia);
+                        nuevoProducto.setDescription(descripcion);
+                        nuevoProducto.setEstado(estado);
+                        nuevoProducto.setStock(stockTotal);
+                        productosRepository.save(nuevoProducto);
+                        productosCreados++;
+                    }
+                }
+            }
+
+            // 2. SINCRONIZAR PRODUCTOS ESPECIALES
+            for (Map.Entry<String, Map<String, Object>> entry : stockProductosEspeciales.entrySet()) {
+                String[] partes = entry.getKey().split("\\|", 2);
+                String referencia = partes[0]; // "SIN REFERENCIA" o "VISUAL"
+                String descripcion = partes[1]; // La descripción completa
+                Integer stockTotal = (Integer) entry.getValue().get("stock");
+
+                if (stockTotal > 0) {
+                    // Para productos especiales, buscar por referencia Y descripción
+                    Optional<Producto> productoExistente = productosRepository
+                            .findByReferenciaAndDescription(referencia, descripcion);
+
+                    if (productoExistente.isPresent()) {
+                        // Actualizar producto especial existente
+                        productoExistente.get().setStock(stockTotal);
+                        productosRepository.save(productoExistente.get());
+                        productosActualizados++;
+                    } else {
+                        // Crear nuevo producto especial
+                        Producto nuevoProductoEspecial = new Producto();
+                        nuevoProductoEspecial.setReferencia(referencia);
+                        nuevoProductoEspecial.setDescription(descripcion);
+                        nuevoProductoEspecial.setEstado(null); // Los productos especiales no tienen estado
+                        nuevoProductoEspecial.setStock(stockTotal);
+                        productosRepository.save(nuevoProductoEspecial);
+                        productosCreados++;
+                    }
+                }
+            }
+
+            // 3. LIMPIAR PRODUCTOS QUE NO EXISTEN EN UBICACIONES
+            List<Producto> todosLosProductos = (List<Producto>) productosRepository.findAll();
+            int productosEliminados = 0;
+
+            for (Producto producto : todosLosProductos) {
+                boolean existeEnUbicaciones = false;
+
+                if (esProductoEspecial(producto.getReferencia())) {
+                    // Para productos especiales, verificar en el mapa de especiales
+                    String claveEspecial = producto.getReferencia() + "|" + producto.getDescription();
+                    Map<String, Object> datosStock = stockProductosEspeciales.get(claveEspecial);
+                    existeEnUbicaciones = (datosStock != null && (Integer) datosStock.get("stock") > 0);
+
+                } else {
+                    // Para productos normales, verificar en el mapa de normales
+                    String claveNormal = producto.getReferencia() + "|"
+                            + (producto.getEstado() != null ? producto.getEstado() : "NULL");
+                    Map<String, Object> datosStock = stockProductosNormales.get(claveNormal);
+                    existeEnUbicaciones = (datosStock != null && (Integer) datosStock.get("stock") > 0);
+                }
+
+                if (!existeEnUbicaciones) {
+                    productosRepository.delete(producto);
+                    productosEliminados++;
+                }
+            }
+
+            String mensaje = String.format(
+                    "Sincronización completada: %d productos creados, %d actualizados, %d duplicados eliminados, %d productos eliminados (sin stock/huérfanos)",
+                    productosCreados, productosActualizados, duplicadosEliminados, productosEliminados);
+
+            return ResponseEntity.ok(mensaje);
+
+        } catch (Exception e) {
+            System.err.println("Error durante la sincronización: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error durante la sincronización: " + e.getMessage());
+        }
+    }
+
+    // Método auxiliar para identificar productos especiales
+    private boolean esProductoEspecial(String referencia) {
+        if (referencia == null)
+            return false;
+        return "VISUAL".equals(referencia) || "SIN REFERENCIA".equals(referencia);
     }
 }

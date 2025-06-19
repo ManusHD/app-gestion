@@ -561,7 +561,8 @@ export class FormularioEntradaSalidaComponent
         producto.formaEnvio &&
         producto.formaEnvio.trim() !== '' &&
         producto.comprobado &&
-        producto.estado != null
+        // Permitir estado null para productos especiales
+        (producto.estado != null || this.esProductoEspecial(producto.ref!))
     );
   }
 

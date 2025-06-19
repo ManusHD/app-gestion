@@ -265,12 +265,14 @@ public class SalidaController {
                     if (productoSalida.getComprobado() == null || !productoSalida.getComprobado()) {
                         throw new IllegalArgumentException("Faltan productos por comprobar.");
                     }
-                    if (productoSalida.getEstado() == null || productoSalida.getEstado().isBlank()) {
-                        throw new IllegalArgumentException("El estado del producto no puede estar en blanco.");
-                    }
 
                     String ref = productoSalida.getRef();
                     String estado = productoSalida.getEstado();
+
+                    // CAMBIO: Validar estado solo para productos normales
+                    if (!isProductoEspecial(ref) && (estado == null || estado.isBlank())) {
+                        throw new IllegalArgumentException("El estado del producto " + ref + " no puede estar en blanco.");
+                    }
 
                     // Para productos normales se valida existencia y stock
                     if (!isProductoEspecial(ref)) {
@@ -330,7 +332,7 @@ public class SalidaController {
                     productoUbicacion.setRef(ref);
                     productoUbicacion.setUnidades(productoSalida.getUnidades());
                     productoUbicacion.setDescription(productoSalida.getDescription());
-                    productoUbicacion.setEstado(productoSalida.getEstado()); // IMPORTANTE: Incluir estado
+                    productoUbicacion.setEstado(productoSalida.getEstado()); // Puede ser null para productos especiales
 
                     ubicacion.getProductos().add(productoUbicacion);
 
