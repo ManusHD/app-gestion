@@ -334,3 +334,18 @@ input.stock-excedido {
     transform: translateX(2px);
   }
 }
+
+.linea-duplicada {
+  background-color: rgba(214 0 0) !important;
+  border-left: 3px solid #ff9800 !important;
+}
+
+.linea-duplicada td {
+  border-bottom: 1px solid #ff9800 !important;
+}
+
+.error-duplicado {
+  color: #ff9800;
+  font-size: 12px;
+  font-weight: bold;
+}

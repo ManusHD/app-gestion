@@ -137,13 +137,13 @@ export class FormularioEntradaSalidaComponent
   cargarEstados() {
     this.estadosService.getEstados().subscribe({
       next: (data) => {
-        console.log(data)
+        console.log(data);
         this.estados = data;
       },
       error: (error) => {
         console.error('Error al obtener los estados', error);
       },
-    })
+    });
   }
 
   cargarPerfumerias(perfumeria: string) {
@@ -184,12 +184,12 @@ export class FormularioEntradaSalidaComponent
   }
 
   cargarPDVPerfumeria(perfumeria: string) {
-    this.direccionesService.getPdvsPerfumeria(perfumeria).subscribe(
-      (data: PDV[]) => {
+    this.direccionesService
+      .getPdvsPerfumeria(perfumeria)
+      .subscribe((data: PDV[]) => {
         this.pdvs = data;
         console.log(this.pdvs);
-      }
-    );
+      });
   }
 
   cargarColaboradores() {
@@ -295,24 +295,36 @@ export class FormularioEntradaSalidaComponent
   }
 
   private actualizarProductos(productos: any[]) {
-    productos.forEach((row) => {
+    // Limpiar el array existente
+    while (this.productosControls.length) {
+      this.productosControls.removeAt(0);
+    }
+
+    productos.forEach((row, index) => {
       const productoFormGroup = this.createProductoGroup();
-      productoFormGroup.patchValue({
+
+      // Establecer todos los valores de una vez
+      const valoresProducto = {
         ref: row.referencia || row.ref,
         description: row.descripcion || row.description,
         unidades: row.unidades || row.unidadesPedidas,
         unidadesPedidas: row.unidadesPedidas || row.unidades,
-        ubicacion: row.ubicacion,
+        ubicacion: row.ubicacion, // Preservar la ubicación original
         palets: row.palets || 0,
         bultos: row.bultos || 0,
         formaEnvio: row.formaEnvio,
         observaciones: row.observaciones,
         comprobado: row.comprobado || false,
         estado: row.estado || null,
-      });
-      if (row.ref) {
+      };
+
+      productoFormGroup.patchValue(valoresProducto);
+
+      // Solo buscar descripción si no está presente
+      if (row.ref && !valoresProducto.description) {
         this.buscarDescripcionProducto(productoFormGroup, row.ref);
       }
+
       this.productosControls.push(productoFormGroup);
     });
   }
@@ -331,41 +343,107 @@ export class FormularioEntradaSalidaComponent
         const refB = b.get('ref')?.value || '';
         return refA.localeCompare(refB);
       });
-      
+
       if (this.esSalida()) {
         this.cargarAgenciasTransporte();
-        this.productosControls.controls.forEach((control, index) => {
-          const ref = control.get('ref')?.value;
-          const estado = control.get('estado')?.value;
-          const descripcion = control.get('description')?.value;
-          
-          if (ref && !this.esProductoEspecial(ref)) {
-            // Para productos normales, cargar estados disponibles
-            this.productoService.getEstadosDisponiblesPorReferencia(ref)
-              .subscribe(estados => {
-                this.estadosDisponiblesPorProducto[index] = estados;
-              });
-            
-            // Si ya tiene estado y ubicación, validar stock específico
-            if (estado) {
-              this.cargarUbicacionesPorReferenciaYEstado(ref, estado, index);
-              
-              const ubicacion = control.get('ubicacion')?.value;
-              if (ubicacion) {
-                // Validar stock específico después de cargar ubicaciones
-                setTimeout(() => {
-                  this.validarStockEspecifico(index);
-                  this.actualizarValidadoresUnidades(index);
-                }, 500);
+
+        // Usar Promise.all para esperar a que todas las ubicaciones se carguen
+        const promesasCarga = this.productosControls.controls.map(
+          (control, index) => {
+            const ref = control.get('ref')?.value;
+            const estado = control.get('estado')?.value;
+            const descripcion = control.get('description')?.value;
+
+            return new Promise<void>((resolve) => {
+              if (ref && !this.esProductoEspecial(ref)) {
+                // Para productos normales, cargar estados disponibles
+                this.productoService
+                  .getEstadosDisponiblesPorReferencia(ref)
+                  .subscribe((estados) => {
+                    this.estadosDisponiblesPorProducto[index] = estados;
+
+                    // Si ya tiene estado, cargar ubicaciones
+                    if (estado) {
+                      this.cargarUbicacionesPorReferenciaYEstadoConCallback(
+                        ref,
+                        estado,
+                        index,
+                        resolve
+                      );
+                    } else {
+                      resolve();
+                    }
+                  });
+              } else if (this.esProductoEspecial(ref) && descripcion) {
+                // Para productos especiales, usar descripción
+                this.obtenerUbicacionesProductoEspecial(ref, descripcion);
+                resolve();
+              } else {
+                resolve();
               }
-            }
-          } else if (this.esProductoEspecial(ref) && descripcion) {
-            // Para productos especiales, usar descripción
-            this.obtenerUbicacionesProductoEspecial(ref, descripcion);
+            });
           }
+        );
+
+        // Cuando todas las ubicaciones estén cargadas, forzar actualización
+        Promise.all(promesasCarga).then(() => {
+          setTimeout(() => {
+            // Forzar la actualización de todos los controles de ubicación
+            this.productosControls.controls.forEach((control, index) => {
+              const ubicacionControl = control.get('ubicacion');
+              const ubicacionGuardada = ubicacionControl?.value;
+
+              if (ubicacionGuardada) {
+                // Mantener el valor y forzar actualización visual
+                ubicacionControl?.setValue(ubicacionGuardada);
+                ubicacionControl?.updateValueAndValidity();
+              }
+
+              // Validar stock si es necesario
+              if (this.esSalida()) {
+                this.validarStockEspecifico(index);
+                this.actualizarValidadoresUnidades(index);
+              }
+            });
+
+            // Forzar detección de cambios
+            this.cdr.detectChanges();
+          }, 100);
         });
       }
     });
+  }
+
+  // Nuevo método auxiliar para cargar ubicaciones con callback
+  private cargarUbicacionesPorReferenciaYEstadoConCallback(
+    referencia: string,
+    estado: string,
+    index: number,
+    callback: () => void
+  ) {
+    const key = `${referencia}-${estado}`;
+
+    if (this.ubicacionesPorProductoYEstado[key]) {
+      callback();
+      return;
+    }
+
+    this.ubicacionesService
+      .getUbicacionesByReferenciaAndEstado(referencia, estado)
+      .subscribe({
+        next: (data: Ubicacion[]) => {
+          this.ubicacionesPorProductoYEstado[key] = data;
+          callback();
+        },
+        error: (error) => {
+          console.error(
+            'Error al obtener ubicaciones por referencia y estado:',
+            error
+          );
+          this.ubicacionesPorProductoYEstado[key] = [];
+          callback();
+        },
+      });
   }
 
   modificarEntrada() {
@@ -398,7 +476,8 @@ export class FormularioEntradaSalidaComponent
         estado: !this.pendiente,
         productos: productosEntrada,
         rellena: false,
-        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!.value,
+        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!
+          .value,
       };
 
       this.entradaService.updateEntrada(entradaActualizada).subscribe({
@@ -454,7 +533,8 @@ export class FormularioEntradaSalidaComponent
         rellena: false,
       };
 
-      salidaActualizada.rellena = this.todosLosCamposRellenos(salidaActualizada);
+      salidaActualizada.rellena =
+        this.todosLosCamposRellenos(salidaActualizada);
       console.log(salidaActualizada);
 
       this.salidaService.updateSalida(salidaActualizada).subscribe({
@@ -650,11 +730,11 @@ export class FormularioEntradaSalidaComponent
       this.activeRowIndex = null;
     }, 200);
   }
-  
+
   setActiveCampoUnico(campo: string): void {
     this.activeCampoUnico = campo;
   }
-  
+
   clearActiveCampoUnico(): void {
     setTimeout(() => {
       this.activeCampoUnico = null;
@@ -668,7 +748,7 @@ export class FormularioEntradaSalidaComponent
 
   // Método para obtener estados disponibles (llamado desde template)
   override getEstadosDisponibles(index: number, esSalida: boolean): string[] {
-      return super.getEstadosDisponibles(index, esSalida);
+    return super.getEstadosDisponibles(index, esSalida);
   }
 
   // Método para obtener ubicaciones por índice (llamado desde template)
@@ -710,12 +790,38 @@ export class FormularioEntradaSalidaComponent
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
 
-    if (referencia && estado && ubicacion && !this.esProductoEspecial(referencia)) {
+    if (
+      referencia &&
+      estado &&
+      ubicacion &&
+      !this.esProductoEspecial(referencia)
+    ) {
       const stockDisponible = this.getStockDisponible(index);
       return `Stock disponible: ${stockDisponible}`;
     }
 
     return '';
   }
-  
+
+  // Método para inicializar el formulario con datos existentes (en caso de edición)
+  inicializarFormularioConDatos(datosExistentes: any) {
+    // Cargar datos del formulario
+    this.entradaSalidaForm.patchValue(datosExistentes);
+
+    // Para cada producto, cargar las ubicaciones disponibles
+    datosExistentes.productos?.forEach((producto: any, index: number) => {
+      if (producto.ref && producto.estado && this.esSalida()) {
+        this.cargarUbicacionesPorReferenciaYEstado(
+          producto.ref,
+          producto.estado,
+          index
+        );
+      }
+    });
+
+    // Forzar actualización después de un delay para asegurar que las ubicaciones se carguen
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    }, 500);
+  }
 }

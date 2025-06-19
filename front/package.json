@@ -21,6 +21,8 @@
     "@angular/platform-browser-dynamic": "^16.1.0",
     "@angular/router": "^16.1.0",
     "app-gestion": "file:",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "jwt-decode": "^4.0.0",
     "ngx-toastr": "^19.0.0",
     "rxjs": "~7.8.0",

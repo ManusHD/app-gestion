@@ -1,4 +1,10 @@
-import { ChangeDetectorRef, ElementRef, HostListener, Injectable, ViewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  ElementRef,
+  HostListener,
+  Injectable,
+  ViewChild,
+} from '@angular/core';
 import { inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -76,7 +82,7 @@ export class FormularioEntradaSalidaService {
     protected importarES: ImportarExcelService,
     protected carga: PantallaCargaService,
     protected salidaUbicacionService: SalidaUbicacionService,
-    protected estadosService: EstadoService,
+    protected estadosService: EstadoService
   ) {}
 
   createForm() {
@@ -112,14 +118,14 @@ export class FormularioEntradaSalidaService {
       formaEnvio: ['', Validators.required],
       observaciones: [''],
       comprobado: [!this.esNuevo() ? false : true],
-      estado: [null]
+      estado: [null],
     });
   }
-  
+
   onEnterKey(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       event.preventDefault(); // Evita que el formulario se envíe accidentalmente
-  
+
       const form = event.target as HTMLElement;
       const inputs = Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -127,10 +133,10 @@ export class FormularioEntradaSalidaService {
         )
       );
       const index = inputs.indexOf(form);
-  
+
       if (index >= 0 && index < inputs.length - 1) {
         const nextElement = inputs[index + 1];
-  
+
         // Si el siguiente elemento es el botón de añadir línea, ejecuta la función
         if (nextElement.classList.contains('add-producto')) {
           this.agregarProducto();
@@ -139,13 +145,12 @@ export class FormularioEntradaSalidaService {
         }
       }
     }
-  
+
     if (event.ctrlKey && event.key === '+') {
       event.preventDefault();
       this.agregarProducto();
     }
   }
-  
 
   // Getter para acceder fácilmente al FormArray de productos
   get productosControls() {
@@ -155,12 +160,10 @@ export class FormularioEntradaSalidaService {
   // Método para añadir un nuevo producto
   agregarProducto() {
     this.productosControls.push(this.createProductoGroup());
-    
+
     setTimeout(() => {
       const inputsRef = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          'input[formControlName="ref"]'
-        )
+        document.querySelectorAll<HTMLElement>('input[formControlName="ref"]')
       );
       inputsRef[inputsRef.length - 1].focus();
     });
@@ -433,7 +436,9 @@ export class FormularioEntradaSalidaService {
   // Buscar producto por referencia y autocompletar descripción - Se llama desde el HTML
   buscarProductoPorReferencia(index: number) {
     const refControl = this.productosControls.at(index).get('ref');
-    const descriptionControl = this.productosControls.at(index).get('description');
+    const descriptionControl = this.productosControls
+      .at(index)
+      .get('description');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
 
@@ -465,17 +470,22 @@ export class FormularioEntradaSalidaService {
     }
   }
 
-  private manejarProductoEspecial(index: number, tipo: 'VISUAL' | 'SIN REFERENCIA') {
+  private manejarProductoEspecial(
+    index: number,
+    tipo: 'VISUAL' | 'SIN REFERENCIA'
+  ) {
     // Para productos especiales, el estado no es obligatorio
     const estadoControl = this.productosControls.at(index).get('estado');
     estadoControl?.clearValidators();
     estadoControl?.updateValueAndValidity();
-    
+
     // Limpiar estados disponibles para productos especiales
     delete this.estadosDisponiblesPorProducto[index];
-    
+
     if (this.esSalida()) {
-      const descriptionControl = this.productosControls.at(index).get('description');
+      const descriptionControl = this.productosControls
+        .at(index)
+        .get('description');
       if (!descriptionControl?.value) {
         if (tipo === 'VISUAL') {
           this.cargarVisuales();
@@ -486,7 +496,9 @@ export class FormularioEntradaSalidaService {
         if (tipo === 'VISUAL') {
           this.cargarVisualesPorDescripcion(descriptionControl.value);
         } else {
-          this.cargarProductosSinReferenciaPorDescripcion(descriptionControl.value);
+          this.cargarProductosSinReferenciaPorDescripcion(
+            descriptionControl.value
+          );
         }
       }
     }
@@ -494,24 +506,26 @@ export class FormularioEntradaSalidaService {
 
   // Método para limpiar datos cuando se cambia de producto
   private limpiarCamposProducto(index: number) {
-    const descriptionControl = this.productosControls.at(index).get('description');
+    const descriptionControl = this.productosControls
+      .at(index)
+      .get('description');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
     const unidadesControl = this.productosControls.at(index).get('unidades');
-    
+
     descriptionControl?.setValue('');
     estadoControl?.setValue(null);
     ubicacionControl?.setValue('');
-    
+
     // Limpiar validadores específicos
     unidadesControl?.setValidators([Validators.required, Validators.min(1)]);
     unidadesControl?.updateValueAndValidity();
-    
+
     // Limpiar estados disponibles y stock
     delete this.estadosDisponiblesPorProducto[index];
-    
+
     // Limpiar stock disponible para este índice
-    Object.keys(this.stockDisponiblePorProducto).forEach(key => {
+    Object.keys(this.stockDisponiblePorProducto).forEach((key) => {
       if (key.startsWith(`${index}-`)) {
         delete this.stockDisponiblePorProducto[key];
       }
@@ -526,20 +540,20 @@ export class FormularioEntradaSalidaService {
 
     const referencia = refControl?.value;
     const estado = estadoControl?.value;
-    const ubicacion = ubicacionControl?.value;
+    const ubicacionActual = ubicacionControl?.value; // Guardar la ubicación actual
 
     if (referencia && estado && this.esSalida()) {
-      // Limpiar ubicación al cambiar estado
-      ubicacionControl?.setValue('');
-      
+      // No limpiar la ubicación automáticamente si ya existe
+      // ubicacionControl?.setValue('');
+
       // Cargar ubicaciones para esta referencia y estado específicos
       this.cargarUbicacionesPorReferenciaYEstado(referencia, estado, index);
-      
+
       // Si ya hay ubicación seleccionada, validar stock inmediatamente
-      if (ubicacion) {
+      if (ubicacionActual) {
         this.validarStockEspecifico(index);
       }
-      
+
       // Actualizar validadores de unidades
       this.actualizarValidadoresUnidades(index);
     }
@@ -568,25 +582,33 @@ export class FormularioEntradaSalidaService {
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
 
-    if (referencia && estado && ubicacion && !this.esProductoEspecial(referencia)) {
-      const stockDisponible = this.obtenerStockEspecifico(referencia, estado, ubicacion);
-      
+    if (
+      referencia &&
+      estado &&
+      ubicacion &&
+      !this.esProductoEspecial(referencia)
+    ) {
+      const stockDisponible = this.obtenerStockEspecifico(
+        referencia,
+        estado,
+        ubicacion
+      );
+
       // Configurar validadores con el stock específico
       unidadesControl.setValidators([
         Validators.required,
         Validators.min(1),
-        Validators.max(stockDisponible)
+        Validators.max(stockDisponible),
       ]);
-      
-      console.log(`Validadores actualizados para producto ${index}: max ${stockDisponible}`);
+
+      console.log(
+        `Validadores actualizados para producto ${index}: max ${stockDisponible}`
+      );
     } else {
       // Validadores por defecto
-      unidadesControl.setValidators([
-        Validators.required,
-        Validators.min(1)
-      ]);
+      unidadesControl.setValidators([Validators.required, Validators.min(1)]);
     }
-    
+
     unidadesControl.updateValueAndValidity();
   }
 
@@ -606,11 +628,20 @@ export class FormularioEntradaSalidaService {
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
 
-    if (!referencia || !estado || !ubicacion || this.esProductoEspecial(referencia)) {
+    if (
+      !referencia ||
+      !estado ||
+      !ubicacion ||
+      this.esProductoEspecial(referencia)
+    ) {
       return false;
     }
 
-    const stockDisponible = this.obtenerStockEspecifico(referencia, estado, ubicacion);
+    const stockDisponible = this.obtenerStockEspecifico(
+      referencia,
+      estado,
+      ubicacion
+    );
     return unidades > stockDisponible;
   }
 
@@ -624,31 +655,47 @@ export class FormularioEntradaSalidaService {
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
 
-    if (referencia && estado && ubicacion && !this.esProductoEspecial(referencia)) {
+    if (
+      referencia &&
+      estado &&
+      ubicacion &&
+      !this.esProductoEspecial(referencia)
+    ) {
       // Buscar el stock específico en la ubicación y estado seleccionados
-      const stockDisponible = this.obtenerStockEspecifico(referencia, estado, ubicacion);
-      
+      const stockDisponible = this.obtenerStockEspecifico(
+        referencia,
+        estado,
+        ubicacion
+      );
+
       // Guardar el stock disponible para este producto
       const key = `${index}-${referencia}-${estado}-${ubicacion}`;
       this.stockDisponiblePorProducto[key] = stockDisponible;
-      
-      console.log(`Stock disponible para ${referencia} estado ${estado} en ${ubicacion}: ${stockDisponible}`);
+
+      console.log(
+        `Stock disponible para ${referencia} estado ${estado} en ${ubicacion}: ${stockDisponible}`
+      );
     }
   }
 
   // Nuevo método para obtener stock específico de una ubicación y estado
-  protected obtenerStockEspecifico(referencia: string, estado: string, ubicacionNombre: string): number {
+  protected obtenerStockEspecifico(
+    referencia: string,
+    estado: string,
+    ubicacionNombre: string
+  ): number {
     const key = `${referencia}-${estado}`;
     const ubicaciones = this.ubicacionesPorProductoYEstado[key] || [];
-    
-    const ubicacionEncontrada = ubicaciones.find(ubi => ubi.nombre === ubicacionNombre);
+
+    const ubicacionEncontrada = ubicaciones.find(
+      (ubi) => ubi.nombre === ubicacionNombre
+    );
     if (!ubicacionEncontrada) {
       return 0;
     }
 
-    const productoEnUbicacion = ubicacionEncontrada.productos?.find(p => 
-      p.ref === referencia && 
-      p.estado === estado
+    const productoEnUbicacion = ubicacionEncontrada.productos?.find(
+      (p) => p.ref === referencia && p.estado === estado
     );
 
     return productoEnUbicacion?.unidades || 0;
@@ -664,7 +711,12 @@ export class FormularioEntradaSalidaService {
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
 
-    if (!referencia || !estado || !ubicacion || this.esProductoEspecial(referencia)) {
+    if (
+      !referencia ||
+      !estado ||
+      !ubicacion ||
+      this.esProductoEspecial(referencia)
+    ) {
       return 0;
     }
 
@@ -672,7 +724,9 @@ export class FormularioEntradaSalidaService {
   }
 
   private procesarRespuestaProducto(response: any, index: number) {
-    const descriptionControl = this.productosControls.at(index).get('description');
+    const descriptionControl = this.productosControls
+      .at(index)
+      .get('description');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
 
@@ -681,33 +735,49 @@ export class FormularioEntradaSalidaService {
         // Producto con múltiples estados
         descriptionControl!.setValue(response.description);
         this.productosNuevos.delete(index);
-        
+
         // Configurar estados disponibles
-        this.estadosDisponiblesPorProducto[index] = response.estados.map((e: any) => e.estado);
-        
+        this.estadosDisponiblesPorProducto[index] = response.estados.map(
+          (e: any) => e.estado
+        );
+
         // Hacer el estado obligatorio para productos normales
         estadoControl?.setValidators([Validators.required]);
         estadoControl?.updateValueAndValidity();
-        
-        // Limpiar estado y ubicación hasta que se seleccione un estado
-        estadoControl?.setValue(null);
-        ubicacionControl?.setValue('');
-        
+
+        // Solo limpiar estado y ubicación si no tienen valores
+        if (!estadoControl?.value) {
+          estadoControl?.setValue(null);
+        }
+        if (!ubicacionControl?.value) {
+          ubicacionControl?.setValue('');
+        }
+
         if (this.esSalida()) {
-          // Limpiar ubicaciones hasta que se seleccione un estado
-          const ref = this.productosControls.at(index).get('ref')?.value;
-          delete this.ubicacionesPorProductoYEstado[`${ref}-${index}`];
+          // Si ya hay estado seleccionado, cargar ubicaciones
+          if (estadoControl?.value) {
+            this.cargarUbicacionesPorReferenciaYEstado(
+              response.referencia,
+              estadoControl.value,
+              index
+            );
+          }
         }
       } else if (response.estados && response.estados.length === 1) {
         // Producto con un solo estado
         descriptionControl!.setValue(response.description);
-        estadoControl?.setValue(response.estados[0].estado);
+
+        // Solo establecer el estado si no está ya establecido
+        if (!estadoControl?.value) {
+          estadoControl?.setValue(response.estados[0].estado);
+        }
+
         this.productosNuevos.delete(index);
-        
+
         // Hacer el estado obligatorio
         estadoControl?.setValidators([Validators.required]);
         estadoControl?.updateValueAndValidity();
-        
+
         if (this.esSalida()) {
           this.setMaxUnidades(index, response.estados[0].stock);
           this.cargarUbicacionesPorReferenciaYEstado(
@@ -720,11 +790,11 @@ export class FormularioEntradaSalidaService {
         // Producto tradicional (respuesta directa)
         descriptionControl!.setValue(response.description);
         this.productosNuevos.delete(index);
-        
+
         // Hacer el estado obligatorio
         estadoControl?.setValidators([Validators.required]);
         estadoControl?.updateValueAndValidity();
-        
+
         if (this.esSalida()) {
           this.setMaxUnidades(index, response.stock);
           this.obtenerUbicacionesProductoSalida(response.referencia);
@@ -736,30 +806,58 @@ export class FormularioEntradaSalidaService {
     }
   }
 
-  protected cargarUbicacionesPorReferenciaYEstado(referencia: string, estado: string, index: number) {
+  protected cargarUbicacionesPorReferenciaYEstado(
+    referencia: string,
+    estado: string,
+    index: number
+  ) {
     const key = `${referencia}-${estado}`;
-    
-    if (this.ubicacionesPorProductoYEstado[key]) {
-      return; // Ya están cargadas
-    }
 
-    this.ubicacionesService.getUbicacionesByReferenciaAndEstado(referencia, estado)
-      .subscribe({
-        next: (data: Ubicacion[]) => {
-          this.ubicacionesPorProductoYEstado[key] = data;
-        },
-        error: (error) => {
-          console.error('Error al obtener ubicaciones por referencia y estado:', error);
-          this.ubicacionesPorProductoYEstado[key] = [];
-        },
-      });
+    // Cargar ubicaciones si no están ya cargadas
+    if (!this.ubicacionesPorProductoYEstado[key]) {
+      this.ubicacionesService
+        .getUbicacionesByReferenciaAndEstado(referencia, estado)
+        .subscribe({
+          next: (data: Ubicacion[]) => {
+            this.ubicacionesPorProductoYEstado[key] = data;
+            // Después de cargar, verificar si hay ubicación guardada para este índice específico
+            this.verificarUbicacionGuardada(index);
+          },
+          error: (error) => {
+            console.error(
+              'Error al obtener ubicaciones por referencia y estado:',
+              error
+            );
+            this.ubicacionesPorProductoYEstado[key] = [];
+          },
+        });
+    } else {
+      // Si ya están cargadas, verificar inmediatamente
+      this.verificarUbicacionGuardada(index);
+    }
+  }
+
+  // Nuevo método para verificar y establecer la ubicación guardada
+  private verificarUbicacionGuardada(index: number) {
+    const ubicacionControl = this.productosControls.at(index).get('ubicacion');
+    const ubicacionGuardada = ubicacionControl?.value;
+
+    if (ubicacionGuardada) {
+      // Forzar la actualización del valor para que se muestre correctamente
+      setTimeout(() => {
+        ubicacionControl?.setValue(ubicacionGuardada);
+        ubicacionControl?.updateValueAndValidity();
+      }, 100);
+    }
   }
 
   // Método para obtener ubicaciones filtradas por referencia y estado
   getUbicacionesPorIndice(index: number): Ubicacion[] {
     const refControl = this.productosControls.at(index).get('ref');
     const estadoControl = this.productosControls.at(index).get('estado');
-    const descriptionControl = this.productosControls.at(index).get('description');
+    const descriptionControl = this.productosControls
+      .at(index)
+      .get('description');
 
     const referencia = refControl?.value;
     const estado = estadoControl?.value;
@@ -783,16 +881,19 @@ export class FormularioEntradaSalidaService {
   // Método para obtener estados disponibles por índice
   getEstadosDisponibles(index: number, esSalida: boolean): string[] {
     if (esSalida) {
-      return this.estadosDisponiblesPorProducto[index] || this.estados.map(e => e.nombre);
+      return (
+        this.estadosDisponiblesPorProducto[index] ||
+        this.estados.map((e) => e.nombre)
+      );
     } else {
-      return this.estados.map(e => e.nombre!);
+      return this.estados.map((e) => e.nombre!);
     }
   }
 
   esEstadoRequerido(index: number): boolean {
     const refControl = this.productosControls.at(index).get('ref');
     const referencia = refControl?.value;
-    
+
     // El estado no es requerido para productos especiales
     return !this.esProductoEspecial(referencia);
   }
@@ -1017,7 +1118,7 @@ export class FormularioEntradaSalidaService {
 
   // Referencia local creada por Francia, no viene de arriba de Chanel
   refLocal(ref: string) {
-    if(/^[a-zA-Z]$/.test(ref.charAt(0))) {
+    if (/^[a-zA-Z]$/.test(ref.charAt(0))) {
       return true;
     }
     return false;
@@ -1083,22 +1184,24 @@ export class FormularioEntradaSalidaService {
     const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
     const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
-    const otroOrigenDestino = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const otroOrigenDestino =
+      this.entradaSalidaForm.get('otroOrigenDestino')?.value;
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
     const dcsValido = /^[0-9]{10}$/.test(dcs);
-  
+
     // Validar que perfumería y PDV vayan juntos
     const perfumeriaPdvCompleto = (perfumeria && pdv) || (!perfumeria && !pdv);
     if (!perfumeriaPdvCompleto) {
       return false;
     }
-  
+
     // Casos válidos de origen/destino
     const tienePerfumeriaPdv = perfumeria && pdv;
     const tieneColaborador = colaborador && colaborador.trim() !== '';
-    const tieneOtroOrigenDestino = otroOrigenDestino && otroOrigenDestino.trim() !== '';
+    const tieneOtroOrigenDestino =
+      otroOrigenDestino && otroOrigenDestino.trim() !== '';
     const tieneDcs = dcs && dcs.trim() !== '';
-  
+
     // Combinaciones válidas (misma lógica que previsionEsValida pero sin mostrar errores)
     const combinacionesValidas = [
       tienePerfumeriaPdv && !tieneColaborador && !tieneOtroOrigenDestino,
@@ -1106,10 +1209,14 @@ export class FormularioEntradaSalidaService {
       !tienePerfumeriaPdv && !tieneColaborador && tieneOtroOrigenDestino,
       tienePerfumeriaPdv && tieneColaborador && !tieneOtroOrigenDestino,
       tienePerfumeriaPdv && !tieneColaborador && tieneOtroOrigenDestino,
-      !tienePerfumeriaPdv && !tieneColaborador && !tieneOtroOrigenDestino && tieneDcs && dcsValido
+      !tienePerfumeriaPdv &&
+        !tieneColaborador &&
+        !tieneOtroOrigenDestino &&
+        tieneDcs &&
+        dcsValido,
     ];
-  
-    return combinacionesValidas.some(c => c);
+
+    return combinacionesValidas.some((c) => c);
   }
 
   // Comprueba todo al completo de los campos simples y muestra los errores
@@ -1117,21 +1224,22 @@ export class FormularioEntradaSalidaService {
     const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
     const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
-    const otroOrigenDestino = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const otroOrigenDestino =
+      this.entradaSalidaForm.get('otroOrigenDestino')?.value;
     const dcs = this.entradaSalidaForm.get('dcs')?.value;
     const hayProductos = this.productosControls.length > 0;
     const productosValidos = this.productosPrevisionSonValidos();
     const dcsValido = /^[0-9]{10}$/.test(dcs);
-  
+
     // Verificar que Perfumería y PDV van juntos
     const perfumeriaPdvValido = (!perfumeria && !pdv) || (perfumeria && pdv);
     const tienePerfumeriaPdv = perfumeria && pdv;
-  
+
     // Casos válidos de origen/destino (ahora permite combinaciones)
     const tieneColaborador = !!colaborador;
     const tieneOtroOrigenDestino = !!otroOrigenDestino;
     const tieneDcs = !!dcs && dcsValido;
-  
+
     // Verificar que hay al menos un origen válido
     const tieneAlgunOrigen =
       tienePerfumeriaPdv ||
@@ -1139,39 +1247,54 @@ export class FormularioEntradaSalidaService {
       (tieneOtroOrigenDestino && !tieneColaborador && !tienePerfumeriaPdv) ||
       (tienePerfumeriaPdv && tieneColaborador && !tieneOtroOrigenDestino) ||
       (tienePerfumeriaPdv && tieneOtroOrigenDestino && !tieneColaborador);
-  
-    // Combinaciones válidas:
-    // 1. Solo Perfumería y PDV
-    // 2. Solo Colaborador  
-    // 3. Solo Otros Destinos
-    // 4. Perfumería y PDV + Colaborador
-    // 5. Perfumería y PDV + Otros Destinos
-    // 6. Solo DCS
-    const combinacionValida = 
-      // Casos con DCS (exclusivo)
-      (tieneDcs && !tieneAlgunOrigen) ||
-      // Casos sin DCS pero con al menos un origen
-      (!tieneDcs && tieneAlgunOrigen);
-  
-    let previsionValida = 
+
+    // Combinaciones válidas
+    const combinacionValida =
+      (tieneDcs && !tieneAlgunOrigen) || (!tieneDcs && tieneAlgunOrigen);
+
+    // NUEVA VALIDACIÓN: Verificar líneas duplicadas
+    const hayDuplicados = this.hayLineasDuplicadas();
+
+    let previsionValida =
       combinacionValida &&
       perfumeriaPdvValido &&
       hayProductos &&
-      productosValidos;
-  
+      productosValidos &&
+      !hayDuplicados; // Agregar esta condición
+
     // Mensajes de error específicos
     if (!perfumeriaPdvValido) {
       this.snackBarError('Perfumeria y PDV deben estar rellenos conjuntamente');
     } else if (tieneDcs && tieneAlgunOrigen) {
-      this.snackBarError('Debe seleccionar DCS o campos de ' + this.getOrigenODestino() + ', no ambos');
+      this.snackBarError(
+        'Debe seleccionar DCS o campos de ' +
+          this.getOrigenODestino() +
+          ', no ambos'
+      );
     } else if (!tieneDcs && !tieneAlgunOrigen) {
-      this.snackBarError('Faltan campos por rellenar o tiene una combinación inválida de direcciones');
+      this.snackBarError(
+        'Faltan campos por rellenar o tiene una combinación inválida de direcciones'
+      );
     } else if (!hayProductos) {
       this.snackBarError('Debe haber al menos 1 producto');
     } else if (dcs && !dcsValido) {
       this.snackBarError('El DCS debe tener 10 dígitos');
+    } else if (hayDuplicados) {
+      // Mostrar detalles de las líneas duplicadas
+      const duplicados = this.obtenerLineasDuplicadas();
+      const mensajeDuplicados = duplicados
+        .map(
+          (d) =>
+            `Líneas ${d.indices.map((i) => i + 1).join(', ')}: ${d.detalle}`
+        )
+        .join('\n');
+
+      this.snackBarError(
+        `Hay líneas duplicadas. Combine las unidades en una sola línea:\n${mensajeDuplicados}`
+      );
+      this.carga.hide();
     }
-  
+
     return previsionValida;
   }
 
@@ -1204,7 +1327,9 @@ export class FormularioEntradaSalidaService {
         this.esSalida() &&
         !this.currentPath.startsWith('/salidas/nuevo')
       ) {
-        this.snackBarError('Las UNIDADES PEDIDAS deben ser mayor o igual que 0');
+        this.snackBarError(
+          'Las UNIDADES PEDIDAS deben ser mayor o igual que 0'
+        );
       } else if (!unidadesValidas) {
         this.snackBarError('Las UNIDADES deben ser mayor que 0');
       }
@@ -1349,5 +1474,144 @@ export class FormularioEntradaSalidaService {
   esProductoEspecial(referencia: String) {
     if (referencia == null) return false;
     return 'VISUAL' == referencia || 'SIN REFERENCIA' == referencia;
+  }
+
+  // Método para verificar si hay líneas duplicadas
+  private hayLineasDuplicadas(): boolean {
+    const lineasUnicas = new Set<string>();
+
+    for (let i = 0; i < this.productosControls.length; i++) {
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value?.trim();
+      const description = control.get('description')?.value?.trim();
+      const estado = control.get('estado')?.value;
+      const ubicacion = control.get('ubicacion')?.value?.trim();
+
+      // Solo validar si todos los campos están completos
+      if (ref && description && ubicacion) {
+        let claveLinea: string;
+
+        if (this.esProductoEspecial(ref)) {
+          // Para productos especiales: referencia + descripción + ubicación
+          claveLinea = `${ref}|${description}|${ubicacion}`;
+        } else {
+          // Para productos normales: referencia + estado + ubicación
+          // Si no hay estado, usar 'null' como placeholder
+          const estadoKey = estado || 'null';
+          claveLinea = `${ref}|${estadoKey}|${ubicacion}`;
+        }
+
+        if (lineasUnicas.has(claveLinea)) {
+          return true; // Hay duplicados
+        }
+
+        lineasUnicas.add(claveLinea);
+      }
+    }
+
+    return false; // No hay duplicados
+  }
+
+  // Método para obtener detalles de las líneas duplicadas
+  private obtenerLineasDuplicadas(): { indices: number[]; detalle: string }[] {
+    const mapaLineas = new Map<string, number[]>();
+    const duplicados: { indices: number[]; detalle: string }[] = [];
+
+    for (let i = 0; i < this.productosControls.length; i++) {
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value?.trim();
+      const description = control.get('description')?.value?.trim();
+      const estado = control.get('estado')?.value;
+      const ubicacion = control.get('ubicacion')?.value?.trim();
+
+      if (ref && description && ubicacion) {
+        let claveLinea: string;
+        let detalleLinea: string;
+
+        if (this.esProductoEspecial(ref)) {
+          claveLinea = `${ref}|${description}|${ubicacion}`;
+          detalleLinea = `${ref} - ${description} en ${ubicacion}`;
+        } else {
+          const estadoKey = estado || 'null';
+          claveLinea = `${ref}|${estadoKey}|${ubicacion}`;
+          detalleLinea = `${ref}${
+            estado ? ` (${estado})` : ''
+          } en ${ubicacion}`;
+        }
+
+        if (!mapaLineas.has(claveLinea)) {
+          mapaLineas.set(claveLinea, []);
+        }
+
+        mapaLineas.get(claveLinea)!.push(i);
+
+        // Si ya hay más de una línea con la misma clave, es duplicado
+        if (mapaLineas.get(claveLinea)!.length > 1) {
+          // Verificar si ya está en la lista de duplicados
+          const duplicadoExistente = duplicados.find(
+            (d) => d.detalle === detalleLinea
+          );
+          if (!duplicadoExistente) {
+            duplicados.push({
+              indices: mapaLineas.get(claveLinea)!,
+              detalle: detalleLinea,
+            });
+          } else {
+            // Actualizar los índices
+            duplicadoExistente.indices = mapaLineas.get(claveLinea)!;
+          }
+        }
+      }
+    }
+
+    return duplicados;
+  }
+
+  // Método para validar duplicados en tiempo real (opcional)
+  validarDuplicadosEnTiempoReal(index: number): boolean {
+    const controlActual = this.productosControls.at(index);
+    const refActual = controlActual.get('ref')?.value?.trim();
+    const descriptionActual = controlActual.get('description')?.value?.trim();
+    const estadoActual = controlActual.get('estado')?.value;
+    const ubicacionActual = controlActual.get('ubicacion')?.value?.trim();
+
+    if (!refActual || !descriptionActual || !ubicacionActual) {
+      return false; // No está completo, no se puede validar
+    }
+
+    let claveActual: string;
+    if (this.esProductoEspecial(refActual)) {
+      claveActual = `${refActual}|${descriptionActual}|${ubicacionActual}`;
+    } else {
+      const estadoKey = estadoActual || 'null';
+      claveActual = `${refActual}|${estadoKey}|${ubicacionActual}`;
+    }
+
+    // Verificar si hay otra línea con la misma clave
+    for (let i = 0; i < this.productosControls.length; i++) {
+      if (i === index) continue; // Saltar la línea actual
+
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value?.trim();
+      const description = control.get('description')?.value?.trim();
+      const estado = control.get('estado')?.value;
+      const ubicacion = control.get('ubicacion')?.value?.trim();
+
+      if (ref && description && ubicacion) {
+        let clave: string;
+        if (this.esProductoEspecial(ref)) {
+          clave = `${ref}|${description}|${ubicacion}`;
+        } else {
+          const estadoKey = estado || 'null';
+          clave = `${ref}|${estadoKey}|${ubicacion}`;
+        }
+
+        if (clave === claveActual) {
+          return true; // Hay duplicado
+        }
+      }
+    }
+
+    return false; // No hay duplicado
   }
 }

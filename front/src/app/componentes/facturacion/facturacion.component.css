@@ -1,0 +1,517 @@
+.facturacion-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 140px);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* Formulario */
+.form-card {
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.form-card mat-card-header {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 20px 24px;
+  margin: -16px -16px 16px -16px;
+}
+
+.form-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.form-card mat-card-subtitle {
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  width: 48%;
+}
+
+.actions-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.actions-row button {
+  padding: 12px 32px;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.actions-row button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Carga */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  margin-bottom: 24px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* Resultados */
+.resultados-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Resumen */
+.resumen-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.resumen-card mat-card-header {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  padding: 20px 24px;
+  margin: -16px -16px 16px -16px;
+}
+
+.resumen-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.resumen-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.resumen-item.almacenaje {
+  background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 100%);
+  border-color: #8b5cf6;
+}
+
+.resumen-item.movimientos {
+  background: linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%);
+  border-color: #3b82f6;
+}
+
+.resumen-item.total {
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
+  border-color: #f59e0b;
+}
+
+.resumen-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.resumen-item mat-icon {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+  color: #4b5563;
+}
+
+.resumen-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.resumen-content .label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.resumen-content .amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.total-amount {
+  color: #059669 !important;
+}
+
+.export-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.export-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Tabla de detalles */
+.detalles-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+
+.detalles-card mat-card-header {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  color: white;
+  padding: 20px 24px;
+  margin: -16px -16px 16px -16px;
+}
+
+.detalles-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.table-container {
+  max-height: 600px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.facturacion-table {
+  width: 100%;
+  background: white;
+}
+
+.facturacion-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  padding: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.facturacion-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.facturacion-table tr:hover {
+  background: #f8fafc;
+}
+
+.concepto-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.concepto-cell strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.referencia {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.dias-almacenaje {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.dias-almacenaje mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.fecha-salida {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.fecha-salida mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.descuento {
+  color: #dc2626 !important;
+}
+
+.descuento-label {
+  font-size: 0.75rem;
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.cantidad.descuento,
+.total-cell.descuento {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.cantidad {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.total-cell {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1.1rem;
+}
+
+mat-chip {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+/* Sin datos */
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.no-data mat-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.no-data p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Tarifas */
+.tarifas-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+
+.tarifas-card mat-card-header {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  padding: 20px 24px;
+  margin: -16px -16px 16px -16px;
+}
+
+.tarifas-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.tarifas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tarifa-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.tarifa-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.tarifa-item mat-icon {
+  color: #7c3aed;
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.tarifa-item span:nth-child(2) {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+}
+
+.tarifa-item .precio {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1.1rem;
+}
+
+.nota-tarifas {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 16px;
+  background: #fef3c7;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.nota-tarifas mat-icon {
+  color: #d97706;
+  margin-top: 2px;
+}
+
+.nota-tarifas p {
+  margin: 0;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .facturacion-container {
+    padding: 16px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .half-width {
+    width: 100%;
+  }
+  
+  .resumen-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tarifas-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .facturacion-table {
+    min-width: 600px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultados-container > * {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.resultados-container > *:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.resultados-container > *:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.resultados-container > *:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.export-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.export-actions button {
+  min-width: 150px;
+}

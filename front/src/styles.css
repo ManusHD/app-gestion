@@ -249,6 +249,9 @@ textarea:focus {
     outline: none;
 }
 
+textarea {
+    field-sizing: content;
+}
 
 
 /* ----------------------------------------

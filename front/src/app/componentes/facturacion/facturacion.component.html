@@ -1,1 +1,276 @@
-<p>facturacion works!</p>
+<div class="facturacion-container">
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>receipt</mat-icon>
+        Cálculo de Facturación
+      </mat-card-title>
+      <mat-card-subtitle>
+        Calcule la facturación mensual basada en almacenaje y movimientos
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="facturacionForm" (ngSubmit)="calcularFacturacion()">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Mes a Facturar</mat-label>
+            <input matInput 
+                   type="month" 
+                   formControlName="mesSeleccionado"
+                   required>
+            <mat-icon matSuffix>calendar_month</mat-icon>
+            <mat-error *ngIf="facturacionForm.get('mesSeleccionado')?.hasError('required')">
+              El mes es obligatorio
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Fecha Inicio</mat-label>
+            <input matInput 
+                   type="date" 
+                   formControlName="fechaInicio"
+                   required>
+            <mat-icon matSuffix>date_range</mat-icon>
+            <mat-error *ngIf="facturacionForm.get('fechaInicio')?.hasError('required')">
+              La fecha de inicio es obligatoria
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Fecha Fin</mat-label>
+            <input matInput 
+                   type="date" 
+                   formControlName="fechaFin"
+                   required>
+            <mat-icon matSuffix>date_range</mat-icon>
+            <mat-error *ngIf="facturacionForm.get('fechaFin')?.hasError('required')">
+              La fecha de fin es obligatoria
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="actions-row">
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit"
+                  [disabled]="facturacionForm.invalid || cargando">
+            <mat-icon>calculate</mat-icon>
+            {{ cargando ? 'Calculando...' : 'Calcular Facturación' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="cargando" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Procesando datos de facturación...</p>
+  </div>
+
+  <!-- Resultados de facturación -->
+  <div *ngIf="mostrarResultados && resumenFacturacion && !cargando" class="resultados-container">
+    
+    <!-- Resumen de totales -->
+    <mat-card class="resumen-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>summary</mat-icon>
+          Resumen de Facturación
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="resumen-grid">
+          <div class="resumen-item almacenaje">
+            <mat-icon>warehouse</mat-icon>
+            <div class="resumen-content">
+              <span class="label">Total Almacenaje</span>
+              <span class="amount">{{ resumenFacturacion.totalAlmacenaje | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <div class="resumen-item movimientos">
+            <mat-icon>local_shipping</mat-icon>
+            <div class="resumen-content">
+              <span class="label">Total Movimientos</span>
+              <span class="amount">{{ resumenFacturacion.totalMovimientos | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <div class="resumen-item total">
+            <mat-icon>euro</mat-icon>
+            <div class="resumen-content">
+              <span class="label">Total General</span>
+              <span class="amount total-amount">{{ resumenFacturacion.totalGeneral | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="export-actions">
+            <button mat-raised-button 
+                    color="primary"
+                    (click)="exportarPDF()">
+                <mat-icon>picture_as_pdf</mat-icon>
+                Exportar PDF
+            </button>
+            
+            <button mat-stroked-button 
+                    color="accent"
+                    (click)="exportarExcel()">
+                <mat-icon>table_chart</mat-icon>
+                Exportar Excel
+            </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Tabla de detalles -->
+    <mat-card class="detalles-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>list_alt</mat-icon>
+          Detalle de Facturación
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="resumenFacturacion.detalles" class="facturacion-table">
+            
+            <!-- Columna Tipo -->
+            <ng-container matColumnDef="tipo">
+              <th mat-header-cell *matHeaderCellDef>Tipo</th>
+              <td mat-cell *matCellDef="let detalle">
+                <mat-chip [color]="detalle.tipo === 'almacenaje' ? 'primary' : 'accent'" 
+                         selected="true">
+                  <mat-icon>{{ detalle.tipo === 'almacenaje' ? 'warehouse' : 'local_shipping' }}</mat-icon>
+                  {{ detalle.tipo | titlecase }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Columna Concepto -->
+            <ng-container matColumnDef="concepto">
+              <th mat-header-cell *matHeaderCellDef>Concepto</th>
+              <td mat-cell *matCellDef="let detalle">
+                <div class="concepto-cell">
+                  <strong [class.descuento]="detalle.total < 0">
+                    {{ detalle.concepto }}
+                    <span *ngIf="detalle.total < 0" class="descuento-label"> (DESCUENTO)</span>
+                  </strong>
+                  <div *ngIf="detalle.referencia" class="referencia">
+                    {{ detalle.referencia }} - {{ detalle.descripcion }}
+                  </div>
+                  <div *ngIf="detalle.diasAlmacenaje && detalle.diasAlmacenaje !== 0" class="dias-almacenaje">
+                    <mat-icon>{{ detalle.diasAlmacenaje > 0 ? 'schedule' : 'remove_circle' }}</mat-icon>
+                    <span [class.descuento]="detalle.diasAlmacenaje < 0">
+                      {{ Math.abs(detalle.diasAlmacenaje) }} días
+                      {{ detalle.diasAlmacenaje < 0 ? 'descontados' : 'de almacenaje' }}
+                    </span>
+                  </div>
+                  <div *ngIf="detalle.fechaSalida" class="fecha-salida">
+                    <mat-icon>logout</mat-icon>
+                    Salida: {{ detalle.fechaSalida | date:'dd/MM/yyyy' }}
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Columna Cantidad -->
+            <ng-container matColumnDef="cantidad">
+              <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+              <td mat-cell *matCellDef="let detalle">
+                <span class="cantidad" [class.descuento]="detalle.cantidad < 0">
+                  {{ detalle.cantidad }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Columna Precio -->
+            <ng-container matColumnDef="precio">
+              <th mat-header-cell *matHeaderCellDef>Precio Unit.</th>
+              <td mat-cell *matCellDef="let detalle">
+                {{ detalle.precio | currency:'EUR':'symbol':'1.2-2' }}
+              </td>
+            </ng-container>
+
+            <!-- Columna Total -->
+            <ng-container matColumnDef="total">
+              <th mat-header-cell *matHeaderCellDef>Total</th>
+              <td mat-cell *matCellDef="let detalle">
+                <span class="total-cell" [class.descuento]="detalle.total < 0">
+                  {{ detalle.total | currency:'EUR':'symbol':'1.2-2' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+
+        <!-- Mensaje si no hay datos -->
+        <div *ngIf="resumenFacturacion.detalles.length === 0" class="no-data">
+          <mat-icon>info</mat-icon>
+          <p>No se encontraron movimientos ni almacenaje para el período seleccionado.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Información de tarifas -->
+    <mat-card class="tarifas-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info</mat-icon>
+          Tarifas Aplicadas
+        </mat-card-title>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="tarifas-grid">
+          <div class="tarifa-item">
+            <mat-icon>warehouse</mat-icon>
+            <span>Almacenaje por palet/mes</span>
+            <span class="precio">{{ TARIFA_PALET_MES | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+          
+          <div class="tarifa-item">
+            <mat-icon>inventory</mat-icon>
+            <span>Movimiento por palet</span>
+            <span class="precio">{{ TARIFA_MOVIMIENTO_PALET | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+          
+          <div class="tarifa-item">
+            <mat-icon>cases</mat-icon>
+            <span>Movimiento por bulto</span>
+            <span class="precio">{{ TARIFA_MOVIMIENTO_BULTO | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+          
+          <div class="tarifa-item">
+            <mat-icon>confirmation_number</mat-icon>
+            <span>Movimiento por unidad</span>
+            <span class="precio">{{ TARIFA_MOVIMIENTO_UNIDAD | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+        
+        <mat-divider></mat-divider>
+        
+        <div class="nota-tarifas">
+          <mat-icon>info_outline</mat-icon>
+          <p>
+            <strong>Lógica de facturación:</strong> 
+            <br>• Los palets que ya estaban en el almacén al inicio del mes se facturan completos (mes entero).
+            <br>• Los palets que entran durante el mes se facturan proporcionalmente desde su fecha de entrada.
+            <br>• Los palets que salen durante el mes generan un descuento proporcional desde su fecha de salida.
+            <br>• Los movimientos se cobran según la jerarquía: palets > bultos > unidades.
+            <br>• La facturación siempre es del día 1 al último día del mes seleccionado.
+          </p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

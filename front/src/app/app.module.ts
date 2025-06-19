@@ -81,6 +81,12 @@ import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospe
 import { EstadosComponent } from './componentes/estados/estados.component';
 import { EstadoService } from './services/estado.service';
 import { FacturacionComponent } from './componentes/facturacion/facturacion.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
+import { FacturacionService } from './services/facturacion.service';
 
 @NgModule({
   declarations: [
@@ -149,6 +155,15 @@ import { FacturacionComponent } from './componentes/facturacion/facturacion.comp
     MatSnackBarModule,
     MatSortModule,
     MatTableModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTableModule,
+    MatChipsModule,
+    MatDividerModule,
     ReactiveFormsModule,
     ToastrModule.forRoot(),
   ],
@@ -161,6 +176,7 @@ import { FacturacionComponent } from './componentes/facturacion/facturacion.comp
     EntradaServices,
     EstadoService,
     FormularioEntradaSalidaService,
+    FacturacionService,
     ImportarExcelService,
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     ProductoServices,

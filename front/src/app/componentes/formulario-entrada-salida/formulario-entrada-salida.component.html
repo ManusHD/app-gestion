@@ -136,7 +136,10 @@
                 </thead>
                 <tbody formArrayName="productos">
                     <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
-                        [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
+                        [ngClass]="{
+                            'campo-nuevo': isProductoNuevo(i),
+                            'linea-duplicada': validarDuplicadosEnTiempoReal(i)
+                        }">
                         <td>
                             <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
                                 maxlength="14" [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
