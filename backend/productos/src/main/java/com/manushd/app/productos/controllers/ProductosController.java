@@ -232,7 +232,7 @@ public class ProductosController {
         }
 
         if (producto.getReferencia() == null || producto.getDescription() == null ||
-                producto.getEstado() == null ||
+                (producto.getEstado() == null || producto.getEstado().isEmpty()) ||
                 producto.getReferencia().length() < 1 || producto.getDescription().length() < 1 ||
                 producto.getEstado().length() < 1) {
             throw new IllegalArgumentException("La referencia, descripción y estado no pueden estar vacíos");
@@ -480,21 +480,21 @@ public class ProductosController {
     public ResponseEntity<?> subtractStockEspecialVisual(@PathVariable String description,
             @RequestBody Integer cantidad) {
         Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("VISUAL", description);
+
         if (!optProducto.isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Producto especial con Descripción '" + optProducto.get().getDescription()
-                            + "' no encontrado");
+                    .body("Producto especial con Descripción '" + description + "' no encontrado");
         }
+
         Producto producto = optProducto.get();
         int nuevoStock = producto.getStock() - cantidad;
+
         if (nuevoStock < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("No hay stock suficiente para el producto especial con Descripción "
-                            + optProducto.get().getDescription());
+                    .body("No hay stock suficiente para el producto especial con Descripción " + description);
         } else if (nuevoStock == 0) {
             productosRepository.delete(producto);
-            return ResponseEntity.ok("Producto especial con Descripción " + optProducto.get().getDescription()
-                    + " eliminado por stock 0");
+            return ResponseEntity.ok("Producto especial con Descripción " + description + " eliminado por stock 0");
         } else {
             producto.setStock(nuevoStock);
             productosRepository.save(producto);
@@ -504,27 +504,45 @@ public class ProductosController {
 
     @PutMapping("/sinreferencia/restarEspecial/{description}")
     public ResponseEntity<?> subtractStockEspecialSR(@PathVariable String description, @RequestBody Integer cantidad) {
-        Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA",
-                description);
-        if (!optProducto.isPresent()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Producto especial con Descripción '" + optProducto.get().getDescription()
-                            + "' no encontrado");
-        }
-        Producto producto = optProducto.get();
-        int nuevoStock = producto.getStock() - cantidad;
-        if (nuevoStock < 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("No hay stock suficiente para el producto especial con Descripción "
-                            + optProducto.get().getDescription());
-        } else if (nuevoStock == 0) {
-            productosRepository.delete(producto);
-            return ResponseEntity.ok("Producto especial con Descripción " + optProducto.get().getDescription()
-                    + " eliminado por stock 0");
-        } else {
-            producto.setStock(nuevoStock);
-            productosRepository.save(producto);
-            return ResponseEntity.ok(producto);
+        System.out.println("=== RESTAR STOCK SIN REFERENCIA ===");
+        System.out.println("Descripción: " + description);
+        System.out.println("Cantidad a restar: " + cantidad);
+        
+        try {
+            Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA", description);
+            
+            if (!optProducto.isPresent()) {
+                System.err.println("Producto SIN REFERENCIA no encontrado con descripción: " + description);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Producto especial con Descripción '" + description + "' no encontrado");
+            }
+            
+            Producto producto = optProducto.get();
+            int stockActual = producto.getStock();
+            int nuevoStock = stockActual - cantidad;
+            
+            System.out.println("Stock actual: " + stockActual + ", Nuevo stock: " + nuevoStock);
+            
+            if (nuevoStock < 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("No hay stock suficiente para el producto especial con Descripción " + description + 
+                            ". Stock actual: " + stockActual + ", Solicitado: " + cantidad);
+            } else if (nuevoStock == 0) {
+                productosRepository.delete(producto);
+                System.out.println("Producto eliminado por stock 0");
+                return ResponseEntity.ok("Producto especial con Descripción " + description + " eliminado por stock 0");
+            } else {
+                producto.setStock(nuevoStock);
+                productosRepository.save(producto);
+                System.out.println("Stock actualizado correctamente");
+                return ResponseEntity.ok(producto);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error en subtractStockEspecialSR: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno del servidor: " + e.getMessage());
         }
     }
 
@@ -532,8 +550,8 @@ public class ProductosController {
     public ResponseEntity<?> transferirEstado(@RequestBody TransferirEstadoDTO dto) {
         try {
             // Corregir como indicaste: null sigue siendo null
-            String estadoOrigenBuscar = dto.getEstadoOrigen() == null ? null : dto.getEstadoOrigen();
-            String estadoDestinoBuscar = dto.getEstadoDestino() == null ? null : dto.getEstadoDestino();
+            String estadoOrigenBuscar = (dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "" : dto.getEstadoOrigen();
+            String estadoDestinoBuscar = (dto.getEstadoDestino() == null || dto.getEstadoDestino().isEmpty()) ? "" : dto.getEstadoDestino();
 
             Optional<Producto> productoOrigenOpt = productosRepository.findByReferenciaAndEstado(
                     dto.getReferencia(), estadoOrigenBuscar);
@@ -541,7 +559,7 @@ public class ProductosController {
             if (!productoOrigenOpt.isPresent()) {
                 return ResponseEntity.badRequest()
                         .body("No se encontró producto con referencia " + dto.getReferencia() +
-                                " y estado " + (dto.getEstadoOrigen() == null ? "SIN ESTADO" : dto.getEstadoOrigen()));
+                                " y estado " + ((dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "SIN ESTADO" : dto.getEstadoOrigen()));
             }
 
             Producto productoOrigen = productoOrigenOpt.get();
@@ -636,11 +654,18 @@ public class ProductosController {
     @PostMapping("/migrar-sin-estado")
     public ResponseEntity<?> migrarProductosSinEstado(@RequestBody MigrarEstadoDTO dto,
             @RequestHeader("Authorization") String token) {
+                System.out.println("================= DTO =================");
+                System.out.println(dto.getReferencia());
+                System.out.println(dto.getEstadoDestino());
         try {
             // Buscar productos sin estado con esa referencia
             List<Producto> productosSinEstado = productosRepository.findByReferenciaAndEstadoOrderByReferenciaAsc(
                     dto.getReferencia(),
-                    null);
+                    "");
+
+            System.out.println("================= Productos sin estado =================");
+            System.out.println(productosSinEstado);
+            
 
             if (productosSinEstado.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -770,8 +795,6 @@ public class ProductosController {
 
                         if (esProductoEspecial(pu.getRef())) {
                             // PRODUCTOS ESPECIALES: "SIN REFERENCIA" o "VISUAL"
-                            // Clave única por descripción (pueden tener la misma descripción que productos
-                            // normales)
                             String claveEspecial = pu.getRef() + "|" + pu.getDescription();
 
                             Map<String, Object> datos = stockProductosEspeciales.computeIfAbsent(claveEspecial,
@@ -779,11 +802,11 @@ public class ProductosController {
                             datos.merge("stock", pu.getUnidades(), (a, b) -> (Integer) a + (Integer) b);
                             datos.put("descripcion", pu.getDescription());
                             datos.put("referencia", pu.getRef());
-                            datos.put("estado", null); // Los productos especiales no tienen estado
+                            datos.put("estado", null);
 
                         } else {
                             // PRODUCTOS NORMALES: referencia + estado
-                            String claveNormal = pu.getRef() + "|" + (pu.getEstado() != null ? pu.getEstado() : "NULL");
+                            String claveNormal = pu.getRef() + "|" + ((pu.getEstado() != null && !pu.getEstado().isEmpty()) ? pu.getEstado() : "");
 
                             Map<String, Object> datos = stockProductosNormales.computeIfAbsent(claveNormal,
                                     k -> new HashMap<>());
@@ -804,7 +827,7 @@ public class ProductosController {
             for (Map.Entry<String, Map<String, Object>> entry : stockProductosNormales.entrySet()) {
                 String[] partes = entry.getKey().split("\\|", 2);
                 String referencia = partes[0];
-                String estado = partes[1].equals("NULL") ? null : partes[1];
+                String estado = partes[1].equals("NULL") ? "" : partes[1];
                 Integer stockTotal = (Integer) entry.getValue().get("stock");
                 String descripcion = (String) entry.getValue().get("descripcion");
 
@@ -838,7 +861,7 @@ public class ProductosController {
                 }
             }
 
-            // 2. SINCRONIZAR PRODUCTOS ESPECIALES
+            // 2. SINCRONIZAR PRODUCTOS ESPECIALES - MODIFICADO PARA MANEJAR DUPLICADOS
             for (Map.Entry<String, Map<String, Object>> entry : stockProductosEspeciales.entrySet()) {
                 String[] partes = entry.getKey().split("\\|", 2);
                 String referencia = partes[0]; // "SIN REFERENCIA" o "VISUAL"
@@ -846,21 +869,30 @@ public class ProductosController {
                 Integer stockTotal = (Integer) entry.getValue().get("stock");
 
                 if (stockTotal > 0) {
-                    // Para productos especiales, buscar por referencia Y descripción
-                    Optional<Producto> productoExistente = productosRepository
-                            .findByReferenciaAndDescription(referencia, descripcion);
+                    // MODIFICADO: Buscar por referencia Y descripción usando findAll en lugar de
+                    // findByReferenciaAndDescription
+                    List<Producto> productosExistentes = StreamSupport.stream(productosRepository.findAll().spliterator(), false)
+                            .filter(p -> referencia.equals(p.getReferencia()) && descripcion.equals(p.getDescription()))
+                            .collect(Collectors.toList());
 
-                    if (productoExistente.isPresent()) {
-                        // Actualizar producto especial existente
-                        productoExistente.get().setStock(stockTotal);
-                        productosRepository.save(productoExistente.get());
+                    if (!productosExistentes.isEmpty()) {
+                        // Actualizar el primero y eliminar duplicados
+                        Producto productoAConservar = productosExistentes.get(0);
+                        productoAConservar.setStock(stockTotal);
+                        productosRepository.save(productoAConservar);
                         productosActualizados++;
+
+                        // Eliminar duplicados
+                        for (int i = 1; i < productosExistentes.size(); i++) {
+                            productosRepository.delete(productosExistentes.get(i));
+                            duplicadosEliminados++;
+                        }
                     } else {
                         // Crear nuevo producto especial
                         Producto nuevoProductoEspecial = new Producto();
                         nuevoProductoEspecial.setReferencia(referencia);
                         nuevoProductoEspecial.setDescription(descripcion);
-                        nuevoProductoEspecial.setEstado(null); // Los productos especiales no tienen estado
+                        nuevoProductoEspecial.setEstado("");
                         nuevoProductoEspecial.setStock(stockTotal);
                         productosRepository.save(nuevoProductoEspecial);
                         productosCreados++;
@@ -884,7 +916,7 @@ public class ProductosController {
                 } else {
                     // Para productos normales, verificar en el mapa de normales
                     String claveNormal = producto.getReferencia() + "|"
-                            + (producto.getEstado() != null ? producto.getEstado() : "NULL");
+                            + ((producto.getEstado() != null && !producto.getEstado().isEmpty()) ? producto.getEstado() : "");
                     Map<String, Object> datosStock = stockProductosNormales.get(claveNormal);
                     existeEnUbicaciones = (datosStock != null && (Integer) datosStock.get("stock") > 0);
                 }

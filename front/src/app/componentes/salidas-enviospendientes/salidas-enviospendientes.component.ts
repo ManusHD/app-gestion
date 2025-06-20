@@ -55,7 +55,6 @@ export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaSer
       .pipe(
         catchError((error) => {
           this.snackBarError(error.error || "Algunos artículos no tienen suficiente Stock");
-          this.carga.hide();
           this.btnSubmitActivado = true;
           return throwError(error);
         })
@@ -63,13 +62,12 @@ export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaSer
       .subscribe(
         (data) => {
           this.carga.hide();
-          this.cargarSalidas();
           console.log('Salida grabada con éxito');
           this.snackBarExito('Salida grabada con éxito');
           this.btnSubmitActivado = true;
+          this.cargarSalidas();
         },
         (error) => {
-          this.carga.hide();
           this.btnSubmitActivado = true;
           console.error(error);
         }

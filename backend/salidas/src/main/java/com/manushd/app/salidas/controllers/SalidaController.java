@@ -271,7 +271,8 @@ public class SalidaController {
 
                     // CAMBIO: Validar estado solo para productos normales
                     if (!isProductoEspecial(ref) && (estado == null || estado.isBlank())) {
-                        throw new IllegalArgumentException("El estado del producto " + ref + " no puede estar en blanco.");
+                        throw new IllegalArgumentException(
+                                "El estado del producto " + ref + " no puede estar en blanco.");
                     }
 
                     // Para productos normales se valida existencia y stock
@@ -431,7 +432,12 @@ public class SalidaController {
                     ubicacion.getProductos().forEach(p -> System.out.println("  - Producto: " + p.getRef()
                             + " | Estado: " + p.getEstado() + " | Unidades: " + p.getUnidades()));
 
-                    HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headers);
+                    // IMPORTANTE: Asegurar que el token se pasa correctamente
+                    HttpHeaders headersUbicaciones = new HttpHeaders();
+                    headersUbicaciones.set("Authorization", token);
+                    headersUbicaciones.set("Content-Type", "application/json");
+
+                    HttpEntity<Ubicacion> requestEntity = new HttpEntity<>(ubicacion, headersUbicaciones);
                     ResponseEntity<Ubicacion> response = restTemplate.exchange(
                             "http://localhost:8095/ubicaciones/restar",
                             HttpMethod.POST,
@@ -441,12 +447,15 @@ public class SalidaController {
                     System.out.println("✅ Stock restado exitosamente de ubicación: " + ubicacion.getNombre());
                 } catch (HttpClientErrorException e) {
                     String errorMessage = e.getResponseBodyAsString();
-                    System.err.println("Error al restar stock: " + errorMessage);
-                    return ResponseEntity.status(e.getStatusCode()).body(errorMessage);
+                    System.err.println("Error al restar stock (HTTP " + e.getStatusCode() + "): " + errorMessage);
+                    return ResponseEntity.status(e.getStatusCode())
+                            .body("Error al restar stock en ubicaciones: " + errorMessage);
                 } catch (Exception e) {
-                    System.err.println("Error inesperado al restar stock: " + e.getMessage());
+                    System.err.println("Error inesperado al restar stock: " + e.getClass().getSimpleName() + " - "
+                            + e.getMessage());
+                    e.printStackTrace();
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("Error inesperado: " + e.getMessage());
+                            .body("Error inesperado al procesar ubicaciones: " + e.getMessage());
                 }
             }
         }

@@ -1,8 +1,10 @@
 package com.manushd.app.ubicaciones.controllers;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -257,37 +259,77 @@ public class UbicacionesController {
         }
     }
 
-    // MODIFICAR método restarUbicacion para considerar estados
     @PostMapping("/restar")
     public ResponseEntity<?> restarUbicacion(@RequestBody Ubicacion ubicacion,
             @RequestHeader("Authorization") String token) {
         try {
+            System.out.println("=== INICIO RESTAR UBICACIÓN ===");
+            System.out.println("Token recibido: " + (token != null ? "Presente" : "Ausente"));
+            System.out.println("Ubicación: " + ubicacion.getNombre());
+
             Ubicacion ubiAux = ubicacionesRepository.findByNombre(ubicacion.getNombre()).orElse(null);
 
             if (ubiAux != null) {
+                // SOLUCIÓN: Agrupar productos especiales por descripción antes de procesarlos
+                Map<String, Integer> productosEspecialesAgrupados = new HashMap<>();
+
                 for (ProductoUbicacion prodRestar : ubicacion.getProductos()) {
                     if (esProductoEspecial(prodRestar)) {
-                        // Lógica original para productos especiales
-                        ProductoUbicacion prodExistente = ubiAux.getProductos()
-                                .stream()
-                                .filter(p -> p.getDescription() != null
-                                        && p.getDescription().equals(prodRestar.getDescription()))
-                                .findFirst()
-                                .orElse(null);
+                        String descripcion = prodRestar.getDescription();
+                        productosEspecialesAgrupados.merge(descripcion, prodRestar.getUnidades(), Integer::sum);
+                    }
+                }
 
-                        if (prodExistente == null) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("No se encontró el producto especial en la ubicación");
-                        }
-                        if (prodExistente.getUnidades() - prodRestar.getUnidades() < 0) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("No hay unidades suficientes del producto especial");
-                        } else if (prodExistente.getUnidades() - prodRestar.getUnidades() == 0) {
-                            ubiAux.getProductos().remove(prodExistente);
-                        } else {
-                            prodExistente.setUnidades(prodExistente.getUnidades() - prodRestar.getUnidades());
-                        }
+                // Procesar productos especiales agrupados
+                for (Map.Entry<String, Integer> entry : productosEspecialesAgrupados.entrySet()) {
+                    String descripcion = entry.getKey();
+                    Integer totalUnidades = entry.getValue();
+
+                    ProductoUbicacion prodExistente = ubiAux.getProductos()
+                            .stream()
+                            .filter(p -> p.getDescription() != null && p.getDescription().equals(descripcion))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (prodExistente == null) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("No se encontró el producto especial '" + descripcion + "' en la ubicación");
+                    }
+
+                    if (prodExistente.getUnidades() < totalUnidades) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body("No hay unidades suficientes del producto especial '" + descripcion +
+                                        "' (Disponible: " + prodExistente.getUnidades() + ", Solicitado: "
+                                        + totalUnidades + ")");
+                    }
+
+                    // Actualizar unidades en ubicación
+                    if (prodExistente.getUnidades() - totalUnidades == 0) {
+                        ubiAux.getProductos().remove(prodExistente);
                     } else {
+                        prodExistente.setUnidades(prodExistente.getUnidades() - totalUnidades);
+                    }
+
+                    // Restar stock en microservicio de productos (UNA SOLA VEZ por descripción)
+                    ProductoUbicacion prodParaRestar = new ProductoUbicacion();
+                    prodParaRestar.setRef(prodExistente.getRef());
+                    prodParaRestar.setDescription(descripcion);
+                    prodParaRestar.setUnidades(totalUnidades);
+
+                    try {
+                        restarStockProductoEspecial(prodParaRestar, token);
+                        System.out.println(
+                                "✅ Stock especial restado para: " + descripcion + " - " + totalUnidades + " unidades");
+                    } catch (Exception e) {
+                        System.err.println(
+                                "Error al restar stock especial para '" + descripcion + "': " + e.getMessage());
+                        // Continuar procesando otros productos en lugar de fallar completamente
+                    }
+                }
+
+                // Procesar productos normales (sin cambios en la lógica)
+                for (ProductoUbicacion prodRestar : ubicacion.getProductos()) {
+                    if (!esProductoEspecial(prodRestar)) {
                         // Producto normal: buscar por referencia Y estado
                         ProductoUbicacion prodExistente = ubiAux.getProductos()
                                 .stream()
@@ -306,6 +348,14 @@ public class UbicacionesController {
                             } else {
                                 prodExistente.setUnidades(prodExistente.getUnidades() - prodRestar.getUnidades());
                             }
+
+                            // Restar stock en microservicio
+                            try {
+                                restarStockProductoNormalConEstado(prodRestar, token);
+                            } catch (Exception e) {
+                                System.err.println("Error al restar stock normal para " + prodRestar.getRef() + ": "
+                                        + e.getMessage());
+                            }
                         } else {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                     .body("No hay unidades del producto con referencia " + prodRestar.getRef()
@@ -314,20 +364,14 @@ public class UbicacionesController {
                     }
                 }
 
-                // Actualizar stock en microservicio de productos
-                for (ProductoUbicacion p : ubicacion.getProductos()) {
-                    if (esProductoEspecial(p)) {
-                        restarStockProductoEspecial(p, token);
-                    } else {
-                        restarStockProductoNormalConEstado(p, token);
-                    }
-                }
                 return ResponseEntity.ok(ubicacionesRepository.save(ubiAux));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("No existe la ubicación: " + ubicacion.getNombre());
             }
         } catch (Exception e) {
+            System.err.println("Error general al procesar restar ubicación: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al procesar la solicitud: " + e.getMessage());
         }
@@ -336,11 +380,11 @@ public class UbicacionesController {
     @PostMapping("/reubicar")
     public ResponseEntity<?> reubicarProducto(@RequestBody ReubicacionRequest request) {
         // Validar que se hayan enviado las ubicaciones y el producto
-        if (request.getOrigen() == null || request.getOrigen().isBlank()) {
+        if ((request.getOrigen() == null || request.getOrigen().isEmpty()) || request.getOrigen().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("La ubicación de origen es obligatoria.");
         }
-        if (request.getDestino() == null || request.getDestino().isBlank()) {
+        if ((request.getDestino() == null || request.getDestino().isEmpty()) || request.getDestino().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("La ubicación destino es obligatoria.");
         }
@@ -578,25 +622,51 @@ public class UbicacionesController {
      * (usando el productoId).
      */
     private void restarStockProductoEspecial(ProductoUbicacion productoUbicacion, String token) {
-        RestTemplate restTemplate = new RestTemplate();
-        String url;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String url;
 
-        if (productoUbicacion.getRef().equals("VISUAL")) {
-            url = "http://localhost:8091/productos/visual/restarEspecial/" + productoUbicacion.getDescription();
-        } else {
-            url = "http://localhost:8091/productos/sinreferencia/restarEspecial/" + productoUbicacion.getDescription();
+            if ("VISUAL".equals(productoUbicacion.getRef())) {
+                url = "http://localhost:8091/productos/visual/restarEspecial/" + productoUbicacion.getDescription();
+            } else if ("SIN REFERENCIA".equals(productoUbicacion.getRef())) {
+                url = "http://localhost:8091/productos/sinreferencia/restarEspecial/"
+                        + productoUbicacion.getDescription();
+            } else {
+                System.err.println("Tipo de producto especial no reconocido: " + productoUbicacion.getRef());
+                return;
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            headers.set("Content-Type", "application/json");
+
+            HttpEntity<Integer> requestEntity = new HttpEntity<>(productoUbicacion.getUnidades(), headers);
+
+            System.out.println("Llamando a URL: " + url);
+            System.out.println("Unidades a restar: " + productoUbicacion.getUnidades());
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    requestEntity,
+                    String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("Stock especial restado exitosamente para: " + productoUbicacion.getRef() + " - "
+                        + productoUbicacion.getDescription());
+            } else {
+                System.err.println("Error al restar stock especial. Status: " + response.getStatusCode());
+            }
+
+        } catch (HttpClientErrorException e) {
+            System.err.println(
+                    "Error HTTP al restar stock especial: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error al restar stock del producto especial: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Error general al restar stock especial: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al restar stock del producto especial: " + e.getMessage());
         }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-
-        HttpEntity<Integer> requestEntity = new HttpEntity<>(productoUbicacion.getUnidades(), headers);
-
-        restTemplate.exchange(
-                url,
-                HttpMethod.PUT,
-                requestEntity,
-                String.class);
     }
 
     @PutMapping("/{id}")
@@ -662,7 +732,7 @@ public class UbicacionesController {
                 System.out.println("No se encontró producto origen");
                 return ResponseEntity.badRequest()
                         .body("No se encontró producto con referencia " + dto.getReferencia() +
-                                " y estado " + (dto.getEstadoOrigen() == null ? "SIN ESTADO" : dto.getEstadoOrigen())
+                                " y estado " + ((dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "SIN ESTADO" : dto.getEstadoOrigen())
                                 + " en la ubicación");
             }
 
