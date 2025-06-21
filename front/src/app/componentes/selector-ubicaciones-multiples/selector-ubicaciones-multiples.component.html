@@ -1,0 +1,23 @@
+<div class="selector-multiples" *ngIf="ubicacionesSeleccionadas.length > 0">
+    <div class="header-selector">
+        <h3>Ubicaciones Seleccionadas ({{ ubicacionesSeleccionadas.length }})</h3>
+        <div class="acciones-selector">
+            <button class="btn-limpiar" (click)="limpiarSelecciones()">
+                Limpiar Todo
+            </button>
+            <button class="btn-crear-salida"
+                [appConfirm]="'¿Crear salida con ' + ubicacionesSeleccionadas.length + ' ubicaciones seleccionadas?'"
+                (confirmed)="crearSalidaMultiple()">
+                Crear Salida Múltiple
+            </button>
+        </div>
+    </div>
+
+    <div class="lista-seleccionadas">
+        <div *ngFor="let ubicacion of ubicacionesSeleccionadas" class="ubicacion-item">
+            <span class="nombre-ubicacion">{{ ubicacion.nombre }}</span>
+            <span class="productos-count">({{ ubicacion.productos?.length || 0 }} productos)</span>
+            <button class="btn-quitar" (click)="quitarUbicacion(ubicacion.id!)">×</button>
+        </div>
+    </div>
+</div>

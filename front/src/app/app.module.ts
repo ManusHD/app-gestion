@@ -87,6 +87,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { FacturacionService } from './services/facturacion.service';
+import { SelectorUbicacionesMultiplesComponent } from './componentes/selector-ubicaciones-multiples/selector-ubicaciones-multiples.component';
 
 @NgModule({
   declarations: [
@@ -136,6 +137,7 @@ import { FacturacionService } from './services/facturacion.service';
     PerfilComponent,
     SalidasEnviospendientesComponent,
     FacturacionComponent,
+    SelectorUbicacionesMultiplesComponent,
   ],
   imports: [
     AppRoutingModule,

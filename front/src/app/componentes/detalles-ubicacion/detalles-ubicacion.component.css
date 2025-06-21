@@ -438,4 +438,14 @@ td {
     .tabla-estados td {
         padding: 8px 6px;
     }
+
+}
+
+.ubicacion-button.selected {
+    background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+.ubicacion-button.selected .button-text {
+    color: white;
 }

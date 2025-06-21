@@ -2,7 +2,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EntradaServices } from '../../services/entrada.service';
 import { SalidaServices } from '../../services/salida.service';
-import { FacturacionService, FacturacionCalculada } from '../../services/facturacion.service';
+import {
+  FacturacionService,
+  FacturacionCalculada,
+  ResumenMovimientos,
+} from '../../services/facturacion.service';
 import { Entrada } from '../../models/entrada.model';
 import { Salida } from '../../models/salida.model';
 import { ProductoEntrada } from '../../models/productoEntrada.model';
@@ -27,12 +31,13 @@ interface ResumenFacturacion {
   totalMovimientos: number;
   totalGeneral: number;
   detalles: DetalleFacturacion[];
+  resumenMovimientos: ResumenMovimientos;
 }
 
 @Component({
   selector: 'app-facturacion',
   templateUrl: './facturacion.component.html',
-  styleUrls: ['./facturacion.component.css']
+  styleUrls: ['./facturacion.component.css'],
 })
 export class FacturacionComponent implements OnInit {
   facturacionForm!: FormGroup;
@@ -50,7 +55,13 @@ export class FacturacionComponent implements OnInit {
   readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;
 
   // Columnas para la tabla de detalles
-  displayedColumns: string[] = ['tipo', 'concepto', 'cantidad', 'precio', 'total'];
+  displayedColumns: string[] = [
+    'tipo',
+    'concepto',
+    'cantidad',
+    'precio',
+    'total',
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -66,21 +77,55 @@ export class FacturacionComponent implements OnInit {
 
   private initForm() {
     const currentDate = new Date();
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
 
     this.facturacionForm = this.fb.group({
-      mesSeleccionado: [this.formatDateForInput(firstDayOfMonth), Validators.required],
-      fechaInicio: [this.formatDateForInput(firstDayOfMonth), Validators.required],
-      fechaFin: [this.formatDateForInput(lastDayOfMonth), Validators.required]
+      mesSeleccionado: [
+        this.formatDateForInput(firstDayOfMonth),
+        Validators.required,
+      ],
+      fechaInicio: [
+        this.formatDateForInput(firstDayOfMonth),
+        Validators.required,
+      ],
+      fechaFin: [this.formatDateForInput(lastDayOfMonth), Validators.required],
     });
 
     // Escuchar cambios en el mes seleccionado
-    this.facturacionForm.get('mesSeleccionado')?.valueChanges.subscribe(value => {
-      if (value) {
-        this.actualizarRangoFechas(value);
-      }
-    });
+    this.facturacionForm
+      .get('mesSeleccionado')
+      ?.valueChanges.subscribe((value) => {
+        if (value) {
+          this.actualizarRangoFechas(value);
+        }
+      });
+  }
+
+  getMovimientoNeto(tipo: 'bultos' | 'unidades'): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+
+    if (tipo === 'bultos') {
+      return (
+        this.resumenFacturacion.resumenMovimientos.bultosEntrados -
+        this.resumenFacturacion.resumenMovimientos.bultosSalidos
+      );
+    } else {
+      return (
+        this.resumenFacturacion.resumenMovimientos.unidadesEntradas -
+        this.resumenFacturacion.resumenMovimientos.unidadesSalidas
+      );
+    }
   }
 
   private formatDateForInput(date: Date): string {
@@ -94,16 +139,20 @@ export class FacturacionComponent implements OnInit {
 
     this.facturacionForm.patchValue({
       fechaInicio: this.formatDateForInput(primerDia),
-      fechaFin: this.formatDateForInput(ultimoDia)
+      fechaFin: this.formatDateForInput(ultimoDia),
     });
   }
 
   calcularFacturacion() {
     if (this.facturacionForm.invalid) {
-      this.snackBar.open('Por favor, complete todos los campos requeridos', 'Cerrar', {
-        duration: 3000,
-        panelClass: 'error'
-      });
+      this.snackBar.open(
+        'Por favor, complete todos los campos requeridos',
+        'Cerrar',
+        {
+          duration: 3000,
+          panelClass: 'error',
+        }
+      );
       return;
     }
 
@@ -113,28 +162,32 @@ export class FacturacionComponent implements OnInit {
     const fechaInicio = this.facturacionForm.get('fechaInicio')?.value;
     const fechaFin = this.facturacionForm.get('fechaFin')?.value;
 
-    this.facturacionService.calcularFacturacion(fechaInicio, fechaFin).subscribe({
-      next: (facturacion) => {
-        this.resumenFacturacion = this.convertirFacturacion(facturacion);
-        this.mostrarResultados = true;
-        this.cargando = false;
-      },
-      error: (error) => {
-        console.error('Error al calcular facturación:', error);
-        this.snackBar.open('Error al calcular la facturación', 'Cerrar', {
-          duration: 3000,
-          panelClass: 'error'
-        });
-        this.cargando = false;
-      }
-    });
+    this.facturacionService
+      .calcularFacturacion(fechaInicio, fechaFin)
+      .subscribe({
+        next: (facturacion) => {
+          this.resumenFacturacion = this.convertirFacturacion(facturacion);
+          this.mostrarResultados = true;
+          this.cargando = false;
+        },
+        error: (error) => {
+          console.error('Error al calcular facturación:', error);
+          this.snackBar.open('Error al calcular la facturación', 'Cerrar', {
+            duration: 3000,
+            panelClass: 'error',
+          });
+          this.cargando = false;
+        },
+      });
   }
 
-  private convertirFacturacion(facturacion: FacturacionCalculada): ResumenFacturacion {
+  private convertirFacturacion(
+    facturacion: FacturacionCalculada
+  ): ResumenFacturacion {
     const detalles: DetalleFacturacion[] = [];
 
     // Convertir movimientos
-    facturacion.detallesMovimientos.forEach(mov => {
+    facturacion.detallesMovimientos.forEach((mov) => {
       detalles.push({
         tipo: 'movimiento',
         concepto: `Movimiento de entrada - ${mov.tipo}s`,
@@ -142,12 +195,12 @@ export class FacturacionComponent implements OnInit {
         precio: mov.precioUnitario,
         total: mov.costoTotal,
         referencia: mov.referencia,
-        descripcion: mov.descripcion
+        descripcion: mov.descripcion,
       });
     });
 
     // Convertir almacenaje
-    facturacion.detallesAlmacenaje.forEach(alm => {
+    facturacion.detallesAlmacenaje.forEach((alm) => {
       detalles.push({
         tipo: 'almacenaje',
         concepto: 'Almacenaje de palets',
@@ -158,7 +211,7 @@ export class FacturacionComponent implements OnInit {
         descripcion: alm.descripcion,
         diasAlmacenaje: alm.diasAlmacenaje,
         fechaEntrada: alm.fechaEntrada,
-        fechaSalida: alm.fechaSalida
+        fechaSalida: alm.fechaSalida,
       });
     });
 
@@ -166,7 +219,8 @@ export class FacturacionComponent implements OnInit {
       totalAlmacenaje: facturacion.totalAlmacenaje,
       totalMovimientos: facturacion.totalMovimientos,
       totalGeneral: facturacion.totalGeneral,
-      detalles
+      detalles,
+      resumenMovimientos: facturacion.resumenMovimientos, // NUEVO
     };
   }
 
@@ -179,7 +233,7 @@ export class FacturacionComponent implements OnInit {
     const csvContent = this.generarCSV();
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -196,8 +250,17 @@ export class FacturacionComponent implements OnInit {
       return '';
     }
 
-    const headers = ['Tipo', 'Concepto', 'Referencia', 'Descripción', 'Cantidad', 'Precio', 'Total', 'Días Almacenaje'];
-    const rows = this.resumenFacturacion.detalles.map(detalle => [
+    const headers = [
+      'Tipo',
+      'Concepto',
+      'Referencia',
+      'Descripción',
+      'Cantidad',
+      'Precio',
+      'Total',
+      'Días Almacenaje',
+    ];
+    const rows = this.resumenFacturacion.detalles.map((detalle) => [
       detalle.tipo,
       detalle.concepto,
       detalle.referencia || '',
@@ -205,15 +268,42 @@ export class FacturacionComponent implements OnInit {
       detalle.cantidad.toString(),
       detalle.precio.toFixed(2),
       detalle.total.toFixed(2),
-      detalle.diasAlmacenaje?.toString() || ''
+      detalle.diasAlmacenaje?.toString() || '',
     ]);
 
     // Agregar fila de totales
-    rows.push(['', '', '', '', '', 'TOTAL MOVIMIENTOS:', this.resumenFacturacion.totalMovimientos.toFixed(2), '']);
-    rows.push(['', '', '', '', '', 'TOTAL ALMACENAJE:', this.resumenFacturacion.totalAlmacenaje.toFixed(2), '']);
-    rows.push(['', '', '', '', '', 'TOTAL GENERAL:', this.resumenFacturacion.totalGeneral.toFixed(2), '']);
+    rows.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL MOVIMIENTOS:',
+      this.resumenFacturacion.totalMovimientos.toFixed(2),
+      '',
+    ]);
+    rows.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL ALMACENAJE:',
+      this.resumenFacturacion.totalAlmacenaje.toFixed(2),
+      '',
+    ]);
+    rows.push([
+      '',
+      '',
+      '',
+      '',
+      '',
+      'TOTAL GENERAL:',
+      this.resumenFacturacion.totalGeneral.toFixed(2),
+      '',
+    ]);
 
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
   }
 
   getTotalPorTipo(tipo: 'almacenaje' | 'movimiento'): number {
@@ -221,91 +311,148 @@ export class FacturacionComponent implements OnInit {
       return 0;
     }
     return this.resumenFacturacion.detalles
-      .filter(d => d.tipo === tipo)
+      .filter((d) => d.tipo === tipo)
       .reduce((sum, d) => sum + d.total, 0);
   }
 
   exportarPDF() {
-  if (!this.resumenFacturacion) {
-    return;
+    if (!this.resumenFacturacion) {
+      return;
+    }
+
+    const periodo = this.facturacionForm.get('mesSeleccionado')?.value;
+
+    // Convertir ResumenFacturacion a FacturacionCalculada
+    const facturacionCalculada: FacturacionCalculada = {
+      totalAlmacenaje: this.resumenFacturacion.totalAlmacenaje,
+      totalMovimientos: this.resumenFacturacion.totalMovimientos,
+      totalGeneral: this.resumenFacturacion.totalGeneral,
+      detallesAlmacenaje: this.resumenFacturacion.detalles
+        .filter((d) => d.tipo === 'almacenaje')
+        .map((d) => ({
+          referencia: d.referencia || '',
+          descripcion: d.descripcion || '',
+          palets: d.cantidad,
+          diasAlmacenaje: d.diasAlmacenaje || 0,
+          costoTotal: d.total,
+          fechaEntrada: d.fechaEntrada || new Date(),
+          fechaSalida: d.fechaSalida,
+        })),
+      detallesMovimientos: this.resumenFacturacion.detalles
+        .filter((d) => d.tipo === 'movimiento')
+        .map((d) => ({
+          referencia: d.referencia || '',
+          descripcion: d.descripcion || '',
+          tipo: this.extraerTipoMovimiento(d.concepto),
+          cantidad: d.cantidad,
+          precioUnitario: d.precio,
+          costoTotal: d.total,
+          fechaMovimiento: new Date(),
+        })),
+      resumenMovimientos: this.resumenFacturacion.resumenMovimientos,
+    };
+
+    this.facturacionService.exportarPDF(facturacionCalculada, periodo);
   }
 
-  const periodo = this.facturacionForm.get('mesSeleccionado')?.value;
-  
-  // Convertir ResumenFacturacion a FacturacionCalculada
-  const facturacionCalculada: FacturacionCalculada = {
-    totalAlmacenaje: this.resumenFacturacion.totalAlmacenaje,
-    totalMovimientos: this.resumenFacturacion.totalMovimientos,
-    totalGeneral: this.resumenFacturacion.totalGeneral,
-    detallesAlmacenaje: this.resumenFacturacion.detalles
-      .filter(d => d.tipo === 'almacenaje')
-      .map(d => ({
-        referencia: d.referencia || '',
-        descripcion: d.descripcion || '',
-        palets: d.cantidad,
-        diasAlmacenaje: d.diasAlmacenaje || 0,
-        costoTotal: d.total,
-        fechaEntrada: d.fechaEntrada || new Date(),
-        fechaSalida: d.fechaSalida
-      })),
-    detallesMovimientos: this.resumenFacturacion.detalles
-      .filter(d => d.tipo === 'movimiento')
-      .map(d => ({
-        referencia: d.referencia || '',
-        descripcion: d.descripcion || '',
-        tipo: this.extraerTipoMovimiento(d.concepto),
-        cantidad: d.cantidad,
-        precioUnitario: d.precio,
-        costoTotal: d.total,
-        fechaMovimiento: new Date()
-      }))
-  };
+  exportarExcel() {
+    if (!this.resumenFacturacion) {
+      return;
+    }
 
-  this.facturacionService.exportarPDF(facturacionCalculada, periodo);
-}
+    const periodo = this.facturacionForm.get('mesSeleccionado')?.value;
 
-exportarExcel() {
-  if (!this.resumenFacturacion) {
-    return;
+    // Convertir ResumenFacturacion a FacturacionCalculada (mismo código que arriba)
+    const facturacionCalculada: FacturacionCalculada = {
+      totalAlmacenaje: this.resumenFacturacion.totalAlmacenaje,
+      totalMovimientos: this.resumenFacturacion.totalMovimientos,
+      totalGeneral: this.resumenFacturacion.totalGeneral,
+      detallesAlmacenaje: this.resumenFacturacion.detalles
+        .filter((d) => d.tipo === 'almacenaje')
+        .map((d) => ({
+          referencia: d.referencia || '',
+          descripcion: d.descripcion || '',
+          palets: d.cantidad,
+          diasAlmacenaje: d.diasAlmacenaje || 0,
+          costoTotal: d.total,
+          fechaEntrada: d.fechaEntrada || new Date(),
+          fechaSalida: d.fechaSalida,
+        })),
+      detallesMovimientos: this.resumenFacturacion.detalles
+        .filter((d) => d.tipo === 'movimiento')
+        .map((d) => ({
+          referencia: d.referencia || '',
+          descripcion: d.descripcion || '',
+          tipo: this.extraerTipoMovimiento(d.concepto),
+          cantidad: d.cantidad,
+          precioUnitario: d.precio,
+          costoTotal: d.total,
+          fechaMovimiento: new Date(),
+        })),
+      resumenMovimientos: this.resumenFacturacion.resumenMovimientos,
+    };
+
+    this.facturacionService.exportarExcel(facturacionCalculada, periodo);
   }
 
-  const periodo = this.facturacionForm.get('mesSeleccionado')?.value;
-  
-  // Convertir ResumenFacturacion a FacturacionCalculada (mismo código que arriba)
-  const facturacionCalculada: FacturacionCalculada = {
-    totalAlmacenaje: this.resumenFacturacion.totalAlmacenaje,
-    totalMovimientos: this.resumenFacturacion.totalMovimientos,
-    totalGeneral: this.resumenFacturacion.totalGeneral,
-    detallesAlmacenaje: this.resumenFacturacion.detalles
-      .filter(d => d.tipo === 'almacenaje')
-      .map(d => ({
-        referencia: d.referencia || '',
-        descripcion: d.descripcion || '',
-        palets: d.cantidad,
-        diasAlmacenaje: d.diasAlmacenaje || 0,
-        costoTotal: d.total,
-        fechaEntrada: d.fechaEntrada || new Date(),
-        fechaSalida: d.fechaSalida
-      })),
-    detallesMovimientos: this.resumenFacturacion.detalles
-      .filter(d => d.tipo === 'movimiento')
-      .map(d => ({
-        referencia: d.referencia || '',
-        descripcion: d.descripcion || '',
-        tipo: this.extraerTipoMovimiento(d.concepto),
-        cantidad: d.cantidad,
-        precioUnitario: d.precio,
-        costoTotal: d.total,
-        fechaMovimiento: new Date()
-      }))
-  };
+  private extraerTipoMovimiento(
+    concepto: string
+  ): 'palet' | 'bulto' | 'unidad' {
+    if (concepto.includes('palet')) return 'palet';
+    if (concepto.includes('bulto')) return 'bulto';
+    return 'unidad';
+  }
 
-  this.facturacionService.exportarExcel(facturacionCalculada, periodo);
-}
+  getStockFinalPalets(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    return (
+      this.resumenFacturacion.resumenMovimientos.stockInicialPalets +
+      this.resumenFacturacion.resumenMovimientos.paletsEntrados -
+      this.resumenFacturacion.resumenMovimientos.paletsSalidos
+    );
+  }
 
-private extraerTipoMovimiento(concepto: string): 'palet' | 'bulto' | 'unidad' {
-  if (concepto.includes('palet')) return 'palet';
-  if (concepto.includes('bulto')) return 'bulto';
-  return 'unidad';
-}
+  getTotalEntradas(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    const facturacion =
+      this.resumenFacturacion.resumenMovimientos.facturacionEntradas;
+    return (
+      facturacion.paletsImporte +
+      facturacion.bultosImporte +
+      facturacion.unidadesImporte
+    );
+  }
+
+  getTotalSalidas(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    return this.resumenFacturacion.resumenMovimientos.facturacionSalidas
+      .paletsImporte;
+  }
+
+  getEstadoUnidades(): string {
+    if (!this.resumenFacturacion) {
+      return '';
+    }
+
+    const paletsCobrados =
+      this.resumenFacturacion.resumenMovimientos.facturacionEntradas
+        .paletsCobrados;
+    const bultosCobrados =
+      this.resumenFacturacion.resumenMovimientos.facturacionEntradas
+        .bultosCobrados;
+
+    if (paletsCobrados > 0) {
+      return 'No facturadas (se cobraron palets)';
+    } else if (bultosCobrados > 0) {
+      return 'No facturadas (se cobraron bultos)';
+    }
+
+    return 'Sin movimientos facturables';
+  }
 }

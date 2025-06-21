@@ -156,6 +156,7 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
           Ubicación: ubicacion.nombre ?? '',
           Referencia: producto.ref ?? '',
           Descripción: producto.description ?? '',
+          Estado: producto.estado ?? '',
           Unidades: producto.unidades ?? '',
         });
       });

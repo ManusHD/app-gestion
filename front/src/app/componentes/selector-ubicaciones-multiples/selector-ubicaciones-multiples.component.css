@@ -1,0 +1,87 @@
+.selector-multiples {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+  padding: 20px;
+  max-width: 400px;
+  z-index: 1000;
+}
+
+.header-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header-selector h3 {
+  margin: 0;
+  color: var(--letter-color);
+  font-family: 'Nunito-Bold';
+}
+
+.acciones-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-limpiar {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-crear-salida {
+  background: var(--letter-color);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.lista-seleccionadas {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ubicacion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.nombre-ubicacion {
+  font-weight: bold;
+  color: var(--letter-color);
+}
+
+.productos-count {
+  color: #666;
+  font-size: 12px;
+}
+
+.btn-quitar {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

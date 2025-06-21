@@ -2,12 +2,12 @@
 <div id="stock">
     <div>
         <div class="admin-actions" *appHasRole="'ROLE_ADMIN'">
-          <button 
+          <!-- <button 
             class="btn-sincronizar" 
             (click)="sincronizarProductos()"
             [disabled]="!btnSubmitActivado">
             <span>🔄 SINCRONIZAR PRODUCTOS</span>
-          </button>
+          </button> -->
         </div>
         <div class="buscador" (keyup)="onEnterKey($event)">
             <select [(ngModel)]="tipoBusqueda" class="select-buscador">

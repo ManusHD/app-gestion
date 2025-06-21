@@ -30,7 +30,8 @@
                             <td>{{producto.description}}</td>
                             <td><strong>{{producto.unidades}}</strong></td>
                             <td class="centrar transparente">
-                                <app-reubicar-producto [productoActual]="producto" [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
+                                <app-reubicar-producto [productoActual]="producto"
+                                    [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
                             </td>
                         </tr>
                     </tbody>
@@ -42,23 +43,24 @@
                 <h3>
                     Productos Normales (por Estado)
                 </h3>
-                
+
                 <div *ngFor="let grupo of productosAgrupados" class="grupo-producto-modal">
                     <div class="cabecera-grupo-modal" (click)="toggleExpand(grupo.referencia)">
-                        <span class="expand-icon" [style.transform]="grupo.expanded ? 'rotate(90deg)' : 'rotate(0deg)'">▶</span>
+                        <span class="expand-icon"
+                            [style.transform]="grupo.expanded ? 'rotate(90deg)' : 'rotate(0deg)'">▶</span>
                         <strong>{{ grupo.referencia }}</strong> - {{ grupo.description }}
                         <span *ngFor="let producto of grupo.productos" class="estado-chip">
                             {{ producto.estado || 'Sin estado' }}: {{ producto.unidades }}
                         </span>
                         <span class="total-unidades-modal">{{ grupo.totalUnidades }} unidades</span>
                     </div>
-                    
+
                     <!-- Vista resumida cuando está contraído -->
                     <!-- <div *ngIf="!grupo.expanded" class="vista-resumida">
                         <div class="estados-resumidos">
                         </div>
                     </div> -->
-                    
+
                     <!-- Vista detallada cuando está expandido -->
                     <div *ngIf="grupo.expanded" class="detalle-estados-modal">
                         <table class="tabla-estados">
@@ -73,64 +75,64 @@
                             <tbody>
                                 <tr *ngFor="let producto of grupo.productos">
                                     <td>
-                                        <span class="estado-badge-modal" 
-                                              [ngClass]="{'sin-estado': !producto.estado}">
+                                        <span class="estado-badge-modal" [ngClass]="{'sin-estado': !producto.estado}">
                                             {{ formatearEstado(producto.estado) }}
                                         </span>
                                         <ng-container *ngIf="!producto.estado">
                                             <br><br>
-                                            <select [(ngModel)]="estadoDestinoSinEstado" class="select-estado-modal" title="Asignar estado a productos sin estado">
+                                            <select [(ngModel)]="estadoDestinoSinEstado" class="select-estado-modal"
+                                                title="Asignar estado a productos sin estado">
                                                 <option value="" disabled selected>Selecciona estado</option>
                                                 <option *ngFor="let estado of estados" [value]="estado.nombre">
                                                     {{ estado.nombre }}
                                                 </option>
                                             </select>
-                                            <button 
-                                                [disabled]="!estadoDestinoSinEstado"
-                                                (click)="migrarProductosSinEstado(grupo.referencia)"
-                                                class="btn-migrar"
-                                                title="Asignar estado seleccionado"
-                                                style="margin-top: 8px;">
+                                            <button [disabled]="!estadoDestinoSinEstado"
+                                                (click)="migrarProductosSinEstado(grupo.referencia)" class="btn-migrar"
+                                                title="Asignar estado seleccionado" style="margin-top: 8px;">
                                                 ASIGNAR ESTADO
                                             </button>
                                         </ng-container>
                                     </td>
                                     <td><strong>{{ producto.unidades }}</strong></td>
                                     <td>
-                                        <button *ngIf="!mostrarTransferencia[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre]"
-                                                (click)="mostrarFormularioTransferencia(grupo.referencia, producto.estado!)"
-                                                class="btn-transferir-modal">
+                                        <button
+                                            *ngIf="!mostrarTransferencia[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre]"
+                                            (click)="mostrarFormularioTransferencia(grupo.referencia, producto.estado!)"
+                                            class="btn-transferir-modal">
                                             Cambiar Estado
                                         </button>
-                                        
+
                                         <!-- Formulario de transferencia inline -->
-                                        <div *ngIf="mostrarTransferencia[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre]" 
-                                             class="formulario-transferencia-modal">
+                                        <div *ngIf="mostrarTransferencia[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre]"
+                                            class="formulario-transferencia-modal">
                                             <div class="form-inline">
-                                                <select [(ngModel)]="transferirData[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre].estadoDestino"
-                                                        class="select-estado-modal">
+                                                <select
+                                                    [(ngModel)]="transferirData[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre].estadoDestino"
+                                                    class="select-estado-modal">
                                                     <option value="">Estado destino</option>
-                                                    <option *ngFor="let estado of estados" 
-                                                            [value]="estado.nombre"
-                                                            [disabled]="estado.nombre === producto.estado">
+                                                    <option *ngFor="let estado of estados" [value]="estado.nombre"
+                                                        [disabled]="estado.nombre === producto.estado">
                                                         {{ estado.nombre }}
                                                     </option>
                                                 </select>
-                                                <input type="number" 
-                                                       [(ngModel)]="transferirData[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre].cantidad"
-                                                       [max]="producto.unidades!"
-                                                       min="1"
-                                                       placeholder="Cantidad"
-                                                       class="input-cantidad-modal">
-                                                <button (click)="ejecutarTransferencia(grupo.referencia, producto.estado!)"
-                                                        class="btn-confirmar-modal" title="Confirmar transferencia">✓</button>
-                                                <button (click)="cancelarTransferencia(grupo.referencia, producto.estado!)"
-                                                        class="btn-cancelar-modal" title="Cancelar">✗</button>
+                                                <input type="number"
+                                                    [(ngModel)]="transferirData[grupo.referencia + '-' + producto.estado + '-' + ubicacion.nombre].cantidad"
+                                                    [max]="producto.unidades!" min="1" placeholder="Cantidad"
+                                                    class="input-cantidad-modal">
+                                                <button
+                                                    (click)="ejecutarTransferencia(grupo.referencia, producto.estado!)"
+                                                    class="btn-confirmar-modal"
+                                                    title="Confirmar transferencia">✓</button>
+                                                <button
+                                                    (click)="cancelarTransferencia(grupo.referencia, producto.estado!)"
+                                                    class="btn-cancelar-modal" title="Cancelar">✗</button>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="transparente">
-                                        <app-reubicar-producto [productoActual]="producto" [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
+                                        <app-reubicar-producto [productoActual]="producto"
+                                            [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
                                     </td>
                                 </tr>
                             </tbody>
@@ -144,14 +146,23 @@
                 <p>No hay productos en esta ubicación</p>
             </div>
         </div>
-        
+
         <!-- Botón de acción principal -->
         <div style="text-align: center; padding: 0 30px 30px;">
-            <button *ngIf="ubicacion.productos!.length > 0" 
-                    class="ubicacion-button" 
-                    [appConfirm]="'¿QUIERES CREAR UNA PREVISIÓN DE SALIDA CON ESTA UBICACION?'" 
-                    (confirmed)="sacarUbicacion()">
-                <span class="button-text">DAR SALIDA A LA UBICACIÓN</span>
+            <!-- NUEVO: Botón para agregar/quitar de selección múltiple -->
+            <button *ngIf="ubicacion.productos!.length > 0" class="ubicacion-button"
+                [ngClass]="{'selected': ubicacionSeleccionada}" (click)="toggleSeleccionUbicacion()"
+                style="margin-right: 15px;">
+                <span class="button-text">
+                    {{ ubicacionSeleccionada ? 'QUITAR DE SELECCIÓN' : 'AGREGAR A SELECCIÓN' }}
+                </span>
+            </button>
+
+            <!-- CONSERVAR: Botón para salida individual -->
+            <button *ngIf="ubicacion.productos!.length > 0" class="ubicacion-button"
+                [appConfirm]="'¿QUIERES CREAR UNA PREVISIÓN DE SALIDA CON ESTA UBICACION?'"
+                (confirmed)="sacarUbicacion()">
+                <span class="button-text">DAR SALIDA INDIVIDUAL</span>
             </button>
         </div>
     </div>

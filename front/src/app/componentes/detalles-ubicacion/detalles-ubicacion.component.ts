@@ -41,6 +41,8 @@ export class DetallesUbicacionComponent {
   transferirData: { [key: string]: TransferirEstadoUbicacionDTO } = {};
   estadoDestinoSinEstado: string | null = null;
 
+  ubicacionSeleccionada: boolean = false;
+
   constructor(
     private salidaUbicacionService: SalidaUbicacionService,
     private router: Router,
@@ -48,12 +50,30 @@ export class DetallesUbicacionComponent {
     private estadoService: EstadoService,
     private productoService: ProductoServices,
     private snackbar: SnackBar,
-    private authService: AuthService // Para obtener el token
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.cargarEstados();
     this.agruparProductos();
+    this.verificarSeleccion();
+  }
+
+  // NUEVO: Verificar si la ubicación está seleccionada
+  verificarSeleccion(): void {
+    this.ubicacionSeleccionada = this.salidaUbicacionService.estaUbicacionSeleccionada(this.ubicacion.id!);
+  }
+
+  toggleSeleccionUbicacion(): void {
+    if (this.ubicacionSeleccionada) {
+      this.salidaUbicacionService.quitarUbicacionDeSeleccion(this.ubicacion.id!);
+      this.ubicacionSeleccionada = false;
+      this.snackbar.snackBarExito(`Ubicación ${this.ubicacion.nombre} quitada de la selección`);
+    } else {
+      this.salidaUbicacionService.agregarUbicacionASeleccion(this.ubicacion);
+      this.ubicacionSeleccionada = true;
+      this.snackbar.snackBarExito(`Ubicación ${this.ubicacion.nombre} agregada a la selección`);
+    }
   }
 
   sacarUbicacion() {
