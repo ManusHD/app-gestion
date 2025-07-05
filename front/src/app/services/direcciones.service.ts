@@ -20,6 +20,10 @@ export class DireccionesService {
         return this.http.get<any>(`${this.apiUrlColaboradores}/activos`);
     }
 
+    getColaboradoresActivosByNombrePaginado(nombre: string, page: number, size: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}/activos/byNombre/${nombre}/paginado?page=${page}&size=${size}`);
+    }
+
     getColaboradoresPaginado(page: number, size: number): Observable<any> {
         return this.http.get<any>(`${this.apiUrlColaboradores}/paginado?page=${page}&size=${size}`);
     }
@@ -30,6 +34,14 @@ export class DireccionesService {
 
     getColaborador(nombre: String): Observable<Colaborador> {
         return this.http.get(`${this.apiUrlColaboradores}/${nombre}`);
+    }
+
+    getTodosColaboradores(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlColaboradores}/todos`);
+    }
+    
+    getColaboradorPorPdv(pdvId: number): Observable<Colaborador> {
+        return this.http.get<Colaborador>(`${this.apiUrlPdvs}/${pdvId}/colaborador`);
     }
 
     createColaborador(colaborador: Colaborador): Observable<Colaborador> {
@@ -58,6 +70,20 @@ export class DireccionesService {
     
     getPdv(nombre: string): Observable<PDV> {
         return this.http.get<PDV>(`${this.apiUrlPdvs}/${nombre}`);
+    }
+
+    // Obtener PDVs de una perfumería específica filtrando por nombre de PDV
+    getPDVsDeUnaPerfumeriaByNombre(perfumeriaId: number, nombrePdv: string): Observable<PDV[]> {
+        return this.http.get<PDV[]>(`${this.apiUrlPerfumerias}/${perfumeriaId}/pdvs/byNombre/${nombrePdv}`);
+    }
+    
+    getPDVsDeUnaPerfumeriaByNombres(nombrePerfumeria: string, nombrePdv: string): Observable<PDV[]> {
+        return this.http.get<PDV[]>(`${this.apiUrlPerfumerias}/nombre/${nombrePerfumeria}/pdvs/byNombre/${nombrePdv}`);
+    }
+    
+    // Obtener perfumerías que tienen PDVs con un nombre específico
+    getPerfumeriasConPdvByNombre(nombrePdv: string): Observable<Perfumeria[]> {
+        return this.http.get<Perfumeria[]>(`${this.apiUrlPerfumerias}/conPdv/${nombrePdv}`);
     }
     
     createPdv(pdv: PDV): Observable<PDV> {
@@ -158,6 +184,14 @@ export class DireccionesService {
 
     deleteOtraDireccion(id: number): Observable<OtraDireccion> {
         return this.http.delete<OtraDireccion>(`${this.apiUrlOtrasDirecciones}/${id}`);
+    }
+
+    getPdvsActivos(): Observable<PDV[]> {
+        return this.http.get<PDV[]>(`${this.apiUrlPdvs}/activos`);
+    }
+    
+    getPdvsByNombre(nombre: string): Observable<PDV[]> {
+        return this.http.get<PDV[]>(`${this.apiUrlPdvs}/byNombre/${nombre}`);
     }
 
 }

@@ -349,3 +349,30 @@ input.stock-excedido {
   font-size: 12px;
   font-weight: bold;
 }
+
+.division-info {
+  display: block;
+  font-size: 11px;
+  margin-top: 2px;
+  color: #61a5ff;
+  font-weight: 500;
+}
+
+.linea-origen {
+  background-color: rgba(97, 165, 255, 0.1) !important;
+  border-left: 3px solid #61a5ff !important;
+}
+
+.linea-origen td {
+  border-bottom: 1px solid #61a5ff !important;
+}
+
+/* Animación para resaltar cuando se produce una división */
+@keyframes division-highlight {
+  0% { background-color: rgba(97, 165, 255, 0.3); }
+  100% { background-color: transparent; }
+}
+
+.division-realizada {
+  animation: division-highlight 1s ease-out;
+}

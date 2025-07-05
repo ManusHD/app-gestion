@@ -3,7 +3,7 @@
   max-width: 1400px;
   margin: 0 auto;
   min-height: calc(100vh - 140px);
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--bg-color);
 }
 
 /* Formulario */
@@ -15,8 +15,8 @@
 }
 
 .form-card mat-card-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--table-primary), var(--table-secondary));
+  color: var(--btn-color-w);
   padding: 20px 24px;
   margin: -16px -16px 16px -16px;
 }
@@ -56,16 +56,15 @@
 }
 
 .actions-row button {
-  padding: 12px 32px;
-  font-weight: 600;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--table-primary), var(--table-secondary));
+  color: var(--btn-color-w);
+  border: none;
+  box-shadow: 0 4px 12px rgba(18, 66, 223, 0.3);
 }
 
 .actions-row button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, var(--table-secondary), var(--table-primary));
+  box-shadow: 0 6px 20px rgba(18, 66, 223, 0.4);
 }
 
 /* Carga */
@@ -103,8 +102,8 @@
 }
 
 .resumen-card mat-card-header {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--caption-color), var(--color-excel));
+  color: var(--btn-color-w);
   padding: 20px 24px;
   margin: -16px -16px 16px -16px;
 }
@@ -135,18 +134,18 @@
 }
 
 .resumen-item.almacenaje {
-  background: linear-gradient(135deg, #ddd6fe 0%, #ede9fe 100%);
-  border-color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(61, 126, 255, 0.1), rgba(61, 126, 255, 0.05));
+  border-color: var(--letter-color);
 }
 
 .resumen-item.movimientos {
-  background: linear-gradient(135deg, #bfdbfe 0%, #dbeafe 100%);
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, rgba(0, 114, 83, 0.1), rgba(0, 114, 83, 0.05));
+  border-color: var(--caption-color);
 }
 
 .resumen-item.total {
-  background: linear-gradient(135deg, #fef3c7 0%, #fef9e7 100%);
-  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(235, 185, 52, 0.2), rgba(235, 185, 52, 0.1));
+  border-color: var(--color-detalles);
 }
 
 .resumen-item:hover {
@@ -158,7 +157,7 @@
   font-size: 2rem;
   width: 2rem;
   height: 2rem;
-  color: #4b5563;
+  color: var(--letter-color-off);
 }
 
 .resumen-content {
@@ -177,11 +176,11 @@
 .resumen-content .amount {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--main-color);
 }
 
 .total-amount {
-  color: #059669 !important;
+  color: var(--positive-color) !important;
 }
 
 .export-actions {
@@ -204,8 +203,8 @@
 }
 
 .detalles-card mat-card-header {
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--main-color), var(--bg-color));
+  color: var(--letter-color);
   padding: 20px 24px;
   margin: -16px -16px 16px -16px;
 }
@@ -238,29 +237,40 @@
   border-bottom: 2px solid #e5e7eb;
 }
 
+.facturacion-table th {
+  background: var(--thead-bgcolor);
+  font-weight: 600;
+  color: var(--thead-color);
+  padding: 16px;
+  border-bottom: 2px solid var(--letter-color);
+}
+
 .facturacion-table td {
   padding: 16px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--letter-color-off);
 }
 
 .facturacion-table tr:hover {
-  background: #f8fafc;
+  background: var(--hover-color);
 }
 
-.concepto-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.facturacion-table tr:nth-child(even) {
+  background: rgba(18, 66, 223, 0.03);
+}
+
+.facturacion-table tr:nth-child(odd) {
+  background: var(--btn-color-w);
 }
 
 .concepto-cell strong {
-  color: #1f2937;
+  color: var(--main-color);
   font-weight: 600;
 }
 
 .referencia {
   font-size: 0.875rem;
-  color: white;
+  color: var(--letter-color);
   font-style: italic;
 }
 
@@ -269,7 +279,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.875rem;
-  color: #059669;
+  color: var(--positive-color);
   font-weight: 500;
 }
 
@@ -284,7 +294,7 @@
   align-items: center;
   gap: 4px;
   font-size: 0.875rem;
-  color: #dc2626;
+  color: var(--negative-color);
   font-weight: 500;
 }
 
@@ -295,13 +305,13 @@
 }
 
 .descuento {
-  color: #dc2626 !important;
+  color: var(--negative-color) !important;
 }
 
 .descuento-label {
   font-size: 0.75rem;
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(255, 77, 77, 0.1);
+  color: var(--negative-color);
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: 8px;
@@ -315,13 +325,13 @@
 
 .cantidad {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--main-color);
   font-size: 1.1rem;
 }
 
 .total-cell {
-  font-weight: 700;
-  color: #059669;
+  font-weight: 500;
+  color: var(--positive-color);
   font-size: 1.1rem;
 }
 
@@ -363,8 +373,8 @@ mat-chip {
 }
 
 .tarifas-card mat-card-header {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--aux-color), var(--caption-color));
+  color: var(--btn-color-w);
   padding: 20px 24px;
   margin: -16px -16px 16px -16px;
 }
@@ -389,20 +399,20 @@ mat-chip {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #f8fafc;
+  background: #f1f1f1;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
 }
 
 .tarifa-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: var(--hover-color);
+  border-color: var(--letter-color);
   transform: translateY(-2px);
 }
 
 .tarifa-item mat-icon {
-  color: #7c3aed;
+  color: var(--letter-color);
   font-size: 1.5rem;
   width: 1.5rem;
   height: 1.5rem;
@@ -411,12 +421,12 @@ mat-chip {
 .tarifa-item span:nth-child(2) {
   flex: 1;
   font-weight: 500;
-  color: #374151;
+  color: var(--main-color);
 }
 
 .tarifa-item .precio {
   font-weight: 700;
-  color: #059669;
+  color: var(--positive-color);
   font-size: 1.1rem;
 }
 
@@ -426,19 +436,19 @@ mat-chip {
   align-items: flex-start;
   margin-top: 16px;
   padding: 16px;
-  background: #fef3c7;
+  background: rgba(255, 193, 7, 0.1);
   border-radius: 8px;
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid var(--warning-color);
 }
 
 .nota-tarifas mat-icon {
-  color: #d97706;
+  color: var(--warning-color);
   margin-top: 2px;
 }
 
 .nota-tarifas p {
   margin: 0;
-  color: #92400e;
+  color: var(--letter-color-off);
   line-height: 1.5;
 }
 
@@ -501,21 +511,19 @@ mat-chip {
   animation-delay: 0.3s;
 }
 
-.export-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: center;
+.export-actions button[color="primary"] {
+  background: linear-gradient(135deg, var(--table-primary), var(--table-secondary));
+  color: var(--btn-color-w);
 }
 
-.export-actions button {
-  min-width: 150px;
+.export-actions button[color="accent"] {
+  background: linear-gradient(135deg, var(--caption-color), var(--color-excel));
+  color: var(--btn-color-w);
+  border: 1px solid var(--caption-color);
 }
 
-.movimientos-card {
-  margin: 20px 0;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 1px solid #dee2e6;
+.export-actions button[color="accent"]:hover {
+  background: linear-gradient(135deg, var(--color-excel), var(--color-excel-hover));
 }
 
 .movimientos-grid {
@@ -525,11 +533,18 @@ mat-chip {
   padding: 10px 0;
 }
 
+.movimientos-card {
+  margin: 20px 0;
+  background: linear-gradient(135deg, var(--color-cream), var(--color-beige));
+  border: 1px solid var(--border-color);
+  box-shadow: var(--header-shadow);
+}
+
 .movimiento-seccion {
-  background: white;
+  background: var(--btn-color-w);
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-color);
   border-left: 4px solid var(--table-primary);
 }
 
@@ -538,7 +553,7 @@ mat-chip {
 }
 
 .movimiento-seccion.bultos {
-  border-left-color: var(--warning-color);
+  border-left-color: var(--color-detalles);
 }
 
 .movimiento-seccion.unidades {
@@ -568,29 +583,26 @@ mat-chip {
   padding: 8px 12px;
   background: #f8f9fa;
   border-radius: 4px;
-  border: 1px solid #e9ecef;
+  background: var(--color-cream);
+  border: 1px solid var(--border-color);
 }
 
 .dato-movimiento.inicial {
-  background: #e3f2fd;
-  border-color: #2196f3;
+  background: rgba(18, 66, 223, 0.1);
+  border-color: var(--table-primary);
 }
 
 .dato-movimiento.final {
-  background: #f3e5f5;
-  border-color: #9c27b0;
+  background: rgba(235, 185, 52, 0.1);
+  border-color: var(--color-detalles);
   font-weight: 600;
 }
 
 .etiqueta {
-  font-size: 14px;
-  color: #495057;
-  font-weight: 500;
+  color: var(--letter-color-off);
 }
 
 .valor {
-  font-size: 16px;
-  font-weight: 700;
   color: var(--main-color);
 }
 
@@ -605,6 +617,29 @@ mat-chip {
 .valor.final {
   color: #9c27b0;
   font-size: 18px;
+}
+
+.entrada-facturacion {
+  background: rgba(0, 183, 18, 0.1);
+  border-left: 4px solid var(--positive-color);
+}
+
+.salida-facturacion {
+  background: rgba(18, 66, 223, 0.1);
+  border-left: 4px solid var(--table-primary);
+}
+
+.salida-info {
+  background: rgba(255, 193, 7, 0.1);
+  border-left: 4px solid var(--warning-color);
+}
+
+.valor.cobrado {
+  color: var(--positive-color);
+}
+
+.valor.info-text {
+  color: var(--warning-color);
 }
 
 @media (max-width: 768px) {
@@ -635,6 +670,60 @@ mat-chip {
 }
 
 .resumen-facturacion-tipos {
+  margin-top: 25px;
+  padding: 20px;
+  background: var(--color-cream);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.resumen-facturacion-tipos h4 {
+  color: var(--main-color);
+}
+
+.facturacion-seccion {
+  margin: 15px 0;
+  padding: 15px;
+  background: var(--btn-color-w);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.facturacion-seccion h5 {
+  color: var(--main-color);
+}
+
+.tipo-facturacion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: var(--btn-color-w);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.icon-palet {
+  color: var(--table-primary);
+}
+
+.icon-bulto {
+  color: var(--color-detalles);
+}
+
+.icon-unidad {
+  color: var(--caption-color);
+}
+
+.tipo-cantidad {
+  color: var(--letter-color-off);
+}
+
+.tipo-importe {
+  color: var(--positive-color);
+}.resumen-facturacion-tipos {
   margin-top: 25px;
   padding: 20px;
   background: #f8f9fa;
@@ -707,6 +796,18 @@ mat-chip {
   border: 2px solid var(--table-primary);
   color: var(--table-primary);
   font-size: 18px;
+}
+
+.subtotal-entradas,
+.subtotal-salidas {
+  background: var(--color-cream);
+  color: var(--table-primary);
+}
+
+.info-no-cobrado {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
 }
 
 @media (max-width: 768px) {

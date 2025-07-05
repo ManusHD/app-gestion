@@ -104,6 +104,26 @@
                 </td>
               </ng-container>
 
+              <ng-container matColumnDef="colaborador">
+                <th class="header-paginator" *matHeaderCellDef> Colaborador </th>
+                <td class="fila-paginator" mat-cell *matCellDef="let pdv">
+                    <ng-container *ngIf="editandoId !== pdv.id; else editColaborador">
+                        {{ pdv.colaborador?.nombre || 'Sin colaborador' }}
+                    </ng-container>
+                    <ng-template #editColaborador>
+                        <select [(ngModel)]="colaboradorSeleccionado" 
+                                (change)="onColaboradorSeleccionado(colaboradorSeleccionado!)"
+                                class="select-buscador">
+                            <option [ngValue]="null">Sin colaborador</option>
+                            <option *ngFor="let colaborador of colaboradores" 
+                                    [ngValue]="colaborador">
+                                {{ colaborador.nombre }}
+                            </option>
+                        </select>
+                    </ng-template>
+                </td>
+            </ng-container>
+
               <!-- Columna Teléfono -->
               <ng-container matColumnDef="telefono">
                 <th class="header-paginator" *matHeaderCellDef> Teléfono </th>

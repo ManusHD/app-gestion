@@ -34,21 +34,34 @@
 
                     <div class="campo-form">
                         <label>PDV</label>
-                        <select formControlName="pdv"
-                            [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}">
-                            <option value=""></option>
-                            <option *ngFor="let pdv of pdvs" [value]="pdv.nombre">{{pdv.nombre}}</option>
-                        </select>
+                        <input (focus)="setActiveCampoUnico('pdv')" (blur)="clearActiveCampoUnico()" 
+                        formControlName="pdv" type="text"
+                        [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="pdvs.length > 0 && !pdvSeleccionado && activeCampoUnico == 'pdv'">
+                                <div class="autocomplete-item" *ngFor="let pdv of pdvs"
+                                    (click)="selectPdv(pdv)">
+                                    {{ pdv.nombre }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="campo-form">
                         <label>COLABORADOR</label>
-                        <select formControlName="colaborador"
-                            [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}">
-                            <option value=""></option>
-                            <option *ngFor="let colaborador of colaboradores" [value]="colaborador.nombre">
-                                {{colaborador.nombre}}</option>
-                        </select>
+                        <input (focus)="setActiveCampoUnico('colaborador')" (blur)="clearActiveCampoUnico()" 
+                        formControlName="colaborador" type="text"
+                        [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="colaboradores.length > 0 && !colaboradorSeleccionado && activeCampoUnico == 'colaborador'">
+                                <div class="autocomplete-item" *ngFor="let colaborador of colaboradores"
+                                    (click)="selectColaborador(colaborador)">
+                                    {{ colaborador.nombre }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Campos específicos de origen/destino -->
@@ -210,13 +223,20 @@
                                         'campo-vacio': campoVacio('unidades', i),
                                         'stock-excedido': unidadesExcedenStock(i)
                                     }" 
-                                    min="0" />
+                                    min="0"
+                                    (blur)="onUnidadesBlur(i)" />
                                 
                                 <!-- Mostrar stock disponible para salidas -->
                                 <small *ngIf="currentPath.startsWith('/salidas') && getMensajeStock(i)" 
                                     class="stock-info"
                                     [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
                                     {{ getMensajeStock(i) }}
+                                </small>
+
+                                <!-- Mostrar información de división automática mejorada -->
+                                <small *ngIf="currentPath.startsWith('/entradas') && mostrarInfoDivisionDetallada(i)" 
+                                    class="division-info">
+                                    {{ mostrarInfoDivisionDetallada(i) }}
                                 </small>
                             </div>
                         </td>

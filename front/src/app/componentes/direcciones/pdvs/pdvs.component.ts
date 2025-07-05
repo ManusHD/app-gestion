@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { finalize, Subject, takeUntil } from 'rxjs';
+import { Colaborador } from 'src/app/models/colaborador.model';
 import { PDV } from 'src/app/models/pdv.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { DireccionesService } from 'src/app/services/direcciones.service';
@@ -13,27 +14,29 @@ import { SnackBar } from 'src/app/services/snackBar.service';
   selector: 'app-pdvs',
   templateUrl: './pdvs.component.html',
   styleUrls: [
-    '../../../../assets/styles/paginator.css', 
-    './pdvs.component.css'
-  ], 
+    '../../../../assets/styles/paginator.css',
+    './pdvs.component.css',
+  ],
 })
 export class PdvsComponent implements OnInit, OnDestroy {
   currentPath = window.location.pathname;
   pdvs: PDV[] = [];
-  // Inicializamos el nuevo PDV con un array vacío de Perfumerías
-  nuevoPdv: PDV = {};
+  // Inicializamos el nuevo PDV con un colaborador vacío
+  nuevoPdv: PDV = { colaborador: {} as Colaborador };
   pdvSeleccionado: PDV | null = null;
   pdvEditar: PDV | null = null;
   indexPdvSeleccionado: number = -1;
   existe: boolean = true;
   editandoId: number | null = null;
-  editandoPdv: PDV = {};
+  editandoPdv: PDV = { colaborador: {} as Colaborador };
   buscador: string = '';
   pageSize = 10;
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
-  
+  colaboradores: Colaborador[] = [];
+  colaboradorSeleccionado: Colaborador | null = null;
+
   pdvsImportacion: PDV[] = [];
   importando = false;
   progresoActual = 0;
@@ -44,6 +47,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   columnasPdvs: string[] = [
     'nombre',
+    'colaborador',
     'telefono',
     'direccion',
     'acciones',
@@ -61,14 +65,15 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarPdvs();
-    
+    this.cargarColaboradores();
+
     // Limpiar los datos de la importacion
     this.importarES.resetExcel();
     this.pdvsImportacion = [];
 
     this.importarES.excelData$
       .pipe(takeUntil(this.unsubscribe$))
-      .subscribe(data => {
+      .subscribe((data) => {
         if (data && data.length > 0) {
           this.procesarDatosExcel(data);
         } else {
@@ -77,16 +82,16 @@ export class PdvsComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
-    cambiarPagina(event: PageEvent) {
-      this.pageIndex = event.pageIndex; 
-      this.pageSize = event.pageSize;   
-      if(this.buscando){
-        this.buscarPdvs();
-      } else {
-        this.cargarPdvs();         
-      }
+
+  cambiarPagina(event: PageEvent) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    if (this.buscando) {
+      this.buscarPdvs();
+    } else {
+      this.cargarPdvs();
     }
+  }
 
   // Manejo de la tecla Enter en el buscador
   onEnterKey(event: any) {
@@ -107,52 +112,67 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   buscarPdvs() {
     this.carga.show();
-    if(!this.buscando) {
+    if (!this.buscando) {
       this.pageIndex = 0;
     }
     this.buscando = true;
-    this.direccionesService.getPdvsByNombrePaginado(this.buscador, this.pageIndex, this.pageSize).subscribe(
-      (data) => {
-        this.pdvs = data.content;
-        setTimeout(() => {
-          this.totalElementos = data.totalElements;
-        });
-        this.dataSourcePdvs.data = this.pdvs;
-    
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
-      },
-      (error) => {
-        console.error('Error al buscar PDVs', error);
-    
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
-      }
-    );
+    this.direccionesService
+      .getPdvsByNombrePaginado(this.buscador, this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.pdvs = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
+          this.dataSourcePdvs.data = this.pdvs;
+
+          setTimeout(() => {
+            this.carga.hide();
+          });
+        },
+        (error) => {
+          console.error('Error al buscar PDVs', error);
+
+          setTimeout(() => {
+            this.carga.hide();
+          });
+        }
+      );
   }
 
   cargarPdvs(): void {
     this.carga.show();
-    this.direccionesService.getPdvsPaginado(this.pageIndex, this.pageSize).subscribe(
+    this.direccionesService
+      .getPdvsPaginado(this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.pdvs = data.content;
+          setTimeout(() => {
+            this.totalElementos = data.totalElements;
+          });
+          this.dataSourcePdvs.data = this.pdvs;
+
+          setTimeout(() => {
+            this.carga.hide();
+          });
+        },
+        (error) => {
+          console.error('Error al cargar PDVs', error);
+
+          setTimeout(() => {
+            this.carga.hide();
+          });
+        }
+      );
+  }
+
+  cargarColaboradores(): void {
+    this.direccionesService.getTodosColaboradores().subscribe(
       (data) => {
-        this.pdvs = data.content;
-        setTimeout(() => {
-          this.totalElementos = data.totalElements;
-        });
-        this.dataSourcePdvs.data = this.pdvs;
-    
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
+        this.colaboradores = data;
       },
       (error) => {
-        console.error('Error al cargar PDVs', error);
-    
-        setTimeout(() => {
-          this.carga.hide();
-        }); 
+        console.error('Error al cargar colaboradores', error);
       }
     );
   }
@@ -171,17 +191,17 @@ export class PdvsComponent implements OnInit, OnDestroy {
             this.pdvs.push(data);
             this.cargarPdvs();
             // Reiniciamos el formulario de creación
-            this.nuevoPdv = {};
+            this.nuevoPdv = { colaborador: {} as Colaborador };
             this.snackbar.snackBarExito('PDV creado con éxito');
             setTimeout(() => {
               this.carga.hide();
-            }); 
+            });
           },
           (error) => {
             console.error('Error al crear el PDV', error);
             setTimeout(() => {
               this.carga.hide();
-            }); 
+            });
           }
         );
       }
@@ -206,8 +226,18 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   editarPdv(pdv: PDV): void {
     this.editandoId = pdv.id!;
-    // Clonamos el PDV (incluyendo la lista de Perfumerías)
-    this.editandoPdv = { ...pdv};
+    this.editandoPdv = { ...pdv };
+
+    // Si tiene colaborador, establecerlo como seleccionado
+    if (pdv.colaborador) {
+      this.colaboradorSeleccionado = pdv.colaborador;
+    } else {
+      this.colaboradorSeleccionado = null;
+    }
+  }
+
+  onColaboradorSeleccionado(colaborador: Colaborador): void {
+    this.editandoPdv.colaborador = colaborador;
   }
 
   guardarEdit(): void {
@@ -216,6 +246,10 @@ export class PdvsComponent implements OnInit, OnDestroy {
         this.snackbar.snackBarError('El nombre no puede estar en blanco');
         return;
       }
+
+      // Asignar colaborador seleccionado
+      this.editandoPdv.colaborador = this.colaboradorSeleccionado!;
+
       this.carga.show();
       this.editandoPdv.nombre = this.editandoPdv.nombre.trim();
       this.direccionesService
@@ -231,14 +265,14 @@ export class PdvsComponent implements OnInit, OnDestroy {
             this.snackbar.snackBarExito('PDV actualizado con éxito');
             setTimeout(() => {
               this.carga.hide();
-            }); 
+            });
           },
           (error) => {
             this.snackbar.snackBarError(error.error.error);
             console.error('Error al actualizar el PDV', error);
             setTimeout(() => {
               this.carga.hide();
-            }); 
+            });
           }
         );
     }
@@ -246,7 +280,8 @@ export class PdvsComponent implements OnInit, OnDestroy {
 
   cancelarEdit(): void {
     this.editandoId = null;
-    this.editandoPdv = {};
+    this.editandoPdv = { colaborador: {} as Colaborador };
+    this.colaboradorSeleccionado = null;
   }
 
   eliminarPdv(id: number): void {
@@ -260,7 +295,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
         console.error('Error al eliminar el PDV', error);
         setTimeout(() => {
           this.carga.hide();
-        }); 
+        });
       }
     );
   }
@@ -271,7 +306,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
   }
 
   procesarDatosExcel(data: any[]): void {
-    this.pdvsImportacion = data.map(row => {
+    this.pdvsImportacion = data.map((row) => {
       const pdv: PDV = new PDV();
       // Mapear las propiedades desde el Excel a nuestro modelo
       pdv.nombre = row.nombre || '';
@@ -297,7 +332,7 @@ export class PdvsComponent implements OnInit, OnDestroy {
     this.progresoActual = 0;
     this.pdvsImportadosOK = 0;
     this.pdvsConError = 0;
-    
+
     // Importar PDVs de uno en uno
     this.importarSiguientePDV();
   }
@@ -309,8 +344,9 @@ export class PdvsComponent implements OnInit, OnDestroy {
     }
 
     const pdvActual = this.pdvsImportacion[this.progresoActual];
-    
-    this.direccionesService.createPdv(pdvActual)
+
+    this.direccionesService
+      .createPdv(pdvActual)
       .pipe(
         finalize(() => {
           this.progresoActual++;
@@ -325,18 +361,22 @@ export class PdvsComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error al importar PDV:', error);
           this.pdvsConError++;
-        }
+        },
       });
   }
 
   finalizarImportacion(): void {
     this.importando = false;
     this.importacionCompletada = true;
-    
+
     if (this.pdvsConError === 0) {
-      this.snackbar.snackBarExito(`Se han importado ${this.pdvsImportadosOK} PDVs correctamente`);
+      this.snackbar.snackBarExito(
+        `Se han importado ${this.pdvsImportadosOK} PDVs correctamente`
+      );
     } else {
-      this.snackbar.snackBarError(`Importación con errores: ${this.pdvsImportadosOK} PDVs correctos, ${this.pdvsConError} con errores`);
+      this.snackbar.snackBarError(
+        `Importación con errores: ${this.pdvsImportadosOK} PDVs correctos, ${this.pdvsConError} con errores`
+      );
     }
   }
 
@@ -346,11 +386,10 @@ export class PdvsComponent implements OnInit, OnDestroy {
       this.importando = false;
       this.snackbar.snackBarError('Importación cancelada');
     }
-    
+
     // Limpiar los datos
     this.importarES.resetExcel();
     this.pdvsImportacion = [];
     this.importacionCompletada = false;
   }
-
 }

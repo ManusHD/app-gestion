@@ -1,8 +1,10 @@
 package com.manushd.app.direcciones.controllers;
 
 import java.util.HashSet;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,6 +41,9 @@ import jakarta.persistence.EntityManager;
 public class DireccionesController {
 
     @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
     private ColaboradoresRepository colaboradoresRepository;
     @Autowired
     private PDVrepository pdvRepository;
@@ -63,6 +68,12 @@ public class DireccionesController {
         return colaboradoresRepository.findAllByActivaOrderByNombreAsc(true);
     }
 
+    @GetMapping("/colaboradores/activos/byNombre/{nombre}/paginado")
+    public Iterable<Colaborador> getAllColaboradoresActivosByNombre(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
+    @RequestParam(defaultValue = "10") int size) {
+        return colaboradoresRepository.findAllByActivaAndNombreContainingIgnoreCaseOrderByNombreAsc(true, nombre, PageRequest.of(page, size));
+    }
+
     @GetMapping("/colaboradores/{nombre}")
     public Colaborador getColaboradorByNombre(@PathVariable String nombre) {
         return colaboradoresRepository.findByNombre(nombre).orElse(null);
@@ -72,6 +83,20 @@ public class DireccionesController {
     public Iterable<Colaborador> getColaboradoresContainingIgnoreCaseByNombre(@PathVariable String nombre, @RequestParam(defaultValue = "0") int page,
     @RequestParam(defaultValue = "10") int size) {
         return colaboradoresRepository.findByNombreContainingIgnoreCaseOrderByNombreAsc(PageRequest.of(page, size), nombre);
+    }
+
+    @GetMapping("/colaboradores/todos")
+    public Iterable<Colaborador> getTodosColaboradores() {
+        return colaboradoresRepository.findAllByOrderByNombreAsc();
+    }
+
+    @GetMapping("/pdvs/{id}/colaborador")
+    public ResponseEntity<Colaborador> getColaboradorPorPdv(@PathVariable Long id) {
+        Optional<PDV> pdv = pdvRepository.findById(id);
+        if (pdv.isPresent() && pdv.get().getColaborador() != null) {
+            return ResponseEntity.ok(pdv.get().getColaborador());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/colaboradores")
@@ -252,8 +277,27 @@ public class DireccionesController {
         return perfumeriaRepository.findPDVsNotRelatedToAnyPerfumeria();
     }
 
-    @Autowired
-    private EntityManager entityManager;
+    // Obtener PDVs existentes en una perfumería por nombre de PDV
+    @GetMapping("/perfumerias/{perfumeriaId}/pdvs/byNombre/{nombrePdv}")
+    public Iterable<PDV> getPDVsDeUnaPerfumeriaByNombre(
+            @PathVariable Long perfumeriaId, 
+            @PathVariable String nombrePdv) {
+        return perfumeriaRepository.findPDVsByPerfumeriaIdAndNombrePdv(perfumeriaId, nombrePdv);
+    }
+
+    @GetMapping("/perfumerias/nombre/{nombrePerfumeria}/pdvs/byNombre/{nombrePdv}")
+    public Iterable<PDV> getPDVsDeUnaPerfumeriaByNombres(
+            @PathVariable String nombrePerfumeria, 
+            @PathVariable String nombrePdv) {
+        return perfumeriaRepository.findPDVsByNombrePerfumeriaAndNombrePdv(nombrePerfumeria, nombrePdv);
+    }
+
+    // Método para obtener las perfumerías que tienen PDVs con un nombre específico
+    @GetMapping("/perfumerias/conPdv/{nombrePdv}")
+    public Iterable<Perfumeria> getPerfumeriasConPdvByNombre(@PathVariable String nombrePdv) {
+        return perfumeriaRepository.findByPdvsNombreOrderByNombreAsc(nombrePdv);
+    }
+    
 
     @PostMapping("/perfumerias")
     @PreAuthorize("hasRole('ADMIN')")

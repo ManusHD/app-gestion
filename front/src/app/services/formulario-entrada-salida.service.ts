@@ -50,8 +50,8 @@ export class FormularioEntradaSalidaService {
   otrasDirecciones: OtraDireccion[] = [];
   otraDireccionSeleccionada: OtraDireccion | null = null;
   perfumeriaSeleccionada: Perfumeria | null = null;
-  pdvSeleccionada: PDV | null = null;
-  colaboradorSeleccionada: Colaborador | null = null;
+  pdvSeleccionado: PDV | null = null;
+  colaboradorSeleccionado: Colaborador | null = null;
 
   btnSubmitActivado = true;
   currentPath: string = window.location.pathname;
@@ -1635,4 +1635,5 @@ export class FormularioEntradaSalidaService {
 
     return false; // No hay duplicado
   }
+  
 }

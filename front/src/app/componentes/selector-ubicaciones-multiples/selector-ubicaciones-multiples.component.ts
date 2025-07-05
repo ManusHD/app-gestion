@@ -19,6 +19,7 @@ export class SelectorUbicacionesMultiplesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.salidaUbicacionService.limpiarSelecciones();
     this.salidaUbicacionService.ubicacionesSeleccionadas$.subscribe(
       ubicaciones => {
         this.ubicacionesSeleccionadas = ubicaciones;

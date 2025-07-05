@@ -84,17 +84,38 @@ export class FormularioEntradaSalidaComponent
         debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
       )
       .subscribe((value) => {
-        if (value == '') {
+        if (value == '' || value == null) {
           this.limpiarCamposDireccion();
           // this.otrasDirecciones = [];
           this.otraDireccionSeleccionada = null;
+          this.cargarOtrasDirecciones('a');
         } else {
           this.cargarOtrasDirecciones(value);
         }
       });
 
+    let nombrePerfumeria = '';
     this.entradaSalidaForm
       .get('perfumeria')
+      ?.valueChanges.pipe(
+        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+      )
+      .subscribe((value) => {
+        nombrePerfumeria = value;
+        if (value == '' || value == null) {
+          this.limpiarCamposDireccion();
+          // this.perfumerias = [];
+          this.entradaSalidaForm.get('pdv')!.setValue('');
+          this.perfumeriaSeleccionada = null;
+          this.pdvSeleccionado = null;
+          this.cargarPerfumerias('a');
+        } else {
+          this.cargarPerfumerias(value);
+        }
+      });
+
+    this.entradaSalidaForm
+      .get('colaborador')
       ?.valueChanges.pipe(
         debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
       )
@@ -102,9 +123,30 @@ export class FormularioEntradaSalidaComponent
         if (value == '' || value == null) {
           this.limpiarCamposDireccion();
           // this.perfumerias = [];
-          this.perfumeriaSeleccionada = null;
+          this.colaboradorSeleccionado = null;
+          if(!nombrePerfumeria) {
+            this.cargarColaboradores();
+          }
         } else {
-          this.cargarPerfumerias(value);
+          this.cargarColaboradoresActivosByNombre(value);
+        }
+      });
+
+    this.entradaSalidaForm
+      .get('pdv')
+      ?.valueChanges.pipe(
+        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+      )
+      .subscribe((value) => {
+        if (value == '' || value == null) {
+          this.limpiarCamposDireccion();
+          // this.perfumerias = [];
+          this.pdvSeleccionado = null;
+          if(nombrePerfumeria) {
+            this.cargarPDVs();
+          }
+        } else {
+          this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
         }
       });
 
@@ -192,6 +234,15 @@ export class FormularioEntradaSalidaComponent
       });
   }
 
+  cargarPDVsPerfumeriaByNombre(nombrePerfumeria: string, nombrePdv: string) {
+    this.direccionesService
+      .getPDVsDeUnaPerfumeriaByNombres(nombrePerfumeria, nombrePdv)
+      .subscribe((data: PDV[]) => {
+        this.pdvs = data;
+        console.log(this.pdvs);
+      });
+  }
+
   cargarColaboradores() {
     this.direccionesService.getColaboradoresActivos().subscribe({
       next: (data) => {
@@ -201,6 +252,24 @@ export class FormularioEntradaSalidaComponent
         console.error('Error al obtener colaboradores', error);
       },
     });
+  }
+
+  cargarColaboradoresActivosByNombre(nombre: string) {
+    this.direccionesService
+    .getColaboradoresActivosByNombrePaginado(
+      nombre,
+      this.pageIndex,
+      this.pageSize
+    )
+    .subscribe({
+      next: (data) => {
+        this.colaboradores = data.content;
+        console.log(this.colaboradores);
+        },
+        error: (error) => {
+          console.error('Error al obtener colaboradores', error);
+        },
+      });
   }
 
   cargarOtrasDirecciones(direccion: string) {
@@ -213,9 +282,6 @@ export class FormularioEntradaSalidaComponent
       .subscribe({
         next: (data) => {
           this.otrasDirecciones = data.content;
-          this.otrasDirecciones = this.otrasDirecciones.filter((d: any) =>
-            d.nombre.includes(direccion)
-          );
         },
         error: (error) => {
           console.error('Error al obtener otras direcciones', error);
@@ -591,6 +657,11 @@ export class FormularioEntradaSalidaComponent
         cp: pdvSeleccionado.cp || '',
         telefono: pdvSeleccionado.telefono || '',
       });
+
+      // Si el PDV tiene un colaborador asociado, rellenar también el campo colaborador
+      if (pdvSeleccionado.colaborador ) {
+        this.cargarColaboradoresActivosByNombre(pdvSeleccionado.colaborador.nombre!);
+      }
     }
   }
 
@@ -633,7 +704,6 @@ export class FormularioEntradaSalidaComponent
     this.entradaSalidaForm.patchValue({
       otroOrigenDestino: direccion.nombre,
       // Limpiamos los otros campos que podrían tener dirección
-      pdv: '',
       colaborador: '',
     });
 
@@ -662,6 +732,27 @@ export class FormularioEntradaSalidaComponent
     this.perfumeriaSeleccionada = perfumeria;
 
     this.cargarPDVPerfumeria(perfumeria.nombre!);
+  }
+
+  selectPdv(pdv: PDV) {
+    this.entradaSalidaForm.patchValue({
+      pdv: pdv.nombre,
+      // Limpiamos los otros campos que podrían tener dirección
+      otroOrigenDestino: '',
+      colaborador: '',
+    });
+
+    this.pdvSeleccionado = pdv;
+  }
+
+  selectColaborador(colaborador: Colaborador) {
+    this.entradaSalidaForm.patchValue({
+      colaborador: colaborador.nombre,
+      // Limpiamos los otros campos que podrían tener dirección
+      otroOrigenDestino: '',
+    });
+
+    this.colaboradorSeleccionado = colaborador;
   }
 
   selectVisual(i: number, visual: Producto) {
@@ -742,9 +833,95 @@ export class FormularioEntradaSalidaComponent
     }, 200);
   }
 
-  // Método para manejar cambio de estado (llamado desde template)
+  // Modificar el método onEstadoChange para incluir la división automática
   override onEstadoChange(index: number) {
     super.onEstadoChange(index);
+
+    // Solo ejecutar si el estado cambió realmente
+    const estadoControl = this.productosControls.at(index).get('estado');
+    if (estadoControl?.dirty) {
+      setTimeout(() => {
+        this.dividirUnidadesAutomaticamente(index);
+      }, 100);
+    }
+  }
+
+  // Método que se ejecute cuando se cambian las unidades
+  onUnidadesBlur(index: number) {
+    // Ejecutar la división automática que ya incluye deshacer divisiones anteriores
+    this.dividirUnidadesAutomaticamente(index);
+  }
+
+  // Método para verificar si hay líneas con la misma referencia y estado
+  private hayLineasConMismaReferenciaYEstado(index: number): boolean {
+    const productoActual = this.productosControls.at(index);
+    const refActual = productoActual.get('ref')?.value;
+    const estadoActual = productoActual.get('estado')?.value;
+
+    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
+      return false;
+    }
+
+    for (let i = 0; i < this.productosControls.length; i++) {
+      if (i === index) continue;
+
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value;
+      const estado = control.get('estado')?.value;
+
+      if (ref === refActual && estado === estadoActual) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Método para obtener el total de unidades disponibles para dividir
+  private getTotalUnidadesDisponibles(
+    refActual: string,
+    estadoActual: string,
+    indexExcluir: number
+  ): number {
+    let total = 0;
+
+    for (let i = 0; i < this.productosControls.length; i++) {
+      if (i === indexExcluir) continue;
+
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value;
+      const estado = control.get('estado')?.value;
+      const unidades = control.get('unidades')?.value || 0;
+
+      if (ref === refActual && estado === estadoActual) {
+        total += unidades;
+      }
+    }
+
+    return total;
+  }
+
+  // Método para mostrar información sobre la división en tiempo real
+  mostrarInfoDivision(index: number): string {
+    const productoActual = this.productosControls.at(index);
+    const refActual = productoActual.get('ref')?.value;
+    const estadoActual = productoActual.get('estado')?.value;
+
+    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
+      return '';
+    }
+
+    const totalDisponible = this.getTotalUnidadesDisponibles(
+      refActual,
+      estadoActual,
+      index
+    );
+
+    if (totalDisponible > 0 && this.hayLineasConMismaReferenciaYEstado(index)) {
+      return `${totalDisponible} unidades disponibles para dividir`;
+    }
+
+    return '';
   }
 
   // Método para obtener estados disponibles (llamado desde template)
@@ -824,5 +1001,241 @@ export class FormularioEntradaSalidaComponent
     setTimeout(() => {
       this.cdr.detectChanges();
     }, 500);
+  }
+
+  // Método para dividir unidades automáticamente
+  private dividirUnidadesAutomaticamente(index: number) {
+    const productoActual = this.productosControls.at(index);
+    const refActual = productoActual.get('ref')?.value;
+    const estadoActual = productoActual.get('estado')?.value;
+    const unidadesActuales = productoActual.get('unidades')?.value || 0;
+
+    // Solo procesar si es un producto normal (no especial) y tiene referencia y estado
+    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
+      return;
+    }
+
+    // Si hay una división previa para esta línea, deshacerla primero
+    this.deshacerDivisionAnterior(index);
+
+    // Si las unidades son 0 o menores, no hacer nada más
+    if (unidadesActuales <= 0) {
+      return;
+    }
+
+    // Verificar si ya se ha procesado esta división para evitar múltiples ejecuciones
+    if (this.yaSeProcesoLinea(index)) {
+      return;
+    }
+
+    // Buscar la primera línea con la misma referencia y estado que tenga más unidades
+    let lineaOrigenIndex = -1;
+    let maxUnidades = 0;
+
+    for (let i = 0; i < this.productosControls.length; i++) {
+      if (i === index) continue; // Saltar la línea actual
+
+      const control = this.productosControls.at(i);
+      const ref = control.get('ref')?.value;
+      const estado = control.get('estado')?.value;
+      const unidades = control.get('unidades')?.value || 0;
+
+      if (
+        ref === refActual &&
+        estado === estadoActual &&
+        unidades > maxUnidades
+      ) {
+        lineaOrigenIndex = i;
+        maxUnidades = unidades;
+      }
+    }
+
+    // Si encontramos una línea origen con suficientes unidades
+    if (lineaOrigenIndex !== -1 && maxUnidades >= unidadesActuales) {
+      const lineaOrigen = this.productosControls.at(lineaOrigenIndex);
+      const nuevasUnidadesOrigen = maxUnidades - unidadesActuales;
+
+      // Marcar como procesada antes de actualizar para evitar bucles
+      this.marcarLineaComoProcesada(index);
+
+      // Registrar la división para poder deshacerla después
+      this.divisionesRealizadas.set(index, {
+        lineaOrigen: lineaOrigenIndex,
+        unidadesDivididas: unidadesActuales,
+        refProducto: refActual,
+        estadoProducto: estadoActual,
+      });
+
+      // Actualizar las unidades de la línea origen
+      lineaOrigen.get('unidades')?.setValue(nuevasUnidadesOrigen);
+
+      // Mostrar mensaje informativo
+      this.snackBarExito(
+        `Se dividieron ${unidadesActuales} unidades de ${refActual} (${estadoActual}) desde la línea ${
+          lineaOrigenIndex + 1
+        }`
+      );
+
+      console.log(
+        `División automática: ${unidadesActuales} unidades movidas de línea ${
+          lineaOrigenIndex + 1
+        } a línea ${index + 1}`
+      );
+
+      // Limpiar la marca después de un breve delay
+      setTimeout(() => {
+        this.limpiarMarcaProcesada(index);
+      }, 1000);
+    }
+  }
+
+  private lineasProcesadas = new Set<number>();
+
+  private yaSeProcesoLinea(index: number): boolean {
+    return this.lineasProcesadas.has(index);
+  }
+
+  private marcarLineaComoProcesada(index: number) {
+    this.lineasProcesadas.add(index);
+  }
+
+  private limpiarMarcaProcesada(index: number) {
+    this.lineasProcesadas.delete(index);
+  }
+
+  // Limpiar las marcas al agregar o eliminar productos
+  override agregarProducto() {
+    super.agregarProducto();
+    // Limpiar marcas ya que los índices pueden haber cambiado
+    this.lineasProcesadas.clear();
+  }
+
+  override eliminarProducto(index: number) {
+    // Deshacer la división si existe antes de eliminar
+    this.deshacerDivisionAnterior(index);
+
+    // Actualizar los índices de las divisiones existentes
+    const divisionesActualizadas = new Map<number, any>();
+
+    this.divisionesRealizadas.forEach((division, lineaIndex) => {
+      if (lineaIndex > index) {
+        // Decrementar el índice de las líneas posteriores
+        divisionesActualizadas.set(lineaIndex - 1, {
+          ...division,
+          lineaOrigen:
+            division.lineaOrigen > index
+              ? division.lineaOrigen - 1
+              : division.lineaOrigen,
+        });
+      } else if (lineaIndex < index) {
+        // Mantener las líneas anteriores pero actualizar lineaOrigen si es necesario
+        divisionesActualizadas.set(lineaIndex, {
+          ...division,
+          lineaOrigen:
+            division.lineaOrigen > index
+              ? division.lineaOrigen - 1
+              : division.lineaOrigen,
+        });
+      }
+      // No agregar la línea que se está eliminando (lineaIndex === index)
+    });
+
+    this.divisionesRealizadas = divisionesActualizadas;
+
+    // Llamar al método padre
+    super.eliminarProducto(index);
+
+    // Limpiar marcas ya que los índices pueden haber cambiado
+    this.lineasProcesadas.clear();
+  }
+
+  private limpiarTodasLasDivisiones() {
+    this.divisionesRealizadas.clear();
+    this.lineasProcesadas.clear();
+  }
+
+  override resetForm() {
+    this.limpiarTodasLasDivisiones();
+    super.resetForm();
+  }
+
+  // Estructura para rastrear las divisiones realizadas
+  private divisionesRealizadas = new Map<
+    number,
+    {
+      lineaOrigen: number;
+      unidadesDivididas: number;
+      refProducto: string;
+      estadoProducto: string;
+    }
+  >();
+
+  // Nuevo método para deshacer divisiones anteriores
+  private deshacerDivisionAnterior(index: number) {
+    const divisionAnterior = this.divisionesRealizadas.get(index);
+
+    if (divisionAnterior) {
+      // Verificar que la línea origen aún existe
+      if (divisionAnterior.lineaOrigen < this.productosControls.length) {
+        const lineaOrigen = this.productosControls.at(
+          divisionAnterior.lineaOrigen
+        );
+        const refOrigen = lineaOrigen.get('ref')?.value;
+        const estadoOrigen = lineaOrigen.get('estado')?.value;
+
+        // Verificar que sigue siendo el mismo producto
+        if (
+          refOrigen === divisionAnterior.refProducto &&
+          estadoOrigen === divisionAnterior.estadoProducto
+        ) {
+          const unidadesActualesOrigen =
+            lineaOrigen.get('unidades')?.value || 0;
+          const nuevasUnidadesOrigen =
+            unidadesActualesOrigen + divisionAnterior.unidadesDivididas;
+
+          // Devolver las unidades a la línea origen
+          lineaOrigen.get('unidades')?.setValue(nuevasUnidadesOrigen);
+
+          console.log(
+            `División deshecha: ${
+              divisionAnterior.unidadesDivididas
+            } unidades devueltas a línea ${divisionAnterior.lineaOrigen + 1}`
+          );
+        }
+      }
+
+      // Eliminar el registro de la división
+      this.divisionesRealizadas.delete(index);
+    }
+  }
+
+  // Método para mostrar información más detallada sobre divisiones
+  mostrarInfoDivisionDetallada(index: number): string {
+    const productoActual = this.productosControls.at(index);
+    const refActual = productoActual.get('ref')?.value;
+    const estadoActual = productoActual.get('estado')?.value;
+
+    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
+      return '';
+    }
+
+    const division = this.divisionesRealizadas.get(index);
+    if (division) {
+      return `${division.unidadesDivididas} unidades tomadas de línea ${
+        division.lineaOrigen + 1
+      }`;
+    }
+
+    const totalDisponible = this.getTotalUnidadesDisponibles(
+      refActual,
+      estadoActual,
+      index
+    );
+
+    if (totalDisponible > 0 && this.hayLineasConMismaReferenciaYEstado(index)) {
+      return `${totalDisponible} unidades disponibles para dividir`;
+    }
+
+    return '';
   }
 }
