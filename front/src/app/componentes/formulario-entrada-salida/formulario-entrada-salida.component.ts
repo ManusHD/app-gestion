@@ -28,6 +28,8 @@ export class FormularioEntradaSalidaComponent
   activeRowIndex: number | null = null;
   activeCampoUnico: string | null = null;
 
+  private isTabbing: boolean = false;
+
   @ViewChild('observaciones', { static: false })
   observacionesInput!: ElementRef;
 
@@ -106,6 +108,7 @@ export class FormularioEntradaSalidaComponent
           this.limpiarCamposDireccion();
           // this.perfumerias = [];
           this.entradaSalidaForm.get('pdv')!.setValue('');
+          this.pdvs = [];
           this.perfumeriaSeleccionada = null;
           this.pdvSeleccionado = null;
           this.cargarPerfumerias('a');
@@ -124,7 +127,7 @@ export class FormularioEntradaSalidaComponent
           this.limpiarCamposDireccion();
           // this.perfumerias = [];
           this.colaboradorSeleccionado = null;
-          if(!nombrePerfumeria) {
+          if (!nombrePerfumeria) {
             this.cargarColaboradores();
           }
         } else {
@@ -142,7 +145,7 @@ export class FormularioEntradaSalidaComponent
           this.limpiarCamposDireccion();
           // this.perfumerias = [];
           this.pdvSeleccionado = null;
-          if(nombrePerfumeria) {
+          if (nombrePerfumeria) {
             this.cargarPDVs();
           }
         } else {
@@ -174,6 +177,113 @@ export class FormularioEntradaSalidaComponent
   ngOnDestroy() {
     this.entradaSalidaForm.reset();
     this.salidaUbicacionService.resetProductos();
+  }
+
+  onEnterKey(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+
+    // Detectar si se presionó Tab
+    if (event.key === 'Tab') {
+      this.isTabbing = true;
+      // No prevenir el comportamiento por defecto del Tab
+      return;
+    }
+
+    // Si estamos en un campo con dropdown y hay opciones, seleccionar la primera
+    if (event.key === 'Enter') {
+      let handled = false;
+
+      if (
+        this.activeCampoUnico === 'perfumeria' &&
+        this.perfumerias.length > 0 &&
+        !this.perfumeriaSeleccionada
+      ) {
+        event.preventDefault();
+        this.selectPerfumeria(this.perfumerias[0]);
+        handled = true;
+      } else if (
+        this.activeCampoUnico === 'pdv' &&
+        this.pdvs.length > 0 &&
+        !this.pdvSeleccionado
+      ) {
+        event.preventDefault();
+        this.selectPdv(this.pdvs[0]);
+        handled = true;
+      } else if (
+        this.activeCampoUnico === 'colaborador' &&
+        this.colaboradores.length > 0 &&
+        !this.colaboradorSeleccionado
+      ) {
+        event.preventDefault();
+        this.selectColaborador(this.colaboradores[0]);
+        handled = true;
+      } else if (
+        this.activeCampoUnico === 'otroOrigenDestino' &&
+        this.otrasDirecciones.length > 0 &&
+        !this.otraDireccionSeleccionada
+      ) {
+        event.preventDefault();
+        this.selectOtraDireccion(this.otrasDirecciones[0]);
+        handled = true;
+      }
+
+      if (handled) {
+        // Pasar al siguiente campo después de seleccionar
+        setTimeout(() => {
+          this.focusNextElement(target);
+        }, 100);
+        return;
+      } else {
+        // Comportamiento normal del Enter
+        event.preventDefault();
+        this.focusNextElement(target);
+      }
+    }
+
+    if (event.ctrlKey && event.key === '+') {
+      event.preventDefault();
+      this.agregarProducto();
+    }
+  }
+
+  // Agregar método específico para cuando se hace click en el campo
+  onFieldClick(campo: string): void {
+    this.activeCampoUnico = campo;
+    // Cargar opciones inmediatamente si hay texto
+    this.loadOptionsForActiveField();
+  }
+
+  // Método para limpiar cuando se pierde el foco por click fuera
+  onFieldBlur(event: FocusEvent): void {
+    // Verificar si el siguiente elemento enfocado es parte del dropdown
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    if (
+      relatedTarget &&
+      relatedTarget.classList.contains('autocomplete-item')
+    ) {
+      return; // No limpiar si se hizo click en una opción del dropdown
+    }
+
+    this.clearActiveCampoUnico();
+  }
+
+  // Método auxiliar para enfocar el siguiente elemento
+  private focusNextElement(currentElement: HTMLElement): void {
+    const inputs = Array.from(
+      document.querySelectorAll<HTMLElement>('input, select, textarea, button')
+    );
+    const index = inputs.indexOf(currentElement);
+
+    if (index >= 0 && index < inputs.length - 1) {
+      const nextElement = inputs[index + 1];
+
+      // Si el siguiente elemento es el botón de añadir línea, ejecuta la función
+      if (nextElement.classList.contains('add-producto')) {
+        this.agregarProducto();
+      } else {
+        nextElement.focus();
+      }
+    }
   }
 
   cargarEstados() {
@@ -256,15 +366,15 @@ export class FormularioEntradaSalidaComponent
 
   cargarColaboradoresActivosByNombre(nombre: string) {
     this.direccionesService
-    .getColaboradoresActivosByNombrePaginado(
-      nombre,
-      this.pageIndex,
-      this.pageSize
-    )
-    .subscribe({
-      next: (data) => {
-        this.colaboradores = data.content;
-        console.log(this.colaboradores);
+      .getColaboradoresActivosByNombrePaginado(
+        nombre,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe({
+        next: (data) => {
+          this.colaboradores = data.content;
+          console.log(this.colaboradores);
         },
         error: (error) => {
           console.error('Error al obtener colaboradores', error);
@@ -659,8 +769,10 @@ export class FormularioEntradaSalidaComponent
       });
 
       // Si el PDV tiene un colaborador asociado, rellenar también el campo colaborador
-      if (pdvSeleccionado.colaborador ) {
-        this.cargarColaboradoresActivosByNombre(pdvSeleccionado.colaborador.nombre!);
+      if (pdvSeleccionado.colaborador) {
+        this.cargarColaboradoresActivosByNombre(
+          pdvSeleccionado.colaborador.nombre!
+        );
       }
     }
   }
@@ -700,10 +812,47 @@ export class FormularioEntradaSalidaComponent
   }
 
   // Método para seleccionar una dirección
+  selectPerfumeria(perfumeria: Perfumeria) {
+    this.entradaSalidaForm.patchValue({
+      perfumeria: perfumeria.nombre,
+      otroOrigenDestino: '',
+      colaborador: '',
+    });
+
+    this.perfumeriaSeleccionada = perfumeria;
+    this.cargarPDVPerfumeria(perfumeria.nombre!);
+
+    // Limpiar el dropdown inmediatamente
+    this.activeCampoUnico = null;
+    this.perfumerias = []; // Limpiar la lista para ocultar el dropdown
+  }
+
+  selectPdv(pdv: PDV) {
+    this.entradaSalidaForm.patchValue({
+      pdv: pdv.nombre,
+      otroOrigenDestino: '',
+      colaborador: '',
+    });
+
+    this.pdvSeleccionado = pdv;
+    this.activeCampoUnico = null;
+    this.pdvs = []; // Limpiar la lista
+  }
+
+  selectColaborador(colaborador: Colaborador) {
+    this.entradaSalidaForm.patchValue({
+      colaborador: colaborador.nombre,
+      otroOrigenDestino: '',
+    });
+
+    this.colaboradorSeleccionado = colaborador;
+    this.activeCampoUnico = null;
+    this.colaboradores = []; // Limpiar la lista
+  }
+
   selectOtraDireccion(direccion: OtraDireccion) {
     this.entradaSalidaForm.patchValue({
       otroOrigenDestino: direccion.nombre,
-      // Limpiamos los otros campos que podrían tener dirección
       colaborador: '',
     });
 
@@ -718,41 +867,8 @@ export class FormularioEntradaSalidaComponent
     }
 
     this.otraDireccionSeleccionada = direccion;
-  }
-
-  // Método para seleccionar una dirección
-  selectPerfumeria(perfumeria: Perfumeria) {
-    this.entradaSalidaForm.patchValue({
-      perfumeria: perfumeria.nombre,
-      // Limpiamos los otros campos que podrían tener dirección
-      otroOrigenDestino: '',
-      colaborador: '',
-    });
-
-    this.perfumeriaSeleccionada = perfumeria;
-
-    this.cargarPDVPerfumeria(perfumeria.nombre!);
-  }
-
-  selectPdv(pdv: PDV) {
-    this.entradaSalidaForm.patchValue({
-      pdv: pdv.nombre,
-      // Limpiamos los otros campos que podrían tener dirección
-      otroOrigenDestino: '',
-      colaborador: '',
-    });
-
-    this.pdvSeleccionado = pdv;
-  }
-
-  selectColaborador(colaborador: Colaborador) {
-    this.entradaSalidaForm.patchValue({
-      colaborador: colaborador.nombre,
-      // Limpiamos los otros campos que podrían tener dirección
-      otroOrigenDestino: '',
-    });
-
-    this.colaboradorSeleccionado = colaborador;
+    this.activeCampoUnico = null;
+    this.otrasDirecciones = []; // Limpiar la lista
   }
 
   selectVisual(i: number, visual: Producto) {
@@ -825,12 +941,57 @@ export class FormularioEntradaSalidaComponent
 
   setActiveCampoUnico(campo: string): void {
     this.activeCampoUnico = campo;
+    // Si llegamos aquí por Tab y el campo tiene valor, cargar las opciones
+    if (this.isTabbing) {
+      setTimeout(() => {
+        console.log('Activamos campo único:', campo);
+        this.loadOptionsForActiveField();
+        this.isTabbing = false; // Reset el flag
+      }, 200);
+    }
   }
 
   clearActiveCampoUnico(): void {
     setTimeout(() => {
+      console.log('Desactivamos campo único');
       this.activeCampoUnico = null;
-    }, 200);
+    }, 50);
+  }
+
+  // Nuevo método para cargar opciones del campo activo
+  private loadOptionsForActiveField(): void {
+    if (!this.activeCampoUnico) return;
+
+    const valorActual = this.entradaSalidaForm.get(
+      this.activeCampoUnico
+    )?.value;
+    if (!valorActual || valorActual.trim() === '') return;
+
+    switch (this.activeCampoUnico) {
+      case 'perfumeria':
+        if (!this.perfumeriaSeleccionada) {
+          this.cargarPerfumerias(valorActual);
+        }
+        break;
+      case 'pdv':
+        if (!this.pdvSeleccionado) {
+          const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+          if (perfumeria) {
+            this.cargarPDVsPerfumeriaByNombre(perfumeria, valorActual);
+          }
+        }
+        break;
+      case 'colaborador':
+        if (!this.colaboradorSeleccionado) {
+          this.cargarColaboradoresActivosByNombre(valorActual);
+        }
+        break;
+      case 'otroOrigenDestino':
+        if (!this.otraDireccionSeleccionada) {
+          this.cargarOtrasDirecciones(valorActual);
+        }
+        break;
+    }
   }
 
   // Modificar el método onEstadoChange para incluir la división automática

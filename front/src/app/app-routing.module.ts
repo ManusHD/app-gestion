@@ -59,3 +59,11 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
+
+// Ahora necesito crear una nueva sección, la cual será para los trabajos de manipulación.
+
+// Debe tener un formulario y estructura similar a las entradas, de ahí a que te haya puesto de ejemplo las entradas y el formulario usado en entradas y salidas, pero con algunas modificaciones, por lo que podrías crear uno nuevo si lo ves más convincente.
+
+// Tendrá 3 subsecciones (a diferencia de las entradas que sólo tiene 3), las cuales serán para una crear la previsión, otra para modificar los trabajos previstos (y actualizarlos) y otra con el historial de trabajos hechos.
+
+// Este nuevo formulario tendrá los siguientes campos: FECHA, CONCEPTO, DIRECCIÓN (puede ser un PDV [PDV + PERFUMERIA] u Otro Origen, pero con las direcciones rellenas como se haría en salidas), HORAS, IMPORTE (debe ser modificable de algún modo, por si en el futuro cambia, actualmente es de 25€/hora) y OBSERVACIONES.

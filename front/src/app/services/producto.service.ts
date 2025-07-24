@@ -30,12 +30,19 @@ export class ProductoServices {
 
   // Nuevo método para obtener estados disponibles
   getEstadosDisponiblesPorReferencia(referencia: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/referencia/${referencia}/estados`);
+    return this.http.get<string[]>(
+      `${this.apiUrl}/referencia/${referencia}/estados`
+    );
   }
-  
+
   // Nuevo método para obtener producto específico por referencia y estado
-  getProductoPorReferenciaYEstado(referencia: string, estado: string): Observable<Producto> {
-    return this.http.get<Producto>(`${this.apiUrl}/referencia/${referencia}/estado/${estado}`);
+  getProductoPorReferenciaYEstado(
+    referencia: string,
+    estado: string
+  ): Observable<Producto> {
+    return this.http.get<Producto>(
+      `${this.apiUrl}/referencia/${referencia}/estado/${estado}`
+    );
   }
 
   getVisualesPaginado(page: number, size: number): Observable<any> {
@@ -95,13 +102,40 @@ export class ProductoServices {
       `${this.apiUrl}/referencia/${referencia}/buscar/paginado?page=${page}&size=${size}`
     );
   }
-  
+
   getProductosPorDescripcion(descripcion: String): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/description/${descripcion}`);
   }
 
   getProductosPorReferencia(referencia: String): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/referencia/${referencia}/buscar`);
+  }
+
+  // En producto.service.ts - Nuevos métodos
+  getProductosUnicosPaginado(page: number, size: number): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/uniqueProducts?page=${page}&size=${size}`
+    );
+  }
+
+  getProductosUnicosPorReferenciaPaginado(
+    referencia: string,
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/uniqueProducts/referencia/${referencia}?page=${page}&size=${size}`
+    );
+  }
+
+  getProductosUnicosPorDescripcionPaginado(
+    descripcion: string,
+    page: number,
+    size: number
+  ): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/uniqueProducts/descripcion/${descripcion}?page=${page}&size=${size}`
+    );
   }
 
   postProducto(producto: Producto): Observable<Producto> {
@@ -139,8 +173,12 @@ export class ProductoServices {
   }
 
   sincronizarProductosDesdeUbicaciones(): Observable<string> {
-    return this.http.post(`${this.apiUrl}/sincronizar-desde-ubicaciones`, {}, {
-      responseType: 'text'
-    });
+    return this.http.post(
+      `${this.apiUrl}/sincronizar-desde-ubicaciones`,
+      {},
+      {
+        responseType: 'text',
+      }
+    );
   }
 }

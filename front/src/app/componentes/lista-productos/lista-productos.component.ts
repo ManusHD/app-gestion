@@ -106,64 +106,52 @@ export class ListaProductosComponent implements OnInit {
   }
 
   buscarProductos() {
-    this.carga.show();
-    if (!this.buscando) {
-      this.pageIndex = 0;
-    }
-    this.buscando = true;
-
-    if (this.tipoBusqueda === 'referencias') {
-      this.productoService
-        .getProductosPorReferenciaPaginado(
-          this.buscador,
-          this.pageIndex,
-          this.pageSize
-        )
-        .subscribe(
-          (data) => {
-            this.productos = data.content;
-            this.agruparProductos(); // AGREGAR AQUÍ
-            setTimeout(() => {
-              this.totalElementos = data.totalElements;
-            });
-            this.dataSourceStock.data = this.productosAgrupados; // CAMBIAR AQUÍ
-            setTimeout(() => {
-              this.carga.hide();
-            });
-          },
-          () => {
-            setTimeout(() => {
-              this.carga.hide();
-            });
-          }
-        );
-    } else if (this.tipoBusqueda === 'descripciones') {
-      this.productoService
-        .getProductosPorDescripcionPaginado(
-          this.buscador,
-          this.pageIndex,
-          this.pageSize
-        )
-        .subscribe(
-          (data) => {
-            this.productos = data.content;
-            this.agruparProductos(); // AGREGAR AQUÍ
-            setTimeout(() => {
-              this.totalElementos = data.totalElements;
-            });
-            this.dataSourceStock.data = this.productosAgrupados; // CAMBIAR AQUÍ
-            setTimeout(() => {
-              this.carga.hide();
-            });
-          },
-          () => {
-            setTimeout(() => {
-              this.carga.hide();
-            });
-          }
-        );
-    }
+  this.carga.show();
+  if (!this.buscando) {
+    this.pageIndex = 0;
   }
+  this.buscando = true;
+
+  if (this.tipoBusqueda === 'referencias') {
+    this.productoService
+      .getProductosUnicosPorReferenciaPaginado(
+        this.buscador,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe(
+        (data) => {
+          this.productos = data.content;
+          this.agruparProductos();
+          this.totalElementos = data.totalElements;
+          this.dataSourceStock.data = this.productosAgrupados;
+          this.carga.hide();
+        },
+        () => {
+          this.carga.hide();
+        }
+      );
+  } else if (this.tipoBusqueda === 'descripciones') {
+    this.productoService
+      .getProductosUnicosPorDescripcionPaginado(
+        this.buscador,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe(
+        (data) => {
+          this.productos = data.content;
+          this.agruparProductos();
+          this.totalElementos = data.totalElements;
+          this.dataSourceStock.data = this.productosAgrupados;
+          this.carga.hide();
+        },
+        () => {
+          this.carga.hide();
+        }
+      );
+  }
+}
 
   cargarEstados() {
     this.estadoService.getEstados().subscribe(
@@ -177,28 +165,22 @@ export class ListaProductosComponent implements OnInit {
   }
 
   cargarProductos() {
-    this.carga.show();
-    this.productoService
-      .getProductosPaginado(this.pageIndex, this.pageSize)
-      .subscribe(
-        (data) => {
-          this.productos = data.content;
-          this.agruparProductos();
-          setTimeout(() => {
-            this.totalElementos = data.totalElements;
-          });
-          this.dataSourceStock.data = this.productosAgrupados;
-          setTimeout(() => {
-            this.carga.hide();
-          });
-        },
-        () => {
-          setTimeout(() => {
-            this.carga.hide();
-          });
-        }
-      );
-  }
+  this.carga.show();
+  this.productoService
+    .getProductosUnicosPaginado(this.pageIndex, this.pageSize)
+    .subscribe(
+      (data) => {
+        this.productos = data.content;
+        this.agruparProductos();
+        this.totalElementos = data.totalElements; // Ahora es correcto
+        this.dataSourceStock.data = this.productosAgrupados;
+        this.carga.hide();
+      },
+      () => {
+        this.carga.hide();
+      }
+    );
+}
 
   agruparProductos() {
     const grupos = new Map<string, ProductoAgrupado>();
@@ -437,11 +419,6 @@ export class ListaProductosComponent implements OnInit {
     }
   }
 
-  // Función helper para formatear estados
-  formatearEstado(estado: string | null | undefined): string {
-    return estado || 'SIN ESTADO';
-  }
-
   get hayEspeciales(): boolean {
       return Array.isArray(this.productosAgrupados) && this.productosAgrupados.some(g => g && g.esEspecial);
   }
@@ -471,4 +448,54 @@ export class ListaProductosComponent implements OnInit {
       });
     }
   }
+
+  // Obtener la clase CSS según el estado
+getEstadoClass(estado: string | null | undefined): string {
+  if (!estado || estado.trim() === '') {
+    return 'sin-estado';
+  }
+  
+  const estadoLower = estado.toLowerCase().trim();
+  
+  // Mapear estados comunes a clases CSS
+  switch (estadoLower) {
+    case 'nuevo':
+    case 'nuevos':
+      return 'nuevo';
+    case 'usado':
+    case 'usados':
+    case 'segunda mano':
+      return 'usado';
+    case 'defectuoso':
+    case 'defectuosos':
+    case 'roto':
+    case 'rotos':
+      return 'defectuoso';
+    case 'reparado':
+    case 'reparados':
+    case 'restaurado':
+      return 'reparado';
+    default:
+      return 'default';
+  }
+}
+
+// Obtener tooltip para estados adicionales
+getMasEstadosTooltip(productosRestantes: any[]): string {
+  return productosRestantes.map(p => 
+    `${this.formatearEstado(p.estado)}: ${p.stock}`
+  ).join('\n');
+}
+
+// El método formatearEstado ya existe, pero lo mejoramos
+formatearEstado(estado: string | null | undefined): string {
+  if (!estado || estado.trim() === '') {
+    return 'SIN ESTADO';
+  }
+  
+  // Capitalizar primera letra de cada palabra
+  return estado.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
 }

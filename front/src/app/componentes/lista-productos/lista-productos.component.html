@@ -68,9 +68,13 @@
                 <th class="header-paginator" mat-header-cell *matHeaderCellDef> Estados </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let grupo">
                     <div *ngIf="!grupo.expanded">
-                        <span *ngFor="let producto of grupo.productos">
-                            {{ formatearEstado(producto.estado) }}: {{ producto.stock }}
-                        </span>
+                        <div class="estados-container" [ngClass]="{'many-states': grupo.productos.length > 4}">
+                            <span *ngFor="let producto of grupo.productos; let last = last">
+                                <span class="estado-badge" 
+                                    [ngClass]="{'sin-estado': !producto.estado || producto.estado.trim() === ''}">
+                                    {{ formatearEstado(producto.estado) }}: {{ producto.stock }}</span>
+                            </span>
+                        </div>
                     </div>
                 </td>
             </ng-container>

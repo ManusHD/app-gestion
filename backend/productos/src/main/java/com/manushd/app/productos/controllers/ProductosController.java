@@ -6,8 +6,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -940,6 +942,200 @@ public class ProductosController {
                     .body("Error durante la sincronización: " + e.getMessage());
         }
     }
+
+    @GetMapping("/uniqueProducts")
+public ResponseEntity<Map<String, Object>> getUniqueProductsPaginado(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+    try {
+        // PASO 1: Obtener TODOS los productos para calcular correctamente el total único
+        Iterable<Producto> todosLosProductos = productosRepository.findProductosNormalesOrderByReferenciaAndEstado();
+        
+        // PASO 2: Agrupar por clave única manteniendo el orden por referencia
+        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>(); // LinkedHashMap mantiene el orden
+        
+        for (Producto producto : todosLosProductos) {
+            String clave;
+            if (esProductoEspecial(producto.getReferencia())) {
+                clave = producto.getReferencia() + "_" + producto.getDescription();
+            } else {
+                clave = producto.getReferencia();
+            }
+            
+            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+        }
+        
+        // PASO 3: Obtener las claves ordenadas (ya están ordenadas por LinkedHashMap)
+        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+        int totalProductosUnicos = clavesOrdenadas.size();
+        
+        // PASO 4: Aplicar paginación sobre los productos únicos
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+        
+        List<Producto> productosParaPagina = new ArrayList<>();
+        
+        if (startIndex < totalProductosUnicos) {
+            for (int i = startIndex; i < endIndex; i++) {
+                String clave = clavesOrdenadas.get(i);
+                List<Producto> grupoProductos = productosAgrupados.get(clave);
+                
+                // Ordenar el grupo por estado antes de agregarlo
+                grupoProductos.sort((p1, p2) -> {
+                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                    return estado1.compareTo(estado2);
+                });
+                
+                productosParaPagina.addAll(grupoProductos);
+            }
+        }
+        
+        // PASO 5: Preparar respuesta con datos correctos
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", productosParaPagina);
+        response.put("totalElements", totalProductosUnicos); // Total de productos únicos (CORREGIDO)
+        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+        response.put("size", size);
+        response.put("number", page);
+        response.put("first", page == 0);
+        response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        System.err.println("Error en getUniqueProductsPaginado: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
+// Método similar para búsquedas por referencia
+@GetMapping("/uniqueProducts/referencia/{referencia}")
+public ResponseEntity<Map<String, Object>> getUniqueProductsPorReferenciaPaginado(
+        @PathVariable String referencia,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+    try {
+        // Obtener todos los productos que coincidan con la búsqueda
+        Iterable<Producto> todosLosProductos = productosRepository.findByReferenciaContainingIgnoreCaseOrderByReferenciaAsc(referencia);
+        
+        // Agrupar manteniendo orden
+        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
+        
+        for (Producto producto : todosLosProductos) {
+            String clave;
+            if (esProductoEspecial(producto.getReferencia())) {
+                clave = producto.getReferencia() + "_" + producto.getDescription();
+            } else {
+                clave = producto.getReferencia();
+            }
+            
+            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+        }
+        
+        // Aplicar paginación
+        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+        int totalProductosUnicos = clavesOrdenadas.size();
+        
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+        
+        List<Producto> productosParaPagina = new ArrayList<>();
+        
+        if (startIndex < totalProductosUnicos) {
+            for (int i = startIndex; i < endIndex; i++) {
+                String clave = clavesOrdenadas.get(i);
+                List<Producto> grupoProductos = productosAgrupados.get(clave);
+                
+                grupoProductos.sort((p1, p2) -> {
+                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                    return estado1.compareTo(estado2);
+                });
+                
+                productosParaPagina.addAll(grupoProductos);
+            }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", productosParaPagina);
+        response.put("totalElements", totalProductosUnicos);
+        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+        response.put("size", size);
+        response.put("number", page);
+        response.put("first", page == 0);
+        response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        System.err.println("Error en búsqueda por referencia: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
+
+// Método similar para búsquedas por descripción
+@GetMapping("/uniqueProducts/descripcion/{descripcion}")
+public ResponseEntity<Map<String, Object>> getUniqueProductsPorDescripcionPaginado(
+        @PathVariable String descripcion,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+    
+    try {
+        Iterable<Producto> todosLosProductos = productosRepository.findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(descripcion);
+        
+        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
+        
+        for (Producto producto : todosLosProductos) {
+            String clave;
+            if (esProductoEspecial(producto.getReferencia())) {
+                clave = producto.getReferencia() + "_" + producto.getDescription();
+            } else {
+                clave = producto.getReferencia();
+            }
+            
+            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+        }
+        
+        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+        int totalProductosUnicos = clavesOrdenadas.size();
+        
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+        
+        List<Producto> productosParaPagina = new ArrayList<>();
+        
+        if (startIndex < totalProductosUnicos) {
+            for (int i = startIndex; i < endIndex; i++) {
+                String clave = clavesOrdenadas.get(i);
+                List<Producto> grupoProductos = productosAgrupados.get(clave);
+                
+                grupoProductos.sort((p1, p2) -> {
+                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                    return estado1.compareTo(estado2);
+                });
+                
+                productosParaPagina.addAll(grupoProductos);
+            }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", productosParaPagina);
+        response.put("totalElements", totalProductosUnicos);
+        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+        response.put("size", size);
+        response.put("number", page);
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+}
 
     // Método auxiliar para identificar productos especiales
     private boolean esProductoEspecial(String referencia) {

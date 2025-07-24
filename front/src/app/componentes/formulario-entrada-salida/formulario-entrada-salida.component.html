@@ -17,64 +17,66 @@
                 </div>
 
                 <div class="direcciones">
+                    <!-- Perfumería -->
                     <div class="campo-form">
                         <label>PERFUMERÍA</label>
-                        <input (focus)="setActiveCampoUnico('perfumeria')" (blur)="clearActiveCampoUnico()" formControlName="perfumeria" type="text"
+                        <input (focus)="setActiveCampoUnico('perfumeria')" formControlName="perfumeria" type="text"
                             [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
                         <div class="autocomplete-container">
                             <div class="autocomplete-dropdown"
                                 *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada && activeCampoUnico == 'perfumeria'">
-                                <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias"
-                                    (click)="selectPerfumeria(perfumeria)">
+                                <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPerfumeria(perfumeria)">
                                     {{ perfumeria.nombre }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- PDV -->
                     <div class="campo-form">
                         <label>PDV</label>
-                        <input (focus)="setActiveCampoUnico('pdv')" (blur)="clearActiveCampoUnico()" 
-                        formControlName="pdv" type="text"
-                        [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
+                        <input (focus)="setActiveCampoUnico('pdv')" formControlName="pdv" type="text"
+                            [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
                         <div class="autocomplete-container">
                             <div class="autocomplete-dropdown"
                                 *ngIf="pdvs.length > 0 && !pdvSeleccionado && activeCampoUnico == 'pdv'">
-                                <div class="autocomplete-item" *ngFor="let pdv of pdvs"
-                                    (click)="selectPdv(pdv)">
+                                <div class="autocomplete-item" *ngFor="let pdv of pdvs; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPdv(pdv)">
                                     {{ pdv.nombre }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Colaborador -->
                     <div class="campo-form">
                         <label>COLABORADOR</label>
-                        <input (focus)="setActiveCampoUnico('colaborador')" (blur)="clearActiveCampoUnico()" 
-                        formControlName="colaborador" type="text"
-                        [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}" />
+                        <input (focus)="setActiveCampoUnico('colaborador')" formControlName="colaborador" type="text"
+                            [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}" />
                         <div class="autocomplete-container">
                             <div class="autocomplete-dropdown"
                                 *ngIf="colaboradores.length > 0 && !colaboradorSeleccionado && activeCampoUnico == 'colaborador'">
-                                <div class="autocomplete-item" *ngFor="let colaborador of colaboradores"
-                                    (click)="selectColaborador(colaborador)">
+                                <div class="autocomplete-item" *ngFor="let colaborador of colaboradores; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectColaborador(colaborador)">
                                     {{ colaborador.nombre }}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Campos específicos de origen/destino -->
+                    <!-- Otros Orígenes/Destinos -->
                     <div class="campo-form">
                         <label *ngIf="currentPath.startsWith('/salidas')">OTROS DESTINOS</label>
                         <label *ngIf="currentPath.startsWith('/entradas')">OTROS ORIGENES</label>
                         <div class="autocomplete-container">
-                            <input (focus)="setActiveCampoUnico('otroOrigenDestino')" (blur)="clearActiveCampoUnico()" formControlName="otroOrigenDestino" type="text"
+                            <input (focus)="setActiveCampoUnico('otroOrigenDestino')" (blur)="clearActiveCampoUnico()"
+                                formControlName="otroOrigenDestino" type="text"
                                 [ngClass]="{'campo-vacio': !otroOrigenDestinoValido() && !previsionEsValidaCampoSimple()}" />
                             <div class="autocomplete-dropdown"
                                 *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada && activeCampoUnico == 'otroOrigenDestino'">
-                                <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones"
-                                    (click)="selectOtraDireccion(direccion)">
+                                <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectOtraDireccion(direccion)">
                                     {{ direccion.nombre }}
                                 </div>
                             </div>
@@ -84,9 +86,9 @@
 
                 <!-- Campos de dirección para salidas -->
                 <ng-container *ngIf="currentPath.startsWith('/salidas')">
-                    <div class="detalles-direcciones">
+                    <div class="detalles-direcciones" (click)="clearActiveCampoUnico()">
 
-                        <div class="campo-form ">
+                        <div class="campo-form " (focus)="clearActiveCampoUnico()">
                             <label>DIRECCIÓN</label>
                             <input formControlName="direccion" type="text" />
                         </div>
@@ -126,7 +128,7 @@
             </div>
 
             <!-- Tabla para campos repetitivos -->
-            <table>
+            <table (click)="clearActiveCampoUnico()">
                 <thead>
                     <tr>
                         <th>REFERENCIA</th>
@@ -192,10 +194,11 @@
                             </div>
                         </td>
                         <td>
-                            <select formControlName="estado" 
-                                    [ngClass]="{'campo-vacio': esEstadoRequerido(i) && campoVacio('estado', i)}"
-                                    (change)="onEstadoChange(i)">
-                                <option value="">{{ esEstadoRequerido(i) ? 'Seleccionar estado' : 'Sin estado' }}</option>
+                            <select formControlName="estado"
+                                [ngClass]="{'campo-vacio': esEstadoRequerido(i) && campoVacio('estado', i)}"
+                                (change)="onEstadoChange(i)">
+                                <option value="">{{ esEstadoRequerido(i) ? 'Seleccionar estado' : 'Sin estado' }}
+                                </option>
                                 <option *ngFor="let estado of getEstadosDisponibles(i, esSalida())" [value]="estado">
                                     {{ estado }}
                                 </option>
@@ -215,26 +218,22 @@
                                     [ngClass]="{'campo-vacio': campoVacio('unidadesPedidas', i)}" min="0" />
                             </div>
                         </td>
-                        <td *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision') || currentPath.startsWith('/entradas')">
+                        <td
+                            *ngIf="currentPath.startsWith('/salidas') && !pestanaPadre.startsWith('prevision') || currentPath.startsWith('/entradas')">
                             <div class="centrar">
-                                <input formControlName="unidades" 
-                                    type="number"
-                                    [ngClass]="{
+                                <input formControlName="unidades" type="number" [ngClass]="{
                                         'campo-vacio': campoVacio('unidades', i),
                                         'stock-excedido': unidadesExcedenStock(i)
-                                    }" 
-                                    min="0"
-                                    (blur)="onUnidadesBlur(i)" />
-                                
+                                    }" min="0" (blur)="onUnidadesBlur(i)" />
+
                                 <!-- Mostrar stock disponible para salidas -->
-                                <small *ngIf="currentPath.startsWith('/salidas') && getMensajeStock(i)" 
-                                    class="stock-info"
-                                    [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
+                                <small *ngIf="currentPath.startsWith('/salidas') && getMensajeStock(i)"
+                                    class="stock-info" [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
                                     {{ getMensajeStock(i) }}
                                 </small>
 
                                 <!-- Mostrar información de división automática mejorada -->
-                                <small *ngIf="currentPath.startsWith('/entradas') && mostrarInfoDivisionDetallada(i)" 
+                                <small *ngIf="currentPath.startsWith('/entradas') && mostrarInfoDivisionDetallada(i)"
                                     class="division-info">
                                     {{ mostrarInfoDivisionDetallada(i) }}
                                 </small>
@@ -242,9 +241,9 @@
                         </td>
                         <!-- Campo de UBICACIÓN con evento onchange -->
                         <td *ngIf="!pestanaPadre.startsWith('prevision')">
-                            <select formControlName="ubicacion" 
-                                    (change)="sincronizarUbicaciones(i); onUbicacionChange(i)"
-                                    [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
+                            <select formControlName="ubicacion"
+                                (change)="sincronizarUbicaciones(i); onUbicacionChange(i)"
+                                [ngClass]="{'campo-vacio': campoVacio('ubicacion', i)}">
                                 <option value=""></option>
                                 <ng-container *ngIf="esEntrada(); else ubiSalida">
                                     <option *ngFor="let ubicacion of ubicaciones; let i = index" [value]="ubicacion">
@@ -252,15 +251,16 @@
                                     </option>
                                 </ng-container>
                                 <ng-template #ubiSalida>
-                                    <option *ngFor="let ubicacion of getUbicacionesPorIndice(i)" [value]="ubicacion.nombre">
+                                    <option *ngFor="let ubicacion of getUbicacionesPorIndice(i)"
+                                        [value]="ubicacion.nombre">
                                         {{ubicacion.nombre}}
                                         <!-- Mostrar stock específico en la opción si está disponible -->
                                         <span *ngIf="currentPath.startsWith('/salidas') && 
                                                 productosControls.at(i).get('ref')?.value && 
                                                 productosControls.at(i).get('estado')?.value">
-                                            ({{ obtenerStockEspecifico(productosControls.at(i).get('ref')?.value, 
-                                                                    productosControls.at(i).get('estado')?.value, 
-                                                                    ubicacion.nombre!) }} disponibles)
+                                            ({{ obtenerStockEspecifico(productosControls.at(i).get('ref')?.value,
+                                            productosControls.at(i).get('estado')?.value,
+                                            ubicacion.nombre!) }} disponibles)
                                         </span>
                                     </option>
                                 </ng-template>

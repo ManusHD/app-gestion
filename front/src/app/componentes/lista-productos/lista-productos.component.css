@@ -42,4 +42,108 @@
   box-shadow: none;
 }
 
+/* Contenedor de estados mejorado */
+.estados-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos base para estados */
+.estado-badge {
+  display: inline-block;
+  min-width: 5rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background-color: var(--estado-color-default);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  margin: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+/* Estado sin estado (especial) */
+.estado-badge.sin-estado {
+  background-color: var(--btn-inactive);
+  color: var(--color-white);
+  font-style: italic;
+}
+
+/* Hover effect para los badges */
+.estado-badge:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Separador entre estado y stock */
+.estado-stock-separator {
+  display: inline-block;
+  margin: 0 4px;
+  color: var(--letter-color-off);
+  font-weight: normal;
+}
+
+/* Stock número destacado */
+.stock-numero {
+  font-weight: bold;
+  color: var(--letter-color);
+  font-size: 12px;
+}
+
+/* Para pantallas pequeñas */
+@media (max-width: 768px) {
+  .estado-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  
+  .estados-container {
+    gap: 2px;
+  }
+}
+
+/* Animación sutil al cargar */
+@keyframes fadeInBadge {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.estado-badge {
+  animation: fadeInBadge 0.3s ease-out;
+}
+
+/* Si hay muchos estados, permitir scroll horizontal */
+.estados-container.many-states {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: var(--letter-color) transparent;
+}
+
+.estados-container.many-states::-webkit-scrollbar {
+  height: 4px;
+}
+
+.estados-container.many-states::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.estados-container.many-states::-webkit-scrollbar-thumb {
+  background-color: var(--letter-color);
+  border-radius: 2px;
+}
+
 

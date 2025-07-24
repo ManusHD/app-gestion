@@ -122,36 +122,6 @@ export class FormularioEntradaSalidaService {
     });
   }
 
-  onEnterKey(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Evita que el formulario se envíe accidentalmente
-
-      const form = event.target as HTMLElement;
-      const inputs = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          'input, select, textarea, button'
-        )
-      );
-      const index = inputs.indexOf(form);
-
-      if (index >= 0 && index < inputs.length - 1) {
-        const nextElement = inputs[index + 1];
-
-        // Si el siguiente elemento es el botón de añadir línea, ejecuta la función
-        if (nextElement.classList.contains('add-producto')) {
-          this.agregarProducto();
-        } else {
-          nextElement.focus();
-        }
-      }
-    }
-
-    if (event.ctrlKey && event.key === '+') {
-      event.preventDefault();
-      this.agregarProducto();
-    }
-  }
-
   // Getter para acceder fácilmente al FormArray de productos
   get productosControls() {
     return this.entradaSalidaForm.get('productos') as FormArray;

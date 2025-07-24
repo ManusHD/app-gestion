@@ -197,7 +197,7 @@ td {
 }
 
 .estado-chip {
-    background-color: #c56900;
+    background-color: var(--estado-color-default);
     color: var(--btn-color-w);
     padding: 6px 12px;
     border-radius: 2px;

@@ -376,3 +376,29 @@ input.stock-excedido {
 .division-realizada {
   animation: division-highlight 1s ease-out;
 }
+
+/* Resaltar la primera opción para indicar que se seleccionará con Enter */
+.autocomplete-item.first-option {
+  background-color: rgba(61, 126, 255, 0.2);
+  border-left: 3px solid var(--letter-color);
+}
+
+.autocomplete-item.first-option:hover {
+  background-color: var(--table-primary);
+}
+
+/* Mejorar la transición del dropdown */
+.autocomplete-dropdown {
+  animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
