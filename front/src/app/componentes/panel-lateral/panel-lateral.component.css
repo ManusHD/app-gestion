@@ -190,7 +190,6 @@ li a {
   color: var(--letter-color-off);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 600;
   transition: all 0.2s ease;
   letter-spacing: 0.5px;
 }
@@ -220,7 +219,6 @@ summary {
   padding: 12px 20px;
   color: var(--letter-color-off);
   font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   letter-spacing: 0.5px;

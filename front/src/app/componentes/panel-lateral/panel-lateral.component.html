@@ -27,8 +27,7 @@
                     <a 
                       routerLink="/entradas" 
                       routerLinkActive="active" 
-                      [routerLinkActiveOptions]="{ exact: false }" 
-                      (click)="onEntradasClick($event); isMobile && toggleSidebar()">
+                      [routerLinkActiveOptions]="{ exact: false }" >
                       ENTRADAS
                     </a>
                   </li>
@@ -37,9 +36,17 @@
                     <a 
                       routerLink="/salidas" 
                       routerLinkActive="active" 
-                      [routerLinkActiveOptions]="{ exact: false }" 
-                      (click)="onSalidasClick($event); isMobile && toggleSidebar()">
+                      [routerLinkActiveOptions]="{ exact: false }" >
                       SALIDAS
+                    </a>
+                  </li>
+                  
+                  <li id="trabajos">
+                    <a 
+                      routerLink="/trabajos" 
+                      routerLinkActive="active" 
+                      [routerLinkActiveOptions]="{ exact: false }" >
+                      TRABAJOS
                     </a>
                   </li>
                 <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario" (click)="isMobile && toggleSidebar()">INVENTARIO</a></li>

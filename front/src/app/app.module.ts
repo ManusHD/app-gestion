@@ -88,6 +88,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { FacturacionService } from './services/facturacion.service';
 import { SelectorUbicacionesMultiplesComponent } from './componentes/selector-ubicaciones-multiples/selector-ubicaciones-multiples.component';
+import { TrabajoService } from './services/trabajo.service';
+import { CabeceraTrabajosComponent } from './componentes/cabecera-trabajos/cabecera-trabajos.component';
+import { TrabajosPrevisionComponent } from './componentes/trabajos-prevision/trabajos-prevision.component';
+import { TrabajosPendientesComponent } from './componentes/trabajos-pendientes/trabajos-pendientes.component';
+import { TrabajosRealizadosComponent } from './componentes/trabajos-realizados/trabajos-realizados.component';
+import { DetallesTrabajoComponent } from './componentes/detalles-trabajo/detalles-trabajo.component';
+import { FormularioTrabajoComponent } from './componentes/formulario-trabajo/formulario-trabajo.component';
 
 @NgModule({
   declarations: [
@@ -138,6 +145,12 @@ import { SelectorUbicacionesMultiplesComponent } from './componentes/selector-ub
     SalidasEnviospendientesComponent,
     FacturacionComponent,
     SelectorUbicacionesMultiplesComponent,
+    CabeceraTrabajosComponent,
+    TrabajosPrevisionComponent,
+    TrabajosPendientesComponent,
+    TrabajosRealizadosComponent,
+    DetallesTrabajoComponent,
+    FormularioTrabajoComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -185,6 +198,7 @@ import { SelectorUbicacionesMultiplesComponent } from './componentes/selector-ub
     ReubicarPaletsService,
     SalidaServices,
     SnackBar,
+    TrabajoService,
     UbicacionService,
     PantallaCargaService,
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' },

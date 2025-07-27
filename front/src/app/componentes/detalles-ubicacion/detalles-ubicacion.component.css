@@ -78,7 +78,6 @@ td {
 .productos-especiales-section h3,
 .productos-normales-section h3 {
     color: var(--letter-color);
-    font-family: 'Nunito-Bold';
     font-size: 20px;
     margin-bottom: 20px;
     padding: 10px 15px;

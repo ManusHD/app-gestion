@@ -27,6 +27,9 @@ import { PerfilComponent } from './componentes/perfil/perfil.component';
 import { SalidasEnviospendientesComponent } from './componentes/salidas-enviospendientes/salidas-enviospendientes.component';
 import { EstadosComponent } from './componentes/estados/estados.component';
 import { FacturacionComponent } from './componentes/facturacion/facturacion.component';
+import { TrabajosPrevisionComponent } from './componentes/trabajos-prevision/trabajos-prevision.component';
+import { TrabajosPendientesComponent } from './componentes/trabajos-pendientes/trabajos-pendientes.component';
+import { TrabajosRealizadosComponent } from './componentes/trabajos-realizados/trabajos-realizados.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -39,6 +42,9 @@ const routes: Routes = [
   {path: 'salidas/envios', component:SalidasEnviospendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'salidas/enviadas', component:SalidasEnviadasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'trabajos', component:TrabajosPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'trabajos/pendientes', component:TrabajosPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'trabajos/realizados', component:TrabajosRealizadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'inventario', component:InventarioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'agencias', component:AgenciasTransporteComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'ubicaciones', component:UbicacionesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
@@ -60,10 +66,3 @@ const routes: Routes = [
 })
 export class AppRoutingModule { }
 
-// Ahora necesito crear una nueva sección, la cual será para los trabajos de manipulación.
-
-// Debe tener un formulario y estructura similar a las entradas, de ahí a que te haya puesto de ejemplo las entradas y el formulario usado en entradas y salidas, pero con algunas modificaciones, por lo que podrías crear uno nuevo si lo ves más convincente.
-
-// Tendrá 3 subsecciones (a diferencia de las entradas que sólo tiene 3), las cuales serán para una crear la previsión, otra para modificar los trabajos previstos (y actualizarlos) y otra con el historial de trabajos hechos.
-
-// Este nuevo formulario tendrá los siguientes campos: FECHA, CONCEPTO, DIRECCIÓN (puede ser un PDV [PDV + PERFUMERIA] u Otro Origen, pero con las direcciones rellenas como se haría en salidas), HORAS, IMPORTE (debe ser modificable de algún modo, por si en el futuro cambia, actualmente es de 25€/hora) y OBSERVACIONES.

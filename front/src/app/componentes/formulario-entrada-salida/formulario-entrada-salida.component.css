@@ -107,7 +107,6 @@ select option,
 
 .campo-form label {
   font-size: 16px;
-  font-weight: 600;
   color: white;
   letter-spacing: 1px;
 }
@@ -391,6 +390,13 @@ input.stock-excedido {
 .autocomplete-dropdown {
   animation: fadeInDown 0.2s ease-out;
 }
+
+td input,
+td textarea {
+    width: 80%;
+}
+
+
 
 @keyframes fadeInDown {
   from {

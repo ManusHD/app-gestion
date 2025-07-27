@@ -10,6 +10,7 @@ set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
 set MICROSERVICIO_DIRECCIONES=backend\direcciones
 set MICROSERVICIO_AUTH=backend\autenticacion
 set MICROSERVICIO_ESTADOS=backend\estados
+set MICROSERVICIO_TRABAJOS=backend\trabajos
 
 :: Ejecutar entradas en una nueva ventana 8091
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
@@ -34,3 +35,6 @@ start cmd /c "cd %MICROSERVICIO_AUTH% && mvn spring-boot:run"
 
 :: Ejecutar dcs en una nueva ventana 8099
 start cmd /c "cd %MICROSERVICIO_ESTADOS% && mvn spring-boot:run"
+
+:: Ejecutar trabajos en una nueva ventana 8100
+start cmd /k "cd %MICROSERVICIO_TRABAJOS% && mvn spring-boot:run"

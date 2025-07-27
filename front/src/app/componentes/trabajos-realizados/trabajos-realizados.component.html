@@ -1,0 +1,106 @@
+<app-cabecera-trabajos></app-cabecera-trabajos>
+
+<div id="contenedor-trabajos-realizados">
+    <div>
+        <div class="contenedor-filtro">
+            <div class="buscador-fechas">
+                <div class="rango-fechas">
+                    <div class="rango-fecha">
+                        <label>Desde:</label>
+                        <input type="date" [(ngModel)]="fechaInicio" class="input-fecha" [max]="fechaFin" />
+                    </div>
+
+                    <div class="rango-fecha">
+                        <label>Hasta:</label>
+                        <input type="date" [(ngModel)]="fechaFin" class="input-fecha" [min]="fechaInicio" />
+                    </div>
+                </div>
+
+                <div class="buscador" (keyup)="onEnterKey($event)">
+                    <select [(ngModel)]="tipoBusqueda" class="select-buscador">
+                        <option value="fecha">Búsqueda solo por FECHA</option>
+                        <option value="concepto">Búsqueda por CONCEPTO</option>
+                        <option value="direccion">Búsqueda por DIRECCIÓN</option>
+                        <option value="observacion">Búsqueda por OBSERVACIÓN</option>
+                    </select>
+                    <input type="text" placeholder="Buscar trabajo" [(ngModel)]="buscador" />
+                    <button (click)="buscarTrabajos()" class="btn-buscar">
+                        <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+                        <span class="letra-buscador">Buscar</span>
+                    </button>
+                    <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="historial">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+                <caption>TRABAJOS REALIZADOS</caption>
+                
+                <ng-container matColumnDef="fecha">
+                    <th class="header-paginator" *matHeaderCellDef>FECHA</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        {{trabajo.fecha | date: 'dd/MM/yyyy'}}
+                    </td>
+                </ng-container>
+                
+                <ng-container matColumnDef="concepto">
+                    <th class="header-paginator" *matHeaderCellDef>CONCEPTO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        {{trabajo.concepto}}
+                    </td>
+                </ng-container>
+                
+                <ng-container matColumnDef="direccion">
+                    <th class="header-paginator" *matHeaderCellDef>DIRECCIÓN</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        {{getDireccionCompleta(trabajo)}}
+                    </td>
+                </ng-container>
+                
+                <ng-container matColumnDef="horas">
+                    <th class="header-paginator" *matHeaderCellDef>HORAS</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        {{trabajo.horas}}
+                    </td>
+                </ng-container>
+                
+                <ng-container matColumnDef="importe">
+                    <th class="header-paginator" *matHeaderCellDef>IMPORTE</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        {{trabajo.importeTotal | currency:'EUR':'symbol':'1.2-2'}}
+                    </td>
+                </ng-container>
+                
+                <ng-container matColumnDef="detalles">
+                    <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                        <app-detalles-trabajo [trabajo]="trabajo" [esRealizado]="true"></app-detalles-trabajo>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+            </table>
+            
+            <mat-paginator
+                class="paginator"
+                [pageSize]="pageSize"
+                [pageIndex]="pageIndex"
+                [length]="totalElementos"
+                [hidePageSize]="true"
+                showFirstLastButtons
+                (page)="cambiarPagina($event)">
+            </mat-paginator>
+            
+            <app-exportar-excel 
+                (click)="obtenerDatosAExportar()"  
+                [data$]="trabajosParaExportar$" 
+                [nombreConjuntoExportado]="'TRABAJOS'"
+                [fileName]="'TRABAJOS-EXPORTADOS'">
+            </app-exportar-excel>
+        </div>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

@@ -114,245 +114,269 @@
     </mat-card>
 
     <mat-card class="movimientos-card" *ngIf="mostrarResultados && resumenFacturacion">
-  <mat-card-header>
-    <mat-card-title>
-      <mat-icon>analytics</mat-icon>
-      Resumen de Movimientos del Mes
-    </mat-card-title>
-  </mat-card-header>
-  
-  <mat-card-content>
-    <div class="movimientos-grid">
-      <!-- Palets -->
-      <div class="movimiento-seccion palets">
-        <h3>
-          <mat-icon>inventory_2</mat-icon>
-          Palets
-        </h3>
-        <div class="movimiento-datos">
-          <div class="dato-movimiento inicial">
-            <span class="etiqueta">Stock Inicial</span>
-            <span class="valor">{{ resumenFacturacion.resumenMovimientos.stockInicialPalets }}</span>
-          </div>
-          <div class="dato-movimiento entrada">
-            <span class="etiqueta">Entrados</span>
-            <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.paletsEntrados }}</span>
-          </div>
-          <div class="dato-movimiento salida">
-            <span class="etiqueta">Salidos</span>
-            <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.paletsSalidos }}</span>
-          </div>
-          <div class="dato-movimiento final">
-            <span class="etiqueta">Stock Final</span>
-            <span class="valor final">{{ getStockFinalPalets() }}</span>
-          </div>
-          
-          <!-- Facturación de palets por entradas -->
-          <div class="dato-movimiento facturacion entrada-facturacion" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">input</mat-icon>
-              Cobrados (Entradas)
-            </span>
-            <span class="valor cobrado">
-              {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados }} 
-              ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsImporte | currency:'EUR':'symbol':'1.2-2' }})
-            </span>
-          </div>
-          
-          <!-- Facturación de palets por salidas -->
-          <div class="dato-movimiento facturacion salida-facturacion" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">output</mat-icon>
-              Cobrados (Salidas)
-            </span>
-            <span class="valor cobrado">
-              {{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados }} 
-              ({{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsImporte | currency:'EUR':'symbol':'1.2-2' }})
-            </span>
-          </div>
-        </div>
-      </div>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>analytics</mat-icon>
+          Resumen de Movimientos del Mes
+        </mat-card-title>
+      </mat-card-header>
 
-      <!-- Bultos -->
-      <div class="movimiento-seccion bultos">
-        <h3>
-          <mat-icon>cases</mat-icon>
-          Bultos
-        </h3>
-        <div class="movimiento-datos">
-          <div class="dato-movimiento entrada">
-            <span class="etiqueta">Entrados</span>
-            <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.bultosEntrados }}</span>
-          </div>
-          <div class="dato-movimiento salida">
-            <span class="etiqueta">Salidos</span>
-            <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.bultosSalidos }}</span>
-          </div>
-          <div class="dato-movimiento neto">
-            <span class="etiqueta">Movimiento Neto</span>
-            <span class="valor" [class.positivo]="getMovimientoNeto('bultos') > 0" [class.negativo]="getMovimientoNeto('bultos') < 0">
-              {{ getMovimientoNeto('bultos') >= 0 ? '+' : '' }}{{ getMovimientoNeto('bultos') }}
-            </span>
-          </div>
-          
-          <!-- Facturación de bultos (solo entradas) -->
-          <div class="dato-movimiento facturacion entrada-facturacion" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">input</mat-icon>
-              Cobrados (Entradas)
-            </span>
-            <span class="valor cobrado">
-              {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados }} 
-              ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosImporte | currency:'EUR':'symbol':'1.2-2' }})
-            </span>
-          </div>
-          
-          <!-- Info sobre bultos no facturados -->
-          <div class="dato-movimiento info" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados === 0 && resumenFacturacion.resumenMovimientos.bultosEntrados > 0">
-            <span class="etiqueta">Estado (Entradas)</span>
-            <span class="valor info-text">No facturados (se cobraron palets)</span>
-          </div>
-          
-          <div class="dato-movimiento info salida-info" 
-               *ngIf="resumenFacturacion.resumenMovimientos.bultosSalidos > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">output</mat-icon>
-              Estado (Salidas)
-            </span>
-            <span class="valor info-text">No se facturan bultos de salida</span>
-          </div>
-        </div>
-      </div>
+      <mat-card-content>
+        <div class="movimientos-grid">
+          <!-- Palets -->
+          <div class="movimiento-seccion palets">
+            <h3>
+              <mat-icon>inventory_2</mat-icon>
+              Palets
+            </h3>
+            <div class="movimiento-datos">
+              <div class="dato-movimiento inicial">
+                <span class="etiqueta">Stock Inicial</span>
+                <span class="valor">{{ resumenFacturacion.resumenMovimientos.stockInicialPalets }}</span>
+              </div>
+              <div class="dato-movimiento entrada">
+                <span class="etiqueta">Entrados</span>
+                <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.paletsEntrados }}</span>
+              </div>
+              <div class="dato-movimiento salida">
+                <span class="etiqueta">Salidos</span>
+                <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.paletsSalidos }}</span>
+              </div>
+              <div class="dato-movimiento final">
+                <span class="etiqueta">Stock Final</span>
+                <span class="valor final">{{ getStockFinalPalets() }}</span>
+              </div>
 
-      <!-- Unidades -->
-      <div class="movimiento-seccion unidades">
-        <h3>
-          <mat-icon>confirmation_number</mat-icon>
-          Unidades
-        </h3>
-        <div class="movimiento-datos">
-          <div class="dato-movimiento entrada">
-            <span class="etiqueta">Entradas</span>
-            <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.unidadesEntradas | number }}</span>
-          </div>
-          <div class="dato-movimiento salida">
-            <span class="etiqueta">Salidas</span>
-            <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.unidadesSalidas | number }}</span>
-          </div>
-          <div class="dato-movimiento neto">
-            <span class="etiqueta">Movimiento Neto</span>
-            <span class="valor" [class.positivo]="getMovimientoNeto('unidades') > 0" [class.negativo]="getMovimientoNeto('unidades') < 0">
-              {{ getMovimientoNeto('unidades') >= 0 ? '+' : '' }}{{ getMovimientoNeto('unidades') | number }}
-            </span>
-          </div>
-          
-          <!-- Facturación de unidades (solo entradas) -->
-          <div class="dato-movimiento facturacion entrada-facturacion" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">input</mat-icon>
-              Cobradas (Entradas)
-            </span>
-            <span class="valor cobrado">
-              {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas | number }} 
-              ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesImporte | currency:'EUR':'symbol':'1.2-2' }})
-            </span>
-          </div>
-          
-          <!-- Info sobre unidades no facturadas -->
-          <div class="dato-movimiento info" 
-               *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas === 0 && resumenFacturacion.resumenMovimientos.unidadesEntradas > 0">
-            <span class="etiqueta">Estado (Entradas)</span>
-            <span class="valor info-text">{{ getEstadoUnidades() }}</span>
-          </div>
-          
-          <div class="dato-movimiento info salida-info" 
-               *ngIf="resumenFacturacion.resumenMovimientos.unidadesSalidas > 0">
-            <span class="etiqueta">
-              <mat-icon class="icon-small">output</mat-icon>
-              Estado (Salidas)
-            </span>
-            <span class="valor info-text">No se facturan unidades de salida</span>
-          </div>
-        </div>
-      </div>
-    </div>
+              <!-- Facturación de palets por entradas -->
+              <div class="dato-movimiento facturacion entrada-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">input</mat-icon>
+                  Cobrados (Entradas)
+                </span>
+                <span class="valor cobrado">
+                  {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados }}
+                  ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsImporte |
+                  currency:'EUR':'symbol':'1.2-2' }})
+                </span>
+              </div>
 
-    <!-- ACTUALIZADO: Resumen de facturación separado por entradas y salidas -->
-    <div class="resumen-facturacion-tipos">
-      <h4>
-        <mat-icon>euro</mat-icon>
-        Desglose de Facturación por Movimientos
-      </h4>
-      
-      <!-- Facturación de ENTRADAS -->
-      <div class="facturacion-seccion">
-        <h5>
-          <mat-icon>input</mat-icon>
-          Movimientos de Entrada
-        </h5>
-        <div class="facturacion-tipos-grid">
-          <div class="tipo-facturacion" *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados > 0">
-            <mat-icon class="icon-palet">inventory_2</mat-icon>
-            <div class="tipo-info">
-              <span class="tipo-cantidad">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados }} palets</span>
-              <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsImporte | currency:'EUR':'symbol':'1.2-2' }}</span>
+              <!-- Facturación de palets por salidas -->
+              <div class="dato-movimiento facturacion salida-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">output</mat-icon>
+                  Cobrados (Salidas)
+                </span>
+                <span class="valor cobrado">
+                  {{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados }}
+                  ({{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsImporte |
+                  currency:'EUR':'symbol':'1.2-2' }})
+                </span>
+              </div>
             </div>
           </div>
-          <div class="tipo-facturacion" *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados > 0">
-            <mat-icon class="icon-bulto">cases</mat-icon>
-            <div class="tipo-info">
-              <span class="tipo-cantidad">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados }} bultos</span>
-              <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosImporte | currency:'EUR':'symbol':'1.2-2' }}</span>
+
+          <!-- Bultos -->
+          <div class="movimiento-seccion bultos">
+            <h3>
+              <mat-icon>cases</mat-icon>
+              Bultos
+            </h3>
+            <div class="movimiento-datos">
+              <div class="dato-movimiento entrada">
+                <span class="etiqueta">Entrados</span>
+                <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.bultosEntrados }}</span>
+              </div>
+              <div class="dato-movimiento salida">
+                <span class="etiqueta">Salidos</span>
+                <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.bultosSalidos }}</span>
+              </div>
+              <div class="dato-movimiento neto">
+                <span class="etiqueta">Movimiento Neto</span>
+                <span class="valor" [class.positivo]="getMovimientoNeto('bultos') > 0"
+                  [class.negativo]="getMovimientoNeto('bultos') < 0">
+                  {{ getMovimientoNeto('bultos') >= 0 ? '+' : '' }}{{ getMovimientoNeto('bultos') }}
+                </span>
+              </div>
+
+              <!-- Facturación de bultos (solo entradas) -->
+              <div class="dato-movimiento facturacion entrada-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">input</mat-icon>
+                  Cobrados (Entradas)
+                </span>
+                <span class="valor cobrado">
+                  {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados }}
+                  ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosImporte |
+                  currency:'EUR':'symbol':'1.2-2' }})
+                </span>
+              </div>
+
+              <!-- Info sobre bultos no facturados -->
+              <div class="dato-movimiento info"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados === 0 && resumenFacturacion.resumenMovimientos.bultosEntrados > 0">
+                <span class="etiqueta">Estado (Entradas)</span>
+                <span class="valor info-text">No facturados (se cobraron palets)</span>
+              </div>
+
+              <div class="dato-movimiento info salida-info"
+                *ngIf="resumenFacturacion.resumenMovimientos.bultosSalidos > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">output</mat-icon>
+                  Estado (Salidas)
+                </span>
+                <span class="valor info-text">No se facturan bultos de salida</span>
+              </div>
             </div>
           </div>
-          <div class="tipo-facturacion" *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas > 0">
-            <mat-icon class="icon-unidad">confirmation_number</mat-icon>
-            <div class="tipo-info">
-              <span class="tipo-cantidad">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas | number }} unidades</span>
-              <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesImporte | currency:'EUR':'symbol':'1.2-2' }}</span>
+
+          <!-- Unidades -->
+          <div class="movimiento-seccion unidades">
+            <h3>
+              <mat-icon>confirmation_number</mat-icon>
+              Unidades
+            </h3>
+            <div class="movimiento-datos">
+              <div class="dato-movimiento entrada">
+                <span class="etiqueta">Entradas</span>
+                <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.unidadesEntradas | number
+                  }}</span>
+              </div>
+              <div class="dato-movimiento salida">
+                <span class="etiqueta">Salidas</span>
+                <span class="valor negativo">-{{ resumenFacturacion.resumenMovimientos.unidadesSalidas | number
+                  }}</span>
+              </div>
+              <div class="dato-movimiento neto">
+                <span class="etiqueta">Movimiento Neto</span>
+                <span class="valor" [class.positivo]="getMovimientoNeto('unidades') > 0"
+                  [class.negativo]="getMovimientoNeto('unidades') < 0">
+                  {{ getMovimientoNeto('unidades') >= 0 ? '+' : '' }}{{ getMovimientoNeto('unidades') | number }}
+                </span>
+              </div>
+
+              <!-- Facturación de unidades (solo entradas) -->
+              <div class="dato-movimiento facturacion entrada-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">input</mat-icon>
+                  Cobradas (Entradas)
+                </span>
+                <span class="valor cobrado">
+                  {{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas | number }}
+                  ({{ resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesImporte |
+                  currency:'EUR':'symbol':'1.2-2' }})
+                </span>
+              </div>
+
+              <!-- Info sobre unidades no facturadas -->
+              <div class="dato-movimiento info"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas === 0 && resumenFacturacion.resumenMovimientos.unidadesEntradas > 0">
+                <span class="etiqueta">Estado (Entradas)</span>
+                <span class="valor info-text">{{ getEstadoUnidades() }}</span>
+              </div>
+
+              <div class="dato-movimiento info salida-info"
+                *ngIf="resumenFacturacion.resumenMovimientos.unidadesSalidas > 0">
+                <span class="etiqueta">
+                  <mat-icon class="icon-small">output</mat-icon>
+                  Estado (Salidas)
+                </span>
+                <span class="valor info-text">No se facturan unidades de salida</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="subtotal-entradas" *ngIf="getTotalEntradas() > 0">
-          <strong>Subtotal Entradas: {{ getTotalEntradas() | currency:'EUR':'symbol':'1.2-2' }}</strong>
-        </div>
-      </div>
 
-      <!-- Facturación de SALIDAS -->
-      <div class="facturacion-seccion">
-        <h5>
-          <mat-icon>output</mat-icon>
-          Movimientos de Salida
-        </h5>
-        <div class="facturacion-tipos-grid">
-          <div class="tipo-facturacion" *ngIf="resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados > 0">
-            <mat-icon class="icon-palet">inventory_2</mat-icon>
-            <div class="tipo-info">
-              <span class="tipo-cantidad">{{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados }} palets</span>
-              <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsImporte | currency:'EUR':'symbol':'1.2-2' }}</span>
+        <!-- ACTUALIZADO: Resumen de facturación separado por entradas y salidas -->
+        <div class="resumen-facturacion-tipos">
+          <h4>
+            <mat-icon>euro</mat-icon>
+            Desglose de Facturación por Movimientos
+          </h4>
+
+          <!-- Facturación de ENTRADAS -->
+          <div class="facturacion-seccion">
+            <h5>
+              <mat-icon>input</mat-icon>
+              Movimientos de Entrada
+            </h5>
+            <div class="facturacion-tipos-grid">
+              <div class="tipo-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados > 0">
+                <mat-icon class="icon-palet">inventory_2</mat-icon>
+                <div class="tipo-info">
+                  <span class="tipo-cantidad">{{
+                    resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsCobrados }} palets</span>
+                  <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.paletsImporte
+                    | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="tipo-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados > 0">
+                <mat-icon class="icon-bulto">cases</mat-icon>
+                <div class="tipo-info">
+                  <span class="tipo-cantidad">{{
+                    resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosCobrados }} bultos</span>
+                  <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionEntradas.bultosImporte
+                    | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="tipo-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas > 0">
+                <mat-icon class="icon-unidad">confirmation_number</mat-icon>
+                <div class="tipo-info">
+                  <span class="tipo-cantidad">{{
+                    resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesCobradas | number }}
+                    unidades</span>
+                  <span class="tipo-importe">{{
+                    resumenFacturacion.resumenMovimientos.facturacionEntradas.unidadesImporte |
+                    currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="subtotal-entradas" *ngIf="getTotalEntradas() > 0">
+              <strong>Subtotal Entradas: {{ getTotalEntradas() | currency:'EUR':'symbol':'1.2-2' }}</strong>
             </div>
           </div>
-          <div class="info-no-cobrado" *ngIf="resumenFacturacion.resumenMovimientos.bultosSalidos > 0 || resumenFacturacion.resumenMovimientos.unidadesSalidas > 0">
-            <mat-icon>info</mat-icon>
-            <span>En salidas solo se facturan palets</span>
+
+          <!-- Facturación de SALIDAS -->
+          <div class="facturacion-seccion">
+            <h5>
+              <mat-icon>output</mat-icon>
+              Movimientos de Salida
+            </h5>
+            <div class="facturacion-tipos-grid">
+              <div class="tipo-facturacion"
+                *ngIf="resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados > 0">
+                <mat-icon class="icon-palet">inventory_2</mat-icon>
+                <div class="tipo-info">
+                  <span class="tipo-cantidad">{{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsCobrados
+                    }} palets</span>
+                  <span class="tipo-importe">{{ resumenFacturacion.resumenMovimientos.facturacionSalidas.paletsImporte |
+                    currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+              </div>
+              <div class="info-no-cobrado"
+                *ngIf="resumenFacturacion.resumenMovimientos.bultosSalidos > 0 || resumenFacturacion.resumenMovimientos.unidadesSalidas > 0">
+                <mat-icon>info</mat-icon>
+                <span>En salidas solo se facturan palets</span>
+              </div>
+            </div>
+            <div class="subtotal-salidas" *ngIf="getTotalSalidas() > 0">
+              <strong>Subtotal Salidas: {{ getTotalSalidas() | currency:'EUR':'symbol':'1.2-2' }}</strong>
+            </div>
+          </div>
+
+          <div class="total-movimientos-desglose">
+            <strong>Total Movimientos: {{ resumenFacturacion.totalMovimientos | currency:'EUR':'symbol':'1.2-2'
+              }}</strong>
           </div>
         </div>
-        <div class="subtotal-salidas" *ngIf="getTotalSalidas() > 0">
-          <strong>Subtotal Salidas: {{ getTotalSalidas() | currency:'EUR':'symbol':'1.2-2' }}</strong>
-        </div>
-      </div>
-
-      <div class="total-movimientos-desglose">
-        <strong>Total Movimientos: {{ resumenFacturacion.totalMovimientos | currency:'EUR':'symbol':'1.2-2' }}</strong>
-      </div>
-    </div>
-  </mat-card-content>
-</mat-card>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Tabla de detalles -->
     <mat-card class="detalles-card">

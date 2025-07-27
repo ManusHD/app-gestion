@@ -1,0 +1,90 @@
+<app-cabecera-trabajos></app-cabecera-trabajos>
+
+<div class="centrar">
+    <div id="historial">
+        <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+            <caption>TRABAJOS PENDIENTES DE REALIZAR</caption>
+            
+            <ng-container matColumnDef="fecha">
+                <th class="header-paginator" *matHeaderCellDef>FECHA</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    {{trabajo.fecha | date: 'dd/MM/yyyy'}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="concepto">
+                <th class="header-paginator" *matHeaderCellDef>CONCEPTO</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    {{trabajo.concepto}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="direccion">
+                <th class="header-paginator" *matHeaderCellDef>DIRECCIÓN</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    {{getDireccionCompleta(trabajo)}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="horas">
+                <th class="header-paginator" *matHeaderCellDef>HORAS</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    {{trabajo.horas}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="importe">
+                <th class="header-paginator" *matHeaderCellDef>IMPORTE</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    {{trabajo.importeTotal | currency:'EUR':'symbol':'1.2-2'}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>ACCIONES</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
+                    <div class="centrar">
+                        <div style="display:flex; gap: 5px">
+                            <app-detalles-trabajo [trabajo]="trabajo" [esRealizado]="false"></app-detalles-trabajo>
+                            
+                            <button 
+                                [appConfirm]="'¿ESTÁS SEGURO DE BORRAR EL TRABAJO?'" 
+                                (confirmed)="deleteTrabajo(trabajo.id!)"
+                                *appHasRole="'ROLE_ADMIN'" 
+                                [disabled]="!btnSubmitActivado"
+                                class="btn-eliminar">
+                                <span class="text">BORRAR</span>
+                                <span class="icon">
+                                    <img src="../../../assets/icons/delete-bin.svg" />
+                                </span>
+                            </button>
+                            
+                            <button 
+                                [appConfirm]="'¿ESTÁS SEGURO DE MARCAR COMO REALIZADO?'" 
+                                (confirmed)="marcarComoRealizado(trabajo.id!)"
+                                [disabled]="!btnSubmitActivado"
+                                class="btn-grabar">
+                                REALIZADO
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+        </table>
+        
+        <mat-paginator
+            class="paginator"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [length]="totalElementos"
+            [hidePageSize]="true"
+            showFirstLastButtons
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

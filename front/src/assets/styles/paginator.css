@@ -20,7 +20,6 @@
 .tabla-paginator caption {
     background-color: var(--caption-color);
     color: white;
-    font-weight: bold;
     padding: 15px;
     font-size: 18px;
     text-align: center;

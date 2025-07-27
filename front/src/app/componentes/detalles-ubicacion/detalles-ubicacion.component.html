@@ -26,9 +26,9 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let producto of getProductosEspeciales()">
-                            <td><strong>{{producto.ref}}</strong></td>
+                            <td>{{producto.ref}}</td>
                             <td>{{producto.description}}</td>
-                            <td><strong>{{producto.unidades}}</strong></td>
+                            <td>{{producto.unidades}}</td>
                             <td class="centrar transparente">
                                 <app-reubicar-producto [productoActual]="producto"
                                     [ubicacionActual]="ubicacion.nombre!"></app-reubicar-producto>
@@ -48,7 +48,7 @@
                     <div class="cabecera-grupo-modal" (click)="toggleExpand(grupo.referencia)">
                         <span class="expand-icon"
                             [style.transform]="grupo.expanded ? 'rotate(90deg)' : 'rotate(0deg)'">▶</span>
-                        <strong>{{ grupo.referencia }}</strong> - {{ grupo.description }}
+                        {{ grupo.referencia }} - {{ grupo.description }}
                         <span *ngFor="let producto of grupo.productos" class="estado-chip">
                             {{ producto.estado || 'Sin estado' }}: {{ producto.unidades }}
                         </span>

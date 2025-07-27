@@ -1,0 +1,183 @@
+<div *ngIf="mostrarFormulario" class="flotar-medio" style="height: 800px;">
+    <div class="cuerpo-formulario">
+        <form [formGroup]="trabajoForm" (keydown)="onEnterKey($event)" #formularioNuevoTrabajo="ngForm">
+
+            <div class="formulario-no-repetido">
+                <!-- Fecha -->
+                <div class="fechas">
+                    <div class="campo-form">
+                        <label>FECHA</label>
+                        <input
+                            formControlName="fecha" 
+                            type="date"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('fecha')}" />
+                    </div>
+                </div>
+
+                <!-- Concepto -->
+                <div class="concepto">
+                    <div class="campo-form">
+                        <label>CONCEPTO</label>
+                        <input 
+                            formControlName="concepto" 
+                            type="text"
+                            placeholder="Descripción del trabajo a realizar"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('concepto')}" />
+                    </div>
+                </div>
+
+                <!-- Direcciones -->
+                <div class="direcciones">
+                    <!-- Perfumería -->
+                    <div class="campo-form">
+                        <label>PERFUMERÍA</label>
+                        <input (focus)="setActiveCampoUnico('perfumeria')" formControlName="perfumeria" type="text"
+                            [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada && activeCampoUnico == 'perfumeria'">
+                                <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPerfumeria(perfumeria)">
+                                    {{ perfumeria.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDV -->
+                    <div class="campo-form">
+                        <label>PDV</label>
+                        <input (focus)="setActiveCampoUnico('pdv')" formControlName="pdv" type="text"
+                            [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="pdvs.length > 0 && !pdvSeleccionado && activeCampoUnico == 'pdv'">
+                                <div class="autocomplete-item" *ngFor="let pdv of pdvs; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPdv(pdv)">
+                                    {{ pdv.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Otros Orígenes -->
+                    <div class="campo-form">
+                        <label>OTRO ORIGEN</label>
+                        <div class="autocomplete-container">
+                            <input (focus)="setActiveCampoUnico('otroOrigen')" (blur)="clearActiveCampoUnico()"
+                                formControlName="otroOrigen" type="text"
+                                [ngClass]="{'campo-vacio': !otroOrigenValido() && !previsionEsValidaCampoSimple()}" />
+                            <div class="autocomplete-dropdown"
+                                *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada && activeCampoUnico == 'otroOrigen'">
+                                <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectOtraDireccion(direccion)">
+                                    {{ direccion.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos de dirección detallada -->
+                <div class="detalles-direcciones" (click)="clearActiveCampoUnico()">
+                    <div class="campo-form">
+                        <label>DIRECCIÓN</label>
+                        <input formControlName="direccion" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>POBLACIÓN</label>
+                        <input formControlName="poblacion" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>PROVINCIA</label>
+                        <input formControlName="provincia" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>CP</label>
+                        <input formControlName="cp" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>TELÉFONO</label>
+                        <input formControlName="telefono" type="text" />
+                    </div>
+                </div>
+
+                <!-- Horas e Importe -->
+                <div class="horas-importe">
+                    <div class="campo-form">
+                        <label>HORAS</label>
+                        <input 
+                            formControlName="horas" 
+                            type="number" 
+                            step="0.5" 
+                            min="0"
+                            placeholder="0.0"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('horas')}"
+                            (input)="calcularImporteTotal()" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>IMPORTE POR HORA (€)</label>
+                        <input 
+                            formControlName="importePorHora" 
+                            type="number" 
+                            step="0.01" 
+                            min="0"
+                            placeholder="25.00"
+                            (input)="calcularImporteTotal()" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>IMPORTE TOTAL (€)</label>
+                        <input 
+                            formControlName="importeTotal" 
+                            type="number" 
+                            step="0.01" 
+                            readonly
+                            class="transparente" />
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="observaciones">
+                    <div class="campo-form">
+                        <label>OBSERVACIONES</label>
+                        <textarea 
+                            formControlName="observaciones" 
+                            rows="3"
+                            placeholder="Observaciones adicionales sobre el trabajo...">
+                        </textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="btns-tabla">
+                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR EL TRABAJO?'" (confirmed)="onSubmit()"
+                    *ngIf="pestanaPadre == 'previsionTrabajo'" type="submit" class="crear-producto"
+                    [disabled]="!btnSubmitActivado">
+                    GRABAR TRABAJO
+                </button>
+            </div>
+        </form>
+
+        <div class="">
+            <button [appConfirm]="'¿ESTÁS SEGURO DE GUARDAR LOS CAMBIOS?'" (confirmed)="modificarTrabajo()"
+                *ngIf="pestanaPadre == 'detallePrevisionTrabajo'" class="btn-actualizar">
+                <span class="button__text">Guardar cambios</span>
+                <span class="button__icon">
+                    <svg class="svg" height="48" viewBox="0 0 48 48" width="48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35.3 12.7c-2.89-2.9-6.88-4.7-11.3-4.7-8.84 0-15.98 7.16-15.98 16s7.14 16 15.98 16c7.45 0 13.69-5.1 15.46-12h-4.16c-1.65 4.66-6.07 8-11.3 8-6.63 0-12-5.37-12-12s5.37-12 12-12c3.31 0 6.28 1.38 8.45 3.55l-6.45 6.45h14v-14l-4.7 4.7z"></path>
+                        <path d="M0 0h48v48h-48z" fill="none"></path>
+                    </svg>
+                </span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

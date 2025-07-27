@@ -1,0 +1,21 @@
+<header>
+    <ul>
+        <li *appHasRole="'ROLE_ADMIN'">
+            <a routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" routerLink="/trabajos">
+                PREVISIÓN DE TRABAJOS
+            </a>
+        </li>
+        <li>
+            <a routerLinkActive="active" routerLink="/trabajos/pendientes">
+                TRABAJOS PENDIENTES
+            </a>
+        </li>
+        <li>
+            <a routerLinkActive="active" routerLink="/trabajos/realizados">
+                HISTORIAL DE TRABAJOS
+            </a>
+        </li>
+    </ul>
+</header>
+
+<hr>

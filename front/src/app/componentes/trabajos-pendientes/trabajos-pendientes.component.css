@@ -1,0 +1,65 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--table-color);
+}
+
+#historial {
+    width: 100%;
+    max-width: 1200px;
+    background-color: var(--main-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    margin-top: 50px;
+}
+
+button {
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px 12px;
+    min-width: 90px;
+}
+
+.btn-grabar {
+    background-color: var(--color-excel);
+    color: white;
+}
+
+.btn-grabar:hover:not([disabled]) {
+    background-color: var(--color-excel-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+button[disabled] {
+    background-color: var(--btn-inactive);
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+    #historial {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+    
+    .fila-paginator {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+    
+    .header-paginator {
+        padding: 10px 8px;
+        font-size: 14px;
+    }
+}

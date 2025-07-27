@@ -1,0 +1,48 @@
+<button *ngIf="currentPath == '/trabajos/realizados'; else editar" class="btn-productos" (click)="mostrarDetalles()">VER DETALLES</button>
+<ng-template #editar>
+    <button class="btn-productos" (click)="mostrarDetalles()">EDITAR</button>
+</ng-template>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+        <span *ngIf="!esRealizado" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" class="close">&times;</span>
+        <span *ngIf="esRealizado" (click)="cerrarModal()" class="close">&times;</span>
+        
+        <h2 *ngIf="esRealizado">CONCEPTO: <span class="titulo-modal">{{trabajo.concepto}}</span></h2>
+        <h2 *ngIf="esRealizado">FECHA: <span class="titulo-modal">{{trabajo.fecha | date: 'dd/MM/yyyy'}}</span></h2>
+        
+        <div class="flotar-medio">
+            <table *ngIf="esRealizado; else detallesEnPrevision">
+                <thead>
+                    <tr>
+                        <th>CONCEPTO</th>
+                        <th>FECHA</th>
+                        <th>DIRECCIÓN</th>
+                        <th>HORAS</th>
+                        <th>IMPORTE/HORA</th>
+                        <th>IMPORTE TOTAL</th>
+                        <th>OBSERVACIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{trabajo.concepto}}</td>
+                        <td>{{trabajo.fecha | date: 'dd/MM/yyyy'}}</td>
+                        <td>{{getDireccionCompleta()}}</td>
+                        <td>{{trabajo.horas}}</td>
+                        <td>{{trabajo.importePorHora | currency:'EUR':'symbol':'1.2-2'}}</td>
+                        <td>{{trabajo.importeTotal | currency:'EUR':'symbol':'1.2-2'}}</td>
+                        <td>{{trabajo.observaciones || 'Sin observaciones'}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <ng-template #detallesEnPrevision>
+            <app-formulario-trabajo [pestanaPadre]="'detallePrevisionTrabajo'" [detallesTrabajo]="trabajo">
+            </app-formulario-trabajo>
+        </ng-template>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

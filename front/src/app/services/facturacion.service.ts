@@ -129,7 +129,7 @@ export class FacturacionService {
       salidasAnteriores$,
     ]).pipe(
       map(([entradas, salidas, entradasAnteriores, salidasAnteriores]) => {
-        const detallesMovimientos = this.calcularMovimientos(entradas);
+        const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
         const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
           entradasAnteriores,
           salidasAnteriores,
@@ -170,130 +170,131 @@ export class FacturacionService {
   }
 
   /**
- * ACTUALIZADO: Calcula el resumen incluyendo facturación de entradas y salidas
- */
-private calcularResumenMovimientos(
-  entradasAnteriores: any[],
-  salidasAnteriores: any[],
-  entradasDelMes: any[],
-  salidasDelMes: any[],
-  fechaInicio: string
-): ResumenMovimientos {
-  const fechaInicioDate = new Date(fechaInicio);
-  
-  // Calcular stock inicial de palets
-  let stockInicialPalets = 0;
-  
-  entradasAnteriores.forEach(entrada => {
-    if (entrada.estado && entrada.productos) {
-      entrada.productos.forEach((producto: any) => {
-        if (producto.palets && producto.palets > 0) {
-          stockInicialPalets += producto.palets;
-        }
-      });
-    }
-  });
-  
-  salidasAnteriores.forEach(salida => {
-    if (salida.estado && salida.productos) {
-      salida.productos.forEach((producto: any) => {
-        if (producto.palets && producto.palets > 0) {
-          stockInicialPalets -= producto.palets;
-        }
-      });
-    }
-  });
-  
-  // Calcular movimientos del mes - ENTRADAS
-  let paletsEntrados = 0;
-  let bultosEntrados = 0;
-  let unidadesEntradas = 0;
-  
-  // Variables para facturación de ENTRADAS
-  let paletsEntradaCobrados = 0;
-  let bultosEntradaCobrados = 0;
-  let unidadesEntradaCobradas = 0;
-  
-  entradasDelMes.forEach(entrada => {
-    if (entrada.estado && entrada.productos) {
-      entrada.productos.forEach((producto: any) => {
-        // Contar movimientos totales
-        if (producto.palets && producto.palets > 0) {
-          paletsEntrados += producto.palets;
-        }
-        if (producto.bultos && producto.bultos > 0) {
-          bultosEntrados += producto.bultos;
-        }
-        if (producto.unidades && producto.unidades > 0) {
-          unidadesEntradas += producto.unidades;
-        }
-        
-        // Determinar qué se cobra en ENTRADAS según jerarquía
-        if (producto.palets && producto.palets > 0) {
-          // Se cobran palets (no bultos ni unidades)
-          paletsEntradaCobrados += producto.palets;
-        } else if (producto.bultos && producto.bultos > 0) {
-          // Se cobran bultos (no unidades)
-          bultosEntradaCobrados += producto.bultos;
-        } else if (producto.unidades && producto.unidades > 0) {
-          // Se cobran unidades
-          unidadesEntradaCobradas += producto.unidades;
-        }
-      });
-    }
-  });
-  
-  // Calcular movimientos del mes - SALIDAS
-  let paletsSalidos = 0;
-  let bultosSalidos = 0;
-  let unidadesSalidas = 0;
-  
-  // Variables para facturación de SALIDAS (solo palets)
-  let paletsSalidaCobrados = 0;
-  
-  salidasDelMes.forEach(salida => {
-    if (salida.estado && salida.productos) {
-      salida.productos.forEach((producto: any) => {
-        // Contar movimientos totales
-        if (producto.palets && producto.palets > 0) {
-          paletsSalidos += producto.palets;
-          // En salidas SOLO se cobran palets
-          paletsSalidaCobrados += producto.palets;
-        }
-        if (producto.bultos && producto.bultos > 0) {
-          bultosSalidos += producto.bultos;
-          // No se cobran bultos en salidas
-        }
-        if (producto.unidades && producto.unidades > 0) {
-          unidadesSalidas += producto.unidades;
-          // No se cobran unidades en salidas
-        }
-      });
-    }
-  });
-  
-  return {
-    stockInicialPalets: Math.max(0, stockInicialPalets),
-    paletsEntrados,
-    paletsSalidos,
-    bultosEntrados,
-    bultosSalidos,
-    unidadesEntradas,
-    unidadesSalidas,
-    facturacionEntradas: {
-      paletsCobrados: paletsEntradaCobrados,
-      paletsImporte: paletsEntradaCobrados * this.TARIFA_MOVIMIENTO_PALET,
-      bultosCobrados: bultosEntradaCobrados,
-      bultosImporte: bultosEntradaCobrados * this.TARIFA_MOVIMIENTO_BULTO,
-      unidadesCobradas: unidadesEntradaCobradas,
-      unidadesImporte: unidadesEntradaCobradas * this.TARIFA_MOVIMIENTO_UNIDAD
-    },
-    facturacionSalidas: {
-      paletsCobrados: paletsSalidaCobrados,
-      paletsImporte: paletsSalidaCobrados * this.TARIFA_MOVIMIENTO_PALET
-    }
-  };
-}
+   * ACTUALIZADO: Calcula el resumen incluyendo facturación de entradas y salidas
+   */
+  private calcularResumenMovimientos(
+    entradasAnteriores: any[],
+    salidasAnteriores: any[],
+    entradasDelMes: any[],
+    salidasDelMes: any[],
+    fechaInicio: string
+  ): ResumenMovimientos {
+    const fechaInicioDate = new Date(fechaInicio);
+
+    // Calcular stock inicial de palets
+    let stockInicialPalets = 0;
+
+    entradasAnteriores.forEach((entrada) => {
+      if (entrada.estado && entrada.productos) {
+        entrada.productos.forEach((producto: any) => {
+          if (producto.palets && producto.palets > 0) {
+            stockInicialPalets += producto.palets;
+          }
+        });
+      }
+    });
+
+    salidasAnteriores.forEach((salida) => {
+      if (salida.estado && salida.productos) {
+        salida.productos.forEach((producto: any) => {
+          if (producto.palets && producto.palets > 0) {
+            stockInicialPalets -= producto.palets;
+          }
+        });
+      }
+    });
+
+    // Calcular movimientos del mes - ENTRADAS
+    let paletsEntrados = 0;
+    let bultosEntrados = 0;
+    let unidadesEntradas = 0;
+
+    // Variables para facturación de ENTRADAS
+    let paletsEntradaCobrados = 0;
+    let bultosEntradaCobrados = 0;
+    let unidadesEntradaCobradas = 0;
+
+    entradasDelMes.forEach((entrada) => {
+      if (entrada.estado && entrada.productos) {
+        entrada.productos.forEach((producto: any) => {
+          // Contar movimientos totales
+          if (producto.palets && producto.palets > 0) {
+            paletsEntrados += producto.palets;
+          }
+          if (producto.bultos && producto.bultos > 0) {
+            bultosEntrados += producto.bultos;
+          }
+          if (producto.unidades && producto.unidades > 0) {
+            unidadesEntradas += producto.unidades;
+          }
+
+          // Determinar qué se cobra en ENTRADAS según jerarquía
+          if (producto.palets && producto.palets > 0) {
+            // Se cobran palets (no bultos ni unidades)
+            paletsEntradaCobrados += producto.palets;
+          } else if (producto.bultos && producto.bultos > 0) {
+            // Se cobran bultos (no unidades)
+            bultosEntradaCobrados += producto.bultos;
+          } else if (producto.unidades && producto.unidades > 0) {
+            // Se cobran unidades
+            unidadesEntradaCobradas += producto.unidades;
+          }
+        });
+      }
+    });
+
+    // Calcular movimientos del mes - SALIDAS
+    let paletsSalidos = 0;
+    let bultosSalidos = 0;
+    let unidadesSalidas = 0;
+
+    // Variables para facturación de SALIDAS (solo palets)
+    let paletsSalidaCobrados = 0;
+
+    salidasDelMes.forEach((salida) => {
+      if (salida.estado && salida.productos) {
+        salida.productos.forEach((producto: any) => {
+          // Contar movimientos totales
+          if (producto.palets && producto.palets > 0) {
+            paletsSalidos += producto.palets;
+            // En salidas SOLO se cobran palets
+            paletsSalidaCobrados += producto.palets;
+          }
+          if (producto.bultos && producto.bultos > 0) {
+            bultosSalidos += producto.bultos;
+            // No se cobran bultos en salidas
+          }
+          if (producto.unidades && producto.unidades > 0) {
+            unidadesSalidas += producto.unidades;
+            // No se cobran unidades en salidas
+          }
+        });
+      }
+    });
+
+    return {
+      stockInicialPalets: Math.max(0, stockInicialPalets),
+      paletsEntrados,
+      paletsSalidos,
+      bultosEntrados,
+      bultosSalidos,
+      unidadesEntradas,
+      unidadesSalidas,
+      facturacionEntradas: {
+        paletsCobrados: paletsEntradaCobrados,
+        paletsImporte: paletsEntradaCobrados * this.TARIFA_MOVIMIENTO_PALET,
+        bultosCobrados: bultosEntradaCobrados,
+        bultosImporte: bultosEntradaCobrados * this.TARIFA_MOVIMIENTO_BULTO,
+        unidadesCobradas: unidadesEntradaCobradas,
+        unidadesImporte:
+          unidadesEntradaCobradas * this.TARIFA_MOVIMIENTO_UNIDAD,
+      },
+      facturacionSalidas: {
+        paletsCobrados: paletsSalidaCobrados,
+        paletsImporte: paletsSalidaCobrados * this.TARIFA_MOVIMIENTO_PALET,
+      },
+    };
+  }
 
   /**
    * Ajusta la fecha para que sea el primer día del mes
@@ -609,9 +610,13 @@ private calcularResumenMovimientos(
   /**
    * Calcula los costos de movimientos de entrada
    */
-  private calcularMovimientos(entradas: any[]): DetalleMovimiento[] {
+  private calcularMovimientos(
+    entradas: any[],
+    salidas: any[]
+  ): DetalleMovimiento[] {
     const detalles: DetalleMovimiento[] = [];
 
+    // Calcular movimientos de ENTRADA (igual que ya tienes)
     entradas.forEach((entrada) => {
       if (entrada.estado && entrada.productos) {
         entrada.productos.forEach((producto: any) => {
@@ -621,6 +626,26 @@ private calcularResumenMovimientos(
           );
           if (detalle) {
             detalles.push(detalle);
+          }
+        });
+      }
+    });
+
+    // Calcular movimientos de SALIDA (solo palets)
+    salidas.forEach((salida) => {
+      if (salida.estado && salida.productos) {
+        salida.productos.forEach((producto: any) => {
+          // Solo palets, ya que es lo único que se cobra
+          if (producto.palets && producto.palets > 0) {
+            detalles.push({
+              referencia: producto.ref || '',
+              descripcion: producto.description || '',
+              tipo: 'palet',
+              cantidad: producto.palets,
+              precioUnitario: this.TARIFA_MOVIMIENTO_PALET,
+              costoTotal: producto.palets * this.TARIFA_MOVIMIENTO_PALET,
+              fechaMovimiento: new Date(salida.fechaEnvio),
+            });
           }
         });
       }

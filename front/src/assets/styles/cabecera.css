@@ -61,7 +61,6 @@ header ul li a:hover {
 /* Elemento activo */
 header ul li a.active {
     color: white;
-    font-weight: 600;
 }
 
 /* Indicador de elemento activo */

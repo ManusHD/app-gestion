@@ -34,6 +34,7 @@
 h2 {
     margin: 0;
     font-family: 'Nunito-ExtraBold';
+    font-weight: 350;
 }
 
 .close {
@@ -134,12 +135,10 @@ h2 {
 
 .titulo-modal {
     color: var(--letter-color);
-    font-weight: 600;
 }
 
 .titulo-detalles {
     color: white;
-    font-weight: 600;
 }
 
 .close {

@@ -2,11 +2,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EntradaServices } from '../../services/entrada.service';
 import { SalidaServices } from '../../services/salida.service';
-import {
-  FacturacionService,
-  FacturacionCalculada,
-  ResumenMovimientos,
-} from '../../services/facturacion.service';
+import {FacturacionService, FacturacionCalculada, ResumenMovimientos} from '../../services/facturacion.service';
 import { Entrada } from '../../models/entrada.model';
 import { Salida } from '../../models/salida.model';
 import { ProductoEntrada } from '../../models/productoEntrada.model';
