@@ -1,4 +1,19 @@
-<button *ngIf="currentPath == '/salidas/enviadas'; else editar" class="btn-productos" (click)="mostrarDetalles()">VER PRODUCTOS</button>
+<div class="btns-alineados">
+    <button *ngIf="currentPath == '/salidas/enviadas'; else editar" class="btn-productos"
+        (click)="mostrarDetalles()">VER
+        PRODUCTOS</button>
+    <button *ngIf="currentPath == '/salidas/enviadas'" class="btn-etiqueta"
+        (click)="mostrarEtiquetaEnvio()">ETIQUETA</button>
+</div>
+
+<div *ngIf="mostrarEtiqueta" class="modal">
+    <div class="modal-content etiqueta-modal">
+        <span class="close" (click)="cerrarEtiqueta()">&times;</span>
+        <h2>Etiqueta de Envío</h2>
+        <app-etiqueta-envio [salida]="salida"></app-etiqueta-envio>
+    </div>
+</div>
+
 <ng-template #editar>
     <button class="btn-productos" (click)="mostrarDetalles()">EDITAR</button>
 </ng-template>
@@ -6,11 +21,13 @@
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
         <span *ngIf="enRecibidas" class="close" (click)="cerrarModal()">&times;</span>
-        <span *ngIf="!enRecibidas" class="close" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" >&times;</span>
+        <span *ngIf="!enRecibidas" class="close" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'"
+            (confirmed)="cerrarModal()">&times;</span>
         <h2 *ngIf="enRecibidas">DESTINO: <span class="titulo-modal">
-            {{salida.destino || salida.colaborador || salida.pdv}}
-        </span></h2>
-        <h2 *ngIf="enRecibidas">FECHA RECEPCIÓN: <span class="titulo-modal">{{salida.fechaEnvio | date: 'dd/MM/yyyy'}}</span></h2>
+                {{salida.destino || salida.colaborador || salida.pdv}}
+            </span></h2>
+        <h2 *ngIf="enRecibidas">FECHA ENVÍO: <span class="titulo-modal">{{salida.fechaEnvio | date:
+                'dd/MM/yyyy'}}</span></h2>
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
@@ -48,5 +65,6 @@
             </app-formulario-entrada-salida>
         </ng-template>
     </div>
+
 
     <app-pantalla-carga></app-pantalla-carga>

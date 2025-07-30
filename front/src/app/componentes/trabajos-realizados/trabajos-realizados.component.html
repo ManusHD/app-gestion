@@ -20,7 +20,7 @@
                     <select [(ngModel)]="tipoBusqueda" class="select-buscador">
                         <option value="fecha">Búsqueda solo por FECHA</option>
                         <option value="concepto">Búsqueda por CONCEPTO</option>
-                        <option value="direccion">Búsqueda por DIRECCIÓN</option>
+                        <option value="direccion">Búsqueda por PDV</option>
                         <option value="observacion">Búsqueda por OBSERVACIÓN</option>
                     </select>
                     <input type="text" placeholder="Buscar trabajo" [(ngModel)]="buscador" />
@@ -52,7 +52,7 @@
                 </ng-container>
                 
                 <ng-container matColumnDef="direccion">
-                    <th class="header-paginator" *matHeaderCellDef>DIRECCIÓN</th>
+                    <th class="header-paginator" *matHeaderCellDef>PDV</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
                         {{getDireccionCompleta(trabajo)}}
                     </td>

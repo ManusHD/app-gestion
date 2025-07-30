@@ -49,7 +49,7 @@ export class FormularioEntradaSalidaComponent
 
     this.cargarColaboradores();
     this.cargarPerfumerias('a');
-    this.cargarOtrasDirecciones('A');
+    this.cargarTodasOtrasDirecciones();
     this.cargarEstados();
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
@@ -90,7 +90,7 @@ export class FormularioEntradaSalidaComponent
           this.limpiarCamposDireccion();
           // this.otrasDirecciones = [];
           this.otraDireccionSeleccionada = null;
-          this.cargarOtrasDirecciones('a');
+          this.cargarTodasOtrasDirecciones();
         } else {
           this.cargarOtrasDirecciones(value);
         }
@@ -380,6 +380,18 @@ export class FormularioEntradaSalidaComponent
           console.error('Error al obtener colaboradores', error);
         },
       });
+  }
+
+  cargarTodasOtrasDirecciones() {
+    this.direccionesService.getOtrasDirecciones().subscribe({
+      next: (data) => {
+        console.log(data);
+        this.otrasDirecciones = data;
+      },
+      error: (error) => {
+        console.error('Error al obtener otras direcciones', error);
+      },
+    })
   }
 
   cargarOtrasDirecciones(direccion: string) {

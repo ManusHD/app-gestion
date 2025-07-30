@@ -65,13 +65,22 @@ export class TrabajosPendientesComponent implements OnInit {
   }
 
   marcarComoRealizado(id: number) {
+    // Buscar el trabajo en la lista actual
+    const trabajo = this.trabajos.find(t => t.id === id);
+    
+    if (trabajo && (!trabajo.horas || trabajo.horas <= 0)) {
+      this.snackbar.snackBarError('No se puede marcar como realizado: el trabajo debe tener horas asignadas');
+      return;
+    }
+  
     this.btnSubmitActivado = false;
     this.carga.show();
     this.trabajoService
       .marcarComoRealizado(id)
       .pipe(
         catchError((error) => {
-          this.snackbar.snackBarError(error.error.message || error.error);
+          const mensaje = error.error?.message || error.error || 'Error al marcar como realizado';
+          this.snackbar.snackBarError(mensaje);
           this.carga.hide();
           this.btnSubmitActivado = true;
           return throwError(error);
@@ -83,13 +92,7 @@ export class TrabajosPendientesComponent implements OnInit {
         console.log('Trabajo marcado como realizado con éxito');
         this.snackbar.snackBarExito('Trabajo marcado como realizado con éxito');
         this.btnSubmitActivado = true;
-      }),
-      (error: any) => {
-        this.carga.hide();
-        this.btnSubmitActivado = true;
-        this.snackbar.snackBarError(error.error.message || error.error);
-        console.error(error);
-      };
+      });
   }
 
   deleteTrabajo(idTrabajo: number) {

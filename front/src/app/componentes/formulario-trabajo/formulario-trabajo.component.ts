@@ -72,11 +72,32 @@ export class FormularioTrabajoComponent implements OnInit {
       provincia: [''],
       cp: [''],
       telefono: [''],
-      horas: ['', [Validators.required, Validators.min(0.1)]],
+      horas: [''], // Sin validadores iniciales
       importePorHora: [25, [Validators.required, Validators.min(0)]],
       importeTotal: [{ value: 0, disabled: true }],
       observaciones: ['']
     });
+  }
+
+  private validarFormulario(): boolean {
+    const esDetalle = this.pestanaPadre === 'detallePrevisionTrabajo';
+    
+    // Validaciones básicas
+    if (!this.trabajoForm.get('fecha')?.value) {
+      this.snackBarError('La fecha es obligatoria');
+      return false;
+    }
+    
+    if (!this.trabajoForm.get('concepto')?.value?.trim()) {
+      this.snackBarError('El concepto es obligatorio');
+      return false;
+    }
+    
+    if (!this.validarDirecciones()) {
+      return false;
+    }
+    
+    return true;
   }
 
   private setupFormSubscriptions() {
@@ -126,7 +147,7 @@ export class FormularioTrabajoComponent implements OnInit {
       if (value == '' || value == null) {
         this.limpiarCamposDireccion();
         this.otraDireccionSeleccionada = null;
-        this.cargarOtrasDirecciones('a');
+        this.cargarTodasOtrasDirecciones();
       } else {
         this.cargarOtrasDirecciones(value);
       }
@@ -142,7 +163,7 @@ export class FormularioTrabajoComponent implements OnInit {
 
   private cargarDirecciones() {
     this.cargarPerfumerias('a');
-    this.cargarOtrasDirecciones('a');
+    this.cargarTodasOtrasDirecciones();
   }
 
   private inicializarNuevoTrabajo() {
@@ -186,7 +207,7 @@ export class FormularioTrabajoComponent implements OnInit {
     this.carga.show();
     this.btnSubmitActivado = false;
     
-    if (this.trabajoForm.valid && this.validarDirecciones()) {
+    if (this.validarFormulario()) {
       const nuevoTrabajo: Trabajo = {
         fecha: this.trabajoForm.get('fecha')?.value,
         concepto: this.trabajoForm.get('concepto')?.value,
@@ -198,12 +219,12 @@ export class FormularioTrabajoComponent implements OnInit {
         provincia: this.trabajoForm.get('provincia')?.value,
         cp: this.trabajoForm.get('cp')?.value,
         telefono: this.trabajoForm.get('telefono')?.value,
-        horas: this.trabajoForm.get('horas')?.value,
+        horas: this.trabajoForm.get('horas')?.value || 0,
         importePorHora: this.trabajoForm.get('importePorHora')?.value,
         observaciones: this.trabajoForm.get('observaciones')?.value,
         estado: false
       };
-
+  
       this.trabajoService.newTrabajo(nuevoTrabajo).subscribe({
         next: (trabajoCreado) => {
           console.log('Trabajo creado exitosamente:', trabajoCreado);
@@ -214,13 +235,12 @@ export class FormularioTrabajoComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al crear el trabajo:', error);
-          this.snackBarError(error.error || 'Error al crear el trabajo');
+          this.snackBarError(error.error?.message || error.error || 'Error al crear el trabajo');
           this.carga.hide();
           this.btnSubmitActivado = true;
         }
       });
     } else {
-      this.marcarCamposInvalidos();
       this.carga.hide();
       this.btnSubmitActivado = true;
     }
@@ -229,7 +249,7 @@ export class FormularioTrabajoComponent implements OnInit {
   modificarTrabajo() {
     this.carga.show();
     
-    if (this.trabajoForm.valid && this.validarDirecciones()) {
+    if (this.validarFormulario()) {
       const trabajoActualizado: Trabajo = {
         id: this.detallesTrabajo?.id,
         fecha: this.trabajoForm.get('fecha')?.value,
@@ -242,12 +262,12 @@ export class FormularioTrabajoComponent implements OnInit {
         provincia: this.trabajoForm.get('provincia')?.value,
         cp: this.trabajoForm.get('cp')?.value,
         telefono: this.trabajoForm.get('telefono')?.value,
-        horas: this.trabajoForm.get('horas')?.value,
+        horas: this.trabajoForm.get('horas')?.value || 0,
         importePorHora: this.trabajoForm.get('importePorHora')?.value,
         observaciones: this.trabajoForm.get('observaciones')?.value,
         estado: this.detallesTrabajo?.estado || false
       };
-
+  
       this.trabajoService.updateTrabajo(trabajoActualizado).subscribe({
         next: (updatedTrabajo) => {
           console.log('Trabajo actualizado:', updatedTrabajo);
@@ -256,30 +276,45 @@ export class FormularioTrabajoComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error al actualizar el trabajo:', err);
-          this.snackBarError('Error al actualizar el trabajo');
+          this.snackBarError(err.error?.message || 'Error al actualizar el trabajo');
           this.carga.hide();
         }
       });
     } else {
-      this.marcarCamposInvalidos();
       this.carga.hide();
     }
   }
 
   private validarDirecciones(): boolean {
-    const perfumeria = this.trabajoForm.get('perfumeria')?.value;
-    const pdv = this.trabajoForm.get('pdv')?.value;
-    const otroOrigen = this.trabajoForm.get('otroOrigen')?.value;
-
+    const perfumeria = this.trabajoForm.get('perfumeria')?.value?.trim();
+    const pdv = this.trabajoForm.get('pdv')?.value?.trim();
+    const otroOrigen = this.trabajoForm.get('otroOrigen')?.value?.trim();
+  
     const tienePerfumeriaPdv = perfumeria && pdv;
-    const tieneOtroOrigen = otroOrigen && otroOrigen.trim() !== '';
-
+    const tieneOtroOrigen = otroOrigen;
+  
+    // Validar que perfumería y PDV vayan juntos
+    if ((perfumeria && !pdv) || (!perfumeria && pdv)) {
+      this.snackBarError('Perfumería y PDV deben rellenarse conjuntamente');
+      return false;
+    }
+  
+    // Debe tener al menos una dirección válida
     if (!tienePerfumeriaPdv && !tieneOtroOrigen) {
       this.snackBarError('Debe especificar una dirección (Perfumería + PDV o Otro Origen)');
       return false;
     }
-
+  
     return true;
+  }
+
+  campoTieneError(nombreCampo: string): boolean {
+    const control = this.trabajoForm.get(nombreCampo);
+    return !!(control && control.invalid && (control.dirty || control.touched));
+  }
+  
+  horasRequeridas(): boolean {
+    return this.pestanaPadre !== 'detallePrevisionTrabajo';
   }
 
   private resetForm() {
@@ -410,6 +445,18 @@ export class FormularioTrabajoComponent implements OnInit {
           console.error('Error al obtener otras direcciones', error);
         },
       });
+  }
+
+  cargarTodasOtrasDirecciones() {
+    this.direccionesService.getOtrasDirecciones().subscribe({
+      next: (data) => {
+        console.log(data);
+        this.otrasDirecciones = data;
+      },
+      error: (error) => {
+        console.error('Error al obtener otras direcciones', error);
+      },
+    })
   }
 
   // Métodos de selección para autocompletado

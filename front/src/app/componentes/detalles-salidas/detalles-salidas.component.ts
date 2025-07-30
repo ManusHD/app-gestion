@@ -19,6 +19,8 @@ export class DetallesSalidasComponent implements OnInit {
   @Output() salidaRellena = new EventEmitter<boolean>();
   currentPath:string = window.location.pathname;
 
+  mostrarEtiqueta: boolean = false;
+
   constructor(private carga: PantallaCargaService){}
 
   ngOnInit() {
@@ -76,6 +78,14 @@ export class DetallesSalidasComponent implements OnInit {
     }
 
     return null;
+  }
+  
+  mostrarEtiquetaEnvio() {
+    this.mostrarEtiqueta = true;
+  }
+  
+  cerrarEtiqueta() {
+    this.mostrarEtiqueta = false;
   }
 
 }

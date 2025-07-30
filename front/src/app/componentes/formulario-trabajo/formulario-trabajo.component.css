@@ -56,9 +56,9 @@
 .campo-form select,
 .campo-form textarea {
   padding: 0.75rem;
-  border: 1px solid rgba(61, 126, 255, 0.2);
+  border: 1px solid white;
   border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: #001a6e;
   color: var(--btn-color-w);
   font-size: 14px;
   transition: all 0.3s ease;
@@ -199,7 +199,7 @@
 /* Estilos específicos para campos de importe */
 .campo-form input[readonly] {
   background-color: rgba(255, 255, 255, 0.05);
-  color: var(--letter-color);
+  color: var(--checked-color);
   cursor: not-allowed;
 }
 

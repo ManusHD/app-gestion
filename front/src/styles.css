@@ -253,6 +253,10 @@ textarea {
     field-sizing: content;
 }
 
+.btns-alineados {
+    display: flex;
+    justify-content: space-between;
+}
 
 /* ----------------------------------------
 -----------CSS para los Buscadores---------

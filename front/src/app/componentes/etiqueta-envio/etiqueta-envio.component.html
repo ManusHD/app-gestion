@@ -1,0 +1,48 @@
+<div class="etiqueta-container" *ngIf="salida">
+    <div class="etiqueta" #etiquetaRef>
+        <div class="etiqueta-header">
+            <img src="../../../assets/imagenes/delim.jpg" alt="">
+            <!-- <h3>ETIQUETA DE ENVÍO</h3>
+            <div class="fecha-envio">
+                Fecha: {{ salida.fechaEnvio | date: 'dd/MM/yyyy' }}
+            </div> -->
+            <div class="direccion-delim">
+                <p>
+                    DELIM LOGISTICA <br>
+                    C/MORERAS PARC. 1 N-45 <br>
+                    Pl. CAMPORROSO SUR <br>
+                    28350 CIEMPOZUELOS <br>
+                    MADRID
+                </p>
+            </div>
+        </div>
+
+        <div class="etiqueta-body">
+            <div class="destinatario">
+                <h4>DESTINO:</h4>
+                <div class="direccion-completa">
+                    <div class="nombre-destino">{{ obtenerNombreDestino() }}</div>
+                    <div class="direccion" *ngIf="salida.direccion">{{ salida.direccion }}</div>
+                    <div class="poblacion-provincia">
+                        <span *ngIf="salida.poblacion">{{ salida.poblacion }}</span>
+                        <span *ngIf="salida.provincia">{{ salida.provincia }}</span>
+                    </div>
+                    <div class="codigo-postal" *ngIf="salida.cp">CP: {{ salida.cp }}</div>
+                    <div class="telefono" *ngIf="salida.telefono">Tel: {{ salida.telefono }}</div>
+                </div>
+            </div>
+
+            <!-- <div class="peso-section">
+                <div class="peso-label">PESO:</div>
+                <div class="peso-input">_______ kg</div>
+            </div> -->
+        </div>
+    </div>
+
+    <div class="etiqueta-actions">
+        <button class="btn-imprimir" (click)="imprimirEtiqueta()">
+            <img src="../../../assets/icons/print.svg" alt="Imprimir" />
+            Imprimir Etiqueta
+        </button>
+    </div>
+</div>

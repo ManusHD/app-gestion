@@ -170,7 +170,7 @@ public class TrabajoController {
                     .body("El concepto es obligatorio");
         }
 
-        if (trabajo.getHoras() == null || trabajo.getHoras().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+        if (trabajo.getEstado() && (trabajo.getHoras() == null || trabajo.getHoras().compareTo(java.math.BigDecimal.ZERO) <= 0)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Las horas deben ser mayor que 0");
         }

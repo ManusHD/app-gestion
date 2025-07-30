@@ -158,6 +158,10 @@ export class DireccionesService {
         return this.http.delete<Perfumeria>(`${this.apiUrlPerfumerias}/${id}`);
     }
 
+    getOtrasDirecciones(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrlOtrasDirecciones}`);
+    }
+
     getOtrasDireccionesPaginado(page: number, size: number): Observable<any> {
         return this.http.get<any>(`${this.apiUrlOtrasDirecciones}/paginado?page=${page}&size=${size}`);
     }

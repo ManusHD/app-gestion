@@ -46,7 +46,10 @@
                 </ng-container>
                 <ng-container matColumnDef="detalles">
                     <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
-                    <td class="fila-paginator" mat-cell *matCellDef="let salida"><app-detalles-salidas [enRecibidas]="true" [salida]="salida" (entradaRellena)="salida.rellena=$event"></app-detalles-salidas></td>
+                    <td class="fila-paginator" mat-cell *matCellDef="let salida">
+                        <app-detalles-salidas [enRecibidas]="true" [salida]="salida" (entradaRellena)="salida.rellena=$event"></app-detalles-salidas>
+                    </td>
+
                 </ng-container>
                 
                 <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>

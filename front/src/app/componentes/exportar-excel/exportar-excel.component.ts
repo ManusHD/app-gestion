@@ -3,6 +3,7 @@ import { Observable, Subscription } from 'rxjs';
 import { Entrada } from 'src/app/models/entrada.model';
 import { ProductoUbicacion } from 'src/app/models/productoUbicacion.model';
 import { Salida } from 'src/app/models/salida.model';
+import { Trabajo } from 'src/app/models/trabajo.model';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import * as XLSX from 'xlsx';
@@ -63,6 +64,9 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
           break;
         case 'UBICACIONES':
           this.exportarUbicaciones();
+          break;
+        case 'TRABAJOS':
+          this.exportarTrabajos();
           break;
         default:
           this.snackbar.snackBarError(
@@ -167,6 +171,38 @@ export class ExportarExcelComponent implements OnInit, OnDestroy {
     const workbook: XLSX.WorkBook = {
       Sheets: { 'Ubicaciones': worksheet },
       SheetNames: ['Ubicaciones'],
+    };
+    XLSX.writeFile(workbook, `${this.fileName}.xlsx`);
+    this.cerrarModal();
+  }
+
+  exportarTrabajos() {
+    let data: any[] = [];
+    this.dataCompleta.forEach((trabajo: Trabajo) => {
+      data.push({
+        'Fecha': trabajo.fecha ? new Date(trabajo.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', }) : '',
+        'Concepto': trabajo.concepto ?? '',
+        'PDV': 
+          (trabajo.perfumeria || trabajo.pdv)
+        ? [trabajo.perfumeria, trabajo.pdv].filter(Boolean).join(' ')
+        : (trabajo.otroOrigen ?? ''),
+        'Dirección': trabajo.direccion ?? '',
+        'Población': trabajo.poblacion ?? '',
+        'Provincia': trabajo.provincia ?? '',
+        'CP': trabajo.cp ?? '',
+        'Teléfono': trabajo.telefono ?? '',
+        'Horas': trabajo.horas ?? '',
+        'Importe/Hora': trabajo.importePorHora ?? '',
+        'Importe Total': trabajo.importeTotal ?? '',
+        'Observaciones': trabajo.observaciones ?? '',
+      });
+    });
+
+    // Crear hoja de trabajo
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(data);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { 'Trabajos': worksheet },
+      SheetNames: ['Trabajos'],
     };
     XLSX.writeFile(workbook, `${this.fileName}.xlsx`);
     this.cerrarModal();
