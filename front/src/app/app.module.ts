@@ -96,6 +96,7 @@ import { TrabajosRealizadosComponent } from './componentes/trabajos-realizados/t
 import { DetallesTrabajoComponent } from './componentes/detalles-trabajo/detalles-trabajo.component';
 import { FormularioTrabajoComponent } from './componentes/formulario-trabajo/formulario-trabajo.component';
 import { EtiquetaEnvioComponent } from './componentes/etiqueta-envio/etiqueta-envio.component';
+import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nuevo.component';
 
 @NgModule({
   declarations: [
@@ -153,6 +154,7 @@ import { EtiquetaEnvioComponent } from './componentes/etiqueta-envio/etiqueta-en
     DetallesTrabajoComponent,
     FormularioTrabajoComponent,
     EtiquetaEnvioComponent,
+    TrabajosNuevoComponent,
   ],
   imports: [
     AppRoutingModule,

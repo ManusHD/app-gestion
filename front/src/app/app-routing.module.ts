@@ -30,6 +30,7 @@ import { FacturacionComponent } from './componentes/facturacion/facturacion.comp
 import { TrabajosPrevisionComponent } from './componentes/trabajos-prevision/trabajos-prevision.component';
 import { TrabajosPendientesComponent } from './componentes/trabajos-pendientes/trabajos-pendientes.component';
 import { TrabajosRealizadosComponent } from './componentes/trabajos-realizados/trabajos-realizados.component';
+import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nuevo.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -43,6 +44,7 @@ const routes: Routes = [
   {path: 'salidas/enviadas', component:SalidasEnviadasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'salidas/nuevo', component:SalidasNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'trabajos', component:TrabajosPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'trabajos/nuevo', component:TrabajosNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'trabajos/pendientes', component:TrabajosPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'trabajos/realizados', component:TrabajosRealizadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'inventario', component:InventarioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},

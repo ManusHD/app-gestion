@@ -24,7 +24,7 @@
                     <div class="nombre-destino">{{ obtenerNombreDestino() }}</div>
                     <div class="direccion" *ngIf="salida.direccion">{{ salida.direccion }}</div>
                     <div class="poblacion-provincia">
-                        <span *ngIf="salida.poblacion">{{ salida.poblacion }}</span>
+                        <span *ngIf="salida.poblacion">{{ salida.poblacion }}, </span>
                         <span *ngIf="salida.provincia">{{ salida.provincia }}</span>
                     </div>
                     <div class="codigo-postal" *ngIf="salida.cp">CP: {{ salida.cp }}</div>

@@ -52,7 +52,11 @@ export class FormularioTrabajoComponent implements OnInit {
     this.cargarDirecciones();
     
     if (!this.detallesTrabajo) {
-      this.inicializarNuevoTrabajo();
+      if (this.pestanaPadre === 'nuevoTrabajo') {
+        this.inicializarNuevoTrabajo();
+      } else {
+        this.inicializarNuevaPrevision(); // Para previsión
+      }
     } else {
       this.inicializarDetalleTrabajo();
     }
@@ -80,7 +84,7 @@ export class FormularioTrabajoComponent implements OnInit {
   }
 
   private validarFormulario(): boolean {
-    const esDetalle = this.pestanaPadre === 'detallePrevisionTrabajo';
+    const esTrabajoRealizado = this.pestanaPadre === 'nuevoTrabajo';
     
     // Validaciones básicas
     if (!this.trabajoForm.get('fecha')?.value) {
@@ -93,12 +97,22 @@ export class FormularioTrabajoComponent implements OnInit {
       return false;
     }
     
+    // Si es trabajo realizado, las horas son obligatorias
+    if (esTrabajoRealizado) {
+      const horas = this.trabajoForm.get('horas')?.value;
+      if (!horas || horas <= 0) {
+        this.snackBarError('Las horas son obligatorias para trabajos realizados');
+        return false;
+      }
+    }
+    
     if (!this.validarDirecciones()) {
       return false;
     }
     
     return true;
   }
+
 
   private setupFormSubscriptions() {
     // Suscripción para calcular importe automáticamente
@@ -174,6 +188,14 @@ export class FormularioTrabajoComponent implements OnInit {
     });
   }
 
+  private inicializarNuevaPrevision() {
+    this.mostrarFormulario = true;
+    this.trabajoForm.patchValue({
+      fecha: new Date().toISOString().split('T')[0],
+      importePorHora: 25
+    });
+  }
+
   private inicializarDetalleTrabajo() {
     this.mostrarFormulario = true;
     if (this.detallesTrabajo) {
@@ -208,6 +230,8 @@ export class FormularioTrabajoComponent implements OnInit {
     this.btnSubmitActivado = false;
     
     if (this.validarFormulario()) {
+      const esTrabajoRealizado = this.pestanaPadre === 'nuevoTrabajo';
+      
       const nuevoTrabajo: Trabajo = {
         fecha: this.trabajoForm.get('fecha')?.value,
         concepto: this.trabajoForm.get('concepto')?.value,
@@ -222,13 +246,16 @@ export class FormularioTrabajoComponent implements OnInit {
         horas: this.trabajoForm.get('horas')?.value || 0,
         importePorHora: this.trabajoForm.get('importePorHora')?.value,
         observaciones: this.trabajoForm.get('observaciones')?.value,
-        estado: false
+        estado: esTrabajoRealizado // true para trabajo directo, false para previsión
       };
   
       this.trabajoService.newTrabajo(nuevoTrabajo).subscribe({
         next: (trabajoCreado) => {
           console.log('Trabajo creado exitosamente:', trabajoCreado);
-          this.snackBarExito('Trabajo guardado correctamente');
+          const mensaje = esTrabajoRealizado ? 
+            'Trabajo realizado y guardado correctamente' : 
+            'Trabajo guardado correctamente';
+          this.snackBarExito(mensaje);
           this.resetForm();
           this.carga.hide();
           this.btnSubmitActivado = true;

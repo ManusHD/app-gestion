@@ -5,6 +5,11 @@
                 PREVISIÓN DE TRABAJOS
             </a>
         </li>
+        <li *appHasRole="'ROLE_ADMIN'">
+            <a routerLinkActive="active" routerLink="/trabajos/nuevo">
+                GRABAR TRABAJO
+            </a>
+        </li>
         <li>
             <a routerLinkActive="active" routerLink="/trabajos/pendientes">
                 TRABAJOS PENDIENTES

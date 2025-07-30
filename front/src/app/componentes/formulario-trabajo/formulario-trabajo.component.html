@@ -158,11 +158,20 @@
 
             <!-- Botones -->
             <div class="btns-tabla">
-                <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR EL TRABAJO?'" (confirmed)="onSubmit()"
-                    *ngIf="pestanaPadre == 'previsionTrabajo'" type="submit" class="crear-producto"
-                    [disabled]="!btnSubmitActivado">
-                    GRABAR TRABAJO
-                </button>
+                <!-- Botones -->
+                <div class="btns-tabla">
+                    <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR EL TRABAJO?'" (confirmed)="onSubmit()"
+                        *ngIf="pestanaPadre == 'previsionTrabajo'" type="submit" class="crear-producto"
+                        [disabled]="!btnSubmitActivado">
+                        GRABAR TRABAJO
+                    </button>
+                    
+                    <button [appConfirm]="'¿ESTÁS SEGURO DE GRABAR EL TRABAJO?'" (confirmed)="onSubmit()"
+                        *ngIf="pestanaPadre == 'nuevoTrabajo'" type="submit" class="crear-producto"
+                        [disabled]="!btnSubmitActivado">
+                        GRABAR TRABAJO
+                    </button>
+                </div>
             </div>
         </form>
 
