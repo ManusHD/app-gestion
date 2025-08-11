@@ -1,0 +1,85 @@
+<app-cabecera-muebles></app-cabecera-muebles>
+
+<div class="centrar">
+    <div id="historial">
+        <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+            <caption>TRABAJOS DE MUEBLES PENDIENTES</caption>
+            
+            <ng-container matColumnDef="fechaOrden">
+                <th class="header-paginator" *matHeaderCellDef>FECHA ORDEN</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    {{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="destino">
+                <th class="header-paginator" *matHeaderCellDef>DESTINO</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    {{obtenerDestino(mueble)}}
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="tipoAccion">
+                <th class="header-paginator" *matHeaderCellDef>TIPO ACCIÓN</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    <span class="badge" [ngClass]="mueble.tipoAccion === 'IMPLANTACION' ? 'badge-implantacion' : 'badge-retirada'">
+                        {{mueble.tipoAccion}}
+                    </span>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="estado">
+                <th class="header-paginator" *matHeaderCellDef>ESTADO</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    <div class="flotar-medio">
+                        <div>
+                            <img [ngClass]="{'no-relleno': !estaCompleto(mueble)}"
+                                src="../../../assets/icons/check-verde.svg" />
+                            <img [ngClass]="{'relleno': estaCompleto(mueble)}"
+                                src="../../../assets/icons/no-check-gris.svg" />
+                        </div>
+                    </div>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>ACCIONES</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    <div class="centrar">
+                        <div style="display:flex; gap: 5px">
+                            <app-detalles-muebles [enRealizados]="false" [mueble]="mueble"></app-detalles-muebles>
+                            <button [appConfirm]="'¿ESTÁS SEGURO DE BORRAR EL TRABAJO?'" (confirmed)="deleteMueble(mueble.id!)"
+                                *appHasRole="'ROLE_ADMIN'" [disabled]="!btnSubmitActivado"
+                                class="btn-eliminar">
+                                <span class="text">BORRAR</span>
+                                <span class="icon">
+                                    <img src="../../../assets/icons/delete-bin.svg" />
+                                </span>
+                            </button>
+                            <button [appConfirm]="'¿ESTÁS SEGURO DE MARCAR COMO REALIZADO?'" (confirmed)="marcarComoRealizado(mueble.id!)"
+                                    [disabled]="!btnSubmitActivado || !estaCompleto(mueble)"
+                                    class="btn-grabar">
+                                    REALIZAR
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+        </table>
+        
+        <mat-paginator
+            class="paginator"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [length]="totalElementos"
+            [hidePageSize]="true"
+            showFirstLastButtons
+            (page)="cambiarPagina($event)">
+        </mat-paginator>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

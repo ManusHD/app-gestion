@@ -1,0 +1,28 @@
+
+
+.btn-etiqueta {
+  background-color: var(--color-excel-hover);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-etiqueta:hover {
+  background-color: #006936;
+}
+
+.etiqueta-modal {
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.etiqueta-modal h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--letter-color);
+}

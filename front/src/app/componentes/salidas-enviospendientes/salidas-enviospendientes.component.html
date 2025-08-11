@@ -45,6 +45,15 @@
                             class="btn-grabar">
                             GRABAR
                         </button>
+                        <button class="btn-etiqueta" (click)="mostrarEtiquetaEnvio()">ETIQUETA</button>
+
+                        <div *ngIf="mostrarEtiqueta" class="modal">
+                            <div class="modal-content etiqueta-modal">
+                                <span class="close" (click)="cerrarEtiqueta()">&times;</span>
+                                <h2>Etiqueta de Envío</h2>
+                                <app-etiqueta-envio [salida]="salida"></app-etiqueta-envio>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </ng-container>

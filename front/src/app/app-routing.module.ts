@@ -31,6 +31,9 @@ import { TrabajosPrevisionComponent } from './componentes/trabajos-prevision/tra
 import { TrabajosPendientesComponent } from './componentes/trabajos-pendientes/trabajos-pendientes.component';
 import { TrabajosRealizadosComponent } from './componentes/trabajos-realizados/trabajos-realizados.component';
 import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nuevo.component';
+import { MueblesPendientesComponent } from './componentes/muebles-pendientes/muebles-pendientes.component';
+import { MueblesPrevisionComponent } from './componentes/muebles-prevision/muebles-prevision.component';
+import { MueblesRealizadosComponent } from './componentes/muebles-realizados/muebles-realizados.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -47,6 +50,9 @@ const routes: Routes = [
   {path: 'trabajos/nuevo', component:TrabajosNuevoComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'trabajos/pendientes', component:TrabajosPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'trabajos/realizados', component:TrabajosRealizadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'muebles', component: MueblesPrevisionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'muebles/pendientes', component: MueblesPendientesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
+  {path: 'muebles/realizados', component: MueblesRealizadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'inventario', component:InventarioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
   {path: 'agencias', component:AgenciasTransporteComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'ubicaciones', component:UbicacionesComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},

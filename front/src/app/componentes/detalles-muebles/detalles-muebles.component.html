@@ -1,0 +1,78 @@
+<button *ngIf="currentPath == '/muebles/realizados'; else editar" class="btn-productos" (click)="mostrarDetalles()">VER DETALLES</button>
+<ng-template #editar>
+    <button class="btn-productos" (click)="mostrarDetalles()">EDITAR</button>
+</ng-template>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+        <span *ngIf="!enRealizados" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" class="close">&times;</span>
+        <span *ngIf="enRealizados" (click)="cerrarModal()" class="close">&times;</span>
+        
+        <h2 *ngIf="enRealizados">DESTINO: <span class="titulo-modal">{{obtenerDestino()}}</span></h2>
+        <h2 *ngIf="enRealizados">FECHA ORDEN: <span class="titulo-modal">{{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}</span></h2>
+        <h2 *ngIf="enRealizados">TIPO ACCIÓN: <span class="titulo-modal">{{mueble.tipoAccion}}</span></h2>
+
+        <div class="flotar-medio">
+            <div *ngIf="enRealizados; else detallesEnPrevision" class="detalles-container">
+                <!-- Información general -->
+                <div class="info-general">
+                    <div class="info-item">
+                        <label>Fecha Asignación:</label>
+                        <span>{{mueble.fechaAsignacion | date: 'dd/MM/yyyy'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Fecha Realización:</label>
+                        <span>{{mueble.fechaRealizacion | date: 'dd/MM/yyyy'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Coste Colaborador:</label>
+                        <span>{{mueble.costeColaborador | currency:'EUR':'symbol':'1.2-2'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Coste Envío:</label>
+                        <span>{{mueble.costeEnvio | currency:'EUR':'symbol':'1.2-2'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Coste Total:</label>
+                        <span>{{mueble.costeTotal | currency:'EUR':'symbol':'1.2-2'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Importe a Facturar:</label>
+                        <span>{{mueble.importeFacturar | currency:'EUR':'symbol':'1.2-2'}}</span>
+                    </div>
+                    <div class="info-item" *ngIf="mueble.indicaciones">
+                        <label>Indicaciones:</label>
+                        <span>{{mueble.indicaciones}}</span>
+                    </div>
+                </div>
+
+                <!-- Tabla de productos -->
+                <table class="productos-table">
+                    <thead>
+                        <tr>
+                            <th>REFERENCIA</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th>ESTADO</th>
+                            <th>UNIDADES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let producto of mueble.productos">
+                            <td>{{producto.ref}}</td>
+                            <td>{{producto.description}}</td>
+                            <td>{{producto.estado}}</td>
+                            <td>{{producto.unidades}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <ng-template #detallesEnPrevision>
+            <app-formulario-mueble [pestanaPadre]="'detallePrevisionMueble'" [detallesMueble]="mueble">
+            </app-formulario-mueble>
+        </ng-template>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

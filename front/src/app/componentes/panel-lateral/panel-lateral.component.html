@@ -49,6 +49,15 @@
                       TRABAJOS DE MANIPULACIÓN
                     </a>
                   </li>
+                  
+                  <li id="muebles">
+                    <a 
+                      routerLink="/muebles" 
+                      routerLinkActive="active" 
+                      [routerLinkActiveOptions]="{ exact: false }" >
+                      MUEBLES
+                    </a>
+                  </li>
                 <li id="inventario"><a routerLinkActive="active" class="" routerLink="inventario" (click)="isMobile && toggleSidebar()">INVENTARIO</a></li>
                 <details *appHasRole="'ROLE_ADMIN'">
                     <summary

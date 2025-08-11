@@ -62,14 +62,15 @@ export interface DetalleMovimiento {
   providedIn: 'root',
 })
 export class FacturacionService {
+  // URLs de API
   private apiUrlEntradas = environment.apiEntradas;
   private apiUrlSalidas = environment.apiSalidas;
 
-  // Tarifas
-  readonly TARIFA_PALET_MES = 5.4;
-  readonly TARIFA_MOVIMIENTO_PALET = 2.4;
-  readonly TARIFA_MOVIMIENTO_BULTO = 0.45;
-  readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;
+  // Tarifas del sistema (configurables)
+  readonly TARIFA_PALET_MES = 5.4;           // €/palet/mes
+  readonly TARIFA_MOVIMIENTO_PALET = 2.4;    // €/palet movido
+  readonly TARIFA_MOVIMIENTO_BULTO = 0.45;   // €/bulto movido
+  readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;  // €/unidad movida
 
   constructor(private http: HttpClient) {}
 
@@ -148,6 +149,8 @@ export class FacturacionService {
           fechaInicioAjustada
         );
 
+        console.log("Resumen movimientos:", resumenMovimientos.stockInicialPalets);
+
         const totalMovimientos = detallesMovimientos.reduce(
           (sum, d) => sum + d.costoTotal,
           0
@@ -157,10 +160,16 @@ export class FacturacionService {
           0
         );
 
+        console.log('=== DEBUG TOTALES ===');
+        console.log('Detalles almacenaje:', detallesAlmacenaje);
+        console.log('Total almacenaje:', totalAlmacenaje);
+        console.log('Total movimientos:', totalMovimientos);
+        console.log('Total general:', totalAlmacenaje + totalMovimientos);
+
         return {
-          totalAlmacenaje,
-          totalMovimientos,
-          totalGeneral: totalAlmacenaje + totalMovimientos,
+          totalAlmacenaje,           // ✅ Suma de todos los costos de almacenaje
+          totalMovimientos,          // ✅ Suma de todos los costos de movimientos  
+          totalGeneral: totalAlmacenaje + totalMovimientos, // ✅ TOTAL GENERAL
           detallesAlmacenaje,
           detallesMovimientos,
           resumenMovimientos,
@@ -188,21 +197,24 @@ export class FacturacionService {
       if (entrada.estado && entrada.productos) {
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            stockInicialPalets += producto.palets;
+            stockInicialPalets += producto.palets; // ✅ SUMA palets de entradas anteriores
           }
         });
       }
     });
 
+    
     salidasAnteriores.forEach((salida) => {
       if (salida.estado && salida.productos) {
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            stockInicialPalets -= producto.palets;
+            stockInicialPalets -= producto.palets; // ✅ RESTA palets de salidas anteriores
           }
         });
       }
     });
+
+    console.log("Stock inicial de palets:", stockInicialPalets);
 
     // Calcular movimientos del mes - ENTRADAS
     let paletsEntrados = 0;
@@ -273,7 +285,7 @@ export class FacturacionService {
     });
 
     return {
-      stockInicialPalets: Math.max(0, stockInicialPalets),
+      stockInicialPalets: Math.max(0, stockInicialPalets), // ✅ Evita números negativos
       paletsEntrados,
       paletsSalidos,
       bultosEntrados,
@@ -338,273 +350,178 @@ export class FacturacionService {
     const fechaInicioDate = new Date(fechaInicio);
     const fechaFinDate = new Date(fechaFin);
     const diasEnElMes = this.getDiasEnMes(fechaInicioDate);
-
-    // Mapa para trackear todos los palets por referencia/descripción
-    const inventarioPalets = new Map<
-      string,
-      {
-        palets: number;
-        fechaUltimaEntrada: Date;
-        referencia: string;
-        descripcion: string;
-        movimientos: Array<{
-          fecha: Date;
-          cantidad: number;
-          tipo: 'entrada' | 'salida';
-        }>;
-      }
-    >();
-
-    // 1. Procesar todas las entradas ANTERIORES al mes
+  
+    // 1. Calcular stock inicial
+    let stockInicialTotal = 0;
+    
     entradasAnteriores.forEach((entrada) => {
-      if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
-        const fechaEntrada = new Date(entrada.fechaRecepcion);
-
+      if (entrada.estado && entrada.productos) {
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${producto.description}`;
-
-            if (inventarioPalets.has(key)) {
-              const item = inventarioPalets.get(key)!;
-              item.palets += producto.palets;
-              item.fechaUltimaEntrada =
-                fechaEntrada > item.fechaUltimaEntrada
-                  ? fechaEntrada
-                  : item.fechaUltimaEntrada;
-              item.movimientos.push({
-                fecha: fechaEntrada,
-                cantidad: producto.palets,
-                tipo: 'entrada',
-              });
-            } else {
-              inventarioPalets.set(key, {
-                palets: producto.palets,
-                fechaUltimaEntrada: fechaEntrada,
-                referencia: producto.ref || '',
-                descripcion: producto.description || '',
-                movimientos: [
-                  {
-                    fecha: fechaEntrada,
-                    cantidad: producto.palets,
-                    tipo: 'entrada',
-                  },
-                ],
-              });
-            }
+            stockInicialTotal += producto.palets;
           }
         });
       }
     });
-
-    // 1.1. Procesar todas las salidas ANTERIORES al mes
+  
     salidasAnteriores.forEach((salida) => {
-      if (salida.estado && salida.productos && salida.fechaEnvio) {
-        const fechaSalida = new Date(salida.fechaEnvio);
-
+      if (salida.estado && salida.productos) {
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${producto.description}`;
-
-            if (inventarioPalets.has(key)) {
-              const item = inventarioPalets.get(key)!;
-              item.palets -= producto.palets; // ✅ Restar palets que salieron
-              item.movimientos.push({
-                fecha: fechaSalida,
-                cantidad: -producto.palets,
-                tipo: 'salida',
-              });
-            } else {
-              // Si no existía el producto, crear entrada negativa
-              inventarioPalets.set(key, {
-                palets: -producto.palets,
-                fechaUltimaEntrada: fechaSalida,
-                referencia: producto.ref || '',
-                descripcion: producto.description || '',
-                movimientos: [
-                  {
-                    fecha: fechaSalida,
-                    cantidad: -producto.palets,
-                    tipo: 'salida',
-                  },
-                ],
-              });
-            }
+            stockInicialTotal -= producto.palets;
           }
         });
       }
     });
-
-    // 2. Procesar entradas DEL MES
+  
+    stockInicialTotal = Math.max(0, stockInicialTotal);
+  
+    // 2. Stock inicial - facturar mes completo
+    if (stockInicialTotal > 0) {
+      const costoStockInicial = stockInicialTotal * this.TARIFA_PALET_MES;
+      detalles.push({
+        referencia: 'STOCK_INICIAL',
+        descripcion: 'Stock inicial de palets (mes completo)',
+        palets: stockInicialTotal,
+        diasAlmacenaje: diasEnElMes,
+        costoTotal: costoStockInicial,
+        fechaEntrada: fechaInicioDate,
+        fechaSalida: undefined,
+      });
+    }
+  
+    // 3. Procesar entradas del mes INDIVIDUALMENTE
     entradasDelMes.forEach((entrada) => {
       if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
         const fechaEntrada = new Date(entrada.fechaRecepcion);
-
+        
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${producto.description}`;
-
-            if (inventarioPalets.has(key)) {
-              const item = inventarioPalets.get(key)!;
-              item.palets += producto.palets;
-              item.fechaUltimaEntrada =
-                fechaEntrada > item.fechaUltimaEntrada
-                  ? fechaEntrada
-                  : item.fechaUltimaEntrada;
-              item.movimientos.push({
-                fecha: fechaEntrada,
-                cantidad: producto.palets,
-                tipo: 'entrada',
-              });
-            } else {
-              inventarioPalets.set(key, {
-                palets: producto.palets,
-                fechaUltimaEntrada: fechaEntrada,
-                referencia: producto.ref || '',
-                descripcion: producto.description || '',
-                movimientos: [
-                  {
-                    fecha: fechaEntrada,
-                    cantidad: producto.palets,
-                    tipo: 'entrada',
-                  },
-                ],
-              });
-            }
+            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
+            const costoEntrada = (producto.palets * this.TARIFA_PALET_MES * diasDesdeEntrada) / diasEnElMes;
+            
+            detalles.push({
+              referencia: producto.ref || 'SIN_REF',
+              descripcion: producto.description || 'Sin descripción',
+              palets: producto.palets,
+              diasAlmacenaje: diasDesdeEntrada,
+              costoTotal: costoEntrada,
+              fechaEntrada: fechaEntrada,
+              fechaSalida: undefined,
+            });
           }
         });
       }
     });
 
-    // 3. Procesar salidas DEL MES
+    console.log('--- ENTRADAS DEL MES ---');
+    entradasDelMes.forEach((entrada) => {
+      if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
+        const fechaEntrada = new Date(entrada.fechaRecepcion);
+        entrada.productos.forEach((producto: any) => {
+          if (producto.palets && producto.palets > 0) {
+            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
+            console.log(`${producto.ref}: Entrada ${fechaEntrada.toLocaleDateString()}, facturado ${diasDesdeEntrada} días`);
+          }
+        });
+      }
+    });
+  
+    // 4. Procesar salidas del mes INDIVIDUALMENTE (descuentos detallados)
     salidasDelMes.forEach((salida) => {
       if (salida.estado && salida.productos && salida.fechaEnvio) {
         const fechaSalida = new Date(salida.fechaEnvio);
-
+        
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${producto.description}`;
-
-            if (inventarioPalets.has(key)) {
-              const item = inventarioPalets.get(key)!;
-              item.movimientos.push({
-                fecha: fechaSalida,
-                cantidad: -producto.palets,
-                tipo: 'salida',
+            // Días que SÍ se facturan (hasta el día de salida inclusive)
+            const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
+            
+            // Días que NO se facturan (desde el día siguiente a la salida)
+            const diasNoFacturados = diasEnElMes - diasFacturados;
+            
+            // Solo aplicar descuento si hay días no facturados
+            const descuento = diasNoFacturados > 0 
+              ? (producto.palets * this.TARIFA_PALET_MES * diasNoFacturados) / diasEnElMes
+              : 0;
+            
+            // DETALLE INDIVIDUAL DEL DESCUENTO
+            if (descuento > 0) {
+              detalles.push({
+                referencia: producto.ref || 'SIN_REF',
+                descripcion: producto.description || 'Sin descripción',
+                palets: -producto.palets, // Negativo para mostrar que es salida
+                diasAlmacenaje: -diasNoFacturados, // Negativo para mostrar descuento
+                costoTotal: -descuento, // Negativo para mostrar descuento
+                fechaEntrada: fechaInicioDate,
+                fechaSalida: fechaSalida,
               });
             }
+            
+            console.log(`=== DEBUG SALIDA: ${producto.ref} ===`);
+            console.log(`Fecha salida: ${fechaSalida.toLocaleDateString()}`);
+            console.log(`Días facturados (hasta salida inclusive): ${diasFacturados}`);
+            console.log(`Días NO facturados (desde día siguiente): ${diasNoFacturados}`);
+            console.log(`Descuento aplicado: ${descuento.toFixed(2)}€`);
           }
         });
       }
     });
 
-    // 4. Calcular facturación para cada referencia/descripción
-    inventarioPalets.forEach((item, key) => {
-      let costoTotal = 0;
-      let diasFacturados = 0;
-
-      // Calcular cuántos palets había al inicio del mes
-      let paletsAlInicio = 0;
-      item.movimientos.forEach((mov) => {
-        if (mov.fecha < fechaInicioDate) {
-          paletsAlInicio += mov.cantidad;
-        }
-      });
-
-      // Si había palets al inicio del mes, se facturan completos
-      if (paletsAlInicio > 0) {
-        const costoCompleto = paletsAlInicio * this.TARIFA_PALET_MES;
-        costoTotal += costoCompleto;
-        diasFacturados = diasEnElMes;
-
-        detalles.push({
-          referencia: item.referencia,
-          descripcion: item.descripcion,
-          palets: paletsAlInicio,
-          diasAlmacenaje: diasEnElMes,
-          costoTotal: costoCompleto,
-          fechaEntrada: item.fechaUltimaEntrada,
-          fechaSalida: undefined,
+    console.log('--- SALIDAS DEL MES ---');
+    salidasDelMes.forEach((salida) => {
+      if (salida.estado && salida.productos && salida.fechaEnvio) {
+        const fechaSalida = new Date(salida.fechaEnvio);
+        salida.productos.forEach((producto: any) => {
+          if (producto.palets && producto.palets > 0) {
+            const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
+            const diasNoFacturados = diasEnElMes - diasFacturados;
+            console.log(`${producto.ref}: Salida ${fechaSalida.toLocaleDateString()}, facturado ${diasFacturados} días, descontado ${diasNoFacturados} días`);
+          }
         });
       }
-
-      // Procesar movimientos durante el mes
-      const movimientosDelMes = item.movimientos
-        .filter(
-          (mov) => mov.fecha >= fechaInicioDate && mov.fecha <= fechaFinDate
-        )
-        .sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-
-      movimientosDelMes.forEach((mov) => {
-        if (mov.tipo === 'entrada') {
-          // Palets que entran: se facturan proporcionalmente desde su entrada
-          const diasDesdeEntrada = this.calcularDiasDesdeEntrada(
-            mov.fecha,
-            fechaFinDate
-          );
-          const costoEntrada =
-            (mov.cantidad * this.TARIFA_PALET_MES * diasDesdeEntrada) /
-            diasEnElMes;
-          costoTotal += costoEntrada;
-
-          detalles.push({
-            referencia: item.referencia,
-            descripcion: item.descripcion,
-            palets: mov.cantidad,
-            diasAlmacenaje: diasDesdeEntrada,
-            costoTotal: costoEntrada,
-            fechaEntrada: mov.fecha,
-            fechaSalida: undefined,
-          });
-        } else if (mov.tipo === 'salida') {
-          // Palets que salen: se descuenta proporcionalmente desde su salida
-          const diasHastaSalida = this.calcularDiasHastaSalida(
-            fechaInicioDate,
-            mov.fecha
-          );
-          const diasNoFacturados = diasEnElMes - diasHastaSalida;
-          const descuento =
-            (Math.abs(mov.cantidad) *
-              this.TARIFA_PALET_MES *
-              diasNoFacturados) /
-            diasEnElMes;
-          costoTotal -= descuento;
-
-          detalles.push({
-            referencia: item.referencia,
-            descripcion: item.descripcion,
-            palets: mov.cantidad, // Negativo para mostrar que es salida
-            diasAlmacenaje: -diasNoFacturados, // Negativo para mostrar descuento
-            costoTotal: -descuento, // Negativo para mostrar descuento
-            fechaEntrada: item.fechaUltimaEntrada,
-            fechaSalida: mov.fecha,
-          });
-        }
-      });
     });
-
+  
+    // Log para debugging
+    const totalStockInicial = stockInicialTotal * this.TARIFA_PALET_MES;
+    const totalEntradas = detalles
+      .filter(d => d.palets > 0 && d.referencia !== 'STOCK_INICIAL')
+      .reduce((sum, d) => sum + d.costoTotal, 0);
+    const totalDescuentos = detalles
+      .filter(d => d.palets < 0)
+      .reduce((sum, d) => sum + d.costoTotal, 0);
+  
+    console.log('=== DEBUG ALMACENAJE DETALLADO ===');
+    console.log('Stock inicial:', stockInicialTotal, 'palets =', totalStockInicial, '€');
+    console.log('Entradas detalladas:', totalEntradas, '€');
+    console.log('Descuentos detallados:', totalDescuentos, '€');
+    console.log('Total almacenaje:', totalStockInicial + totalEntradas + totalDescuentos, '€');
+    console.log('Detalles generados:', detalles.length);
+  
     return detalles;
   }
 
   /**
-   * Calcula días desde la entrada hasta el fin del mes
+   * Calcula días desde la entrada hasta el fin del mes (INCLUSIVE)
    */
   private calcularDiasDesdeEntrada(
     fechaEntrada: Date,
     fechaFinMes: Date
   ): number {
     const diferenciaTiempo = fechaFinMes.getTime() - fechaEntrada.getTime();
-    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 1;
+    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 1; // +1 para incluir el día de entrada
   }
 
   /**
-   * Calcula días desde el inicio del mes hasta la salida
+   * Calcula días desde el inicio del mes hasta la salida (INCLUSIVE)
+   * Si sale el día X, ese día SÍ se factura, el descuento empieza desde X+1
    */
   private calcularDiasHastaSalida(
     fechaInicioMes: Date,
     fechaSalida: Date
   ): number {
     const diferenciaTiempo = fechaSalida.getTime() - fechaInicioMes.getTime();
-    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 1;
+    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 1; // +1 porque el día de salida SÍ se factura
   }
 
   /**
@@ -1282,4 +1199,6 @@ export class FacturacionService {
     ];
     return `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
   }
+
+  
 }

@@ -1,0 +1,63 @@
+#contenedor-muebles-realizados {
+    display: flex;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.buscador-fechas {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rango-fechas {
+    display: flex;
+    gap: 60px;
+    color: white;
+    width: fit-content;
+    margin-top: 20px;
+}
+
+.rango-fecha {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-fecha {
+    padding: 8px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #001a6e;
+    color: white;
+}
+
+.tabla-paginator,
+mat-paginator {
+    height: fit-content;
+    width: 100%;
+}
+
+input[type="text"] {
+    width: 300px;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.badge-implantacion {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge-retirada {
+    background-color: #fff3e0;
+    color: #f57c00;
+}

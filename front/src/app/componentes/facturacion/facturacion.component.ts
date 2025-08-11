@@ -36,28 +36,23 @@ interface ResumenFacturacion {
   styleUrls: ['./facturacion.component.css'],
 })
 export class FacturacionComponent implements OnInit {
-  facturacionForm!: FormGroup;
-  mostrarResultados = false;
-  cargando = false;
-  resumenFacturacion: ResumenFacturacion | null = null;
+  // === FORMULARIO Y ESTADO ===
+  facturacionForm!: FormGroup;           // Formulario reactivo principal
+  mostrarResultados = false;             // Controla la visibilidad de resultados
+  cargando = false;                      // Estado de carga durante cálculos
+  resumenFacturacion: ResumenFacturacion | null = null; // Datos de facturación calculados
 
-  // Exponer Math para usar en template
-  Math = Math;
-
-  // Tarifas
+  // === CONFIGURACIÓN DE TARIFAS (solo lectura) ===
   readonly TARIFA_PALET_MES = 5.4;
   readonly TARIFA_MOVIMIENTO_PALET = 2.4;
   readonly TARIFA_MOVIMIENTO_BULTO = 0.45;
   readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;
 
-  // Columnas para la tabla de detalles
-  displayedColumns: string[] = [
-    'tipo',
-    'concepto',
-    'cantidad',
-    'precio',
-    'total',
-  ];
+  // === CONFIGURACIÓN DE TABLA ===
+  displayedColumns: string[] = ['tipo', 'concepto', 'cantidad', 'precio', 'total'];
+
+  // === UTILIDADES ===
+  Math = Math; // Exponer Math para usar en template
 
   constructor(
     private fb: FormBuilder,
@@ -67,43 +62,28 @@ export class FacturacionComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {}
 
+  /**
+   * Inicializa el formulario con valores por defecto del mes actual
+   */
   ngOnInit() {
     this.initForm();
   }
 
   private initForm() {
     const currentDate = new Date();
-    const firstDayOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const lastDayOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
-
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  
     this.facturacionForm = this.fb.group({
-      mesSeleccionado: [
-        this.formatDateForInput(firstDayOfMonth),
-        Validators.required,
-      ],
-      fechaInicio: [
-        this.formatDateForInput(firstDayOfMonth),
-        Validators.required,
-      ],
+      mesSeleccionado: [this.formatDateForInput(firstDayOfMonth), Validators.required],
+      fechaInicio: [this.formatDateForInput(firstDayOfMonth), Validators.required],
       fechaFin: [this.formatDateForInput(lastDayOfMonth), Validators.required],
     });
-
-    // Escuchar cambios en el mes seleccionado
-    this.facturacionForm
-      .get('mesSeleccionado')
-      ?.valueChanges.subscribe((value) => {
-        if (value) {
-          this.actualizarRangoFechas(value);
-        }
-      });
+  
+    // Sincronizar fechas cuando cambia el mes seleccionado
+    this.facturacionForm.get('mesSeleccionado')?.valueChanges.subscribe((value) => {
+      if (value) this.actualizarRangoFechas(value);
+    });
   }
 
   getMovimientoNeto(tipo: 'bultos' | 'unidades'): number {
@@ -158,14 +138,15 @@ export class FacturacionComponent implements OnInit {
     const fechaInicio = this.facturacionForm.get('fechaInicio')?.value;
     const fechaFin = this.facturacionForm.get('fechaFin')?.value;
 
-    this.facturacionService
-      .calcularFacturacion(fechaInicio, fechaFin)
-      .subscribe({
-        next: (facturacion) => {
-          this.resumenFacturacion = this.convertirFacturacion(facturacion);
-          this.mostrarResultados = true;
-          this.cargando = false;
-        },
+    this.facturacionService.calcularFacturacion(fechaInicio, fechaFin).subscribe({
+    next: (facturacion) => {
+      this.resumenFacturacion = this.convertirFacturacion(facturacion);
+      this.mostrarResultados = true;
+      this.cargando = false;
+      
+      // Verificar cálculos
+      setTimeout(() => this.verificarCalculosAlmacenaje(), 100);
+    },
         error: (error) => {
           console.error('Error al calcular facturación:', error);
           this.snackBar.open('Error al calcular la facturación', 'Cerrar', {
@@ -450,5 +431,100 @@ export class FacturacionComponent implements OnInit {
     }
 
     return 'Sin movimientos facturables';
+  }
+
+  // Método para obtener el importe del stock inicial
+  getAlmacenajeStockInicial(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    
+    return this.resumenFacturacion.detalles
+      .filter(d => d.tipo === 'almacenaje' && d.referencia === 'STOCK_INICIAL')
+      .reduce((sum, d) => sum + d.total, 0);
+  }
+  
+  getAlmacenajeEntradas(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    
+    return this.resumenFacturacion.detalles
+      .filter(d => d.tipo === 'almacenaje' && d.total > 0 && d.referencia !== 'STOCK_INICIAL')
+      .reduce((sum, d) => sum + d.total, 0);
+  }
+  
+  getAlmacenajeSalidas(): number {
+    if (!this.resumenFacturacion) {
+      return 0;
+    }
+    
+    return this.resumenFacturacion.detalles
+      .filter(d => d.tipo === 'almacenaje' && d.total < 0)
+      .reduce((sum, d) => sum + d.total, 0);
+  }
+  
+  // Método para obtener detalles de descuentos
+  getDescuentosDetallados(): any[] {
+    if (!this.resumenFacturacion) {
+      return [];
+    }
+    
+    return this.resumenFacturacion.detalles
+      .filter(d => d.tipo === 'almacenaje' && d.total < 0)
+      .map(d => ({
+        referencia: d.referencia,
+        descripcion: d.descripcion,
+        palets: Math.abs(d.cantidad),
+        diasDescuento: Math.abs(d.diasAlmacenaje || 0),
+        descuento: Math.abs(d.total),
+        fechaSalida: d.fechaSalida
+      }));
+  }
+
+  // Método para verificar que los cálculos sean correctos
+  verificarCalculosAlmacenaje(): void {
+    if (!this.resumenFacturacion) return;
+    
+    const stockInicial = this.getAlmacenajeStockInicial();
+    const entradas = this.getAlmacenajeEntradas();
+    const salidas = this.getAlmacenajeSalidas();
+    const totalCalculado = stockInicial + entradas + salidas; // salidas ya es negativo
+    
+    console.log('=== VERIFICACIÓN CÁLCULOS ===');
+    console.log('Stock inicial facturado:', stockInicial);
+    console.log('Entradas proporcionales:', entradas);
+    console.log('Descuento salidas:', salidas);
+    console.log('Total calculado:', totalCalculado);
+    console.log('Total del servicio:', this.resumenFacturacion.totalAlmacenaje);
+    console.log('¿Coinciden?', Math.abs(totalCalculado - this.resumenFacturacion.totalAlmacenaje) < 0.01);
+  }
+  
+  // Método auxiliar para obtener días del mes actual
+  private getDiasDelMes(): number {
+    const mesSeleccionado = this.facturacionForm.get('mesSeleccionado')?.value;
+    if (!mesSeleccionado) {
+      return 30; // valor por defecto
+    }
+    
+    const fecha = new Date(mesSeleccionado + '-01');
+    return new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).getDate();
+  }
+
+  // Método para generar texto del concepto más descriptivo
+  getConceptoTexto(detalle: any): string {
+    if (detalle.referencia === 'STOCK_INICIAL') {
+      return 'Stock inicial - Almacenaje mes completo';
+    }
+    
+    if (detalle.total < 0) {
+      return `Descuento por salida - ${detalle.referencia}`;
+    }
+    
+    if (detalle.diasAlmacenaje > 0 && detalle.diasAlmacenaje < this.getDiasDelMes()) {
+      return `Entrada proporcional - ${detalle.referencia}`;
+    }
+    
+    return `Almacenaje de palets - ${detalle.referencia}`;
   }
 }

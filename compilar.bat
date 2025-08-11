@@ -21,6 +21,9 @@ start cmd /k "cd %MICROSERVICIO_ENTRADAS% && mvn clean package"
 :: Ejecutar salidas en una nueva ventana   PORT = 8093
 start cmd /k "cd %MICROSERVICIO_SALIDAS% && mvn clean package"
 
+:: Ejecutar trabajos en una nueva ventana   PORT = 8094
+start cmd /k "cd %MICROSERVICIO_TRABAJOS% && mvn clean package"
+
 :: Ejecutar ubicaciones en una nueva ventana   PORT = 8095
 start cmd /k "cd %MICROSERVICIO_UBICACIONES% && mvn clean package"
 
@@ -36,5 +39,5 @@ start cmd /k "cd %MICROSERVICIO_AUTH% && mvn clean package"
 :: Ejecutar dcs en una nueva ventana   PORT = 8099
 start cmd /k "cd %MICROSERVICIO_ESTADOS% && mvn clean package" 
 
-:: Ejecutar trabajos en una nueva ventana   PORT = 8100
-start cmd /k "cd %MICROSERVICIO_TRABAJOS% && mvn clean package"
+:: Ejecutar muebles en una nueva ventana   PORT = 8101
+start cmd /k "cd %MICROSERVICIO_MUEBLES% && mvn clean package"

@@ -97,6 +97,13 @@ import { DetallesTrabajoComponent } from './componentes/detalles-trabajo/detalle
 import { FormularioTrabajoComponent } from './componentes/formulario-trabajo/formulario-trabajo.component';
 import { EtiquetaEnvioComponent } from './componentes/etiqueta-envio/etiqueta-envio.component';
 import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nuevo.component';
+import { MueblesPrevisionComponent } from './componentes/muebles-prevision/muebles-prevision.component';
+import { MueblesPendientesComponent } from './componentes/muebles-pendientes/muebles-pendientes.component';
+import { MueblesRealizadosComponent } from './componentes/muebles-realizados/muebles-realizados.component';
+import { CabeceraMueblesComponent } from './componentes/cabecera-muebles/cabecera-muebles.component';
+import { DetallesMueblesComponent } from './componentes/detalles-muebles/detalles-muebles.component';
+import { FormularioMuebleComponent } from './componentes/formulario-mueble/formulario-mueble.component';
+import { MuebleService } from './services/mueble.service';
 
 @NgModule({
   declarations: [
@@ -155,6 +162,12 @@ import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nu
     FormularioTrabajoComponent,
     EtiquetaEnvioComponent,
     TrabajosNuevoComponent,
+    MueblesPrevisionComponent,
+    MueblesPendientesComponent,
+    MueblesRealizadosComponent,
+    CabeceraMueblesComponent,
+    DetallesMueblesComponent,
+    FormularioMuebleComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -197,6 +210,7 @@ import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nu
     FormularioEntradaSalidaService,
     FacturacionService,
     ImportarExcelService,
+    MuebleService,
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     ProductoServices,
     ReubicarPaletsService,

@@ -1,0 +1,35 @@
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.badge-implantacion {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge-retirada {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.no-relleno {
+    display: none;
+}
+
+.relleno {
+    display: none;
+}
+
+img:not(.no-relleno)[src*="check-verde"] {
+    display: inline-block;
+    filter: drop-shadow(0 0 3px rgba(0, 183, 18, 0.6));
+}
+
+img:not(.relleno)[src*="no-check-gris"] {
+    display: inline-block;
+    opacity: 0.7;
+}

@@ -9,6 +9,7 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
   selector: 'app-salidas-enviospendientes',
   templateUrl: './salidas-enviospendientes.component.html',
   styleUrls: [
+    '../../../assets/styles/modal.css',
     '../../../assets/styles/paginator.css',
     './salidas-enviospendientes.component.css' , 
     '../salidas-pendientes/salidas-pendientes.component.css']
@@ -20,6 +21,8 @@ export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaSer
   columnasPaginator: string[] = ['destino', 'preparado', 'acciones'];
   dataSource = new MatTableDataSource<Salida>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  mostrarEtiqueta: boolean = false;
 
   ngOnInit() {
     this.cargarSalidas();
@@ -104,5 +107,13 @@ export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaSer
       this.totalElementos = this.salidas.length;
       this.cdr.detectChanges();
     }
+  }
+  
+  mostrarEtiquetaEnvio() {
+    this.mostrarEtiqueta = true;
+  }
+  
+  cerrarEtiqueta() {
+    this.mostrarEtiqueta = false;
   }
 }

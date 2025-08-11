@@ -880,3 +880,273 @@ mat-chip {
   font-style: italic;
   color: #856404;
 }
+
+/* Sección de almacenaje */
+.almacenaje-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  background: white;
+  margin-bottom: 24px;
+}
+
+.almacenaje-card mat-card-header {
+  background: linear-gradient(135deg, var(--aux-color), var(--caption-color));
+  color: var(--btn-color-w);
+  padding: 20px 24px;
+  margin: -16px -16px 16px -16px;
+}
+
+.almacenaje-card mat-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* Stock resumen */
+.stock-resumen {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.stock-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.stock-item.inicial {
+  background: linear-gradient(135deg, rgba(0, 114, 83, 0.1), rgba(0, 114, 83, 0.05));
+  border: 2px solid var(--caption-color);
+}
+
+.stock-item.final {
+  background: linear-gradient(135deg, rgba(235, 185, 52, 0.1), rgba(235, 185, 52, 0.05));
+  border: 2px solid var(--color-detalles);
+}
+
+.stock-item mat-icon {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+  color: var(--main-color);
+}
+
+.stock-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stock-info .label {
+  font-size: 0.875rem;
+  color: var(--letter-color-off);
+  margin-bottom: 4px;
+}
+
+.stock-info .cantidad {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--main-color);
+}
+
+/* Desglose de almacenaje */
+.almacenaje-desglose {
+  background: var(--color-cream);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.almacenaje-desglose h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px 0;
+  color: var(--main-color);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.almacenaje-seccion {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--btn-color-w);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.almacenaje-seccion.stock-inicial {
+  border-left: 4px solid var(--caption-color);
+}
+
+.almacenaje-seccion.entradas-mes {
+  border-left: 4px solid var(--positive-color);
+}
+
+.almacenaje-seccion.salidas-mes {
+  border-left: 4px solid var(--negative-color);
+}
+
+.almacenaje-seccion h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 15px 0;
+  color: var(--main-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.almacenaje-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detalle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--color-cream);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.detalle-item.importe {
+  background: rgba(0, 183, 18, 0.1);
+  border-color: var(--positive-color);
+  font-weight: 600;
+}
+
+.detalle-item.descuento {
+  background: rgba(255, 77, 77, 0.1);
+  border-color: var(--negative-color);
+  font-weight: 600;
+}
+
+.etiqueta {
+  color: var(--letter-color-off);
+}
+
+.valor {
+  color: var(--main-color);
+  font-weight: 500;
+}
+
+.valor.positivo {
+  color: var(--positive-color);
+}
+
+.valor.negativo {
+  color: var(--negative-color);
+}
+
+.valor.cobrado {
+  color: var(--positive-color);
+  font-weight: 600;
+}
+
+.valor.descuento-valor {
+  color: var(--negative-color);
+  font-weight: 600;
+}
+
+/* Total de almacenaje */
+.total-almacenaje {
+  margin-top: 25px;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--table-primary), var(--table-secondary));
+  border-radius: 8px;
+  text-align: center;
+}
+
+.total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.etiqueta-total {
+  color: var(--btn-color-w);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.valor-total {
+  color: var(--btn-color-w);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stock-resumen {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .detalle-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 5px;
+  }
+}
+/* Mejorar estilos para descuentos detallados */
+.concepto-cell .referencia {
+  font-size: 0.875rem;
+  color: var(--letter-color);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.concepto-cell .dias-almacenaje {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.concepto-cell .dias-almacenaje:not(.descuento) {
+  color: var(--positive-color);
+}
+
+.concepto-cell .dias-almacenaje.descuento {
+  color: var(--negative-color);
+}
+
+.concepto-cell .fecha-salida {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--negative-color);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.descuento-label {
+  font-size: 0.75rem;
+  background: rgba(255, 77, 77, 0.1);
+  color: var(--negative-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* Resaltar filas de descuento */
+.facturacion-table tr:has(.descuento) {
+  background: rgba(255, 77, 77, 0.05) !important;
+  border-left: 3px solid var(--negative-color);
+}

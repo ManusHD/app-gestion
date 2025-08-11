@@ -1,0 +1,287 @@
+<div *ngIf="mostrarFormulario" class="centrar" style="height: 1200px;">
+    <div class="cuerpo-formulario">
+        <form [formGroup]="muebleForm" (keydown)="onEnterKey($event)" #formularioNuevoMueble="ngForm">
+
+            <div class="formulario-no-repetido">
+                <!-- Fechas -->
+                <div class="fechas-mueble">
+                    <div class="campo-form">
+                        <label>FECHA ORDEN TRABAJO</label>
+                        <input formControlName="fechaOrdenTrabajo" type="date"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('fechaOrdenTrabajo')}" />
+                    </div>
+                    
+                    <div class="campo-form" *ngIf="!esPrevision()">
+                        <label>FECHA ASIGNACIÓN</label>
+                        <input formControlName="fechaAsignacion" type="date"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('fechaAsignacion')}" />
+                    </div>
+                    
+                    <div class="campo-form" *ngIf="!esPrevision()">
+                        <label>FECHA REALIZACIÓN</label>
+                        <input formControlName="fechaRealizacion" type="date"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('fechaRealizacion')}" />
+                    </div>
+                </div>
+
+                <!-- Destinos -->
+                <div class="direcciones">
+                    <!-- Perfumería -->
+                    <div class="campo-form">
+                        <label>PERFUMERÍA</label>
+                        <input (focus)="setActiveCampoUnico('perfumeria')" formControlName="perfumeria" type="text"
+                            [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada && activeCampoUnico == 'perfumeria'">
+                                <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPerfumeria(perfumeria)">
+                                    {{ perfumeria.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PDV -->
+                    <div class="campo-form">
+                        <label>PDV</label>
+                        <input (focus)="setActiveCampoUnico('pdv')" formControlName="pdv" type="text"
+                            [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
+                        <div class="autocomplete-container">
+                            <div class="autocomplete-dropdown"
+                                *ngIf="pdvs.length > 0 && !pdvSeleccionado && activeCampoUnico == 'pdv'">
+                                <div class="autocomplete-item" *ngFor="let pdv of pdvs; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectPdv(pdv)">
+                                    {{ pdv.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Otros Destinos -->
+                    <div class="campo-form">
+                        <label>OTROS DESTINOS</label>
+                        <div class="autocomplete-container">
+                            <input (focus)="setActiveCampoUnico('otroDestino')" (blur)="clearActiveCampoUnico()"
+                                formControlName="otroDestino" type="text"
+                                [ngClass]="{'campo-vacio': !otroDestinoValido() && !previsionEsValidaCampoSimple()}" />
+                            <div class="autocomplete-dropdown"
+                                *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada && activeCampoUnico == 'otroDestino'">
+                                <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones; let i = index"
+                                    [ngClass]="{'first-option': i === 0}" (mousedown)="selectOtraDireccion(direccion)">
+                                    {{ direccion.nombre }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos de dirección -->
+                <div class="detalles-direcciones" (click)="clearActiveCampoUnico()">
+                    <div class="campo-form">
+                        <label>DIRECCIÓN</label>
+                        <input formControlName="direccion" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>POBLACIÓN</label>
+                        <input formControlName="poblacion" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>PROVINCIA</label>
+                        <input formControlName="provincia" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>CP</label>
+                        <input formControlName="cp" type="text" />
+                    </div>
+
+                    <div class="campo-form">
+                        <label>TELÉFONO</label>
+                        <input formControlName="telefono" type="text" />
+                    </div>
+                </div>
+
+                <!-- Tipo de Acción -->
+                <div class="tipo-accion">
+                    <div class="campo-form">
+                        <label>TIPO DE ACCIÓN</label>
+                        <select formControlName="tipoAccion" 
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('tipoAccion')}">
+                            <option value="">Seleccionar tipo de acción</option>
+                            <option value="IMPLANTACION">Implantación</option>
+                            <option value="RETIRADA">Retirada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Indicaciones -->
+                <div class="indicaciones">
+                    <div class="campo-form">
+                        <label>INDICACIONES (al montador)</label>
+                        <textarea formControlName="indicaciones" rows="3" 
+                            placeholder="Instrucciones especiales para el montador..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Costes -->
+               <div class="costes" *ngIf="!esPrevision()">
+                   <div class="campo-form">
+                       <label>COSTE COLABORADOR (€)</label>
+                       <input formControlName="costeColaborador" type="number" step="0.01" min="0"
+                           (input)="calcularCosteTotal()" />
+                   </div>
+
+                   <div class="campo-form">
+                       <label>COSTE ENVÍO (€)</label>
+                       <input formControlName="costeEnvio" type="number" step="0.01" min="0"
+                           (input)="calcularCosteTotal()" />
+                   </div>
+
+                   <div class="campo-form">
+                       <label>COSTE TOTAL (€)</label>
+                       <input formControlName="costeTotal" type="number" step="0.01" readonly 
+                           class="campo-readonly" />
+                   </div>
+
+                   <div class="campo-form">
+                       <label>IMPORTE A FACTURAR (€)</label>
+                       <input formControlName="importeFacturar" type="number" step="0.01" min="0" />
+                   </div>
+               </div>
+           </div>
+
+           <!-- Tabla para productos -->
+           <table (click)="clearActiveCampoUnico()">
+               <thead>
+                   <tr>
+                       <th>REFERENCIA</th>
+                       <th>DESCRIPCIÓN</th>
+                       <th>ESTADO</th>
+                       <th>UNIDADES</th>
+                       <th>ACCIONES</th>
+                   </tr>
+               </thead>
+               <tbody formArrayName="productos">
+                   <tr *ngFor="let producto of productosControls.controls; let i = index" [formGroupName]="i"
+                       [ngClass]="{'campo-nuevo': isProductoNuevo(i)}">
+                       
+                       <td>
+                           <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
+                               maxlength="14" [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
+                       </td>
+                       
+                       <td>
+                           <textarea formControlName="description" (keyup)="buscarProductoEspecial(i)"
+                               (focus)="setActiveRow(i)" (blur)="clearActiveRow()" type="text"
+                               [ngClass]="{'campo-vacio': !descriptionValida(i)}"
+                               [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)"
+                               class="description"></textarea>
+
+                           <!-- Dropdown para VISUAL -->
+                           <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
+                               && visuales.length > 0 
+                               && activeRowIndex === i" class="autocomplete-container">
+                               <div class="autocomplete-dropdown">
+                                   <div class="autocomplete-item" *ngFor="let visual of visuales"
+                                       (click)="selectVisual(i, visual)">
+                                       {{ visual.description }}
+                                   </div>
+                               </div>
+                           </div>
+
+                           <!-- Dropdown para SIN REFERENCIA -->
+                           <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                                   && productosSR.length > 0 
+                                   && activeRowIndex === i" class="autocomplete-container">
+                               <div class="autocomplete-dropdown">
+                                   <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR"
+                                       (click)="selectProductosSR(i, sinReferencia)">
+                                       {{ sinReferencia.description }}
+                                   </div>
+                               </div>
+                           </div>
+                       </td>
+                       
+                       <td>
+                           <select formControlName="estado"
+                               [ngClass]="{'campo-vacio': esEstadoRequerido(i) && campoVacio('estado', i)}"
+                               (change)="onEstadoChange(i)">
+                               <option value="">{{ esEstadoRequerido(i) ? 'Seleccionar estado' : 'Sin estado' }}</option>
+                               <option *ngFor="let estado of getEstadosDisponibles(i)" [value]="estado">
+                                   {{ estado }}
+                               </option>
+                           </select>
+                       </td>
+                       
+                       <td>
+                           <div class="centrar">
+                               <input formControlName="unidades" type="number" [ngClass]="{
+                                       'campo-vacio': campoVacio('unidades', i),
+                                       'stock-excedido': unidadesExcedenStock(i)
+                                   }" min="1" (blur)="onUnidadesBlur(i)" />
+
+                               <!-- Mostrar stock disponible para implantaciones -->
+                               <small *ngIf="muebleForm.get('tipoAccion')?.value === 'IMPLANTACION' && getMensajeStock(i)"
+                                   class="stock-info" [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
+                                   {{ getMensajeStock(i) }}
+                               </small>
+                           </div>
+                       </td>
+
+                       <td>
+                           <div class="centrar">
+                               <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
+                                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
+                                       <path fill="#B5BAC1"
+                                           d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z">
+                                       </path>
+                                       <path fill="#B5BAC1"
+                                           d="M17 3C17 1.34315 18.3431 0 20 0H29.3125C30.9694 0 32.3125 1.34315 32.3125 3V3H17V3Z">
+                                       </path>
+                                       <path fill="#B5BAC1"
+                                           d="M2.18565 18.0974C2.08466 15.821 3.903 13.9202 6.18172 13.9202H43.8189C46.0976 13.9202 47.916 15.821 47.815 18.0975L46.1699 55.1775C46.0751 57.3155 44.314 59.0002 42.1739 59.0002H7.8268C5.68661 59.0002 3.92559 57.3155 3.83073 55.1775L2.18565 18.0974ZM18.0003 49.5402C16.6196 49.5402 15.5003 48.4209 15.5003 47.0402V24.9602C15.5003 23.5795 16.6196 22.4602 18.0003 22.4602C19.381 22.4602 20.5003 23.5795 20.5003 24.9602V47.0402C20.5003 48.4209 19.381 49.5402 18.0003 49.5402ZM29.5003 47.0402C29.5003 48.4209 30.6196 49.5402 32.0003 49.5402C33.381 49.5402 34.5003 48.4209 34.5003 47.0402V24.9602C34.5003 23.5795 33.381 22.4602 32.0003 22.4602C30.6196 22.4602 29.5003 23.5795 29.5003 24.9602V47.0402Z"
+                                           clip-rule="evenodd" fill-rule="evenodd"></path>
+                                       <path fill="#B5BAC1" d="M2 13H48L47.6742 21.28H2.32031L2 13Z"></path>
+                                   </svg>
+                                   <span class="tooltip">Eliminar</span>
+                               </button>
+                           </div>
+                       </td>
+                   </tr>
+               </tbody>
+           </table>
+
+           <div class="btns-tabla">
+               <button type="button" (click)="agregarProducto()" class="add-producto">
+                   <img src="../../../assets/icons/signo-mas.svg" alt="">
+                   <span>AÑADIR PRODUCTO</span>
+               </button>
+
+               <button [appConfirm]="'¿ESTÁS SEGURO DE CREAR LA PREVISIÓN DE TRABAJO?'" (confirmed)="onSubmit()"
+                   *ngIf="pestanaPadre == 'previsionMueble'" type="submit" class="crear-producto"
+                   [disabled]="!btnSubmitActivado">
+                   CREAR PREVISIÓN
+               </button>
+           </div>
+       </form>
+
+       <div class="">
+           <button [appConfirm]="'¿ESTÁS SEGURO DE GUARDAR LOS CAMBIOS?'" (confirmed)="modificarMueble()"
+               *ngIf="pestanaPadre == 'detallePrevisionMueble'" class="btn-actualizar">
+               <span class="button__text">Guardar cambios</span>
+               <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
+                       xmlns="http://www.w3.org/2000/svg">
+                       <path
+                           d="M35.3 12.7c-2.89-2.9-6.88-4.7-11.3-4.7-8.84 0-15.98 7.16-15.98 16s7.14 16 15.98 16c7.45 0 13.69-5.1 15.46-12h-4.16c-1.65 4.66-6.07 8-11.3 8-6.63 0-12-5.37-12-12s5.37-12 12-12c3.31 0 6.28 1.38 8.45 3.55l-6.45 6.45h14v-14l-4.7 4.7z">
+                       </path>
+                       <path d="M0 0h48v48h-48z" fill="none"></path>
+                   </svg></span>
+           </button>
+       </div>
+   </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

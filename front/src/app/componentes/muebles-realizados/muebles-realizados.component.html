@@ -1,0 +1,105 @@
+<app-cabecera-muebles></app-cabecera-muebles>
+
+<div id="contenedor-muebles-realizados">
+    <div>
+        <div class="contenedor-filtro">
+            <div class="buscador-fechas">
+                <div class="rango-fechas">
+                    <div class="rango-fecha">
+                        <label>Desde:</label>
+                        <input type="date" [(ngModel)]="fechaInicio" class="input-fecha" [max]="fechaFin" />
+                    </div>
+
+                    <div class="rango-fecha">
+                        <label>Hasta:</label>
+                        <input type="date" [(ngModel)]="fechaFin" class="input-fecha" [min]="fechaInicio" />
+                    </div>
+                </div>
+
+                <div class="buscador" (keyup)="onEnterKey($event)">
+                    <select [(ngModel)]="tipoBusqueda" class="select-buscador">
+                        <option value="fecha">Búsqueda solo por FECHA</option>
+                        <option value="referencia">Búsqueda por REFERENCIA</option>
+                        <option value="descripcion">Búsqueda por DESCRIPCIÓN</option>
+                        <option value="destino">Búsqueda por DESTINO</option>
+                    </select>
+                    <input type="text" placeholder="Buscar trabajo" [(ngModel)]="buscador" />
+                    <button (click)="buscarMuebles()" class="btn-buscar">
+                        <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+                        <span class="letra-buscador">Buscar</span>
+                    </button>
+                    <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="historial">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+                <caption>TRABAJOS DE MUEBLES REALIZADOS</caption>
+                
+                <ng-container matColumnDef="fechaOrden">
+                    <th class="header-paginator" *matHeaderCellDef>FECHA ORDEN</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        {{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="fechaRealizacion">
+                    <th class="header-paginator" *matHeaderCellDef>FECHA REALIZACIÓN</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        {{mueble.fechaRealizacion | date: 'dd/MM/yyyy'}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="destino">
+                    <th class="header-paginator" *matHeaderCellDef>DESTINO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        {{obtenerDestino(mueble)}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="tipoAccion">
+                    <th class="header-paginator" *matHeaderCellDef>TIPO ACCIÓN</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        <span class="badge" [ngClass]="mueble.tipoAccion === 'IMPLANTACION' ? 'badge-implantacion' : 'badge-retirada'">
+                            {{mueble.tipoAccion}}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="costeTotal">
+                    <th class="header-paginator" *matHeaderCellDef>COSTE TOTAL</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        {{mueble.costeTotal | currency:'EUR':'symbol':'1.2-2'}}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="detalles">
+                    <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        <app-detalles-muebles [enRealizados]="true" [mueble]="mueble"></app-detalles-muebles>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
+                <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>
+            </table>
+            
+            <mat-paginator
+                class="paginator"
+                [pageSize]="pageSize"
+                [pageIndex]="pageIndex"
+                [length]="totalElementos"
+                [hidePageSize]="true"
+                showFirstLastButtons
+                (page)="cambiarPagina($event)">
+            </mat-paginator>
+            
+            <app-exportar-excel (click)="obtenerDatosAExportar()" [data$]="mueblesParaExportar$" 
+                [nombreConjuntoExportado]="'TRABAJOS'" [fileName]="'TRABAJOS-MUEBLES-EXPORTADOS'">
+            </app-exportar-excel>
+        </div>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

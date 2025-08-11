@@ -246,7 +246,9 @@ public class SalidaController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);
 
+        System.out.println("=============== Entro en AGREGAR salida ===============");
         if (Boolean.TRUE.equals(salida.getEstado())) {
+        System.out.println("=============== Entro en GRABAR salida ===============");
             List<String> nombresUbicaciones = new ArrayList<>();
 
             // Validar cada producto de la salida
@@ -459,6 +461,9 @@ public class SalidaController {
                 }
             }
         }
+
+        
+        System.out.println("=============== Entro GUARDO la salida ===============");
 
         // Guardar la salida
         Salida savedSalida = salidasRepository.save(salida);

@@ -11,4 +11,5 @@ export const environment = {
   apiAutenticacion: direccion + '/auth',
   apiEstados: direccion + '/estados',
   apiTrabajos: direccion + '/trabajos',
+  apiMuebles: direccion + '/muebles',
 };

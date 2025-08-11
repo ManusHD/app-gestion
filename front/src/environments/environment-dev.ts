@@ -11,6 +11,7 @@ export const environment = {
   apiDirecciones: direccion + '8097/direcciones',
   apiAutenticacion: direccion + '8098/auth',
   apiEstados: direccion + '8099/estados',
+  apiMuebles: direccion + '8101/muebles',
 };
 
 // const direccion = 'https://api.chanel.delim.es';
