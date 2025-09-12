@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@angular/forms": "^19.0.4",
-    "xlsx": "^0.18.5"
-  }
-}

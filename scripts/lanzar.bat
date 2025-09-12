@@ -1,16 +1,16 @@
 @echo off
 
 :: Ruta al directorio del microservicio
-set MICROSERVICIO_ENTRADAS=backend\entradas
-set MICROSERVICIO_PRODUCTOS=backend\productos
-set MICROSERVICIO_SALIDAS=backend\salidas
-set MICROSERVICIO_DCS=backend\dcs
-set MICROSERVICIO_UBICACIONES=backend\ubicaciones
-set MICROSERVICIO_AGENCIASENVIO=backend\agenciasenvio
-set MICROSERVICIO_DIRECCIONES=backend\direcciones
-set MICROSERVICIO_AUTH=backend\autenticacion
-set MICROSERVICIO_ESTADOS=backend\estados
-set MICROSERVICIO_TRABAJOS=backend\trabajos
+set MICROSERVICIO_ENTRADAS=..\backend\entradas
+set MICROSERVICIO_PRODUCTOS=..\backend\productos
+set MICROSERVICIO_SALIDAS=..\backend\salidas
+set MICROSERVICIO_DCS=..\backend\dcs
+set MICROSERVICIO_UBICACIONES=..\backend\ubicaciones
+set MICROSERVICIO_AGENCIASENVIO=..\backend\agenciasenvio
+set MICROSERVICIO_DIRECCIONES=..\backend\direcciones
+set MICROSERVICIO_AUTH=..\backend\autenticacion
+set MICROSERVICIO_ESTADOS=..\backend\estados
+set MICROSERVICIO_TRABAJOS=..\backend\trabajos
 
 :: Ejecutar entradas en una nueva ventana 8091
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
