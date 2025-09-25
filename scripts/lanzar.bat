@@ -11,6 +11,7 @@ set MICROSERVICIO_DIRECCIONES=..\backend\direcciones
 set MICROSERVICIO_AUTH=..\backend\autenticacion
 set MICROSERVICIO_ESTADOS=..\backend\estados
 set MICROSERVICIO_TRABAJOS=..\backend\trabajos
+set MICROSERVICIO_MUEBLES=..\backend\muebles
 
 :: Ejecutar entradas en una nueva ventana 8091
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
@@ -20,6 +21,9 @@ start cmd /c "cd %MICROSERVICIO_PRODUCTOS% && mvn spring-boot:run"
 
 :: Ejecutar salidas en una nueva ventana 8093
 start cmd /c "cd %MICROSERVICIO_SALIDAS% && mvn spring-boot:run"
+
+:: Ejecutar trabajos en una nueva ventana 8094
+start cmd /c "cd %MICROSERVICIO_TRABAJOS% && mvn spring-boot:run"
 
 :: Ejecutar ubicaciones en una nueva ventana 8095
 start cmd /c "cd %MICROSERVICIO_UBICACIONES% && mvn spring-boot:run"
@@ -33,8 +37,8 @@ start cmd /c "cd %MICROSERVICIO_DIRECCIONES% && mvn spring-boot:run"
 :: Ejecutar dcs en una nueva ventana 8098
 start cmd /c "cd %MICROSERVICIO_AUTH% && mvn spring-boot:run"
 
-:: Ejecutar dcs en una nueva ventana 8099
+:: Ejecutar estados en una nueva ventana 8099
 start cmd /c "cd %MICROSERVICIO_ESTADOS% && mvn spring-boot:run"
 
-:: Ejecutar trabajos en una nueva ventana 8100
-start cmd /k "cd %MICROSERVICIO_TRABAJOS% && mvn spring-boot:run"
+:: Ejecutar muebles en una nueva ventana 8101
+start cmd /c "cd %MICROSERVICIO_MUEBLES% && mvn spring-boot:run"

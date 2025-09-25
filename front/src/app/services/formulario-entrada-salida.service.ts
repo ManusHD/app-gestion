@@ -67,6 +67,20 @@ export class FormularioEntradaSalidaService {
   ubicacionesPorProductoYEstado: { [key: string]: Ubicacion[] } = {};
 
   stockDisponiblePorProducto: { [key: string]: number } = {};
+  
+  // Mapa para almacenar información de stock real
+  private stockRealPorProducto: { [key: string]: {stockTotal: number, unidadesEnUso: number, stockDisponible: number} } = {};
+
+  // Mapa para almacenar información de stock en envíos
+  private stockEnviosPorProducto: { [key: string]: {stockTotal: number, unidadesEnUsoOtros: number, stockDisponible: number} } = {};
+  
+  // Variable para almacenar el ID de la salida actual cuando estamos en envíos pendientes
+  protected salidaActualId: number | null = null;
+
+  // Método para establecer el ID de la salida actual (llamar desde el componente padre)
+  setSalidaActualId(salidaId: number | null) {
+    this.salidaActualId = salidaId;
+  }
 
   private snackBar = inject(MatSnackBar);
 
@@ -474,30 +488,38 @@ export class FormularioEntradaSalidaService {
     }
   }
 
-  // Método para limpiar datos cuando se cambia de producto
+  // Método para limpiar datos de stock real al cambiar producto
   private limpiarCamposProducto(index: number) {
-    const descriptionControl = this.productosControls
-      .at(index)
-      .get('description');
+    const descriptionControl = this.productosControls.at(index).get('description');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
     const unidadesControl = this.productosControls.at(index).get('unidades');
-
+  
     descriptionControl?.setValue('');
     estadoControl?.setValue(null);
     ubicacionControl?.setValue('');
-
-    // Limpiar validadores específicos
+  
     unidadesControl?.setValidators([Validators.required, Validators.min(1)]);
     unidadesControl?.updateValueAndValidity();
-
-    // Limpiar estados disponibles y stock
+  
     delete this.estadosDisponiblesPorProducto[index];
-
-    // Limpiar stock disponible para este índice
+  
+    // Limpiar todos los tipos de stock para este índice
     Object.keys(this.stockDisponiblePorProducto).forEach((key) => {
       if (key.startsWith(`${index}-`)) {
         delete this.stockDisponiblePorProducto[key];
+      }
+    });
+    
+    Object.keys(this.stockRealPorProducto).forEach((key) => {
+      if (key.startsWith(`${index}-`)) {
+        delete this.stockRealPorProducto[key];
+      }
+    });
+    
+    Object.keys(this.stockEnviosPorProducto).forEach((key) => {
+      if (key.startsWith(`${index}-`)) {
+        delete this.stockEnviosPorProducto[key];
       }
     });
   }
@@ -620,31 +642,52 @@ export class FormularioEntradaSalidaService {
     const refControl = this.productosControls.at(index).get('ref');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
-
+  
     const referencia = refControl?.value;
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
-
+  
     if (
       referencia &&
       estado &&
       ubicacion &&
       !this.esProductoEspecial(referencia)
     ) {
-      // Buscar el stock específico en la ubicación y estado seleccionados
-      const stockDisponible = this.obtenerStockEspecifico(
-        referencia,
-        estado,
-        ubicacion
-      );
-
-      // Guardar el stock disponible para este producto
       const key = `${index}-${referencia}-${estado}-${ubicacion}`;
-      this.stockDisponiblePorProducto[key] = stockDisponible;
-
-      console.log(
-        `Stock disponible para ${referencia} estado ${estado} en ${ubicacion}: ${stockDisponible}`
-      );
+      
+      if (this.currentPath.includes('/salidas/pendientes')) {
+        // PEDIDOS A PREPARAR: usar stock real descontando TODOS los envíos pendientes
+        this.productoService.getStockDisponibleReal(referencia, estado, ubicacion)
+          .subscribe({
+            next: (stockInfo) => {
+              this.stockRealPorProducto[key] = stockInfo;
+              this.stockDisponiblePorProducto[key] = stockInfo.stockDisponible;
+              this.actualizarValidadoresUnidades(index);
+            },
+            error: (error) => {
+              console.error('Error al obtener stock real:', error);
+              this.stockDisponiblePorProducto[key] = 0;
+            }
+          });
+      } else if (this.currentPath.includes('/salidas/envios') && this.salidaActualId) {
+        // ENVÍOS PENDIENTES: usar stock descontando OTROS envíos pendientes
+        this.productoService.getStockDisponibleEnvios(referencia, estado, ubicacion, this.salidaActualId)
+          .subscribe({
+            next: (stockInfo) => {
+              this.stockEnviosPorProducto[key] = stockInfo;
+              this.stockDisponiblePorProducto[key] = stockInfo.stockDisponible;
+              this.actualizarValidadoresUnidades(index);
+            },
+            error: (error) => {
+              console.error('Error al obtener stock para envíos:', error);
+              this.stockDisponiblePorProducto[key] = 0;
+            }
+          });
+      } else {
+        // Otros casos: mantener lógica original
+        const stockDisponible = this.obtenerStockEspecifico(referencia, estado, ubicacion);
+        this.stockDisponiblePorProducto[key] = stockDisponible;
+      }
     }
   }
 
@@ -671,16 +714,16 @@ export class FormularioEntradaSalidaService {
     return productoEnUbicacion?.unidades || 0;
   }
 
-  // Método para obtener el stock disponible de un producto específico (para mostrar en UI)
+  // Método para obtener el stock disponible de un producto específico (para mostrar en UI) considerando salidas pendientes
   getStockDisponible(index: number): number {
     const refControl = this.productosControls.at(index).get('ref');
     const estadoControl = this.productosControls.at(index).get('estado');
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
-
+  
     const referencia = refControl?.value;
     const estado = estadoControl?.value;
     const ubicacion = ubicacionControl?.value;
-
+  
     if (
       !referencia ||
       !estado ||
@@ -689,9 +732,63 @@ export class FormularioEntradaSalidaService {
     ) {
       return 0;
     }
-
-    return this.obtenerStockEspecifico(referencia, estado, ubicacion);
+  
+    const key = `${index}-${referencia}-${estado}-${ubicacion}`;
+    return this.stockDisponiblePorProducto[key] || 0;
   }
+
+  // Método para obtener stock disponible real
+  
+
+  
+  getMensajeStock(index: number): string {
+    if (!this.esSalida()) {
+      return '';
+    }
+  
+    const refControl = this.productosControls.at(index).get('ref');
+    const estadoControl = this.productosControls.at(index).get('estado');
+    const ubicacionControl = this.productosControls.at(index).get('ubicacion');
+  
+    const referencia = refControl?.value;
+    const estado = estadoControl?.value;
+    const ubicacion = ubicacionControl?.value;
+  
+    if (
+      referencia &&
+      estado &&
+      ubicacion &&
+      !this.esProductoEspecial(referencia)
+    ) {
+      const key = `${index}-${referencia}-${estado}-${ubicacion}`;
+      
+      if (this.currentPath.includes('/salidas/pendientes') && this.stockRealPorProducto[key]) {
+        // PEDIDOS A PREPARAR
+        const stockInfo = this.stockRealPorProducto[key];
+        
+        if (stockInfo.unidadesEnUso > 0) {
+          return `Stock disponible: ${stockInfo.stockDisponible} (${stockInfo.unidadesEnUso} en envíos pendientes)`;
+        } else {
+          return `Stock disponible: ${stockInfo.stockDisponible}`;
+        }
+      } else if (this.currentPath.includes('/salidas/envios') && this.stockEnviosPorProducto[key]) {
+        // ENVÍOS PENDIENTES
+        const stockInfo = this.stockEnviosPorProducto[key];
+        
+        if (stockInfo.unidadesEnUsoOtros > 0) {
+          return `Stock disponible: ${stockInfo.stockDisponible} (${stockInfo.unidadesEnUsoOtros} en otros envíos)`;
+        } else {
+          return `Stock disponible: ${stockInfo.stockDisponible}`;
+        }
+      } else {
+        const stockDisponible = this.getStockDisponible(index);
+        return `Stock disponible: ${stockDisponible}`;
+      }
+    }
+  
+    return '';
+  }
+
 
   private procesarRespuestaProducto(response: any, index: number) {
     const descriptionControl = this.productosControls

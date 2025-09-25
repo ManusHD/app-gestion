@@ -135,7 +135,10 @@ export class FormularioEntradaSalidaComponent
         }
       });
 
-    this.entradaSalidaForm
+
+    if(this.hay('pdv') && !this.hay('colaborador')) {
+      console.log("NO HAY COLABORADOR Y HAY PDV");
+      this.entradaSalidaForm
       .get('pdv')
       ?.valueChanges.pipe(
         debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
@@ -152,11 +155,16 @@ export class FormularioEntradaSalidaComponent
           this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
         }
       });
+    } else {
+      console.log("HAY COLABORADOR");
+    }
 
     if (this.currentPath.startsWith('/salidas')) {
       this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe((value) => {
         if (value) {
-          this.rellenarDireccionPDV(value);
+          if(this.hay('pdv') && !this.hay('colaborador')) {
+            this.rellenarDireccionPDV(value);
+          }
         } else {
           this.limpiarCamposDireccion();
         }
@@ -174,9 +182,17 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
+  hay(campo: string): boolean {
+    return this.entradaSalidaForm.get(campo)?.value != '' && this.entradaSalidaForm.get(campo)?.value != null;
+  }
+
   ngOnDestroy() {
     this.entradaSalidaForm.reset();
     this.salidaUbicacionService.resetProductos();
+    
+    if (this.esSalida()) {
+      this.setSalidaActualId(null);
+    }
   }
 
   onEnterKey(event: KeyboardEvent): void {
@@ -476,9 +492,14 @@ export class FormularioEntradaSalidaComponent
       this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.destino);
       this.setCampoValue('direccion', entradaSalidaFormulario.direccion);
       this.setCampoValue('poblacion', entradaSalidaFormulario.poblacion);
+      console.log(entradaSalidaFormulario.poblacion);
+      console.log(this.entradaSalidaForm.get('poblacion')!.value);
       this.setCampoValue('provincia', entradaSalidaFormulario.provincia);
+      console.log(entradaSalidaFormulario.provincia);
+      console.log(this.entradaSalidaForm.get('provincia')!.value);
       this.setCampoValue('cp', entradaSalidaFormulario.cp);
       this.setCampoValue('telefono', entradaSalidaFormulario.telefono);
+      this.setSalidaActualId(this.detallesES!.id || null);
     }
   }
 
@@ -970,7 +991,7 @@ export class FormularioEntradaSalidaComponent
     }, 50);
   }
 
-  // Nuevo método para cargar opciones del campo activo
+  // Método para cargar opciones del campo activo
   private loadOptionsForActiveField(): void {
     if (!this.activeCampoUnico) return;
 
@@ -1128,31 +1149,6 @@ export class FormularioEntradaSalidaComponent
   }
 
   // Método para mostrar mensaje de stock disponible
-  getMensajeStock(index: number): string {
-    if (!this.esSalida()) {
-      return '';
-    }
-
-    const refControl = this.productosControls.at(index).get('ref');
-    const estadoControl = this.productosControls.at(index).get('estado');
-    const ubicacionControl = this.productosControls.at(index).get('ubicacion');
-
-    const referencia = refControl?.value;
-    const estado = estadoControl?.value;
-    const ubicacion = ubicacionControl?.value;
-
-    if (
-      referencia &&
-      estado &&
-      ubicacion &&
-      !this.esProductoEspecial(referencia)
-    ) {
-      const stockDisponible = this.getStockDisponible(index);
-      return `Stock disponible: ${stockDisponible}`;
-    }
-
-    return '';
-  }
 
   // Método para inicializar el formulario con datos existentes (en caso de edición)
   inicializarFormularioConDatos(datosExistentes: any) {

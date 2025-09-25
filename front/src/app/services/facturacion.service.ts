@@ -521,7 +521,7 @@ export class FacturacionService {
     fechaSalida: Date
   ): number {
     const diferenciaTiempo = fechaSalida.getTime() - fechaInicioMes.getTime();
-    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 1; // +1 porque el día de salida SÍ se factura
+    return Math.ceil(diferenciaTiempo / (1000 * 3600 * 24)) + 0; // +0 porque el día de salida SÍ se factura
   }
 
   /**

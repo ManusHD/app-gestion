@@ -35,6 +35,20 @@ export class ProductoServices {
     );
   }
 
+  // Nuevo método para obtener stock disponible real
+  getStockDisponibleReal(referencia: string, estado: string, ubicacion: string): Observable<{stockTotal: number, unidadesEnUso: number, stockDisponible: number}> {
+    return this.http.get<{stockTotal: number, unidadesEnUso: number, stockDisponible: number}>(
+      `${this.apiUrl}/stock-disponible/${referencia}/estado/${estado}/ubicacion/${ubicacion}`
+    );
+  }
+
+  // Método para obtener stock disponible en envíos (excluyendo la salida actual)
+  getStockDisponibleEnvios(referencia: string, estado: string, ubicacion: string, salidaId: number): Observable<{stockTotal: number, unidadesEnUsoOtros: number, stockDisponible: number}> {
+    return this.http.get<{stockTotal: number, unidadesEnUsoOtros: number, stockDisponible: number}>(
+      `${this.apiUrl}/stock-disponible-envios/${referencia}/estado/${estado}/ubicacion/${ubicacion}/excluir/${salidaId}`
+    );
+  }
+
   // Nuevo método para obtener producto específico por referencia y estado
   getProductoPorReferenciaYEstado(
     referencia: string,

@@ -184,6 +184,11 @@
               Bultos
             </h3>
             <div class="movimiento-datos">
+
+              <div class="dato-movimiento entrada">
+                <span class="etiqueta">.</span>
+              </div>
+
               <div class="dato-movimiento entrada">
                 <span class="etiqueta">Entrados</span>
                 <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.bultosEntrados }}</span>
@@ -238,7 +243,12 @@
               <mat-icon>confirmation_number</mat-icon>
               Unidades
             </h3>
+            
             <div class="movimiento-datos">
+              <div class="dato-movimiento entrada">
+                <span class="etiqueta">.</span>
+              </div>
+
               <div class="dato-movimiento entrada">
                 <span class="etiqueta">Entradas</span>
                 <span class="valor positivo">+{{ resumenFacturacion.resumenMovimientos.unidadesEntradas | number
@@ -291,14 +301,14 @@
         </div>
 
         <!-- Resumen de movimientos -->
-        <div class="resumen-facturacion-tipos">
+        <!-- <div class="resumen-facturacion-tipos">
           <h4>
             <mat-icon>euro</mat-icon>
             Desglose de Facturación por Movimientos
-          </h4>
+          </h4> -->
 
           <!-- Facturación de ENTRADAS -->
-          <div class="facturacion-seccion">
+          <!-- <div class="facturacion-seccion">
             <h5>
               <mat-icon>input</mat-icon>
               Movimientos de Entrada
@@ -340,10 +350,10 @@
             <div class="subtotal-entradas" *ngIf="getTotalEntradas() > 0">
               <strong>Subtotal Entradas: {{ getTotalEntradas() | currency:'EUR':'symbol':'1.2-2' }}</strong>
             </div>
-          </div>
+          </div> -->
 
           <!-- Facturación de SALIDAS -->
-          <div class="facturacion-seccion">
+          <!-- <div class="facturacion-seccion">
             <h5>
               <mat-icon>output</mat-icon>
               Movimientos de Salida
@@ -374,7 +384,7 @@
             <strong>Total Movimientos: {{ resumenFacturacion.totalMovimientos | currency:'EUR':'symbol':'1.2-2'
               }}</strong>
           </div>
-        </div>
+        </div> -->
       </mat-card-content>
     </mat-card>
 

@@ -509,26 +509,27 @@ public class ProductosController {
         System.out.println("=== RESTAR STOCK SIN REFERENCIA ===");
         System.out.println("Descripción: " + description);
         System.out.println("Cantidad a restar: " + cantidad);
-        
+
         try {
-            Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA", description);
-            
+            Optional<Producto> optProducto = productosRepository.findByReferenciaAndDescription("SIN REFERENCIA",
+                    description);
+
             if (!optProducto.isPresent()) {
                 System.err.println("Producto SIN REFERENCIA no encontrado con descripción: " + description);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Producto especial con Descripción '" + description + "' no encontrado");
             }
-            
+
             Producto producto = optProducto.get();
             int stockActual = producto.getStock();
             int nuevoStock = stockActual - cantidad;
-            
+
             System.out.println("Stock actual: " + stockActual + ", Nuevo stock: " + nuevoStock);
-            
+
             if (nuevoStock < 0) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("No hay stock suficiente para el producto especial con Descripción " + description + 
-                            ". Stock actual: " + stockActual + ", Solicitado: " + cantidad);
+                        .body("No hay stock suficiente para el producto especial con Descripción " + description +
+                                ". Stock actual: " + stockActual + ", Solicitado: " + cantidad);
             } else if (nuevoStock == 0) {
                 productosRepository.delete(producto);
                 System.out.println("Producto eliminado por stock 0");
@@ -539,7 +540,7 @@ public class ProductosController {
                 System.out.println("Stock actualizado correctamente");
                 return ResponseEntity.ok(producto);
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error en subtractStockEspecialSR: " + e.getMessage());
             e.printStackTrace();
@@ -552,8 +553,10 @@ public class ProductosController {
     public ResponseEntity<?> transferirEstado(@RequestBody TransferirEstadoDTO dto) {
         try {
             // Corregir como indicaste: null sigue siendo null
-            String estadoOrigenBuscar = (dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "" : dto.getEstadoOrigen();
-            String estadoDestinoBuscar = (dto.getEstadoDestino() == null || dto.getEstadoDestino().isEmpty()) ? "" : dto.getEstadoDestino();
+            String estadoOrigenBuscar = (dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? ""
+                    : dto.getEstadoOrigen();
+            String estadoDestinoBuscar = (dto.getEstadoDestino() == null || dto.getEstadoDestino().isEmpty()) ? ""
+                    : dto.getEstadoDestino();
 
             Optional<Producto> productoOrigenOpt = productosRepository.findByReferenciaAndEstado(
                     dto.getReferencia(), estadoOrigenBuscar);
@@ -561,7 +564,9 @@ public class ProductosController {
             if (!productoOrigenOpt.isPresent()) {
                 return ResponseEntity.badRequest()
                         .body("No se encontró producto con referencia " + dto.getReferencia() +
-                                " y estado " + ((dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "SIN ESTADO" : dto.getEstadoOrigen()));
+                                " y estado "
+                                + ((dto.getEstadoOrigen() == null || dto.getEstadoOrigen().isEmpty()) ? "SIN ESTADO"
+                                        : dto.getEstadoOrigen()));
             }
 
             Producto productoOrigen = productoOrigenOpt.get();
@@ -656,9 +661,9 @@ public class ProductosController {
     @PostMapping("/migrar-sin-estado")
     public ResponseEntity<?> migrarProductosSinEstado(@RequestBody MigrarEstadoDTO dto,
             @RequestHeader("Authorization") String token) {
-                System.out.println("================= DTO =================");
-                System.out.println(dto.getReferencia());
-                System.out.println(dto.getEstadoDestino());
+        System.out.println("================= DTO =================");
+        System.out.println(dto.getReferencia());
+        System.out.println(dto.getEstadoDestino());
         try {
             // Buscar productos sin estado con esa referencia
             List<Producto> productosSinEstado = productosRepository.findByReferenciaAndEstadoOrderByReferenciaAsc(
@@ -667,7 +672,6 @@ public class ProductosController {
 
             System.out.println("================= Productos sin estado =================");
             System.out.println(productosSinEstado);
-            
 
             if (productosSinEstado.isEmpty()) {
                 return ResponseEntity.badRequest()
@@ -808,7 +812,8 @@ public class ProductosController {
 
                         } else {
                             // PRODUCTOS NORMALES: referencia + estado
-                            String claveNormal = pu.getRef() + "|" + ((pu.getEstado() != null && !pu.getEstado().isEmpty()) ? pu.getEstado() : "");
+                            String claveNormal = pu.getRef() + "|"
+                                    + ((pu.getEstado() != null && !pu.getEstado().isEmpty()) ? pu.getEstado() : "");
 
                             Map<String, Object> datos = stockProductosNormales.computeIfAbsent(claveNormal,
                                     k -> new HashMap<>());
@@ -873,7 +878,8 @@ public class ProductosController {
                 if (stockTotal > 0) {
                     // MODIFICADO: Buscar por referencia Y descripción usando findAll en lugar de
                     // findByReferenciaAndDescription
-                    List<Producto> productosExistentes = StreamSupport.stream(productosRepository.findAll().spliterator(), false)
+                    List<Producto> productosExistentes = StreamSupport
+                            .stream(productosRepository.findAll().spliterator(), false)
                             .filter(p -> referencia.equals(p.getReferencia()) && descripcion.equals(p.getDescription()))
                             .collect(Collectors.toList());
 
@@ -918,7 +924,8 @@ public class ProductosController {
                 } else {
                     // Para productos normales, verificar en el mapa de normales
                     String claveNormal = producto.getReferencia() + "|"
-                            + ((producto.getEstado() != null && !producto.getEstado().isEmpty()) ? producto.getEstado() : "");
+                            + ((producto.getEstado() != null && !producto.getEstado().isEmpty()) ? producto.getEstado()
+                                    : "");
                     Map<String, Object> datosStock = stockProductosNormales.get(claveNormal);
                     existeEnUbicaciones = (datosStock != null && (Integer) datosStock.get("stock") > 0);
                 }
@@ -944,203 +951,449 @@ public class ProductosController {
     }
 
     @GetMapping("/uniqueProducts")
-public ResponseEntity<Map<String, Object>> getUniqueProductsPaginado(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-    
-    try {
-        // PASO 1: Obtener TODOS los productos para calcular correctamente el total único
-        Iterable<Producto> todosLosProductos = productosRepository.findProductosNormalesOrderByReferenciaAndEstado();
-        
-        // PASO 2: Agrupar por clave única manteniendo el orden por referencia
-        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>(); // LinkedHashMap mantiene el orden
-        
-        for (Producto producto : todosLosProductos) {
-            String clave;
-            if (esProductoEspecial(producto.getReferencia())) {
-                clave = producto.getReferencia() + "_" + producto.getDescription();
-            } else {
-                clave = producto.getReferencia();
-            }
-            
-            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
-        }
-        
-        // PASO 3: Obtener las claves ordenadas (ya están ordenadas por LinkedHashMap)
-        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
-        int totalProductosUnicos = clavesOrdenadas.size();
-        
-        // PASO 4: Aplicar paginación sobre los productos únicos
-        int startIndex = page * size;
-        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
-        
-        List<Producto> productosParaPagina = new ArrayList<>();
-        
-        if (startIndex < totalProductosUnicos) {
-            for (int i = startIndex; i < endIndex; i++) {
-                String clave = clavesOrdenadas.get(i);
-                List<Producto> grupoProductos = productosAgrupados.get(clave);
-                
-                // Ordenar el grupo por estado antes de agregarlo
-                grupoProductos.sort((p1, p2) -> {
-                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
-                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
-                    return estado1.compareTo(estado2);
-                });
-                
-                productosParaPagina.addAll(grupoProductos);
-            }
-        }
-        
-        // PASO 5: Preparar respuesta con datos correctos
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", productosParaPagina);
-        response.put("totalElements", totalProductosUnicos); // Total de productos únicos (CORREGIDO)
-        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
-        response.put("size", size);
-        response.put("number", page);
-        response.put("first", page == 0);
-        response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
-        
-        return ResponseEntity.ok(response);
-        
-    } catch (Exception e) {
-        System.err.println("Error en getUniqueProductsPaginado: " + e.getMessage());
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-    }
-}
+    public ResponseEntity<Map<String, Object>> getUniqueProductsPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-// Método similar para búsquedas por referencia
-@GetMapping("/uniqueProducts/referencia/{referencia}")
-public ResponseEntity<Map<String, Object>> getUniqueProductsPorReferenciaPaginado(
-        @PathVariable String referencia,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-    
-    try {
-        // Obtener todos los productos que coincidan con la búsqueda
-        Iterable<Producto> todosLosProductos = productosRepository.findByReferenciaContainingIgnoreCaseOrderByReferenciaAsc(referencia);
-        
-        // Agrupar manteniendo orden
-        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
-        
-        for (Producto producto : todosLosProductos) {
-            String clave;
-            if (esProductoEspecial(producto.getReferencia())) {
-                clave = producto.getReferencia() + "_" + producto.getDescription();
-            } else {
-                clave = producto.getReferencia();
-            }
-            
-            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
-        }
-        
-        // Aplicar paginación
-        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
-        int totalProductosUnicos = clavesOrdenadas.size();
-        
-        int startIndex = page * size;
-        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
-        
-        List<Producto> productosParaPagina = new ArrayList<>();
-        
-        if (startIndex < totalProductosUnicos) {
-            for (int i = startIndex; i < endIndex; i++) {
-                String clave = clavesOrdenadas.get(i);
-                List<Producto> grupoProductos = productosAgrupados.get(clave);
-                
-                grupoProductos.sort((p1, p2) -> {
-                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
-                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
-                    return estado1.compareTo(estado2);
-                });
-                
-                productosParaPagina.addAll(grupoProductos);
-            }
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", productosParaPagina);
-        response.put("totalElements", totalProductosUnicos);
-        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
-        response.put("size", size);
-        response.put("number", page);
-        response.put("first", page == 0);
-        response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
-        
-        return ResponseEntity.ok(response);
-        
-    } catch (Exception e) {
-        System.err.println("Error en búsqueda por referencia: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-    }
-}
+        try {
+            // PASO 1: Obtener TODOS los productos para calcular correctamente el total
+            // único
+            Iterable<Producto> todosLosProductos = productosRepository
+                    .findProductosNormalesOrderByReferenciaAndEstado();
 
-// Método similar para búsquedas por descripción
-@GetMapping("/uniqueProducts/descripcion/{descripcion}")
-public ResponseEntity<Map<String, Object>> getUniqueProductsPorDescripcionPaginado(
-        @PathVariable String descripcion,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-    
-    try {
-        Iterable<Producto> todosLosProductos = productosRepository.findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(descripcion);
-        
-        Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
-        
-        for (Producto producto : todosLosProductos) {
-            String clave;
-            if (esProductoEspecial(producto.getReferencia())) {
-                clave = producto.getReferencia() + "_" + producto.getDescription();
-            } else {
-                clave = producto.getReferencia();
+            // PASO 2: Agrupar por clave única manteniendo el orden por referencia
+            Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>(); // LinkedHashMap mantiene el orden
+
+            for (Producto producto : todosLosProductos) {
+                String clave;
+                if (esProductoEspecial(producto.getReferencia())) {
+                    clave = producto.getReferencia() + "_" + producto.getDescription();
+                } else {
+                    clave = producto.getReferencia();
+                }
+
+                productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
             }
-            
-            productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
-        }
-        
-        List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
-        int totalProductosUnicos = clavesOrdenadas.size();
-        
-        int startIndex = page * size;
-        int endIndex = Math.min(startIndex + size, totalProductosUnicos);
-        
-        List<Producto> productosParaPagina = new ArrayList<>();
-        
-        if (startIndex < totalProductosUnicos) {
-            for (int i = startIndex; i < endIndex; i++) {
-                String clave = clavesOrdenadas.get(i);
-                List<Producto> grupoProductos = productosAgrupados.get(clave);
-                
-                grupoProductos.sort((p1, p2) -> {
-                    String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
-                    String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
-                    return estado1.compareTo(estado2);
-                });
-                
-                productosParaPagina.addAll(grupoProductos);
+
+            // PASO 3: Obtener las claves ordenadas (ya están ordenadas por LinkedHashMap)
+            List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+            int totalProductosUnicos = clavesOrdenadas.size();
+
+            // PASO 4: Aplicar paginación sobre los productos únicos
+            int startIndex = page * size;
+            int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+
+            List<Producto> productosParaPagina = new ArrayList<>();
+
+            if (startIndex < totalProductosUnicos) {
+                for (int i = startIndex; i < endIndex; i++) {
+                    String clave = clavesOrdenadas.get(i);
+                    List<Producto> grupoProductos = productosAgrupados.get(clave);
+
+                    // Ordenar el grupo por estado antes de agregarlo
+                    grupoProductos.sort((p1, p2) -> {
+                        String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                        String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                        return estado1.compareTo(estado2);
+                    });
+
+                    productosParaPagina.addAll(grupoProductos);
+                }
             }
+
+            // PASO 5: Preparar respuesta con datos correctos
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", productosParaPagina);
+            response.put("totalElements", totalProductosUnicos); // Total de productos únicos (CORREGIDO)
+            response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+            response.put("size", size);
+            response.put("number", page);
+            response.put("first", page == 0);
+            response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("Error en getUniqueProductsPaginado: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", productosParaPagina);
-        response.put("totalElements", totalProductosUnicos);
-        response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
-        response.put("size", size);
-        response.put("number", page);
-        
-        return ResponseEntity.ok(response);
-        
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
-}
+
+    // Método similar para búsquedas por referencia
+    @GetMapping("/uniqueProducts/referencia/{referencia}")
+    public ResponseEntity<Map<String, Object>> getUniqueProductsPorReferenciaPaginado(
+            @PathVariable String referencia,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            // Obtener todos los productos que coincidan con la búsqueda
+            Iterable<Producto> todosLosProductos = productosRepository
+                    .findByReferenciaContainingIgnoreCaseOrderByReferenciaAsc(referencia);
+
+            // Agrupar manteniendo orden
+            Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
+
+            for (Producto producto : todosLosProductos) {
+                String clave;
+                if (esProductoEspecial(producto.getReferencia())) {
+                    clave = producto.getReferencia() + "_" + producto.getDescription();
+                } else {
+                    clave = producto.getReferencia();
+                }
+
+                productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+            }
+
+            // Aplicar paginación
+            List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+            int totalProductosUnicos = clavesOrdenadas.size();
+
+            int startIndex = page * size;
+            int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+
+            List<Producto> productosParaPagina = new ArrayList<>();
+
+            if (startIndex < totalProductosUnicos) {
+                for (int i = startIndex; i < endIndex; i++) {
+                    String clave = clavesOrdenadas.get(i);
+                    List<Producto> grupoProductos = productosAgrupados.get(clave);
+
+                    grupoProductos.sort((p1, p2) -> {
+                        String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                        String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                        return estado1.compareTo(estado2);
+                    });
+
+                    productosParaPagina.addAll(grupoProductos);
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", productosParaPagina);
+            response.put("totalElements", totalProductosUnicos);
+            response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+            response.put("size", size);
+            response.put("number", page);
+            response.put("first", page == 0);
+            response.put("last", page >= (int) Math.ceil((double) totalProductosUnicos / size) - 1);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            System.err.println("Error en búsqueda por referencia: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    // Método similar para búsquedas por descripción
+    @GetMapping("/uniqueProducts/descripcion/{descripcion}")
+    public ResponseEntity<Map<String, Object>> getUniqueProductsPorDescripcionPaginado(
+            @PathVariable String descripcion,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            Iterable<Producto> todosLosProductos = productosRepository
+                    .findByDescriptionContainingIgnoreCaseOrderByDescriptionAsc(descripcion);
+
+            Map<String, List<Producto>> productosAgrupados = new LinkedHashMap<>();
+
+            for (Producto producto : todosLosProductos) {
+                String clave;
+                if (esProductoEspecial(producto.getReferencia())) {
+                    clave = producto.getReferencia() + "_" + producto.getDescription();
+                } else {
+                    clave = producto.getReferencia();
+                }
+
+                productosAgrupados.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+            }
+
+            List<String> clavesOrdenadas = new ArrayList<>(productosAgrupados.keySet());
+            int totalProductosUnicos = clavesOrdenadas.size();
+
+            int startIndex = page * size;
+            int endIndex = Math.min(startIndex + size, totalProductosUnicos);
+
+            List<Producto> productosParaPagina = new ArrayList<>();
+
+            if (startIndex < totalProductosUnicos) {
+                for (int i = startIndex; i < endIndex; i++) {
+                    String clave = clavesOrdenadas.get(i);
+                    List<Producto> grupoProductos = productosAgrupados.get(clave);
+
+                    grupoProductos.sort((p1, p2) -> {
+                        String estado1 = p1.getEstado() != null ? p1.getEstado() : "SIN ESTADO";
+                        String estado2 = p2.getEstado() != null ? p2.getEstado() : "SIN ESTADO";
+                        return estado1.compareTo(estado2);
+                    });
+
+                    productosParaPagina.addAll(grupoProductos);
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", productosParaPagina);
+            response.put("totalElements", totalProductosUnicos);
+            response.put("totalPages", (int) Math.ceil((double) totalProductosUnicos / size));
+            response.put("size", size);
+            response.put("number", page);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     // Método auxiliar para identificar productos especiales
     private boolean esProductoEspecial(String referencia) {
         if (referencia == null)
             return false;
         return "VISUAL".equals(referencia) || "SIN REFERENCIA".equals(referencia);
+    }
+
+    @GetMapping("/stock-disponible/{referencia}/estado/{estado}/ubicacion/{ubicacion}")
+    public ResponseEntity<Map<String, Integer>> getStockDisponibleReal(
+            @PathVariable String referencia,
+            @PathVariable String estado,
+            @PathVariable String ubicacion,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Map<String, Integer> resultado = new HashMap<>();
+
+            // Obtener stock actual del producto en la ubicación
+            int stockActual = obtenerStockEnUbicacion(referencia, estado, ubicacion, token);
+
+            // Obtener unidades ya asignadas en envíos pendientes
+            int unidadesEnUso = obtenerUnidadesEnUsoEnviosPendientes(referencia, estado, ubicacion, token);
+
+            // Calcular stock disponible real
+            int stockDisponible = Math.max(0, stockActual - unidadesEnUso);
+
+            resultado.put("stockTotal", stockActual);
+            resultado.put("unidadesEnUso", unidadesEnUso);
+            resultado.put("stockDisponible", stockDisponible);
+
+            System.out.println("=== STOCK CALCULATION ===");
+            System.out.println("Producto: " + referencia + " - Estado: " + estado + " - Ubicación: " + ubicacion);
+            System.out.println("Stock Total: " + stockActual);
+            System.out.println("Unidades en Uso: " + unidadesEnUso);
+            System.out.println("Stock Disponible: " + stockDisponible);
+
+            return ResponseEntity.ok(resultado);
+
+        } catch (Exception e) {
+            System.err.println("Error al calcular stock disponible: " + e.getMessage());
+            e.printStackTrace();
+            Map<String, Integer> error = new HashMap<>();
+            error.put("stockTotal", 0);
+            error.put("unidadesEnUso", 0);
+            error.put("stockDisponible", 0);
+            return ResponseEntity.ok(error);
+        }
+    }
+
+    private int obtenerStockEnUbicacion(String referencia, String estado, String ubicacion, String token) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+            String url = "http://localhost:8095/ubicaciones/referencia/" + referencia + "/estado/" + estado;
+
+            ResponseEntity<Ubicacion[]> response = restTemplate.exchange(
+                    url, HttpMethod.GET, requestEntity, Ubicacion[].class);
+
+            Ubicacion[] ubicaciones = response.getBody();
+
+            if (ubicaciones != null) {
+                for (Ubicacion ubi : ubicaciones) {
+                    if (ubi.getNombre().equals(ubicacion)) {
+                        for (ProductoUbicacion producto : ubi.getProductos()) {
+                            if (producto.getRef().equals(referencia) &&
+                                    Objects.equals(producto.getEstado(), estado)) {
+                                System.out.println(
+                                        "Stock encontrado en ubicación " + ubicacion + ": " + producto.getUnidades());
+                                return producto.getUnidades();
+                            }
+                        }
+                    }
+                }
+            }
+
+            System.out.println("No se encontró stock para " + referencia + " en " + ubicacion);
+            return 0;
+        } catch (Exception e) {
+            System.err.println("Error al obtener stock en ubicación: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    private int obtenerUnidadesEnUsoEnviosPendientes(String referencia, String estado, String ubicacion, String token) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+            // Consultar salidas pendientes de envío (estado=false, rellena=true)
+            String url = "http://localhost:8093/salidas/estado/false/rellena/true/paginado?page=0&size=1000";
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url, HttpMethod.GET, requestEntity, Map.class);
+
+            Map<String, Object> pageResponse = response.getBody();
+            List<Map<String, Object>> salidasPendientes = (List<Map<String, Object>>) pageResponse.get("content");
+
+            int unidadesEnUso = 0;
+
+            if (salidasPendientes != null) {
+                for (Map<String, Object> salida : salidasPendientes) {
+                    List<Map<String, Object>> productos = (List<Map<String, Object>>) salida.get("productos");
+
+                    if (productos != null) {
+                        for (Map<String, Object> producto : productos) {
+                            String prodRef = (String) producto.get("ref");
+                            String prodEstado = (String) producto.get("estado");
+                            String prodUbicacion = (String) producto.get("ubicacion");
+                            Integer prodUnidades = (Integer) producto.get("unidades");
+
+                            if (prodRef != null && prodRef.equals(referencia) &&
+                                    Objects.equals(prodEstado, estado) &&
+                                    prodUbicacion != null && prodUbicacion.equals(ubicacion) &&
+                                    prodUnidades != null) {
+                                unidadesEnUso += prodUnidades;
+                                System.out.println("Unidades en uso encontradas: " + prodUnidades + " en salida ID: "
+                                        + salida.get("id"));
+                            }
+                        }
+                    }
+                }
+            }
+
+            System.out.println("Total unidades en uso para " + referencia + " en " + ubicacion + ": " + unidadesEnUso);
+            return unidadesEnUso;
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener unidades en uso: " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @GetMapping("/stock-disponible-envios/{referencia}/estado/{estado}/ubicacion/{ubicacion}/excluir/{salidaId}")
+    public ResponseEntity<Map<String, Integer>> getStockDisponibleEnvios(
+            @PathVariable String referencia,
+            @PathVariable String estado,
+            @PathVariable String ubicacion,
+            @PathVariable Long salidaId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            Map<String, Integer> resultado = new HashMap<>();
+
+            // Obtener stock actual del producto en la ubicación
+            int stockActual = obtenerStockEnUbicacion(referencia, estado, ubicacion, token);
+
+            // Obtener unidades ya asignadas en OTROS envíos pendientes (excluyendo el
+            // actual)
+            int unidadesEnUsoOtros = obtenerUnidadesEnUsoOtrosEnvios(referencia, estado, ubicacion, salidaId, token);
+
+            // Calcular stock disponible real
+            int stockDisponible = Math.max(0, stockActual - unidadesEnUsoOtros);
+
+            resultado.put("stockTotal", stockActual);
+            resultado.put("unidadesEnUsoOtros", unidadesEnUsoOtros);
+            resultado.put("stockDisponible", stockDisponible);
+
+            System.out.println("=== STOCK CALCULATION ENVIOS ===");
+            System.out.println("Producto: " + referencia + " - Estado: " + estado + " - Ubicación: " + ubicacion);
+            System.out.println("Excluyendo Salida ID: " + salidaId);
+            System.out.println("Stock Total: " + stockActual);
+            System.out.println("Unidades en Uso (otros envíos): " + unidadesEnUsoOtros);
+            System.out.println("Stock Disponible: " + stockDisponible);
+
+            return ResponseEntity.ok(resultado);
+
+        } catch (Exception e) {
+            System.err.println("Error al calcular stock disponible para envíos: " + e.getMessage());
+            e.printStackTrace();
+            Map<String, Integer> error = new HashMap<>();
+            error.put("stockTotal", 0);
+            error.put("unidadesEnUsoOtros", 0);
+            error.put("stockDisponible", 0);
+            return ResponseEntity.ok(error);
+        }
+    }
+
+    private int obtenerUnidadesEnUsoOtrosEnvios(String referencia, String estado, String ubicacion,
+            Long salidaIdExcluir, String token) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+            // Consultar salidas pendientes de envío (estado=false, rellena=true)
+            String url = "http://localhost:8093/salidas/estado/false/rellena/true/paginado?page=0&size=1000";
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    url, HttpMethod.GET, requestEntity, Map.class);
+
+            Map<String, Object> pageResponse = response.getBody();
+            List<Map<String, Object>> salidasPendientes = (List<Map<String, Object>>) pageResponse.get("content");
+
+            int unidadesEnUso = 0;
+
+            if (salidasPendientes != null) {
+                for (Map<String, Object> salida : salidasPendientes) {
+                    // IMPORTANTE: Excluir la salida actual
+                    Object salidaIdObj = salida.get("id");
+                    Long salidaId = null;
+                    if (salidaIdObj instanceof Integer) {
+                        salidaId = ((Integer) salidaIdObj).longValue();
+                    } else if (salidaIdObj instanceof Long) {
+                        salidaId = (Long) salidaIdObj;
+                    }
+
+                    if (salidaId != null && salidaId.equals(salidaIdExcluir)) {
+                        System.out.println("Excluyendo salida ID: " + salidaId);
+                        continue; // Saltar la salida actual
+                    }
+
+                    List<Map<String, Object>> productos = (List<Map<String, Object>>) salida.get("productos");
+
+                    if (productos != null) {
+                        for (Map<String, Object> producto : productos) {
+                            String prodRef = (String) producto.get("ref");
+                            String prodEstado = (String) producto.get("estado");
+                            String prodUbicacion = (String) producto.get("ubicacion");
+                            Integer prodUnidades = (Integer) producto.get("unidades");
+
+                            if (prodRef != null && prodRef.equals(referencia) &&
+                                    Objects.equals(prodEstado, estado) &&
+                                    prodUbicacion != null && prodUbicacion.equals(ubicacion) &&
+                                    prodUnidades != null) {
+                                unidadesEnUso += prodUnidades;
+                                System.out.println("Unidades en uso (otros envíos): " + prodUnidades + " en salida ID: "
+                                        + salidaId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            System.out.println("Total unidades en uso (otros envíos) para " + referencia + " en " + ubicacion + ": "
+                    + unidadesEnUso);
+            return unidadesEnUso;
+
+        } catch (Exception e) {
+            System.err.println("Error al obtener unidades en uso (otros envíos): " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
     }
 }
