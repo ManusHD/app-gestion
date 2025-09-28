@@ -581,7 +581,6 @@ mat-chip {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: #f8f9fa;
   border-radius: 4px;
   background: var(--color-cream);
   border: 1px solid var(--border-color);
@@ -596,6 +595,14 @@ mat-chip {
   background: rgba(235, 185, 52, 0.1);
   border-color: var(--color-detalles);
   font-weight: 600;
+}
+
+.ocultar-dato-movimiento {
+  background: var(--btn-color-w);
+}
+
+.ocultar-dato-movimiento .etiqueta {
+  color: var(--btn-color-w);
 }
 
 .etiqueta {

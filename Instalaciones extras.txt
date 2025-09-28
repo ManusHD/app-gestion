@@ -1,3 +1,6 @@
+- Angular CLI
+npm install -g @angular/cli
+
 - Excel
 npm install xlsx
 

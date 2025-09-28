@@ -2,7 +2,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EntradaServices } from '../../services/entrada.service';
 import { SalidaServices } from '../../services/salida.service';
-import {FacturacionService, FacturacionCalculada, ResumenMovimientos} from '../../services/facturacion.service';
+import { FacturacionService, FacturacionCalculada, ResumenMovimientos } from '../../services/facturacion.service';
 import { Entrada } from '../../models/entrada.model';
 import { Salida } from '../../models/salida.model';
 import { ProductoEntrada } from '../../models/productoEntrada.model';
@@ -20,6 +20,8 @@ interface DetalleFacturacion {
   diasAlmacenaje?: number;
   fechaEntrada?: Date;
   fechaSalida?: Date;
+  tipoOperacion?: 'entrada' | 'salida';
+  tipoMovimiento?: 'palet' | 'bulto' | 'unidad';
 }
 
 interface ResumenFacturacion {
@@ -60,7 +62,7 @@ export class FacturacionComponent implements OnInit {
     private salidaService: SalidaServices,
     private facturacionService: FacturacionService,
     private snackBar: MatSnackBar
-  ) {}
+  ) { }
 
   /**
    * Inicializa el formulario con valores por defecto del mes actual
@@ -73,13 +75,13 @@ export class FacturacionComponent implements OnInit {
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-  
+
     this.facturacionForm = this.fb.group({
       mesSeleccionado: [this.formatDateForInput(firstDayOfMonth), Validators.required],
       fechaInicio: [this.formatDateForInput(firstDayOfMonth), Validators.required],
       fechaFin: [this.formatDateForInput(lastDayOfMonth), Validators.required],
     });
-  
+
     // Sincronizar fechas cuando cambia el mes seleccionado
     this.facturacionForm.get('mesSeleccionado')?.valueChanges.subscribe((value) => {
       if (value) this.actualizarRangoFechas(value);
@@ -139,23 +141,23 @@ export class FacturacionComponent implements OnInit {
     const fechaFin = this.facturacionForm.get('fechaFin')?.value;
 
     this.facturacionService.calcularFacturacion(fechaInicio, fechaFin).subscribe({
-    next: (facturacion) => {
-      this.resumenFacturacion = this.convertirFacturacion(facturacion);
-      this.mostrarResultados = true;
-      this.cargando = false;
-      
-      // Verificar cálculos
-      setTimeout(() => this.verificarCalculosAlmacenaje(), 100);
-    },
-        error: (error) => {
-          console.error('Error al calcular facturación:', error);
-          this.snackBar.open('Error al calcular la facturación', 'Cerrar', {
-            duration: 3000,
-            panelClass: 'error',
-          });
-          this.cargando = false;
-        },
-      });
+      next: (facturacion) => {
+        this.resumenFacturacion = this.convertirFacturacion(facturacion);
+        this.mostrarResultados = true;
+        this.cargando = false;
+
+        // Verificar cálculos
+        setTimeout(() => this.verificarCalculosAlmacenaje(), 100);
+      },
+      error: (error) => {
+        console.error('Error al calcular facturación:', error);
+        this.snackBar.open('Error al calcular la facturación', 'Cerrar', {
+          duration: 3000,
+          panelClass: 'error',
+        });
+        this.cargando = false;
+      },
+    });
   }
 
   private convertirFacturacion(
@@ -163,16 +165,19 @@ export class FacturacionComponent implements OnInit {
   ): ResumenFacturacion {
     const detalles: DetalleFacturacion[] = [];
 
-    // Convertir movimientos
+    // Convertir movimientos - GUARDAR información del tipoOperacion
     facturacion.detallesMovimientos.forEach((mov) => {
       detalles.push({
         tipo: 'movimiento',
-        concepto: `Movimiento de entrada - ${mov.tipo}s`,
+        concepto: `Movimiento de ${mov.tipoOperacion} - ${mov.tipo}s`,
         cantidad: mov.cantidad,
         precio: mov.precioUnitario,
         total: mov.costoTotal,
         referencia: mov.referencia,
         descripcion: mov.descripcion,
+        tipoOperacion: mov.tipoOperacion, // NUEVO: guardar tipo de operación
+        tipoMovimiento: mov.tipo, // NUEVO: guardar tipo de movimiento
+        fechaEntrada: mov.fechaMovimiento, // REUTILIZAR este campo para fecha de movimiento
       });
     });
 
@@ -197,7 +202,7 @@ export class FacturacionComponent implements OnInit {
       totalMovimientos: facturacion.totalMovimientos,
       totalGeneral: facturacion.totalGeneral,
       detalles,
-      resumenMovimientos: facturacion.resumenMovimientos, // NUEVO
+      resumenMovimientos: facturacion.resumenMovimientos,
     };
   }
 
@@ -320,11 +325,12 @@ export class FacturacionComponent implements OnInit {
         .map((d) => ({
           referencia: d.referencia || '',
           descripcion: d.descripcion || '',
-          tipo: this.extraerTipoMovimiento(d.concepto),
+          tipo: d.tipoMovimiento || this.extraerTipoMovimiento(d.concepto), // USAR tipoMovimiento guardado
+          tipoOperacion: d.tipoOperacion || this.extraerTipoOperacion(d.concepto), // USAR tipoOperacion guardado
           cantidad: d.cantidad,
           precioUnitario: d.precio,
           costoTotal: d.total,
-          fechaMovimiento: new Date(),
+          fechaMovimiento: d.fechaEntrada || new Date(), // USAR fechaEntrada como fecha de movimiento
         })),
       resumenMovimientos: this.resumenFacturacion.resumenMovimientos,
     };
@@ -339,7 +345,7 @@ export class FacturacionComponent implements OnInit {
 
     const periodo = this.facturacionForm.get('mesSeleccionado')?.value;
 
-    // Convertir ResumenFacturacion a FacturacionCalculada (mismo código que arriba)
+    // Mismo código que exportarPDF
     const facturacionCalculada: FacturacionCalculada = {
       totalAlmacenaje: this.resumenFacturacion.totalAlmacenaje,
       totalMovimientos: this.resumenFacturacion.totalMovimientos,
@@ -360,11 +366,12 @@ export class FacturacionComponent implements OnInit {
         .map((d) => ({
           referencia: d.referencia || '',
           descripcion: d.descripcion || '',
-          tipo: this.extraerTipoMovimiento(d.concepto),
+          tipo: d.tipoMovimiento || this.extraerTipoMovimiento(d.concepto),
+          tipoOperacion: d.tipoOperacion || this.extraerTipoOperacion(d.concepto),
           cantidad: d.cantidad,
           precioUnitario: d.precio,
           costoTotal: d.total,
-          fechaMovimiento: new Date(),
+          fechaMovimiento: d.fechaEntrada || new Date(),
         })),
       resumenMovimientos: this.resumenFacturacion.resumenMovimientos,
     };
@@ -372,9 +379,15 @@ export class FacturacionComponent implements OnInit {
     this.facturacionService.exportarExcel(facturacionCalculada, periodo);
   }
 
-  private extraerTipoMovimiento(
-    concepto: string
-  ): 'palet' | 'bulto' | 'unidad' {
+  // método para extraer tipo de operación del concepto (método auxiliar)
+  private extraerTipoOperacion(concepto: string): 'entrada' | 'salida' {
+    if (concepto.includes('entrada')) return 'entrada';
+    if (concepto.includes('salida')) return 'salida';
+    // Por defecto, asumir entrada para compatibilidad hacia atrás
+    return 'entrada';
+  }
+
+  private extraerTipoMovimiento(concepto: string): 'palet' | 'bulto' | 'unidad' {
     if (concepto.includes('palet')) return 'palet';
     if (concepto.includes('bulto')) return 'bulto';
     return 'unidad';
@@ -438,38 +451,38 @@ export class FacturacionComponent implements OnInit {
     if (!this.resumenFacturacion) {
       return 0;
     }
-    
+
     return this.resumenFacturacion.detalles
       .filter(d => d.tipo === 'almacenaje' && d.referencia === 'STOCK_INICIAL')
       .reduce((sum, d) => sum + d.total, 0);
   }
-  
+
   getAlmacenajeEntradas(): number {
     if (!this.resumenFacturacion) {
       return 0;
     }
-    
+
     return this.resumenFacturacion.detalles
       .filter(d => d.tipo === 'almacenaje' && d.total > 0 && d.referencia !== 'STOCK_INICIAL')
       .reduce((sum, d) => sum + d.total, 0);
   }
-  
+
   getAlmacenajeSalidas(): number {
     if (!this.resumenFacturacion) {
       return 0;
     }
-    
+
     return this.resumenFacturacion.detalles
       .filter(d => d.tipo === 'almacenaje' && d.total < 0)
       .reduce((sum, d) => sum + d.total, 0);
   }
-  
+
   // Método para obtener detalles de descuentos
   getDescuentosDetallados(): any[] {
     if (!this.resumenFacturacion) {
       return [];
     }
-    
+
     return this.resumenFacturacion.detalles
       .filter(d => d.tipo === 'almacenaje' && d.total < 0)
       .map(d => ({
@@ -485,12 +498,12 @@ export class FacturacionComponent implements OnInit {
   // Método para verificar que los cálculos sean correctos
   verificarCalculosAlmacenaje(): void {
     if (!this.resumenFacturacion) return;
-    
+
     const stockInicial = this.getAlmacenajeStockInicial();
     const entradas = this.getAlmacenajeEntradas();
     const salidas = this.getAlmacenajeSalidas();
     const totalCalculado = stockInicial + entradas + salidas; // salidas ya es negativo
-    
+
     console.log('=== VERIFICACIÓN CÁLCULOS ===');
     console.log('Stock inicial facturado:', stockInicial);
     console.log('Entradas proporcionales:', entradas);
@@ -499,14 +512,14 @@ export class FacturacionComponent implements OnInit {
     console.log('Total del servicio:', this.resumenFacturacion.totalAlmacenaje);
     console.log('¿Coinciden?', Math.abs(totalCalculado - this.resumenFacturacion.totalAlmacenaje) < 0.01);
   }
-  
+
   // Método auxiliar para obtener días del mes actual
   private getDiasDelMes(): number {
     const mesSeleccionado = this.facturacionForm.get('mesSeleccionado')?.value;
     if (!mesSeleccionado) {
       return 30; // valor por defecto
     }
-    
+
     const fecha = new Date(mesSeleccionado + '-01');
     return new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0).getDate();
   }
@@ -516,15 +529,15 @@ export class FacturacionComponent implements OnInit {
     if (detalle.referencia === 'STOCK_INICIAL') {
       return 'Stock inicial - Almacenaje mes completo';
     }
-    
+
     if (detalle.total < 0) {
       return `Descuento por salida - ${detalle.referencia}`;
     }
-    
+
     if (detalle.diasAlmacenaje > 0 && detalle.diasAlmacenaje < this.getDiasDelMes()) {
       return `Entrada proporcional - ${detalle.referencia}`;
     }
-    
+
     return `Almacenaje de palets - ${detalle.referencia}`;
   }
 }

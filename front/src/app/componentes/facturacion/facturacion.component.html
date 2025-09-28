@@ -67,7 +67,7 @@
       <mat-card-header>
         <mat-card-title>
           <mat-icon>summary</mat-icon>
-          Resumen de Facturación
+          Detalle de Facturación de almacenaje
         </mat-card-title>
       </mat-card-header>
 
@@ -105,10 +105,10 @@
             Exportar PDF
           </button>
 
-          <button mat-stroked-button color="accent" (click)="exportarExcel()">
+          <!-- <button mat-stroked-button color="accent" (click)="exportarExcel()">
             <mat-icon>table_chart</mat-icon>
             Exportar Excel
-          </button>
+          </button> -->
         </div>
       </mat-card-content>
     </mat-card>
@@ -185,7 +185,7 @@
             </h3>
             <div class="movimiento-datos">
 
-              <div class="dato-movimiento entrada">
+              <div class="dato-movimiento entrada ocultar-dato-movimiento">
                 <span class="etiqueta">.</span>
               </div>
 
@@ -245,7 +245,7 @@
             </h3>
             
             <div class="movimiento-datos">
-              <div class="dato-movimiento entrada">
+              <div class="dato-movimiento entrada ocultar-dato-movimiento">
                 <span class="etiqueta">.</span>
               </div>
 

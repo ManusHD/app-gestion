@@ -52,6 +52,7 @@ export interface DetalleMovimiento {
   referencia: string;
   descripcion: string;
   tipo: 'palet' | 'bulto' | 'unidad';
+  tipoOperacion: 'entrada' | 'salida'; // NUEVO CAMPO
   cantidad: number;
   precioUnitario: number;
   costoTotal: number;
@@ -72,7 +73,7 @@ export class FacturacionService {
   readonly TARIFA_MOVIMIENTO_BULTO = 0.45;   // €/bulto movido
   readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;  // €/unidad movida
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Calcula la facturación para un período específico
@@ -130,6 +131,7 @@ export class FacturacionService {
       salidasAnteriores$,
     ]).pipe(
       map(([entradas, salidas, entradasAnteriores, salidasAnteriores]) => {
+        // IMPORTANTE: Calcular movimientos ANTES que almacenaje para mantener orden
         const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
         const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
           entradasAnteriores,
@@ -140,7 +142,6 @@ export class FacturacionService {
           fechaFinAjustada
         );
 
-        // NUEVO: Calcular resumen de movimientos
         const resumenMovimientos = this.calcularResumenMovimientos(
           entradasAnteriores,
           salidasAnteriores,
@@ -148,8 +149,6 @@ export class FacturacionService {
           salidas,
           fechaInicioAjustada
         );
-
-        console.log("Resumen movimientos:", resumenMovimientos.stockInicialPalets);
 
         const totalMovimientos = detallesMovimientos.reduce(
           (sum, d) => sum + d.costoTotal,
@@ -160,18 +159,19 @@ export class FacturacionService {
           0
         );
 
-        console.log('=== DEBUG TOTALES ===');
-        console.log('Detalles almacenaje:', detallesAlmacenaje);
-        console.log('Total almacenaje:', totalAlmacenaje);
-        console.log('Total movimientos:', totalMovimientos);
-        console.log('Total general:', totalAlmacenaje + totalMovimientos);
+        console.log('=== DEBUG MOVIMIENTOS ORDENADOS ===');
+        console.log('Detalles movimientos ordenados:', detallesMovimientos.map(d => ({
+          fecha: d.fechaMovimiento.toLocaleDateString(),
+          tipo: d.tipoOperacion,
+          referencia: d.referencia
+        })));
 
         return {
-          totalAlmacenaje,           // ✅ Suma de todos los costos de almacenaje
-          totalMovimientos,          // ✅ Suma de todos los costos de movimientos  
-          totalGeneral: totalAlmacenaje + totalMovimientos, // ✅ TOTAL GENERAL
+          totalAlmacenaje,
+          totalMovimientos,
+          totalGeneral: totalAlmacenaje + totalMovimientos,
           detallesAlmacenaje,
-          detallesMovimientos,
+          detallesMovimientos, // YA ORDENADOS POR FECHA
           resumenMovimientos,
         };
       })
@@ -203,7 +203,7 @@ export class FacturacionService {
       }
     });
 
-    
+
     salidasAnteriores.forEach((salida) => {
       if (salida.estado && salida.productos) {
         salida.productos.forEach((producto: any) => {
@@ -350,10 +350,10 @@ export class FacturacionService {
     const fechaInicioDate = new Date(fechaInicio);
     const fechaFinDate = new Date(fechaFin);
     const diasEnElMes = this.getDiasEnMes(fechaInicioDate);
-  
+
     // 1. Calcular stock inicial
     let stockInicialTotal = 0;
-    
+
     entradasAnteriores.forEach((entrada) => {
       if (entrada.estado && entrada.productos) {
         entrada.productos.forEach((producto: any) => {
@@ -363,7 +363,7 @@ export class FacturacionService {
         });
       }
     });
-  
+
     salidasAnteriores.forEach((salida) => {
       if (salida.estado && salida.productos) {
         salida.productos.forEach((producto: any) => {
@@ -373,9 +373,9 @@ export class FacturacionService {
         });
       }
     });
-  
+
     stockInicialTotal = Math.max(0, stockInicialTotal);
-  
+
     // 2. Stock inicial - facturar mes completo
     if (stockInicialTotal > 0) {
       const costoStockInicial = stockInicialTotal * this.TARIFA_PALET_MES;
@@ -389,17 +389,17 @@ export class FacturacionService {
         fechaSalida: undefined,
       });
     }
-  
+
     // 3. Procesar entradas del mes INDIVIDUALMENTE
     entradasDelMes.forEach((entrada) => {
       if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
         const fechaEntrada = new Date(entrada.fechaRecepcion);
-        
+
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
             const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
             const costoEntrada = (producto.palets * this.TARIFA_PALET_MES * diasDesdeEntrada) / diasEnElMes;
-            
+
             detalles.push({
               referencia: producto.ref || 'SIN_REF',
               descripcion: producto.description || 'Sin descripción',
@@ -426,25 +426,25 @@ export class FacturacionService {
         });
       }
     });
-  
+
     // 4. Procesar salidas del mes INDIVIDUALMENTE (descuentos detallados)
     salidasDelMes.forEach((salida) => {
       if (salida.estado && salida.productos && salida.fechaEnvio) {
         const fechaSalida = new Date(salida.fechaEnvio);
-        
+
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
             // Días que SÍ se facturan (hasta el día de salida inclusive)
             const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
-            
+
             // Días que NO se facturan (desde el día siguiente a la salida)
             const diasNoFacturados = diasEnElMes - diasFacturados;
-            
+
             // Solo aplicar descuento si hay días no facturados
-            const descuento = diasNoFacturados > 0 
+            const descuento = diasNoFacturados > 0
               ? (producto.palets * this.TARIFA_PALET_MES * diasNoFacturados) / diasEnElMes
               : 0;
-            
+
             // DETALLE INDIVIDUAL DEL DESCUENTO
             if (descuento > 0) {
               detalles.push({
@@ -457,7 +457,7 @@ export class FacturacionService {
                 fechaSalida: fechaSalida,
               });
             }
-            
+
             console.log(`=== DEBUG SALIDA: ${producto.ref} ===`);
             console.log(`Fecha salida: ${fechaSalida.toLocaleDateString()}`);
             console.log(`Días facturados (hasta salida inclusive): ${diasFacturados}`);
@@ -481,7 +481,7 @@ export class FacturacionService {
         });
       }
     });
-  
+
     // Log para debugging
     const totalStockInicial = stockInicialTotal * this.TARIFA_PALET_MES;
     const totalEntradas = detalles
@@ -490,14 +490,14 @@ export class FacturacionService {
     const totalDescuentos = detalles
       .filter(d => d.palets < 0)
       .reduce((sum, d) => sum + d.costoTotal, 0);
-  
+
     console.log('=== DEBUG ALMACENAJE DETALLADO ===');
     console.log('Stock inicial:', stockInicialTotal, 'palets =', totalStockInicial, '€');
     console.log('Entradas detalladas:', totalEntradas, '€');
     console.log('Descuentos detallados:', totalDescuentos, '€');
     console.log('Total almacenaje:', totalStockInicial + totalEntradas + totalDescuentos, '€');
     console.log('Detalles generados:', detalles.length);
-  
+
     return detalles;
   }
 
@@ -533,13 +533,14 @@ export class FacturacionService {
   ): DetalleMovimiento[] {
     const detalles: DetalleMovimiento[] = [];
 
-    // Calcular movimientos de ENTRADA (igual que ya tienes)
+    // Procesar TODAS las entradas
     entradas.forEach((entrada) => {
-      if (entrada.estado && entrada.productos) {
+      if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
         entrada.productos.forEach((producto: any) => {
           const detalle = this.calcularMovimientoProducto(
             producto,
-            entrada.fechaRecepcion
+            entrada.fechaRecepcion,
+            'entrada'
           );
           if (detalle) {
             detalles.push(detalle);
@@ -548,16 +549,16 @@ export class FacturacionService {
       }
     });
 
-    // Calcular movimientos de SALIDA (solo palets)
+    // Procesar TODAS las salidas
     salidas.forEach((salida) => {
-      if (salida.estado && salida.productos) {
+      if (salida.estado && salida.productos && salida.fechaEnvio) {
         salida.productos.forEach((producto: any) => {
-          // Solo palets, ya que es lo único que se cobra
           if (producto.palets && producto.palets > 0) {
             detalles.push({
               referencia: producto.ref || '',
               descripcion: producto.description || '',
               tipo: 'palet',
+              tipoOperacion: 'salida',
               cantidad: producto.palets,
               precioUnitario: this.TARIFA_MOVIMIENTO_PALET,
               costoTotal: producto.palets * this.TARIFA_MOVIMIENTO_PALET,
@@ -568,6 +569,14 @@ export class FacturacionService {
       }
     });
 
+    // ORDENAR TODO POR FECHA (CRÍTICO)
+    detalles.sort((a, b) => a.fechaMovimiento.getTime() - b.fechaMovimiento.getTime());
+
+    console.log('=== MOVIMIENTOS ORDENADOS POR FECHA ===');
+    detalles.forEach((detalle, index) => {
+      console.log(`${index + 1}. ${detalle.fechaMovimiento.toLocaleDateString()} - ${detalle.tipoOperacion} - ${detalle.referencia}`);
+    });
+
     return detalles;
   }
 
@@ -576,7 +585,8 @@ export class FacturacionService {
    */
   private calcularMovimientoProducto(
     producto: any,
-    fechaMovimiento: string
+    fechaMovimiento: string,
+    tipoOperacion: 'entrada' | 'salida' // NUEVO PARÁMETRO
   ): DetalleMovimiento | null {
     if (!producto.palets && !producto.bultos && !producto.unidades) {
       return null;
@@ -588,6 +598,7 @@ export class FacturacionService {
         referencia: producto.ref || '',
         descripcion: producto.description || '',
         tipo: 'palet',
+        tipoOperacion, // NUEVO CAMPO
         cantidad: producto.palets,
         precioUnitario: this.TARIFA_MOVIMIENTO_PALET,
         costoTotal: producto.palets * this.TARIFA_MOVIMIENTO_PALET,
@@ -598,6 +609,7 @@ export class FacturacionService {
         referencia: producto.ref || '',
         descripcion: producto.description || '',
         tipo: 'bulto',
+        tipoOperacion, // NUEVO CAMPO
         cantidad: producto.bultos,
         precioUnitario: this.TARIFA_MOVIMIENTO_BULTO,
         costoTotal: producto.bultos * this.TARIFA_MOVIMIENTO_BULTO,
@@ -608,6 +620,7 @@ export class FacturacionService {
         referencia: producto.ref || '',
         descripcion: producto.description || '',
         tipo: 'unidad',
+        tipoOperacion, // NUEVO CAMPO
         cantidad: producto.unidades,
         precioUnitario: this.TARIFA_MOVIMIENTO_UNIDAD,
         costoTotal: producto.unidades * this.TARIFA_MOVIMIENTO_UNIDAD,
@@ -649,9 +662,8 @@ export class FacturacionService {
 
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${
-              producto.description
-            }-${fechaEntrada.getTime()}`;
+            const key = `${producto.ref}-${producto.description
+              }-${fechaEntrada.getTime()}`;
             paletsAlmacenaje.set(key, {
               palets: producto.palets,
               fechaEntrada,
@@ -895,8 +907,8 @@ export class FacturacionService {
       ['Concepto', 'Importe'],
       ['Total Almacenaje', `${facturacion.totalAlmacenaje.toFixed(2)} €`],
       ['Total Movimientos', `${facturacion.totalMovimientos.toFixed(2)} €`],
-      ['', ''], // Línea separadora
-      ['TOTAL GENERAL', `${facturacion.totalGeneral.toFixed(2)} €`],
+      ['Total Trabajos de Manipulación', ` €`],
+      ['TOTAL', `${facturacion.totalGeneral.toFixed(2)} €`],
     ];
 
     autoTable(doc, {
@@ -907,6 +919,7 @@ export class FacturacionService {
       styles: { fontSize: 12 },
       headStyles: { fillColor: [41, 128, 185], textColor: 255 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
+      showHead: 'firstPage',
       didParseCell: (data) => {
         if (data.row.index === 3 && data.column.index === 0) {
           // Línea separadora
@@ -917,7 +930,7 @@ export class FacturacionService {
           // Fila del total
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fillColor = [52, 152, 219];
-          data.cell.styles.textColor = 255;
+          data.cell.styles.textColor = [0, 0, 0];
         }
       },
     });
@@ -932,25 +945,49 @@ export class FacturacionService {
 
       yPosition += 10;
 
-      const almacenajeData = facturacion.detallesAlmacenaje.map((detalle) => [
+      // Ordenar por fecha de entrada
+      const almacenajeOrdenado = [...facturacion.detallesAlmacenaje].sort((a, b) =>
+        new Date(a.fechaEntrada).getTime() - new Date(b.fechaEntrada).getTime()
+      );
+
+      const almacenajeData = almacenajeOrdenado.map((detalle) => [
+        detalle.fechaEntrada.toLocaleDateString('es-ES'),
         detalle.referencia,
         detalle.descripcion,
         detalle.palets.toString(),
-        detalle.diasAlmacenaje.toString(),
         `${detalle.costoTotal.toFixed(2)} €`,
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Referencia', 'Descripción', 'Palets', 'Días', 'Total']],
+        head: [['Fecha', 'Referencia', 'Descripción', 'Palets', 'Total']],
         body: almacenajeData,
         theme: 'striped',
         styles: { fontSize: 10 },
         headStyles: { fillColor: [155, 89, 182], textColor: 255 },
         columnStyles: {
-          2: { halign: 'center' },
           3: { halign: 'center' },
           4: { halign: 'right' },
+        },
+        showHead: 'firstPage',
+        didParseCell: (data) => {
+          if (data.section === 'body') {
+            const detalle = almacenajeOrdenado[data.row.index];
+
+            // STOCK_INICIAL en negrita
+            if (detalle.referencia === 'STOCK_INICIAL') {
+              if (data.column.index === 1) { // Referencia
+                data.cell.styles.fontStyle = 'bold';
+              }
+            }
+
+            // Salidas en rojo (costos negativos)
+            if (detalle.costoTotal < 0) {
+              if ([0, 1, 2, 4].includes(data.column.index)) { // Fecha, Referencia, Descripción, Total
+                data.cell.styles.textColor = [255, 0, 0]; // Rojo
+              }
+            }
+          }
         },
       });
 
@@ -972,75 +1009,60 @@ export class FacturacionService {
       yPosition += 10;
 
       const movimientosData = facturacion.detallesMovimientos.map((detalle) => [
+        detalle.fechaMovimiento.toLocaleDateString('es-ES'), // Fecha
         detalle.referencia,
-        detalle.descripcion,
+        detalle.descripcion, // SIN recortar, se mostrará completa
         detalle.tipo.toUpperCase(),
         detalle.cantidad.toString(),
-        `${detalle.precioUnitario.toFixed(2)} €`,
-        `${detalle.costoTotal.toFixed(2)} €`,
+        `${detalle.costoTotal.toFixed(2)} €`
       ]);
 
       autoTable(doc, {
         startY: yPosition,
         head: [
           [
+            'Fecha',
             'Referencia',
             'Descripción',
             'Tipo',
             'Cantidad',
-            'P. Unit.',
-            'Total',
+            'Total'
           ],
         ],
         body: movimientosData,
         theme: 'striped',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [231, 76, 60], textColor: 255 },
-        columnStyles: {
-          2: { halign: 'center' },
-          3: { halign: 'center' },
-          4: { halign: 'right' },
-          5: { halign: 'right' },
+        styles: { fontSize: 9 },
+        headStyles: {
+          fillColor: [231, 76, 60],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold'
         },
+        showHead: 'firstPage',
+        columnStyles: {
+          0: { halign: 'center' }, // Fecha
+          1: { halign: 'center' }, // Referencia
+          2: { cellWidth: 60, overflow: 'linebreak' }, // Descripción ajustable
+          3: { halign: 'center' }, // Tipo
+          4: { halign: 'center' }, // Cantidad
+          5: { halign: 'center' }, // Total
+        },
+        didParseCell: (data) => {
+          if (data.section === 'body') {
+            const tipoOperacion = facturacion.detallesMovimientos[data.row.index].tipoOperacion.toUpperCase();
+            if (tipoOperacion === 'ENTRADA') {
+              // data.cell.styles.fillColor = [200, 230, 200]; // Verde claro
+            } else if (tipoOperacion === 'SALIDA') {
+              if([0, 1, 2].includes(data.column.index)) {
+                data.cell.styles.textColor = [255, 0, 0];
+              }
+            }
+          }
+        }
       });
 
       yPosition = (doc as any).lastAutoTable.finalY + 15;
     }
-
-    // Información de tarifas al final
-    if (yPosition > 230) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TARIFAS APLICADAS', 20, yPosition);
-
-    yPosition += 10;
-
-    const tarifasData = [
-      ['Concepto', 'Tarifa'],
-      ['Almacenaje por palet/mes', `${this.TARIFA_PALET_MES.toFixed(2)} €`],
-      ['Movimiento por palet', `${this.TARIFA_MOVIMIENTO_PALET.toFixed(2)} €`],
-      ['Movimiento por bulto', `${this.TARIFA_MOVIMIENTO_BULTO.toFixed(2)} €`],
-      [
-        'Movimiento por unidad',
-        `${this.TARIFA_MOVIMIENTO_UNIDAD.toFixed(2)} €`,
-      ],
-    ];
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [tarifasData[0]],
-      body: tarifasData.slice(1),
-      theme: 'plain',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [149, 165, 166], textColor: 255 },
-      columnStyles: {
-        1: { halign: 'right' },
-      },
-    });
 
     // Pie de página
     const finalY = (doc as any).lastAutoTable.finalY + 20;
@@ -1081,43 +1103,44 @@ export class FacturacionService {
     XLSX.utils.book_append_sheet(workbook, resumenWS, 'Resumen');
 
     // Hoja de detalle de almacenaje
-    if (facturacion.detallesAlmacenaje.length > 0) {
-      const almacenajeHeaders = [
+    if (facturacion.detallesMovimientos.length > 0) {
+      const movimientosHeaders = [
         'Referencia',
         'Descripción',
-        'Palets',
-        'Días Almacenaje',
+        'Operación', // NUEVO
+        'Tipo',
+        'Cantidad',
+        'Precio Unitario',
         'Costo Total',
-        'Fecha Entrada',
-        'Fecha Salida',
+        'Fecha Movimiento',
       ];
-      const almacenajeData = facturacion.detallesAlmacenaje.map((detalle) => [
+      const movimientosData = facturacion.detallesMovimientos.map((detalle) => [
         detalle.referencia,
         detalle.descripcion,
-        detalle.palets,
-        detalle.diasAlmacenaje,
+        detalle.tipoOperacion, // NUEVO
+        detalle.tipo,
+        detalle.cantidad,
+        detalle.precioUnitario,
         detalle.costoTotal,
-        detalle.fechaEntrada.toLocaleDateString('es-ES'),
-        detalle.fechaSalida
-          ? detalle.fechaSalida.toLocaleDateString('es-ES')
-          : '',
+        detalle.fechaMovimiento.toLocaleDateString('es-ES'),
       ]);
 
-      const almacenajeWS = XLSX.utils.aoa_to_sheet([
-        almacenajeHeaders,
-        ...almacenajeData,
+      const movimientosWS = XLSX.utils.aoa_to_sheet([
+        movimientosHeaders,
+        ...movimientosData,
       ]);
-      almacenajeWS['!cols'] = [
-        { width: 15 },
-        { width: 30 },
-        { width: 10 },
-        { width: 15 },
-        { width: 12 },
-        { width: 15 },
-        { width: 15 },
+      movimientosWS['!cols'] = [
+        { width: 15 }, // Referencia
+        { width: 30 }, // Descripción
+        { width: 12 }, // Operación
+        { width: 12 }, // Tipo
+        { width: 10 }, // Cantidad
+        { width: 15 }, // Precio Unitario
+        { width: 12 }, // Costo Total
+        { width: 15 }, // Fecha Movimiento
       ];
 
-      XLSX.utils.book_append_sheet(workbook, almacenajeWS, 'Almacenaje');
+      XLSX.utils.book_append_sheet(workbook, movimientosWS, 'Movimientos');
     }
 
     // Hoja de detalle de movimientos
@@ -1200,5 +1223,5 @@ export class FacturacionService {
     return `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
   }
 
-  
+
 }

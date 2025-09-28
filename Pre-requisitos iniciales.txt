@@ -1,0 +1,24 @@
+Se necesitan las siguientes herramientas, se indica su versión mínima estable necesaria:
+
+--------- HERRAMIENTAS ---------
+
+JAVA 17
+
+APACHE MAVEN 3.9.11
+
+NODE JS 22
+
+ANGULAR CLI
+
+MYSQL 8
+
+GIT
+
+---- PONER EN EL PATH (el bin)
+
+JAVA 17
+APACHE MAVEN
+NODE JS (automáticamente con el .msi installer)
+MYSQL (no necesario pero aconsejable)
+GIT (se agrega con el .msi installer)
+
