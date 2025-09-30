@@ -104,6 +104,8 @@ import { CabeceraMueblesComponent } from './componentes/cabecera-muebles/cabecer
 import { DetallesMueblesComponent } from './componentes/detalles-muebles/detalles-muebles.component';
 import { FormularioMuebleComponent } from './componentes/formulario-mueble/formulario-mueble.component';
 import { MuebleService } from './services/mueble.service';
+import { TarifasComponent } from './componentes/tarifas/tarifas.component';
+import { TarifaService } from './services/tarifas.service';
 
 @NgModule({
   declarations: [
@@ -168,6 +170,7 @@ import { MuebleService } from './services/mueble.service';
     CabeceraMueblesComponent,
     DetallesMueblesComponent,
     FormularioMuebleComponent,
+    TarifasComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -216,6 +219,7 @@ import { MuebleService } from './services/mueble.service';
     ReubicarPaletsService,
     SalidaServices,
     SnackBar,
+    TarifaService,
     TrabajoService,
     UbicacionService,
     PantallaCargaService,

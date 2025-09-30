@@ -411,6 +411,7 @@ details li a.active {
   cursor: pointer;
   position: fixed;
   bottom: 10px;
+  right: 10px;
   overflow: hidden;
   transition-duration: .3s;
   box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);

@@ -18,7 +18,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 export class TrabajosRealizadosComponent implements OnInit {
   trabajos: Trabajo[] = [];
   trabajosExcel: Trabajo[] = [];
-  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'importe', 'detalles'];
+  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'importe', 'observaciones'];
   dataSource = new MatTableDataSource<Trabajo>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -39,7 +39,7 @@ export class TrabajosRealizadosComponent implements OnInit {
     private trabajoService: TrabajoService,
     private carga: PantallaCargaService,
     private snackbar: SnackBar
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.cargarTrabajos();
@@ -91,7 +91,7 @@ export class TrabajosRealizadosComponent implements OnInit {
       this.pageIndex = 0;
     }
     this.buscando = true;
-    
+
     if (!this.fechaInicio || !this.fechaFin) {
       setTimeout(() => {
         this.carga.hide();
@@ -177,5 +177,23 @@ export class TrabajosRealizadosComponent implements OnInit {
       return trabajo.otroOrigen;
     }
     return 'Sin dirección';
+  }
+
+  getDireccionTipo(trabajo: Trabajo): string {
+    if (trabajo.perfumeria && trabajo.pdv) {
+      return 'Perfumería';
+    } else if (trabajo.otroOrigen) {
+      return 'Otro destino';
+    }
+    return 'Sin especificar';
+  }
+
+  getDireccionIcon(trabajo: Trabajo): string {
+    if (trabajo.perfumeria && trabajo.pdv) {
+      return 'store';
+    } else if (trabajo.otroOrigen) {
+      return 'business';
+    }
+    return 'location_off';
   }
 }

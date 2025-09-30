@@ -72,12 +72,13 @@
                     </td>
                 </ng-container>
                 
-                <ng-container matColumnDef="detalles">
-                    <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
+                <ng-container matColumnDef="observaciones">
+                    <th class="header-paginator" *matHeaderCellDef>OBSERVACIONES</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let trabajo">
-                        <app-detalles-trabajo [trabajo]="trabajo" [esRealizado]="true"></app-detalles-trabajo>
+                        {{trabajo.observaciones}}
                     </td>
                 </ng-container>
+                
 
                 <tr mat-header-row *matHeaderRowDef="columnasPaginator"></tr>
                 <tr mat-row *matRowDef="let row; columns: columnasPaginator;"></tr>

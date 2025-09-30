@@ -34,6 +34,7 @@ import { TrabajosNuevoComponent } from './componentes/trabajos-nuevo/trabajos-nu
 import { MueblesPendientesComponent } from './componentes/muebles-pendientes/muebles-pendientes.component';
 import { MueblesPrevisionComponent } from './componentes/muebles-prevision/muebles-prevision.component';
 import { MueblesRealizadosComponent } from './componentes/muebles-realizados/muebles-realizados.component';
+import { TarifasComponent } from './componentes/tarifas/tarifas.component';
 
 const routes: Routes = [
   {path: '', component:InicioComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN', 'ROLE_OPERADOR'] }},
@@ -66,6 +67,7 @@ const routes: Routes = [
   {path: 'perfil', component:PerfilComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'estados', component:EstadosComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
   {path: 'facturacion', component:FacturacionComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
+  {path: 'tarifas', component:TarifasComponent, canActivate: [authGuard, roleGuard], data: { roles: ['ROLE_ADMIN'] }},
 ];
 
 @NgModule({

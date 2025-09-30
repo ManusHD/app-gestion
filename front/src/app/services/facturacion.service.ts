@@ -10,9 +10,11 @@ import * as XLSX from 'xlsx';
 export interface FacturacionCalculada {
   totalAlmacenaje: number;
   totalMovimientos: number;
+  totalTrabajos: number; // NUEVO
   totalGeneral: number;
   detallesAlmacenaje: DetalleAlmacenaje[];
   detallesMovimientos: DetalleMovimiento[];
+  detallesTrabajos: DetalleTrabajoManipulacion[]; // NUEVO
   resumenMovimientos: ResumenMovimientos;
 }
 
@@ -59,6 +61,16 @@ export interface DetalleMovimiento {
   fechaMovimiento: Date;
 }
 
+export interface DetalleTrabajoManipulacion {
+  fecha: Date;
+  concepto: string;
+  horas: number;
+  importePorHora: number;
+  costoTotal: number;
+  direccion: string;
+  observaciones?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -79,104 +91,123 @@ export class FacturacionService {
    * Calcula la facturación para un período específico
    */
   calcularFacturacion(
-    fechaInicio: string,
-    fechaFin: string
-  ): Observable<FacturacionCalculada> {
-    // Ajustar fechas para que siempre sean del 1 al último día del mes
-    const fechaInicioAjustada = this.ajustarFechaInicioMes(fechaInicio);
-    const fechaFinAjustada = this.ajustarFechaFinMes(fechaFin);
+  fechaInicio: string,
+  fechaFin: string
+): Observable<FacturacionCalculada> {
+  // Ajustar fechas para que siempre sean del 1 al último día del mes
+  const fechaInicioAjustada = this.ajustarFechaInicioMes(fechaInicio);
+  const fechaFinAjustada = this.ajustarFechaFinMes(fechaFin);
 
-    const entradas$ = this.http.get<any[]>(`${this.apiUrlEntradas}/filtrar`, {
+  const entradas$ = this.http.get<any[]>(`${this.apiUrlEntradas}/filtrar`, {
+    params: {
+      fechaInicio: fechaInicioAjustada,
+      fechaFin: fechaFinAjustada,
+      tipoBusqueda: 'fecha',
+    },
+  });
+
+  const salidas$ = this.http.get<any[]>(`${this.apiUrlSalidas}/filtrar`, {
+    params: {
+      fechaInicio: fechaInicioAjustada,
+      fechaFin: fechaFinAjustada,
+      tipoBusqueda: 'fecha',
+    },
+  });
+
+  const entradasAnteriores$ = this.http.get<any[]>(
+    `${this.apiUrlEntradas}/filtrar`,
+    {
       params: {
-        fechaInicio: fechaInicioAjustada,
-        fechaFin: fechaFinAjustada,
+        fechaInicio: '2020-01-01',
+        fechaFin: this.restarUnDia(fechaInicioAjustada),
         tipoBusqueda: 'fecha',
       },
-    });
+    }
+  );
 
-    const salidas$ = this.http.get<any[]>(`${this.apiUrlSalidas}/filtrar`, {
+  const salidasAnteriores$ = this.http.get<any[]>(
+    `${this.apiUrlSalidas}/filtrar`,
+    {
       params: {
-        fechaInicio: fechaInicioAjustada,
-        fechaFin: fechaFinAjustada,
+        fechaInicio: '2020-01-01',
+        fechaFin: this.restarUnDia(fechaInicioAjustada),
         tipoBusqueda: 'fecha',
       },
-    });
+    }
+  );
 
-    const entradasAnteriores$ = this.http.get<any[]>(
-      `${this.apiUrlEntradas}/filtrar`,
-      {
-        params: {
-          fechaInicio: '2020-01-01',
-          fechaFin: this.restarUnDia(fechaInicioAjustada),
-          tipoBusqueda: 'fecha',
-        },
-      }
-    );
+  // NUEVO: Obtener trabajos del período
+  const trabajos$ = this.http.get<any[]>(`${environment.apiTrabajos}/filtrar`, {
+    params: {
+      fechaInicio: fechaInicioAjustada,
+      fechaFin: fechaFinAjustada,
+      tipoBusqueda: 'fecha',
+    },
+  });
 
-    const salidasAnteriores$ = this.http.get<any[]>(
-      `${this.apiUrlSalidas}/filtrar`,
-      {
-        params: {
-          fechaInicio: '2020-01-01',
-          fechaFin: this.restarUnDia(fechaInicioAjustada),
-          tipoBusqueda: 'fecha',
-        },
-      }
-    );
+  return forkJoin([
+    entradas$,
+    salidas$,
+    entradasAnteriores$,
+    salidasAnteriores$,
+    trabajos$, // NUEVO
+  ]).pipe(
+    map(([entradas, salidas, entradasAnteriores, salidasAnteriores, trabajos]) => {
+      // IMPORTANTE: Calcular movimientos ANTES que almacenaje para mantener orden
+      const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
+      const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
+        entradasAnteriores,
+        salidasAnteriores,
+        entradas,
+        salidas,
+        fechaInicioAjustada,
+        fechaFinAjustada
+      );
 
-    return forkJoin([
-      entradas$,
-      salidas$,
-      entradasAnteriores$,
-      salidasAnteriores$,
-    ]).pipe(
-      map(([entradas, salidas, entradasAnteriores, salidasAnteriores]) => {
-        // IMPORTANTE: Calcular movimientos ANTES que almacenaje para mantener orden
-        const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
-        const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
-          entradasAnteriores,
-          salidasAnteriores,
-          entradas,
-          salidas,
-          fechaInicioAjustada,
-          fechaFinAjustada
-        );
+      // NUEVO: Calcular trabajos de manipulación
+      const detallesTrabajos = this.calcularTrabajosManipulacion(trabajos);
 
-        const resumenMovimientos = this.calcularResumenMovimientos(
-          entradasAnteriores,
-          salidasAnteriores,
-          entradas,
-          salidas,
-          fechaInicioAjustada
-        );
+      const resumenMovimientos = this.calcularResumenMovimientos(
+        entradasAnteriores,
+        salidasAnteriores,
+        entradas,
+        salidas,
+        fechaInicioAjustada
+      );
 
-        const totalMovimientos = detallesMovimientos.reduce(
-          (sum, d) => sum + d.costoTotal,
-          0
-        );
-        const totalAlmacenaje = detallesAlmacenaje.reduce(
-          (sum, d) => sum + d.costoTotal,
-          0
-        );
+      const totalMovimientos = detallesMovimientos.reduce(
+        (sum, d) => sum + d.costoTotal,
+        0
+      );
+      const totalAlmacenaje = detallesAlmacenaje.reduce(
+        (sum, d) => sum + d.costoTotal,
+        0
+      );
+      const totalTrabajos = detallesTrabajos.reduce(
+        (sum, d) => sum + d.costoTotal,
+        0
+      );
 
-        console.log('=== DEBUG MOVIMIENTOS ORDENADOS ===');
-        console.log('Detalles movimientos ordenados:', detallesMovimientos.map(d => ({
-          fecha: d.fechaMovimiento.toLocaleDateString(),
-          tipo: d.tipoOperacion,
-          referencia: d.referencia
-        })));
+      console.log('=== DEBUG MOVIMIENTOS ORDENADOS ===');
+      console.log('Detalles movimientos ordenados:', detallesMovimientos.map(d => ({
+        fecha: d.fechaMovimiento.toLocaleDateString(),
+        tipo: d.tipoOperacion,
+        referencia: d.referencia
+      })));
 
-        return {
-          totalAlmacenaje,
-          totalMovimientos,
-          totalGeneral: totalAlmacenaje + totalMovimientos,
-          detallesAlmacenaje,
-          detallesMovimientos, // YA ORDENADOS POR FECHA
-          resumenMovimientos,
-        };
-      })
-    );
-  }
+      return {
+        totalAlmacenaje,
+        totalMovimientos,
+        totalTrabajos, // NUEVO
+        totalGeneral: totalAlmacenaje + totalMovimientos + totalTrabajos, // ACTUALIZADO
+        detallesAlmacenaje,
+        detallesMovimientos,
+        detallesTrabajos, // NUEVO
+        resumenMovimientos,
+      };
+    })
+  );
+}
 
   /**
    * ACTUALIZADO: Calcula el resumen incluyendo facturación de entradas y salidas
@@ -581,6 +612,46 @@ export class FacturacionService {
   }
 
   /**
+ * Calcula los costos de trabajos de manipulación
+ */
+private calcularTrabajosManipulacion(trabajos: any[]): DetalleTrabajoManipulacion[] {
+  const detalles: DetalleTrabajoManipulacion[] = [];
+
+  trabajos.forEach((trabajo) => {
+    if (trabajo.estado && trabajo.horas && trabajo.horas > 0) {
+      const direccion = this.obtenerDireccionTrabajo(trabajo);
+      
+      detalles.push({
+        fecha: new Date(trabajo.fecha),
+        concepto: trabajo.concepto || 'Trabajo de manipulación',
+        horas: trabajo.horas,
+        importePorHora: trabajo.importePorHora || 25,
+        costoTotal: trabajo.importeTotal || (trabajo.horas * (trabajo.importePorHora || 25)),
+        direccion: direccion,
+        observaciones: trabajo.observaciones,
+      });
+    }
+  });
+
+  // Ordenar por fecha
+  detalles.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+
+  return detalles;
+}
+
+/**
+ * Obtiene la dirección formateada de un trabajo
+ */
+private obtenerDireccionTrabajo(trabajo: any): string {
+  if (trabajo.perfumeria && trabajo.pdv) {
+    return `${trabajo.perfumeria} - ${trabajo.pdv}`;
+  } else if (trabajo.otroOrigen) {
+    return trabajo.otroOrigen;
+  }
+  return 'Sin dirección especificada';
+}
+
+  /**
    * Calcula el movimiento de un producto siguiendo la jerarquía palets > bultos > unidades
    */
   private calcularMovimientoProducto(
@@ -907,7 +978,7 @@ export class FacturacionService {
       ['Concepto', 'Importe'],
       ['Total Almacenaje', `${facturacion.totalAlmacenaje.toFixed(2)} €`],
       ['Total Movimientos', `${facturacion.totalMovimientos.toFixed(2)} €`],
-      ['Total Trabajos de Manipulación', ` €`],
+      ['Total Trabajos de Manipulación', `${facturacion.totalTrabajos.toFixed(2)} €`], // NUEVO
       ['TOTAL', `${facturacion.totalGeneral.toFixed(2)} €`],
     ];
 
@@ -1064,6 +1135,64 @@ export class FacturacionService {
       yPosition = (doc as any).lastAutoTable.finalY + 15;
     }
 
+    // Verificar si necesitamos nueva página
+if (yPosition > 250) {
+  doc.addPage();
+  yPosition = 20;
+}
+
+// Detalle de trabajos de manipulación
+if (facturacion.detallesTrabajos.length > 0) {
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DETALLE DE TRABAJOS DE MANIPULACIÓN', 20, yPosition);
+
+  yPosition += 10;
+
+  const trabajosData = facturacion.detallesTrabajos.map((detalle) => [
+    detalle.fecha.toLocaleDateString('es-ES'),
+    detalle.concepto,
+    detalle.direccion,
+    detalle.horas.toString(),
+    `${detalle.importePorHora.toFixed(2)} €`,
+    `${detalle.costoTotal.toFixed(2)} €`
+  ]);
+
+  autoTable(doc, {
+    startY: yPosition,
+    head: [
+      [
+        'Fecha',
+        'Concepto',
+        'Dirección',
+        'Horas',
+        'Precio/Hora',
+        'Total'
+      ],
+    ],
+    body: trabajosData,
+    theme: 'striped',
+    styles: { fontSize: 9 },
+    headStyles: {
+      fillColor: [46, 204, 113],
+      textColor: 255,
+      fontSize: 10,
+      fontStyle: 'bold'
+    },
+    columnStyles: {
+      0: { halign: 'center' }, // Fecha
+      1: { cellWidth: 60, overflow: 'linebreak' }, // Concepto
+      2: { cellWidth: 50, overflow: 'linebreak' }, // Dirección  
+      3: { halign: 'center' }, // Horas
+      4: { halign: 'center' }, // Precio/Hora
+      5: { halign: 'center' }, // Total
+    },
+    showHead: 'firstPage',
+  });
+
+  yPosition = (doc as any).lastAutoTable.finalY + 15;
+}
+
     // Pie de página
     const finalY = (doc as any).lastAutoTable.finalY + 20;
     doc.setFontSize(10);
@@ -1076,129 +1205,6 @@ export class FacturacionService {
 
     // Descargar PDF
     doc.save(`facturacion_resumen_${periodo}.pdf`);
-  }
-
-  /**
-   * Exporta los detalles a Excel
-   */
-  exportarExcel(facturacion: FacturacionCalculada, periodo: string): void {
-    const workbook = XLSX.utils.book_new();
-
-    // Hoja de resumen
-    const resumenData = [
-      ['FACTURACIÓN MENSUAL'],
-      [`Período: ${this.formatearPeriodo(periodo)}`],
-      [''],
-      ['Concepto', 'Importe'],
-      ['Total Almacenaje', facturacion.totalAlmacenaje],
-      ['Total Movimientos', facturacion.totalMovimientos],
-      ['TOTAL GENERAL', facturacion.totalGeneral],
-    ];
-
-    const resumenWS = XLSX.utils.aoa_to_sheet(resumenData);
-
-    // Aplicar estilos básicos al resumen
-    resumenWS['!cols'] = [{ width: 20 }, { width: 15 }];
-
-    XLSX.utils.book_append_sheet(workbook, resumenWS, 'Resumen');
-
-    // Hoja de detalle de almacenaje
-    if (facturacion.detallesMovimientos.length > 0) {
-      const movimientosHeaders = [
-        'Referencia',
-        'Descripción',
-        'Operación', // NUEVO
-        'Tipo',
-        'Cantidad',
-        'Precio Unitario',
-        'Costo Total',
-        'Fecha Movimiento',
-      ];
-      const movimientosData = facturacion.detallesMovimientos.map((detalle) => [
-        detalle.referencia,
-        detalle.descripcion,
-        detalle.tipoOperacion, // NUEVO
-        detalle.tipo,
-        detalle.cantidad,
-        detalle.precioUnitario,
-        detalle.costoTotal,
-        detalle.fechaMovimiento.toLocaleDateString('es-ES'),
-      ]);
-
-      const movimientosWS = XLSX.utils.aoa_to_sheet([
-        movimientosHeaders,
-        ...movimientosData,
-      ]);
-      movimientosWS['!cols'] = [
-        { width: 15 }, // Referencia
-        { width: 30 }, // Descripción
-        { width: 12 }, // Operación
-        { width: 12 }, // Tipo
-        { width: 10 }, // Cantidad
-        { width: 15 }, // Precio Unitario
-        { width: 12 }, // Costo Total
-        { width: 15 }, // Fecha Movimiento
-      ];
-
-      XLSX.utils.book_append_sheet(workbook, movimientosWS, 'Movimientos');
-    }
-
-    // Hoja de detalle de movimientos
-    if (facturacion.detallesMovimientos.length > 0) {
-      const movimientosHeaders = [
-        'Referencia',
-        'Descripción',
-        'Tipo',
-        'Cantidad',
-        'Precio Unitario',
-        'Costo Total',
-        'Fecha Movimiento',
-      ];
-      const movimientosData = facturacion.detallesMovimientos.map((detalle) => [
-        detalle.referencia,
-        detalle.descripcion,
-        detalle.tipo,
-        detalle.cantidad,
-        detalle.precioUnitario,
-        detalle.costoTotal,
-        detalle.fechaMovimiento.toLocaleDateString('es-ES'),
-      ]);
-
-      const movimientosWS = XLSX.utils.aoa_to_sheet([
-        movimientosHeaders,
-        ...movimientosData,
-      ]);
-      movimientosWS['!cols'] = [
-        { width: 15 },
-        { width: 30 },
-        { width: 12 },
-        { width: 10 },
-        { width: 15 },
-        { width: 12 },
-        { width: 15 },
-      ];
-
-      XLSX.utils.book_append_sheet(workbook, movimientosWS, 'Movimientos');
-    }
-
-    // Hoja de tarifas
-    const tarifasData = [
-      ['TARIFAS APLICADAS'],
-      [''],
-      ['Concepto', 'Tarifa (€)'],
-      ['Almacenaje por palet/mes', this.TARIFA_PALET_MES],
-      ['Movimiento por palet', this.TARIFA_MOVIMIENTO_PALET],
-      ['Movimiento por bulto', this.TARIFA_MOVIMIENTO_BULTO],
-      ['Movimiento por unidad', this.TARIFA_MOVIMIENTO_UNIDAD],
-    ];
-
-    const tarifasWS = XLSX.utils.aoa_to_sheet(tarifasData);
-    tarifasWS['!cols'] = [{ width: 25 }, { width: 15 }];
-
-    XLSX.utils.book_append_sheet(workbook, tarifasWS, 'Tarifas');
-
-    // Descargar archivo Excel
-    XLSX.writeFile(workbook, `facturacion_detalle_${periodo}.xlsx`);
   }
 
   /**

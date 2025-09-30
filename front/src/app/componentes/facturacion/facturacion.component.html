@@ -89,6 +89,15 @@
             </div>
           </div>
 
+          <!-- NUEVA SECCIÓN: Total Trabajos -->
+          <div class="resumen-item trabajos">
+            <mat-icon>build</mat-icon>
+            <div class="resumen-content">
+              <span class="label">Total Trabajos</span>
+              <span class="amount">{{ resumenFacturacion.totalTrabajos | currency:'EUR':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+
           <div class="resumen-item total">
             <mat-icon>euro</mat-icon>
             <div class="resumen-content">
@@ -243,7 +252,7 @@
               <mat-icon>confirmation_number</mat-icon>
               Unidades
             </h3>
-            
+
             <div class="movimiento-datos">
               <div class="dato-movimiento entrada ocultar-dato-movimiento">
                 <span class="etiqueta">.</span>
@@ -307,8 +316,8 @@
             Desglose de Facturación por Movimientos
           </h4> -->
 
-          <!-- Facturación de ENTRADAS -->
-          <!-- <div class="facturacion-seccion">
+        <!-- Facturación de ENTRADAS -->
+        <!-- <div class="facturacion-seccion">
             <h5>
               <mat-icon>input</mat-icon>
               Movimientos de Entrada
@@ -352,8 +361,8 @@
             </div>
           </div> -->
 
-          <!-- Facturación de SALIDAS -->
-          <!-- <div class="facturacion-seccion">
+        <!-- Facturación de SALIDAS -->
+        <!-- <div class="facturacion-seccion">
             <h5>
               <mat-icon>output</mat-icon>
               Movimientos de Salida
@@ -505,48 +514,60 @@
           <table mat-table [dataSource]="resumenFacturacion.detalles" class="facturacion-table">
 
             <!-- Columna Tipo -->
-            <ng-container matColumnDef="tipo">
-              <th mat-header-cell *matHeaderCellDef>Tipo</th>
-              <td mat-cell *matCellDef="let detalle">
-                <mat-chip [color]="detalle.tipo === 'almacenaje' ? 'primary' : 'accent'" selected="true">
-                  <mat-icon>{{ detalle.tipo === 'almacenaje' ? 'warehouse' : 'local_shipping' }}</mat-icon>
-                  {{ detalle.tipo | titlecase }}
-                </mat-chip>
-              </td>
-            </ng-container>
+<ng-container matColumnDef="tipo">
+  <th mat-header-cell *matHeaderCellDef>Tipo</th>
+  <td mat-cell *matCellDef="let detalle">
+    <mat-chip [color]="getChipColor(detalle.tipo)" selected="true">
+      <mat-icon>{{ getChipIcon(detalle.tipo) }}</mat-icon>
+      {{ detalle.tipo | titlecase }}
+    </mat-chip>
+  </td>
+</ng-container>
 
             <!-- Columna Concepto -->
-            <ng-container matColumnDef="concepto">
-              <th mat-header-cell *matHeaderCellDef>Concepto</th>
-              <td mat-cell *matCellDef="let detalle">
-                <div class="concepto-cell">
-                  <strong [class.descuento]="detalle.total < 0">
-                    {{ getConceptoTexto(detalle) }}
-                    <span *ngIf="detalle.total < 0" class="descuento-label">(DESCUENTO)</span>
-                  </strong>
-                  
-                  <!-- Mostrar referencia y descripción para entradas/salidas individuales -->
-                  <div *ngIf="detalle.referencia && detalle.referencia !== 'STOCK_INICIAL'" class="referencia">
-                    {{ detalle.referencia }} - {{ detalle.descripcion }}
-                  </div>
-                  
-                  <!-- Información de días -->
-                  <div *ngIf="detalle.diasAlmacenaje && detalle.diasAlmacenaje !== 0" class="dias-almacenaje">
-                    <mat-icon>{{ detalle.diasAlmacenaje > 0 ? 'schedule' : 'remove_circle' }}</mat-icon>
-                    <span [class.descuento]="detalle.diasAlmacenaje < 0">
-                      {{ Math.abs(detalle.diasAlmacenaje) }} días
-                      {{ detalle.diasAlmacenaje < 0 ? 'descontados' : 'de almacenaje' }}
-                    </span>
-                  </div>
-                  
-                  <!-- Fecha de salida para descuentos -->
-                  <div *ngIf="detalle.fechaSalida && detalle.total < 0" class="fecha-salida">
-                    <mat-icon>logout</mat-icon>
-                    Salida: {{ detalle.fechaSalida | date:'dd/MM/yyyy' }}
-                  </div>
-                </div>
-              </td>
-            </ng-container>
+<ng-container matColumnDef="concepto">
+  <th mat-header-cell *matHeaderCellDef>Concepto</th>
+  <td mat-cell *matCellDef="let detalle">
+    <div class="concepto-cell">
+      <strong [class.descuento]="detalle.total < 0">
+        {{ getConceptoTexto(detalle) }}
+        <span *ngIf="detalle.total < 0" class="descuento-label">(DESCUENTO)</span>
+      </strong>
+      
+      <!-- Mostrar referencia y descripción para entradas/salidas individuales -->
+      <div *ngIf="detalle.referencia && detalle.referencia !== 'STOCK_INICIAL' && detalle.referencia !== 'TRABAJO'" class="referencia">
+        {{ detalle.referencia }} - {{ detalle.descripcion }}
+      </div>
+      
+      <!-- NUEVO: Mostrar dirección para trabajos -->
+      <div *ngIf="detalle.tipo === 'trabajo'" class="trabajo-direccion">
+        <mat-icon class="icon-small">location_on</mat-icon>
+        {{ detalle.descripcion }}
+      </div>
+      
+      <!-- NUEVO: Mostrar observaciones para trabajos -->
+      <div *ngIf="detalle.tipo === 'trabajo' && detalle.observaciones" class="trabajo-observaciones">
+        <mat-icon class="icon-small">note</mat-icon>
+        {{ detalle.observaciones }}
+      </div>
+      
+      <!-- Información de días -->
+      <div *ngIf="detalle.diasAlmacenaje && detalle.diasAlmacenaje !== 0" class="dias-almacenaje">
+        <mat-icon>{{ detalle.diasAlmacenaje > 0 ? 'schedule' : 'remove_circle' }}</mat-icon>
+        <span [class.descuento]="detalle.diasAlmacenaje < 0">
+          {{ Math.abs(detalle.diasAlmacenaje) }} días
+          {{ detalle.diasAlmacenaje < 0 ? 'descontados' : 'de almacenaje' }}
+        </span>
+      </div>
+      
+      <!-- Fecha de salida para descuentos -->
+      <div *ngIf="detalle.fechaSalida && detalle.total < 0" class="fecha-salida">
+        <mat-icon>logout</mat-icon>
+        Salida: {{ detalle.fechaSalida | date:'dd/MM/yyyy' }}
+      </div>
+    </div>
+  </td>
+</ng-container>
 
             <!-- Columna Cantidad -->
             <ng-container matColumnDef="cantidad">
@@ -588,6 +609,70 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <!-- NUEVA SECCIÓN: Detalle de Trabajos de Manipulación -->
+<mat-card class="trabajos-card" *ngIf="mostrarResultados && resumenFacturacion && getTotalTrabajos() > 0">
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>build</mat-icon>
+      Detalle de Trabajos de Manipulación
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="trabajos-resumen">
+      <div class="trabajo-item total-trabajos">
+        <mat-icon>work</mat-icon>
+        <div class="trabajo-info">
+          <span class="label">Total de Trabajos</span>
+          <span class="cantidad">{{ getDetallesTrabajos().length }}</span>
+        </div>
+      </div>
+
+      <div class="trabajo-item total-horas">
+        <mat-icon>schedule</mat-icon>
+        <div class="trabajo-info">
+          <span class="label">Total de Horas</span>
+          <span class="cantidad">{{ getTotalHoras() }}</span>
+        </div>
+      </div>
+
+      <div class="trabajo-item total-importe">
+        <mat-icon>euro</mat-icon>
+        <div class="trabajo-info">
+          <span class="label">Total Importe</span>
+          <span class="cantidad total-trabajos-amount">{{ getTotalTrabajos() | currency:'EUR':'symbol':'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de trabajos -->
+    <div class="trabajos-tabla-container">
+      <table class="trabajos-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Dirección</th>
+            <th>Horas</th>
+            <th>Precio/Hora</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let trabajo of getDetallesTrabajos()">
+            <td>{{ trabajo.fechaEntrada | date:'dd/MM/yyyy' }}</td>
+            <td>{{ trabajo.concepto }}</td>
+            <td>{{ trabajo.descripcion }}</td>
+            <td class="centrado">{{ trabajo.cantidad }}</td>
+            <td class="centrado">{{ trabajo.precio | currency:'EUR':'symbol':'1.2-2' }}</td>
+            <td class="centrado total-cell">{{ trabajo.total | currency:'EUR':'symbol':'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </mat-card-content>
+</mat-card>
 
     <!-- Información de tarifas -->
     <mat-card class="tarifas-card">

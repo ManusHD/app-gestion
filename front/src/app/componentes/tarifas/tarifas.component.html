@@ -1,0 +1,43 @@
+<div id="center">
+    <div class="contenedor-gestor">
+        <div class="centrar">
+            <h2 class="gestor-titulo">GESTOR DE TARIFAS</h2>
+        </div>
+
+        <div class="centrar">
+            <div class="gestor-crear">
+                <h3>Crear NUEVA Tarifa</h3>
+                <div class="buscador campos-gestor">
+                    <input [(ngModel)]="nuevaTarifa.nombre" placeholder="Nombre" type="text">
+                    <button (click)="crearTarifa()" class="btn-crear" [disabled]="nuevaTarifa.nombre == '' || nuevaTarifa.nombre == undefined">CREAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="lista-tarifas" class="centrar">
+        <table [className]="'tabla-paginator'" [ngClass]="{'tabla-baja': tarifas.length > 0}" mat-table
+            [dataSource]="dataSourceStock">
+            <caption>LISTADO DE TARIFAS</caption>
+            <!-- Nombre Column -->
+            <ng-container matColumnDef="nombre">
+                <th class="header-paginator" *matHeaderCellDef> NOMBRE </th>
+                <td class="fila-paginator" style="cursor: pointer;" mat-cell *matCellDef="let tarifa">
+                    {{tarifa.nombre}} </td>
+            </ng-container>
+
+            <!-- Importe Column -->
+            <ng-container matColumnDef="importe">
+                <th class="header-paginator" mat-header-cell *matHeaderCellDef> IMPORTE </th>
+                <td class="fila-paginator" mat-cell *matCellDef="let tarifa"> {{tarifa.importe}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnasStock"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnasStock;"></tr>
+        </table>
+        <mat-paginator class="paginator" [pageSize]="pageSize" [pageIndex]="pageIndex" [length]="totalElementos"
+            [hidePageSize]="true" showFirstLastButtons (page)="cambiarPagina($event)">
+        </mat-paginator>
+    </div>
+
+    </div>
+</div>
