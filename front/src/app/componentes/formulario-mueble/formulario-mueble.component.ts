@@ -58,6 +58,13 @@ export class FormularioMuebleComponent implements OnInit {
   estadosDisponiblesPorProducto: { [index: number]: string[] } = {};
   stockDisponiblePorProducto: { [key: string]: number } = {};
 
+  // Variables adicionales para productos de retirada
+  visualesRetirada: Producto[] = [];
+  productosSRRetirada: Producto[] = [];
+  activeRowRetiradaIndex: number | null = null;
+  productosRetiradaNuevos: Set<number> = new Set();
+  estadosDisponiblesPorProductoRetirada: { [index: number]: string[] } = {};
+
   constructor(
     private fb: FormBuilder,
     private muebleService: MuebleService,
@@ -84,7 +91,10 @@ export class FormularioMuebleComponent implements OnInit {
         { value: '', disabled: esDetallePendiente },
         Validators.required,
       ],
-      fechaAsignacion: [{ value: '', disabled: esDetallePendiente }, Validators.required],
+      fechaAsignacion: [
+        { value: '', disabled: esDetallePendiente },
+        Validators.required,
+      ],
       fechaPrevistaRealizacion: ['', Validators.required],
       fechaRealizacion: [''],
       perfumeria: [{ value: '', disabled: esDetallePendiente }],
@@ -103,11 +113,12 @@ export class FormularioMuebleComponent implements OnInit {
       presupuesto: ['', [Validators.required, Validators.min(0)]],
       indicaciones: [{ value: '', disabled: esDetallePendiente }],
       incidencias: [''],
-      costeColaborador: ['', Validators.min(0)],
-      costeEnvio: ['', Validators.min(0)],
+      costeColaborador: ['', Validators.required],
+      costeEnvio: ['', Validators.required],
       costeTotal: [{ value: '', disabled: true }],
       importeFacturar: ['', Validators.min(0)],
       productos: this.fb.array([]),
+      productosRetirada: this.fb.array([]),
     });
   }
 
@@ -122,6 +133,575 @@ export class FormularioMuebleComponent implements OnInit {
 
   get productosControls() {
     return this.muebleForm.get('productos') as FormArray;
+  }
+
+  get productosRetiradaControls() {
+    return this.muebleForm.get('productosRetirada') as FormArray;
+  }
+
+  onTipoAccionChange() {
+    const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
+
+    if (tipoAccion === 'INTERCAMBIO') {
+      // Asegurar que ambas listas tengan al menos un producto
+      if (this.productosControls.length === 0) {
+        this.agregarProducto();
+      }
+      if (this.productosRetiradaControls.length === 0) {
+        this.agregarProductoRetirada();
+      }
+
+      // Validar stock para productos de implantación existentes
+      for (let i = 0; i < this.productosControls.length; i++) {
+        this.validarStockProducto(i);
+      }
+    } else if (tipoAccion === 'IMPLANTACION') {
+      // Limpiar productos de retirada si no es intercambio
+      while (this.productosRetiradaControls.length) {
+        this.productosRetiradaControls.removeAt(0);
+      }
+
+      // Validar stock para productos de implantación
+      for (let i = 0; i < this.productosControls.length; i++) {
+        this.validarStockProducto(i);
+      }
+    } else {
+      // Es RETIRADA
+      // Limpiar productos de retirada si no es intercambio
+      while (this.productosRetiradaControls.length) {
+        this.productosRetiradaControls.removeAt(0);
+      }
+
+      // Limpiar validaciones de stock
+      this.stockDisponiblePorProducto = {};
+    }
+  }
+
+  esIntercambio(): boolean {
+    return this.muebleForm.get('tipoAccion')?.value === 'INTERCAMBIO';
+  }
+
+  agregarProductoRetirada() {
+    this.productosRetiradaControls.push(this.createProductoGroup());
+    setTimeout(() => {
+      const inputsRef = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          'tbody[formArrayName="productosRetirada"] input[formControlName="ref"]'
+        )
+      );
+      inputsRef[inputsRef.length - 1]?.focus();
+    });
+  }
+
+  eliminarProductoRetirada(index: number) {
+    if (this.productosRetiradaControls.length > 1) {
+      this.productosRetiradaControls.removeAt(index);
+
+      // Actualizar indices en productosRetiradaNuevos
+      const nuevosIndices = new Set<number>();
+      this.productosRetiradaNuevos.forEach((idx) => {
+        if (idx < index) {
+          nuevosIndices.add(idx);
+        } else if (idx > index) {
+          nuevosIndices.add(idx - 1);
+        }
+      });
+      this.productosRetiradaNuevos = nuevosIndices;
+    }
+  }
+
+  isProductoRetiradaNuevo(index: number): boolean {
+    const ref = this.productosRetiradaControls.at(index).get('ref')!.value;
+    if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
+      return false;
+    }
+    return this.productosRetiradaNuevos.has(index);
+  }
+
+  buscarProductoRetiradaPorReferencia(index: number) {
+    const refControl = this.productosRetiradaControls.at(index).get('ref');
+    const descriptionControl = this.productosRetiradaControls
+      .at(index)
+      .get('description');
+    const estadoControl = this.productosRetiradaControls
+      .at(index)
+      .get('estado');
+
+    if (refControl!.value === 'VISUAL') {
+      this.manejarProductoEspecialRetirada(index, 'VISUAL');
+    } else if (refControl!.value === 'SIN REFERENCIA') {
+      this.manejarProductoEspecialRetirada(index, 'SIN REFERENCIA');
+    } else {
+      refControl!.valueChanges
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(),
+          switchMap((ref) => {
+            if (ref?.trim()) {
+              return this.productoService.getProductoPorReferencia(ref.trim());
+            }
+            return of(null);
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            this.procesarRespuestaProductoRetirada(response, index);
+          },
+          error: () => {
+            this.productosRetiradaNuevos.add(index);
+            this.limpiarCamposProductoRetirada(index);
+          },
+        });
+    }
+  }
+
+  private manejarProductoEspecialRetirada(
+    index: number,
+    tipo: 'VISUAL' | 'SIN REFERENCIA'
+  ) {
+    const estadoControl = this.productosRetiradaControls
+      .at(index)
+      .get('estado');
+    estadoControl?.clearValidators();
+    estadoControl?.updateValueAndValidity();
+
+    delete this.estadosDisponiblesPorProductoRetirada[index];
+
+    const descriptionControl = this.productosRetiradaControls
+      .at(index)
+      .get('description');
+    if (!descriptionControl?.value) {
+      if (tipo === 'VISUAL') {
+        this.cargarVisualesRetirada();
+      } else {
+        this.cargarProductosSinReferenciaRetirada();
+      }
+    } else {
+      if (tipo === 'VISUAL') {
+        this.cargarVisualesPorDescripcionRetirada(descriptionControl.value);
+      } else {
+        this.cargarProductosSinReferenciaPorDescripcionRetirada(
+          descriptionControl.value
+        );
+      }
+    }
+  }
+
+  private procesarRespuestaProductoRetirada(response: any, index: number) {
+    const descriptionControl = this.productosRetiradaControls
+      .at(index)
+      .get('description');
+    const estadoControl = this.productosRetiradaControls
+      .at(index)
+      .get('estado');
+
+    if (response) {
+      if (response.estados && response.estados.length > 1) {
+        descriptionControl!.setValue(response.description);
+        this.productosRetiradaNuevos.delete(index);
+        this.estadosDisponiblesPorProductoRetirada[index] =
+          response.estados.map((e: any) => e.estado);
+        estadoControl?.setValidators([Validators.required]);
+        estadoControl?.updateValueAndValidity();
+
+        if (!estadoControl?.value) {
+          estadoControl?.setValue(null);
+        }
+      } else if (response.estados && response.estados.length === 1) {
+        descriptionControl!.setValue(response.description);
+        if (!estadoControl?.value) {
+          estadoControl?.setValue(response.estados[0].estado);
+        }
+        this.productosRetiradaNuevos.delete(index);
+        estadoControl?.setValidators([Validators.required]);
+        estadoControl?.updateValueAndValidity();
+      } else if (response.referencia) {
+        descriptionControl!.setValue(response.description);
+        this.productosRetiradaNuevos.delete(index);
+        estadoControl?.setValidators([Validators.required]);
+        estadoControl?.updateValueAndValidity();
+      }
+    } else {
+      this.productosRetiradaNuevos.add(index);
+      this.limpiarCamposProductoRetirada(index);
+    }
+  }
+
+  private limpiarCamposProductoRetirada(index: number) {
+    const descriptionControl = this.productosRetiradaControls
+      .at(index)
+      .get('description');
+    const estadoControl = this.productosRetiradaControls
+      .at(index)
+      .get('estado');
+
+    descriptionControl?.setValue('');
+    estadoControl?.setValue(null);
+
+    delete this.estadosDisponiblesPorProductoRetirada[index];
+  }
+
+  buscarProductoRetiradaEspecial(index: number) {
+    const refControl = this.productosRetiradaControls.at(index).get('ref');
+    const descriptionControl = this.productosRetiradaControls
+      .at(index)
+      .get('description');
+
+    if (refControl!.value === 'VISUAL') {
+      if (!descriptionControl || descriptionControl.value == '') {
+        this.cargarVisualesRetirada();
+      } else {
+        this.cargarVisualesPorDescripcionRetirada(descriptionControl.value);
+      }
+    } else if (refControl!.value === 'SIN REFERENCIA') {
+      if (!descriptionControl || descriptionControl.value == '') {
+        this.cargarProductosSinReferenciaRetirada();
+      } else {
+        this.cargarProductosSinReferenciaPorDescripcionRetirada(
+          descriptionControl.value
+        );
+      }
+    }
+  }
+
+  private cargarVisualesRetirada() {
+    this.productoService
+      .getVisualesPaginado(this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.visualesRetirada = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
+  }
+
+  private cargarProductosSinReferenciaRetirada() {
+    this.productoService
+      .getProductosSinReferenciaPaginado(this.pageIndex, this.pageSize)
+      .subscribe(
+        (data) => {
+          this.productosSRRetirada = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener productos sin referencia', error);
+        }
+      );
+  }
+
+  private cargarVisualesPorDescripcionRetirada(descripcion: string) {
+    this.productoService
+      .getVisualesPorDescripcionPaginado(
+        descripcion,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe(
+        (data) => {
+          this.visualesRetirada = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener los Visuales', error);
+        }
+      );
+  }
+
+  private cargarProductosSinReferenciaPorDescripcionRetirada(
+    descripcion: string
+  ) {
+    this.productoService
+      .getProductosSinReferenciaPorDescripcionPaginado(
+        descripcion,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe(
+        (data) => {
+          this.productosSRRetirada = data.content;
+        },
+        (error) => {
+          console.error('Error al obtener productos sin referencia', error);
+        }
+      );
+  }
+
+  selectVisualRetirada(i: number, visual: Producto) {
+    this.productosRetiradaControls
+      .at(i)
+      .get('description')
+      ?.setValue(visual.description);
+    this.visualesRetirada = [];
+  }
+
+  selectProductosSRRetirada(i: number, sinReferencia: Producto) {
+    this.productosRetiradaControls
+      .at(i)
+      .get('description')
+      ?.setValue(sinReferencia.description);
+    this.productosSRRetirada = [];
+  }
+
+  setActiveRowRetirada(index: number): void {
+    this.activeRowRetiradaIndex = index;
+  }
+
+  clearActiveRowRetirada(): void {
+    setTimeout(() => {
+      this.activeRowRetiradaIndex = null;
+    }, 200);
+  }
+
+  onEstadoChangeRetirada(index: number) {
+    // No hay validación de stock para productos de retirada
+  }
+
+  getEstadosDisponiblesRetirada(index: number): string[] {
+    return (
+      this.estadosDisponiblesPorProductoRetirada[index] ||
+      this.estados.map((e) => e.nombre!)
+    );
+  }
+
+  refValidaRetiradaIndex(i: number): boolean {
+    const ref = this.productosRetiradaControls.at(i).get('ref')!.value;
+    return this.refValida(ref);
+  }
+
+  descriptionValidaRetirada(i: number): boolean {
+    const description = this.productosRetiradaControls
+      .at(i)
+      .get('description')!.value;
+    return description && description.trim().length > 0;
+  }
+
+  campoVacioRetirada(nombreCampo: string, index: number): boolean {
+    const control = this.productosRetiradaControls.at(index).get(nombreCampo);
+    return !control!.valid && control!.touched;
+  }
+
+  esEstadoRequeridoRetirada(index: number): boolean {
+    const refControl = this.productosRetiradaControls.at(index).get('ref');
+    const referencia = refControl?.value;
+    return !this.esProductoEspecial(referencia);
+  }
+
+  private construirMueble(): Mueble {
+    const formValue = this.muebleForm.getRawValue();
+
+    const productos: ProductoMueble[] = formValue.productos.map((p: any) => ({
+      ref: p.ref,
+      description: p.description,
+      estado: p.estado,
+      unidades: p.unidades,
+      esRetirada: false, // Productos de implantación
+    }));
+
+    // Si es intercambio, agregar productos de retirada
+    if (formValue.tipoAccion === 'INTERCAMBIO') {
+      const productosRetirada: ProductoMueble[] =
+        formValue.productosRetirada.map((p: any) => ({
+          ref: p.ref,
+          description: p.description,
+          estado: p.estado,
+          unidades: p.unidades,
+          esRetirada: true, // Productos de retirada
+        }));
+      productos.push(...productosRetirada);
+    }
+
+    return {
+      fechaOrdenTrabajo: formValue.fechaOrdenTrabajo,
+      fechaAsignacion: formValue.fechaAsignacion,
+      fechaPrevistaRealizacion: formValue.fechaPrevistaRealizacion || null,
+      fechaRealizacion: formValue.fechaRealizacion || null,
+      perfumeria: formValue.perfumeria || null,
+      pdv: formValue.pdv || null,
+      colaborador: formValue.colaborador || null,
+      otroDestino: formValue.otroDestino || null,
+      direccion: formValue.direccion,
+      poblacion: formValue.poblacion,
+      provincia: formValue.provincia,
+      cp: formValue.cp,
+      telefono: formValue.telefono,
+      tipoAccion: formValue.tipoAccion,
+      presupuesto: formValue.presupuesto || 0,
+      indicaciones: formValue.indicaciones,
+      incidencias: formValue.incidencias,
+      costeColaborador: formValue.costeColaborador,
+      costeEnvio: formValue.costeEnvio,
+      costeTotal: formValue.costeTotal || null,
+      importeFacturar: formValue.importeFacturar || null,
+      estado: false,
+      productos: productos,
+    };
+  }
+
+  private previsionEsValida(): boolean {
+    const fechaOrdenTrabajo = this.muebleForm.get('fechaOrdenTrabajo')?.value;
+    const fechaAsignacion = this.muebleForm.get('fechaAsignacion')?.value;
+    const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
+    const presupuesto = this.muebleForm.get('presupuesto')?.value;
+    const hayProductos = this.productosControls.length > 0;
+    let productosValidos = this.productosSonValidos();
+    const destinosValidos = this.previsionEsValidaCampoSimple();
+
+    // Si es intercambio, validar también productos de retirada
+    if (this.esIntercambio()) {
+      const hayProductosRetirada = this.productosRetiradaControls.length > 0;
+      const productosRetiradaValidos = this.productosRetiradaSonValidos();
+
+      if (!hayProductosRetirada) {
+        this.snackBarError(
+          'Debe agregar al menos un producto a retirar en el intercambio'
+        );
+        return false;
+      }
+
+      if (!productosRetiradaValidos) {
+        this.snackBarError(
+          'Todos los productos de retirada deben estar completos y válidos'
+        );
+        return false;
+      }
+
+      productosValidos = productosValidos && productosRetiradaValidos;
+    }
+
+    let esValida =
+      fechaOrdenTrabajo &&
+      fechaAsignacion &&
+      tipoAccion &&
+      presupuesto !== null &&
+      presupuesto !== '' &&
+      hayProductos &&
+      productosValidos &&
+      destinosValidos;
+
+    if (!fechaOrdenTrabajo) {
+      this.snackBarError('La fecha de orden de trabajo es obligatoria');
+    } else if (!fechaAsignacion) {
+      this.snackBarError('La fecha de asignación es obligatoria');
+    } else if (!tipoAccion) {
+      this.snackBarError('El tipo de acción es obligatorio');
+    } else if (presupuesto === null || presupuesto === '') {
+      this.snackBarError('El presupuesto es obligatorio');
+    } else if (!destinosValidos) {
+      this.snackBarError('Debe seleccionar un destino válido.');
+    } else if (!hayProductos) {
+      this.snackBarError('Debe agregar al menos un producto');
+    } else if (!productosValidos) {
+      this.snackBarError('Todos los productos deben estar completos y válidos');
+    }
+
+    return esValida;
+  }
+
+  private resetForm() {
+    this.muebleForm.reset();
+    this.productosNuevos.clear();
+    this.productosRetiradaNuevos.clear();
+    this.estadosDisponiblesPorProducto = {};
+    this.estadosDisponiblesPorProductoRetirada = {};
+    this.stockDisponiblePorProducto = {};
+
+    this.muebleForm.patchValue({
+      fechaOrdenTrabajo: new Date().toISOString().split('T')[0],
+    });
+
+    // Limpiar ambas listas de productos
+    while (this.productosControls.length) {
+      this.productosControls.removeAt(0);
+    }
+    while (this.productosRetiradaControls.length) {
+      this.productosRetiradaControls.removeAt(0);
+    }
+
+    this.agregarProducto();
+  }
+
+  private cargarDatosExistentes() {
+    // Cargar productos existentes
+    this.detallesMueble!.productos?.forEach((producto) => {
+      if (producto.esRetirada) {
+        this.productosRetiradaControls.push(this.createProductoGroup());
+      } else {
+        this.productosControls.push(this.createProductoGroup());
+      }
+    });
+
+    // Rellenar el formulario
+    this.muebleForm.patchValue({
+      fechaOrdenTrabajo: this.detallesMueble!.fechaOrdenTrabajo,
+      fechaAsignacion: this.detallesMueble!.fechaAsignacion,
+      fechaPrevistaRealizacion: this.detallesMueble!.fechaPrevistaRealizacion,
+      fechaRealizacion: this.detallesMueble!.fechaRealizacion,
+      perfumeria: this.detallesMueble!.perfumeria || '',
+      pdv: this.detallesMueble!.pdv || '',
+      colaborador: this.detallesMueble!.colaborador || '',
+      otroDestino: this.detallesMueble!.otroDestino || '',
+      direccion: this.detallesMueble!.direccion || '',
+      poblacion: this.detallesMueble!.poblacion || '',
+      provincia: this.detallesMueble!.provincia || '',
+      cp: this.detallesMueble!.cp || '',
+      telefono: this.detallesMueble!.telefono || '',
+      tipoAccion: this.detallesMueble!.tipoAccion,
+      presupuesto: this.detallesMueble!.presupuesto || '',
+      indicaciones: this.detallesMueble!.indicaciones || '',
+      incidencias: this.detallesMueble!.incidencias || '',
+      costeColaborador: this.detallesMueble!.costeColaborador,
+      costeEnvio: this.detallesMueble!.costeEnvio,
+      costeTotal: this.detallesMueble!.costeTotal || '',
+      importeFacturar: this.detallesMueble!.importeFacturar || '',
+    });
+
+    // Rellenar productos separando por tipo
+    let indexImplantacion = 0;
+    let indexRetirada = 0;
+
+    this.detallesMueble!.productos?.forEach((producto) => {
+      if (producto.esRetirada) {
+        this.productosRetiradaControls.at(indexRetirada).patchValue({
+          ref: producto.ref,
+          description: producto.description,
+          estado: producto.estado,
+          unidades: producto.unidades,
+        });
+        indexRetirada++;
+      } else {
+        this.productosControls.at(indexImplantacion).patchValue({
+          ref: producto.ref,
+          description: producto.description,
+          estado: producto.estado,
+          unidades: producto.unidades,
+        });
+        this.validarStockProducto(indexImplantacion);
+        indexImplantacion++;
+      }
+    });
+  }
+
+  private marcarCamposInvalidos() {
+    Object.keys(this.muebleForm.controls).forEach((key) => {
+      const control = this.muebleForm.get(key);
+      control?.markAsTouched();
+    });
+
+    this.productosControls.controls.forEach((control) => {
+      const productoGroup = control as FormGroup;
+      Object.keys(productoGroup.controls).forEach((key) => {
+        const productoControl = productoGroup.get(key);
+        productoControl?.markAsTouched();
+      });
+    });
+
+    this.productosRetiradaControls.controls.forEach((control) => {
+      const productoGroup = control as FormGroup;
+      Object.keys(productoGroup.controls).forEach((key) => {
+        const productoControl = productoGroup.get(key);
+        productoControl?.markAsTouched();
+      });
+    });
   }
 
   private cargarDatosIniciales() {
@@ -217,49 +797,6 @@ export class FormularioMuebleComponent implements OnInit {
       });
   }
 
-  private cargarDatosExistentes() {
-    // Cargar productos existentes
-    this.detallesMueble!.productos?.forEach(() => {
-      this.productosControls.push(this.createProductoGroup());
-    });
-
-    // Rellenar el formulario
-    this.muebleForm.patchValue({
-      fechaOrdenTrabajo: this.detallesMueble!.fechaOrdenTrabajo,
-      fechaAsignacion: this.detallesMueble!.fechaAsignacion,
-      fechaPrevistaRealizacion: this.detallesMueble!.fechaPrevistaRealizacion,
-      fechaRealizacion: this.detallesMueble!.fechaRealizacion,
-      perfumeria: this.detallesMueble!.perfumeria || '',
-      pdv: this.detallesMueble!.pdv || '',
-      colaborador: this.detallesMueble!.colaborador || '',
-      otroDestino: this.detallesMueble!.otroDestino || '',
-      direccion: this.detallesMueble!.direccion || '',
-      poblacion: this.detallesMueble!.poblacion || '',
-      provincia: this.detallesMueble!.provincia || '',
-      cp: this.detallesMueble!.cp || '',
-      telefono: this.detallesMueble!.telefono || '',
-      tipoAccion: this.detallesMueble!.tipoAccion,
-      presupuesto: this.detallesMueble!.presupuesto || '',
-      indicaciones: this.detallesMueble!.indicaciones || '',
-      incidencias: this.detallesMueble!.incidencias || '',
-      costeColaborador: this.detallesMueble!.costeColaborador || '',
-      costeEnvio: this.detallesMueble!.costeEnvio || '',
-      costeTotal: this.detallesMueble!.costeTotal || '',
-      importeFacturar: this.detallesMueble!.importeFacturar || '',
-    });
-
-    // Rellenar productos
-    this.detallesMueble!.productos?.forEach((producto, index) => {
-      this.productosControls.at(index).patchValue({
-        ref: producto.ref,
-        description: producto.description,
-        estado: producto.estado,
-        unidades: producto.unidades,
-      });
-      this.validarStockProducto(index);
-    });
-  }
-
   // Métodos para manejar productos
   agregarProducto() {
     this.productosControls.push(this.createProductoGroup());
@@ -315,6 +852,14 @@ export class FormularioMuebleComponent implements OnInit {
         .subscribe({
           next: (response) => {
             this.procesarRespuestaProducto(response, index);
+            // Validar stock si es implantación o intercambio y ya tiene estado
+            const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
+            if (
+              (tipoAccion === 'IMPLANTACION' || tipoAccion === 'INTERCAMBIO') &&
+              estadoControl?.value
+            ) {
+              this.validarStockProducto(index);
+            }
           },
           error: () => {
             this.productosNuevos.add(index);
@@ -458,14 +1003,14 @@ export class FormularioMuebleComponent implements OnInit {
   // Métodos para validación de stock en implantaciones
   onEstadoChange(index: number) {
     const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
-    if (tipoAccion === 'IMPLANTACION') {
+    if (tipoAccion === 'IMPLANTACION' || tipoAccion === 'INTERCAMBIO') {
       this.validarStockProducto(index);
     }
   }
 
   onUnidadesBlur(index: number) {
     const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
-    if (tipoAccion === 'IMPLANTACION') {
+    if (tipoAccion === 'IMPLANTACION' || tipoAccion === 'INTERCAMBIO') {
       this.validarStockProducto(index);
     }
   }
@@ -505,7 +1050,7 @@ export class FormularioMuebleComponent implements OnInit {
 
   unidadesExcedenStock(index: number): boolean {
     const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
-    if (tipoAccion !== 'IMPLANTACION') {
+    if (tipoAccion !== 'IMPLANTACION' && tipoAccion !== 'INTERCAMBIO') {
       return false;
     }
 
@@ -528,7 +1073,7 @@ export class FormularioMuebleComponent implements OnInit {
 
   getMensajeStock(index: number): string {
     const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
-    if (tipoAccion !== 'IMPLANTACION') {
+    if (tipoAccion !== 'IMPLANTACION' && tipoAccion !== 'INTERCAMBIO') {
       return '';
     }
 
@@ -751,7 +1296,7 @@ export class FormularioMuebleComponent implements OnInit {
   selectColaborador(colaborador: Colaborador) {
     this.muebleForm.patchValue({
       colaborador: colaborador.nombre,
-      otroDestino: ''
+      otroDestino: '',
     });
 
     this.colaboradorSeleccionado = colaborador;
@@ -984,12 +1529,12 @@ export class FormularioMuebleComponent implements OnInit {
 
   campoSimpleVacio(nombreCampo: string): boolean {
     const control = this.muebleForm.get(nombreCampo);
-    
+
     // Si el campo está deshabilitado, no mostrarlo como vacío
     if (control?.disabled) {
       return false;
     }
-    
+
     return !control!.valid;
   }
 
@@ -1088,44 +1633,21 @@ export class FormularioMuebleComponent implements OnInit {
     return combinacionesValidas.some((c) => c);
   }
 
-  private previsionEsValida(): boolean {
-    const fechaOrdenTrabajo = this.muebleForm.get('fechaOrdenTrabajo')?.value;
-    const fechaAsignacion = this.muebleForm.get('fechaAsignacion')?.value;
-    const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
-    const presupuesto = this.muebleForm.get('presupuesto')?.value;
-    const hayProductos = this.productosControls.length > 0;
-    const productosValidos = this.productosSonValidos();
-    const destinosValidos = this.previsionEsValidaCampoSimple();
-  
-    let esValida =
-      fechaOrdenTrabajo &&
-      fechaAsignacion &&
-      tipoAccion &&
-      presupuesto !== null &&
-      presupuesto !== '' &&
-      hayProductos &&
-      productosValidos &&
-      destinosValidos;
-  
-    if (!fechaOrdenTrabajo) {
-      this.snackBarError('La fecha de orden de trabajo es obligatoria');
-    } else if (!fechaAsignacion) {
-      this.snackBarError('La fecha de asignación es obligatoria');
-    } else if (!tipoAccion) {
-      this.snackBarError('El tipo de acción es obligatorio');
-    } else if (presupuesto === null || presupuesto === '') {
-      this.snackBarError('El presupuesto es obligatorio');
-    } else if (!destinosValidos) {
-      this.snackBarError(
-        'Debe seleccionar un destino válido.'
-      );
-    } else if (!hayProductos) {
-      this.snackBarError('Debe agregar al menos un producto');
-    } else if (!productosValidos) {
-      this.snackBarError('Todos los productos deben estar completos y válidos');
-    }
-  
-    return esValida;
+  private productosRetiradaSonValidos(): boolean {
+    return this.productosRetiradaControls.controls.every((producto) => {
+      const ref = producto.get('ref')?.value;
+      const description = producto.get('description')?.value;
+      const estado = producto.get('estado')?.value;
+      const unidades = producto.get('unidades')?.value;
+
+      const refValida = this.refValida(ref);
+      const descriptionValida = description && description.trim().length > 0;
+      const estadoValido =
+        this.esProductoEspecial(ref) || (estado && estado.trim() !== '');
+      const unidadesValidas = unidades > 0;
+
+      return refValida && descriptionValida && estadoValido && unidadesValidas;
+    });
   }
 
   private productosSonValidos(): boolean {
@@ -1196,76 +1718,6 @@ export class FormularioMuebleComponent implements OnInit {
     } else {
       this.carga.hide();
     }
-  }
-
-  private construirMueble(): Mueble {
-    const formValue = this.muebleForm.getRawValue();
-
-    const productos: ProductoMueble[] = formValue.productos.map((p: any) => ({
-      ref: p.ref,
-      description: p.description,
-      estado: p.estado,
-      unidades: p.unidades,
-    }));
-
-    return {
-      fechaOrdenTrabajo: formValue.fechaOrdenTrabajo,
-      fechaAsignacion: formValue.fechaAsignacion,
-      fechaPrevistaRealizacion: formValue.fechaPrevistaRealizacion || null,
-      fechaRealizacion: formValue.fechaRealizacion || null,
-      perfumeria: formValue.perfumeria || null,
-      pdv: formValue.pdv || null,
-      colaborador: formValue.colaborador || null,
-      otroDestino: formValue.otroDestino || null,
-      direccion: formValue.direccion,
-      poblacion: formValue.poblacion,
-      provincia: formValue.provincia,
-      cp: formValue.cp,
-      telefono: formValue.telefono,
-      tipoAccion: formValue.tipoAccion,
-      presupuesto: formValue.presupuesto || 0,
-      indicaciones: formValue.indicaciones,
-      incidencias: formValue.incidencias,
-      costeColaborador: formValue.costeColaborador || null,
-      costeEnvio: formValue.costeEnvio || null,
-      costeTotal: formValue.costeTotal || null,
-      importeFacturar: formValue.importeFacturar || null,
-      estado: false,
-      productos: productos,
-    };
-  }
-
-  private resetForm() {
-    this.muebleForm.reset();
-    this.productosNuevos.clear();
-    this.estadosDisponiblesPorProducto = {};
-    this.stockDisponiblePorProducto = {};
-
-    // Reinicializar con valores por defecto
-    this.muebleForm.patchValue({
-      fechaOrdenTrabajo: new Date().toISOString().split('T')[0],
-    });
-
-    // Limpiar productos y agregar uno nuevo
-    while (this.productosControls.length) {
-      this.productosControls.removeAt(0);
-    }
-    this.agregarProducto();
-  }
-
-  private marcarCamposInvalidos() {
-    Object.keys(this.muebleForm.controls).forEach((key) => {
-      const control = this.muebleForm.get(key);
-      control?.markAsTouched();
-    });
-
-    this.productosControls.controls.forEach((control) => {
-      const productoGroup = control as FormGroup;
-      Object.keys(productoGroup.controls).forEach((key) => {
-        const productoControl = productoGroup.get(key);
-        productoControl?.markAsTouched();
-      });
-    });
   }
 
   // Métodos de utilidad

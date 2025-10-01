@@ -53,6 +53,7 @@ export class MuebleService {
   }
 
   updateMueble(mueble: Mueble): Observable<Mueble> {
+    console.log("Mueble enviado:", mueble)
     return this.httpClient.put<Mueble>(`${this.apiUrl}/${mueble.id}`, mueble);
   }
 

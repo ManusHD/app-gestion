@@ -1,11 +1,12 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { catchError, throwError } from 'rxjs';
+import { catchError, forkJoin, of, throwError } from 'rxjs';
 import { Mueble } from 'src/app/models/mueble.model';
 import { MuebleService } from 'src/app/services/mueble.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
+import { ProductoServices } from 'src/app/services/producto.service';
 
 @Component({
   selector: 'app-muebles-pendientes',
@@ -25,9 +26,13 @@ export class MueblesPendientesComponent implements OnInit {
   pageIndex = 0;
   totalElementos = 0;
   btnSubmitActivado = true;
+  
+  // Mapa para almacenar el estado de cada mueble
+  estadosMuebles: Map<number, boolean> = new Map();
 
   constructor(
     private muebleService: MuebleService,
+    private productoService: ProductoServices,
     private carga: PantallaCargaService,
     private snackbar: SnackBar
   ) {}
@@ -50,15 +55,98 @@ export class MueblesPendientesComponent implements OnInit {
         this.muebles = data.content;
         setTimeout(() => {
           this.totalElementos = data.totalElements;
-        })
+        });
         this.dataSource.data = this.muebles;
+        
+        // Validar el estado de completitud de cada mueble
+        this.validarEstadosMuebles();
+        
         this.carga.hide();
+        console.log(this.muebles)
       },
       (error) => {
         this.carga.hide();
         this.snackbar.snackBarError(error.error.message || error.error);
         console.error(error);
       });
+  }
+
+  validarEstadosMuebles() {
+    this.muebles.forEach(mueble => {
+      if (mueble.tipoAccion === 'IMPLANTACION' || mueble.tipoAccion === 'INTERCAMBIO') {
+        this.validarStockMueble(mueble);
+      } else {
+        // Para RETIRADA, solo validar campos básicos
+        this.estadosMuebles.set(mueble.id!, this.estaCompletoBasico(mueble));
+      }
+    });
+  }
+
+  validarStockMueble(mueble: Mueble) {
+    if (!this.estaCompletoBasico(mueble)) {
+      this.estadosMuebles.set(mueble.id!, false);
+      return;
+    }
+
+    // Validar stock para productos de implantación
+    const validacionesStock = mueble.productos
+      ?.filter(p => !p.esRetirada) // Solo productos de implantación
+      .filter(p => p.ref !== 'VISUAL' && p.ref !== 'SIN REFERENCIA') // Excluir especiales
+      .map(producto => 
+        this.productoService.getProductoPorReferenciaYEstado(producto.ref!, producto.estado!)
+          .pipe(
+            catchError(error => {
+              console.error('Error al validar stock:', error);
+              return of(null);
+            })
+          )
+      ) || [];
+
+    if (validacionesStock.length === 0) {
+      // No hay productos que validar (todos son especiales o de retirada)
+      this.estadosMuebles.set(mueble.id!, true);
+      return;
+    }
+
+    forkJoin(validacionesStock).subscribe(productos => {
+      const productosImplantacion = mueble.productos?.filter(p => !p.esRetirada) || [];
+      let stockSuficiente = true;
+
+      productos.forEach((productoStock, index) => {
+        if (productoStock && productosImplantacion[index]) {
+          const unidadesSolicitadas = productosImplantacion[index].unidades || 0;
+          const stockDisponible = productoStock.stock || 0;
+
+          if (unidadesSolicitadas > stockDisponible) {
+            stockSuficiente = false;
+          }
+        }
+      });
+
+      this.estadosMuebles.set(mueble.id!, stockSuficiente);
+    });
+  }
+
+  estaCompletoBasico(mueble: Mueble): boolean {
+    return !!(
+      mueble.fechaOrdenTrabajo &&
+      mueble.fechaAsignacion &&
+      mueble.fechaPrevistaRealizacion &&
+      mueble.tipoAccion &&
+      mueble.presupuesto !== null &&
+      mueble.presupuesto !== undefined &&
+      mueble.costeColaborador !== null &&
+      mueble.costeColaborador !== undefined &&
+      mueble.costeEnvio !== null &&
+      mueble.costeEnvio !== undefined &&
+      mueble.productos &&
+      mueble.productos.length > 0 &&
+      mueble.productos.every(p => p.ref && p.description && p.estado && p.unidades)
+    );
+  }
+
+  estaCompleto(mueble: Mueble): boolean {
+    return this.estadosMuebles.get(mueble.id!) || false;
   }
 
   marcarComoRealizado(id: number) {
@@ -74,6 +162,12 @@ export class MueblesPendientesComponent implements OnInit {
     if (mueble.costeColaborador === null || mueble.costeColaborador === undefined ||
         mueble.costeEnvio === null || mueble.costeEnvio === undefined) {
       this.snackbar.snackBarError('Debe completar todos los costes antes de marcar como realizado');
+      return;
+    }
+    
+    // Validar que está completo (incluyendo validación de stock)
+    if (!this.estaCompleto(mueble)) {
+      this.snackbar.snackBarError('El trabajo no está completo o tiene problemas de stock insuficiente');
       return;
     }
     
@@ -93,7 +187,7 @@ export class MueblesPendientesComponent implements OnInit {
         this.cargarMuebles();
         this.carga.hide();
         console.log('Trabajo marcado como realizado');
-        this.snackbar.snackBarExito('Trabajo marcado como realizado. Se ha generado automáticamente la previsión de ' + (data.tipoAccion === 'IMPLANTACION' ? 'salida' : 'entrada'));
+        this.snackbar.snackBarExito('Trabajo marcado como realizado. Se ha generado automáticamente la previsión de ' + (data.tipoAccion === 'IMPLANTACION' ? 'salida' : (data.tipoAccion === 'RETIRADA' ? 'entrada' : 'entrada y salida')));
         this.btnSubmitActivado = true;
       }),
       (error: any) => {
@@ -130,31 +224,12 @@ export class MueblesPendientesComponent implements OnInit {
       if (mueble.pdv) {
         destino += ' - ' + mueble.pdv;
       }
-      if (mueble.colaborador) {
-        destino += ' (' + mueble.colaborador + ')';
-      }
       return destino;
+    } else if (mueble.colaborador) {
+      return mueble.colaborador;
     } else if (mueble.otroDestino) {
       return mueble.otroDestino;
     }
     return 'No especificado';
-  }
-
-  estaCompleto(mueble: Mueble): boolean {
-    return !!(
-      mueble.fechaOrdenTrabajo &&
-      mueble.fechaAsignacion &&
-      mueble.fechaPrevistaRealizacion &&
-      mueble.tipoAccion &&
-      mueble.presupuesto !== null &&
-      mueble.presupuesto !== undefined &&
-      mueble.costeColaborador !== null &&
-      mueble.costeColaborador !== undefined &&
-      mueble.costeEnvio !== null &&
-      mueble.costeEnvio !== undefined &&
-      mueble.productos &&
-      mueble.productos.length > 0 &&
-      mueble.productos.every(p => p.ref && p.description && p.estado && p.unidades)
-    );
   }
 }

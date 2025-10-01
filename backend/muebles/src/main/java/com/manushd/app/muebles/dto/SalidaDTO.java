@@ -10,6 +10,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class SalidaDTO {
     private String destino;
+    private String colaborador;
     private String perfumeria;
     private String pdv;
     private String direccion;

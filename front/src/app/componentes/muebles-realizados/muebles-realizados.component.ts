@@ -173,10 +173,9 @@ export class MueblesRealizadosComponent implements OnInit {
       if (mueble.pdv) {
         destino += ' - ' + mueble.pdv;
       }
-      if (mueble.colaborador) {
-        destino += ' (' + mueble.colaborador + ')';
-      }
       return destino;
+    } else if (mueble.colaborador) {
+      return mueble.colaborador;
     } else if (mueble.otroDestino) {
       return mueble.otroDestino;
     }

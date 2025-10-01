@@ -22,4 +22,5 @@ public class ProductoMueble {
     private String description;
     private String estado;
     private Integer unidades;
+    private Boolean esRetirada = false;
 }

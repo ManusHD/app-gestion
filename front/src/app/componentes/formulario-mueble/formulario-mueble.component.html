@@ -129,12 +129,12 @@
                 <div class="tipo-accion-presupuesto">
                     <div class="campo-form">
                         <label>TIPO DE ACCIÓN <span class="obligatorio">*</span></label>
-                        <select formControlName="tipoAccion"
+                        <select formControlName="tipoAccion" (change)="onTipoAccionChange()"
                             [ngClass]="{'campo-vacio': campoSimpleVacio('tipoAccion')}">
                             <option value="">Seleccionar tipo de acción</option>
                             <option value="IMPLANTACION">IMPLANTACIÓN</option>
                             <option value="RETIRADA">RETIRADA</option>
-                            <!-- <option value="INTERCAMBIO">INTERCAMBIO</option> -->
+                            <option value="INTERCAMBIO">INTERCAMBIO</option>
                         </select>
                     </div>
 
@@ -150,12 +150,14 @@
                     <div class="campo-form">
                         <label>COSTE COLABORADOR (€)</label>
                         <input formControlName="costeColaborador" type="number" step="0.01" min="0"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('costeColaborador')}"
                             (input)="calcularCosteTotal()" placeholder="" />
                     </div>
 
                     <div class="campo-form">
                         <label>COSTE ENVÍO (€)</label>
                         <input formControlName="costeEnvio" type="number" step="0.01" min="0"
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('costeEnvio')}"
                             (input)="calcularCosteTotal()" placeholder="" />
                     </div>
 
@@ -171,7 +173,118 @@
                 </div>
             </div>
 
-            <!-- Tabla para productos -->
+            <!-- Tabla de PRODUCTOS A RETIRAR (solo para INTERCAMBIO) -->
+            <div *ngIf="esIntercambio()">
+                <h3 class="titulo-tabla-productos">PRODUCTOS A RETIRAR</h3>
+                <table (click)="clearActiveCampoUnico()">
+                    <thead>
+                        <tr>
+                            <th>REFERENCIA <span class="obligatorio">*</span></th>
+                            <th>DESCRIPCIÓN <span class="obligatorio">*</span></th>
+                            <th>ESTADO <span class="obligatorio">*</span></th>
+                            <th>UNIDADES <span class="obligatorio">*</span></th>
+                            <th>ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody formArrayName="productosRetirada">
+                        <tr *ngFor="let producto of productosRetiradaControls.controls; let i = index"
+                            [formGroupName]="i" [ngClass]="{'campo-nuevo': isProductoRetiradaNuevo(i)}">
+
+                            <td>
+                                <input formControlName="ref" (keyup)="buscarProductoRetiradaPorReferencia(i)"
+                                    type="text" maxlength="14"
+                                    [ngClass]="{'campo-vacio': !refValidaRetiradaIndex(i)}" />
+                            </td>
+
+                            <td>
+                                <textarea formControlName="description" (keyup)="buscarProductoRetiradaEspecial(i)"
+                                    (focus)="setActiveRowRetirada(i)" (blur)="clearActiveRowRetirada()" type="text"
+                                    [ngClass]="{'campo-vacio': !descriptionValidaRetirada(i)}"
+                                    [readOnly]="!isProductoRetiradaNuevo(i) && !esProductoEspecial(productosRetiradaControls.at(i).get('ref')!.value)"
+                                    class="description"></textarea>
+
+                                <!-- Dropdown para VISUAL -->
+                                <div *ngIf="productosRetiradaControls.at(i).get('ref')!.value === 'VISUAL' 
+                                   && visualesRetirada.length > 0 
+                                   && activeRowRetiradaIndex === i" class="autocomplete-container">
+                                    <div class="autocomplete-dropdown">
+                                        <div class="autocomplete-item" *ngFor="let visual of visualesRetirada"
+                                            (click)="selectVisualRetirada(i, visual)">
+                                            {{ visual.description }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Dropdown para SIN REFERENCIA -->
+                                <div *ngIf="productosRetiradaControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                                       && productosSRRetirada.length > 0 
+                                       && activeRowRetiradaIndex === i" class="autocomplete-container">
+                                    <div class="autocomplete-dropdown">
+                                        <div class="autocomplete-item" *ngFor="let sinReferencia of productosSRRetirada"
+                                            (click)="selectProductosSRRetirada(i, sinReferencia)">
+                                            {{ sinReferencia.description }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <select formControlName="estado"
+                                    [ngClass]="{'campo-vacio': esEstadoRequeridoRetirada(i) && campoVacioRetirada('estado', i)}"
+                                    (change)="onEstadoChangeRetirada(i)">
+                                    <option value="">{{ esEstadoRequeridoRetirada(i) ? 'Seleccionar estado' : 'Sin
+                                        estado' }}
+                                    </option>
+                                    <option *ngFor="let estado of getEstadosDisponiblesRetirada(i)" [value]="estado">
+                                        {{ estado }}
+                                    </option>
+                                </select>
+                            </td>
+
+                            <td>
+                                <div class="centrar">
+                                    <input formControlName="unidades" type="number" [ngClass]="{
+                                           'campo-vacio': campoVacioRetirada('unidades', i)
+                                       }" min="1" />
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="centrar">
+                                    <button type="button" (click)="eliminarProductoRetirada(i)" class="deleteButton">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59"
+                                            class="bin">
+                                            <path fill="#B5BAC1"
+                                                d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z">
+                                            </path>
+                                            <path fill="#B5BAC1"
+                                                d="M17 3C17 1.34315 18.3431 0 20 0H29.3125C30.9694 0 32.3125 1.34315 32.3125 3V3H17V3Z">
+                                            </path>
+                                            <path fill="#B5BAC1"
+                                                d="M2.18565 18.0974C2.08466 15.821 3.903 13.9202 6.18172 13.9202H43.8189C46.0976 13.9202 47.916 15.821 47.815 18.0975L46.1699 55.1775C46.0751 57.3155 44.314 59.0002 42.1739 59.0002H7.8268C5.68661 59.0002 3.92559 57.3155 3.83073 55.1775L2.18565 18.0974ZM18.0003 49.5402C16.6196 49.5402 15.5003 48.4209 15.5003 47.0402V24.9602C15.5003 23.5795 16.6196 22.4602 18.0003 22.4602C19.381 22.4602 20.5003 23.5795 20.5003 24.9602V47.0402C20.5003 48.4209 19.381 49.5402 18.0003 49.5402ZM29.5003 47.0402C29.5003 48.4209 30.6196 49.5402 32.0003 49.5402C33.381 49.5402 34.5003 48.4209 34.5003 47.0402V24.9602C34.5003 23.5795 33.381 22.4602 32.0003 22.4602C30.6196 22.4602 29.5003 23.5795 29.5003 24.9602V47.0402Z"
+                                                clip-rule="evenodd" fill-rule="evenodd"></path>
+                                            <path fill="#B5BAC1" d="M2 13H48L47.6742 21.28H2.32031L2 13Z"></path>
+                                        </svg>
+                                        <span class="tooltip">Eliminar</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="btns-tabla">
+                    <button type="button" (click)="agregarProductoRetirada()" class="add-producto">
+                        <img src="../../../assets/icons/signo-mas.svg" alt="">
+                        <span>AÑADIR PRODUCTO A RETIRAR</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Título para tabla de IMPLANTACIÓN -->
+            <h3 class="titulo-tabla-productos" *ngIf="esIntercambio()">PRODUCTOS A IMPLANTAR</h3>
+
+            <!-- Tabla para productos de IMPLANTACIÓN (o única tabla si no es intercambio) -->
             <table (click)="clearActiveCampoUnico()">
                 <thead>
                     <tr>
@@ -238,13 +351,13 @@
                         <td>
                             <div class="centrar">
                                 <input formControlName="unidades" type="number" [ngClass]="{
-                                       'campo-vacio': campoVacio('unidades', i),
-                                       'stock-excedido': unidadesExcedenStock(i)
-                                   }" min="1" (blur)="onUnidadesBlur(i)" />
+               'campo-vacio': campoVacio('unidades', i),
+               'stock-excedido': unidadesExcedenStock(i)
+           }" min="1" (blur)="onUnidadesBlur(i)" />
 
-                                <!-- Mostrar stock disponible para implantaciones -->
+                                <!-- Mostrar stock disponible para implantaciones E INTERCAMBIOS -->
                                 <small
-                                    *ngIf="muebleForm.get('tipoAccion')?.value === 'IMPLANTACION' && getMensajeStock(i)"
+                                    *ngIf="(muebleForm.get('tipoAccion')?.value === 'IMPLANTACION' || muebleForm.get('tipoAccion')?.value === 'INTERCAMBIO') && getMensajeStock(i)"
                                     class="stock-info" [ngClass]="{'stock-excedido': unidadesExcedenStock(i)}">
                                     {{ getMensajeStock(i) }}
                                 </small>
@@ -277,7 +390,7 @@
             <div class="btns-tabla">
                 <button type="button" (click)="agregarProducto()" class="add-producto">
                     <img src="../../../assets/icons/signo-mas.svg" alt="">
-                    <span>AÑADIR PRODUCTO</span>
+                    <span>{{ esIntercambio() ? 'AÑADIR PRODUCTO A IMPLANTAR' : 'AÑADIR PRODUCTO' }}</span>
                 </button>
             </div>
 
@@ -287,20 +400,20 @@
                     <div class="campo-form">
                         <label>INDICACIONES (al montador)</label>
                         <textarea formControlName="indicaciones" rows="3"
-                        placeholder="Instrucciones especiales para el montador..."></textarea>
+                            placeholder="Instrucciones especiales para el montador..."></textarea>
                     </div>
                 </div>
-                
+
                 <!-- Incidencias -->
                 <div class="incidencias" *ngIf="!esPrevision()" style="margin-top: 20px;">
                     <div class="campo-form">
                         <label>INCIDENCIAS</label>
                         <textarea formControlName="incidencias" rows="3"
-                        placeholder="Registre aquí cualquier incidencia durante el trabajo..."></textarea>
+                            placeholder="Registre aquí cualquier incidencia durante el trabajo..."></textarea>
                     </div>
                 </div>
             </div>
-                
+
         </form>
 
         <button [appConfirm]="'¿ESTÁS SEGURO DE CREAR LA PREVISIÓN DE TRABAJO?'" (confirmed)="onSubmit()"

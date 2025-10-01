@@ -4,4 +4,5 @@ export class ProductoMueble {
     description?: string;
     estado?: string;
     unidades?: number;
+    esRetirada?: boolean;
 }

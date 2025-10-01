@@ -155,8 +155,6 @@ export class FormularioEntradaSalidaComponent
           this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
         }
       });
-    } else {
-      console.log("HAY COLABORADOR");
     }
 
     if (this.currentPath.startsWith('/salidas')) {
@@ -305,7 +303,6 @@ export class FormularioEntradaSalidaComponent
   cargarEstados() {
     this.estadosService.getEstados().subscribe({
       next: (data) => {
-        console.log(data);
         this.estados = data;
       },
       error: (error) => {
@@ -356,7 +353,6 @@ export class FormularioEntradaSalidaComponent
       .getPdvsPerfumeria(perfumeria)
       .subscribe((data: PDV[]) => {
         this.pdvs = data;
-        console.log(this.pdvs);
       });
   }
 
@@ -365,7 +361,6 @@ export class FormularioEntradaSalidaComponent
       .getPDVsDeUnaPerfumeriaByNombres(nombrePerfumeria, nombrePdv)
       .subscribe((data: PDV[]) => {
         this.pdvs = data;
-        console.log(this.pdvs);
       });
   }
 
@@ -390,7 +385,6 @@ export class FormularioEntradaSalidaComponent
       .subscribe({
         next: (data) => {
           this.colaboradores = data.content;
-          console.log(this.colaboradores);
         },
         error: (error) => {
           console.error('Error al obtener colaboradores', error);
@@ -401,7 +395,6 @@ export class FormularioEntradaSalidaComponent
   cargarTodasOtrasDirecciones() {
     this.direccionesService.getOtrasDirecciones().subscribe({
       next: (data) => {
-        console.log(data);
         this.otrasDirecciones = data;
       },
       error: (error) => {
@@ -492,11 +485,7 @@ export class FormularioEntradaSalidaComponent
       this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.destino);
       this.setCampoValue('direccion', entradaSalidaFormulario.direccion);
       this.setCampoValue('poblacion', entradaSalidaFormulario.poblacion);
-      console.log(entradaSalidaFormulario.poblacion);
-      console.log(this.entradaSalidaForm.get('poblacion')!.value);
       this.setCampoValue('provincia', entradaSalidaFormulario.provincia);
-      console.log(entradaSalidaFormulario.provincia);
-      console.log(this.entradaSalidaForm.get('provincia')!.value);
       this.setCampoValue('cp', entradaSalidaFormulario.cp);
       this.setCampoValue('telefono', entradaSalidaFormulario.telefono);
       this.setSalidaActualId(this.detallesES!.id || null);

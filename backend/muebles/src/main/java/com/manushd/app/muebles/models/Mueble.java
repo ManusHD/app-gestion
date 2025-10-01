@@ -34,6 +34,7 @@ public class Mueble {
     private String telefono;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private TipoAccion tipoAccion;
     
     private BigDecimal presupuesto;
