@@ -71,6 +71,32 @@ public class MicroserviceCommunicationService {
         }
     }
 
+    public void crearPrevisionesIntercambio(Mueble mueble, String token) {
+        HttpHeaders headers = createHeaders(token);
+        
+        EntradaDTO entradaDTO = construirEntradaDTO(mueble);
+        
+        try {
+            HttpEntity<EntradaDTO> request = new HttpEntity<>(entradaDTO, headers);
+            ResponseEntity<Object> response = restTemplate.exchange(
+                "http://localhost:8092/entradas", 
+                HttpMethod.POST, 
+                request, 
+                Object.class
+            );
+            
+            if (response.getStatusCode().is2xxSuccessful()) {
+                System.out.println("✅ Previsión de entrada creada automáticamente para retirada de muebles");
+            } else {
+                System.err.println("❌ Error en respuesta de entradas: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error al crear previsión de entrada: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al crear previsión de entrada: " + e.getMessage(), e);
+        }
+    }
+
     private HttpHeaders createHeaders(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", token);

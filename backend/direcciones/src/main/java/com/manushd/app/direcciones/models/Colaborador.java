@@ -15,7 +15,8 @@ import lombok.ToString;
 @ToString
 public class Colaborador extends Direccion {
     private String nombre;
+    private boolean activa;
     private String dni;
     private String telefono2;
-    private boolean activa;
+    private String email;
 }

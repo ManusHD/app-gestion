@@ -5,12 +5,6 @@ import com.manushd.app.muebles.repository.MuebleRepository;
 
 import com.manushd.app.muebles.service.MicroserviceCommunicationService;
 
-import com.manushd.app.muebles.models.Mueble;
-import com.manushd.app.muebles.models.ProductoEntrada;
-import com.manushd.app.muebles.models.ProductoMueble;
-import com.manushd.app.muebles.models.ProductoSalida;
-import com.manushd.app.muebles.models.Salida;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,25 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,14 +27,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/muebles")
@@ -186,22 +158,6 @@ public class MuebleController {
             Mueble savedMueble = muebleRepository.save(mueble);
             System.out.println("✅ Trabajo de muebles guardado con ID: " + savedMueble.getId());
 
-            // Crear previsión automática según tipo de acción
-            // try {
-            //     if (mueble.getTipoAccion() == Mueble.TipoAccion.IMPLANTACION) {
-            //         communicationService.crearPrevisionSalida(savedMueble, token);
-            //     } else if (mueble.getTipoAccion() == Mueble.TipoAccion.RETIRADA) {
-            //         communicationService.crearPrevisionEntrada(savedMueble, token);
-            //     }
-            // } catch (Exception e) {
-            //     // Log el error pero no fallar la creación del mueble
-            //     System.err.println("⚠️  Trabajo de muebles creado, pero error al crear previsión automática: " + e.getMessage());
-            //     // Aquí podrías decidir si quieres fallar completamente o solo avisar
-            //     return ResponseEntity.ok()
-            //         .header("Warning", "Trabajo creado pero error al generar previsión automática")
-            //         .body(savedMueble);
-            // }
-
             return ResponseEntity.ok(savedMueble);
 
         } catch (IllegalArgumentException e) {
@@ -230,6 +186,15 @@ public class MuebleController {
         Mueble muebleAux = muebleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trabajo de mueble no encontrado"));
         
+        // Validaciones antes de marcar como realizado
+        if (muebleAux.getFechaPrevistaRealizacion() == null) {
+            return ResponseEntity.badRequest().body("La fecha prevista de realización es obligatoria");
+        }
+        
+        if (muebleAux.getCosteColaborador() == null || muebleAux.getCosteEnvio() == null) {
+            return ResponseEntity.badRequest().body("Los costes son obligatorios antes de marcar como realizado");
+        }
+        
         if (muebleAux != null) {
             muebleAux.setEstado(true);
             if (muebleAux.getFechaRealizacion() == null) {
@@ -242,11 +207,11 @@ public class MuebleController {
                     communicationService.crearPrevisionSalida(muebleAux, token);
                 } else if (muebleAux.getTipoAccion() == Mueble.TipoAccion.RETIRADA) {
                     communicationService.crearPrevisionEntrada(muebleAux, token);
+                } else if (muebleAux.getTipoAccion() == Mueble.TipoAccion.INTERCAMBIO) {
+                    communicationService.crearPrevisionesIntercambio(muebleAux, token);
                 }
             } catch (Exception e) {
-                // Log el error pero no fallar la creación del mueble
                 System.err.println("⚠️  Trabajo de muebles creado, pero error al crear previsión automática: " + e.getMessage());
-                // Aquí podrías decidir si quieres fallar completamente o solo avisar
                 return ResponseEntity.ok()
                     .header("Warning", "Trabajo creado pero error al generar previsión automática")
                     .body(muebleAux);
@@ -296,126 +261,5 @@ public class MuebleController {
                 throw new IllegalArgumentException("Error al validar stock: " + e.getMessage());
             }
         }
-    }
-
-    private void crearPrevisionSalida(Mueble mueble, String token) {
-    RestTemplate restTemplate = new RestTemplate();
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", token);
-    headers.set("Content-Type", "application/json");
-
-    // Crear el objeto de salida con fechas correctas
-    Map<String, Object> salida = new HashMap<>();
-    salida.put("destino", determinarDestino(mueble));
-    salida.put("perfumeria", mueble.getPerfumeria());
-    salida.put("pdv", mueble.getPdv());
-    salida.put("direccion", mueble.getDireccion());
-    salida.put("poblacion", mueble.getPoblacion());
-    salida.put("provincia", mueble.getProvincia());
-    salida.put("cp", mueble.getCp());
-    salida.put("telefono", mueble.getTelefono());
-    salida.put("estado", false); // Previsión
-    
-    // Convertir LocalDate a String en formato ISO
-    LocalDate fechaEnvio = mueble.getFechaRealizacion() != null ? mueble.getFechaRealizacion() : LocalDate.now();
-    salida.put("fechaEnvio", fechaEnvio.toString()); // yyyy-MM-dd
-
-    Set<Map<String, Object>> productosSalida = new HashSet<>();
-    for (ProductoMueble pm : mueble.getProductos()) {
-        Map<String, Object> ps = new HashMap<>();
-        ps.put("ref", pm.getRef());
-        ps.put("description", pm.getDescription());
-        ps.put("estado", pm.getEstado());
-        ps.put("unidades", pm.getUnidades());
-        ps.put("unidadesPedidas", pm.getUnidades());
-        ps.put("comprobado", false);
-        ps.put("palets", 0);
-        ps.put("bultos", 0);
-        ps.put("formaEnvio", "");
-        ps.put("observaciones", "Generado automáticamente desde trabajo de muebles");
-        productosSalida.add(ps);
-    }
-    salida.put("productos", productosSalida);
-
-    try {
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(salida, headers);
-        ResponseEntity<Object> response = restTemplate.exchange(
-            "http://localhost:8093/salidas", 
-            HttpMethod.POST, 
-            request, 
-            Object.class
-        );
-        
-        if (response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("✅ Previsión de salida creada automáticamente para implantación de muebles");
-        } else {
-            System.err.println("❌ Error en respuesta: " + response.getStatusCode());
-        }
-    } catch (Exception e) {
-        System.err.println("❌ Error al crear previsión de salida: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-        e.printStackTrace();
-    }
-}
-
-private void crearPrevisionEntrada(Mueble mueble, String token) {
-    RestTemplate restTemplate = new RestTemplate();
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", token);
-    headers.set("Content-Type", "application/json");
-
-    // Crear el objeto de entrada con fechas correctas
-    Map<String, Object> entrada = new HashMap<>();
-    entrada.put("origen", determinarDestino(mueble));
-    entrada.put("perfumeria", mueble.getPerfumeria());
-    entrada.put("pdv", mueble.getPdv());
-    entrada.put("estado", false); // Previsión
-    
-    // Convertir LocalDate a String en formato ISO
-    LocalDate fechaRecepcion = mueble.getFechaAsignacion() != null ? mueble.getFechaAsignacion() : LocalDate.now();
-    entrada.put("fechaRecepcion", fechaRecepcion.toString()); // yyyy-MM-dd
-
-    Set<Map<String, Object>> productosEntrada = new HashSet<>();
-    for (ProductoMueble pm : mueble.getProductos()) {
-        Map<String, Object> pe = new HashMap<>();
-        pe.put("ref", pm.getRef());
-        pe.put("description", pm.getDescription());
-        pe.put("estado", pm.getEstado());
-        pe.put("unidades", pm.getUnidades());
-        pe.put("comprobado", false);
-        pe.put("palets", 0);
-        pe.put("bultos", 0);
-        pe.put("ubicacion", "");
-        pe.put("observaciones", "Generado automáticamente desde trabajo de muebles");
-        productosEntrada.add(pe);
-    }
-    entrada.put("productos", productosEntrada);
-
-    try {
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(entrada, headers);
-        ResponseEntity<Object> response = restTemplate.exchange(
-            "http://localhost:8092/entradas", 
-            HttpMethod.POST, 
-            request, 
-            Object.class
-        );
-        
-        if (response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("✅ Previsión de entrada creada automáticamente para retirada de muebles");
-        } else {
-            System.err.println("❌ Error en respuesta: " + response.getStatusCode());
-        }
-    } catch (Exception e) {
-        System.err.println("❌ Error al crear previsión de entrada: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-        e.printStackTrace();
-    }
-}
-
-    private String determinarDestino(Mueble mueble) {
-        if (mueble.getPerfumeria() != null && !mueble.getPerfumeria().isEmpty()) {
-            return mueble.getPerfumeria() + (mueble.getPdv() != null ? " - " + mueble.getPdv() : "");
-        } else if (mueble.getOtroDestino() != null && !mueble.getOtroDestino().isEmpty()) {
-            return mueble.getOtroDestino();
-        }
-        return "Destino no especificado";
     }
 }

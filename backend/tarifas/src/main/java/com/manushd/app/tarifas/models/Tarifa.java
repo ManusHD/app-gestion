@@ -21,9 +21,6 @@ public class Tarifa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(unique = true, nullable = false)
     private String nombre;
-    
-    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal importe;
 }

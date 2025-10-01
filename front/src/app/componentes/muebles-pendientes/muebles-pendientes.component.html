@@ -6,7 +6,7 @@
             <caption>TRABAJOS DE MUEBLES PENDIENTES</caption>
             
             <ng-container matColumnDef="fechaOrden">
-                <th class="header-paginator" *matHeaderCellDef>FECHA ORDEN</th>
+                <th class="header-paginator" *matHeaderCellDef>FECHA ORDEN TRABAJO</th>
                 <td class="fila-paginator" mat-cell *matCellDef="let mueble">
                     {{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}
                 </td>
@@ -27,6 +27,13 @@
                     </span>
                 </td>
             </ng-container>
+
+            <!-- <ng-container matColumnDef="presupuesto">
+                <th class="header-paginator" *matHeaderCellDef>PRESUPUESTO</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                    {{mueble.presupuesto | currency:'EUR':'symbol':'1.2-2'}}
+                </td>
+            </ng-container> -->
 
             <ng-container matColumnDef="estado">
                 <th class="header-paginator" *matHeaderCellDef>ESTADO</th>

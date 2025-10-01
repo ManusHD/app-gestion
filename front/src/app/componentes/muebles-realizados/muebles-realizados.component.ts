@@ -17,7 +17,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 })
 export class MueblesRealizadosComponent implements OnInit {
   muebles: Mueble[] = [];
-  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'tipoAccion', 'costeTotal', 'detalles'];
+  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'tipoAccion', 'detalles'];
   dataSource = new MatTableDataSource<Mueble>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -169,7 +169,14 @@ export class MueblesRealizadosComponent implements OnInit {
 
   obtenerDestino(mueble: Mueble): string {
     if (mueble.perfumeria) {
-      return mueble.perfumeria + (mueble.pdv ? ' - ' + mueble.pdv : '');
+      let destino = mueble.perfumeria;
+      if (mueble.pdv) {
+        destino += ' - ' + mueble.pdv;
+      }
+      if (mueble.colaborador) {
+        destino += ' (' + mueble.colaborador + ')';
+      }
+      return destino;
     } else if (mueble.otroDestino) {
       return mueble.otroDestino;
     }

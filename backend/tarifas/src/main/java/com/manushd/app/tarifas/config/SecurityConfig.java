@@ -1,7 +1,7 @@
-package com.manushd.app.estados.config;
+package com.manushd.app.tarifas.config;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.manushd.app.estados.filters.JwtFilter;
+import com.manushd.app.tarifas.filters.JwtFilter;
 
 import org.springframework.security.config.Customizer;
 import java.util.Arrays;

@@ -62,6 +62,21 @@ export class MueblesPendientesComponent implements OnInit {
   }
 
   marcarComoRealizado(id: number) {
+    const mueble = this.muebles.find(m => m.id === id);
+    
+    // Validar que tiene fecha prevista de realización
+    if (!mueble?.fechaPrevistaRealizacion) {
+      this.snackbar.snackBarError('Debe establecer una fecha prevista de realización antes de marcar como realizado');
+      return;
+    }
+    
+    // Validar que todos los costes están definidos
+    if (mueble.costeColaborador === null || mueble.costeColaborador === undefined ||
+        mueble.costeEnvio === null || mueble.costeEnvio === undefined) {
+      this.snackbar.snackBarError('Debe completar todos los costes antes de marcar como realizado');
+      return;
+    }
+    
     this.btnSubmitActivado = false;
     this.carga.show();
     this.muebleService
@@ -111,7 +126,14 @@ export class MueblesPendientesComponent implements OnInit {
 
   obtenerDestino(mueble: Mueble): string {
     if (mueble.perfumeria) {
-      return mueble.perfumeria + (mueble.pdv ? ' - ' + mueble.pdv : '');
+      let destino = mueble.perfumeria;
+      if (mueble.pdv) {
+        destino += ' - ' + mueble.pdv;
+      }
+      if (mueble.colaborador) {
+        destino += ' (' + mueble.colaborador + ')';
+      }
+      return destino;
     } else if (mueble.otroDestino) {
       return mueble.otroDestino;
     }
@@ -122,11 +144,14 @@ export class MueblesPendientesComponent implements OnInit {
     return !!(
       mueble.fechaOrdenTrabajo &&
       mueble.fechaAsignacion &&
-      mueble.fechaRealizacion &&
+      mueble.fechaPrevistaRealizacion &&
       mueble.tipoAccion &&
+      mueble.presupuesto !== null &&
+      mueble.presupuesto !== undefined &&
       mueble.costeColaborador !== null &&
+      mueble.costeColaborador !== undefined &&
       mueble.costeEnvio !== null &&
-      mueble.importeFacturar !== null &&
+      mueble.costeEnvio !== undefined &&
       mueble.productos &&
       mueble.productos.length > 0 &&
       mueble.productos.every(p => p.ref && p.description && p.estado && p.unidades)

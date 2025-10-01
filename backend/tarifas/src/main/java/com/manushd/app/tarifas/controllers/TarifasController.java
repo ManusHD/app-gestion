@@ -34,7 +34,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @RestController
 @RequestMapping("/tarifas")
 @PreAuthorize("hasAnyRole('ADMIN','OPERADOR')")
-public class TarifaController {
+public class TarifasController {
     @Autowired
     private TarifaRepository tarifaRepository;
 
@@ -62,7 +62,7 @@ public class TarifaController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarifa no encontrada"));
     }
 
-    @GetMapping("nombre/{nombre}/pageable")
+    @GetMapping("nombre/pageable/{nombre}")
     public Page<Tarifa> getTarifasByNombre(
             @PathVariable String nombre,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -112,12 +112,6 @@ public class TarifaController {
         existingTarifa.setImporte(importeNuevo);
         Tarifa tarifaActualizada = tarifaRepository.save(existingTarifa);
 
-        // Si cambió algo, propagar el cambio a otros microservicios
-        if (!nombreAnterior.equals(nombreNuevo) || importeAnterior.compareTo(importeNuevo) != 0) {
-            propagarCambioTarifa(nombreAnterior, nombreNuevo, 
-                               importeAnterior.doubleValue(), importeNuevo.doubleValue(), token);
-        }
-
         return tarifaActualizada;
     }
 
@@ -126,12 +120,6 @@ public class TarifaController {
             @RequestHeader("Authorization") String token) {
         Tarifa tarifa = tarifaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tarifa no encontrada"));
-
-        // Verificar si la tarifa está siendo usada
-        if (verificarTarifaEnUso(tarifa.getNombre(), token)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "No se puede eliminar la tarifa porque está siendo utilizada");
-        }
 
         tarifaRepository.deleteById(id);
         return ResponseEntity.ok().build();

@@ -18,7 +18,7 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class TrabajosPendientesComponent implements OnInit {
   trabajos: Trabajo[] = [];
-  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'importe', 'acciones'];
+  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'acciones'];
   dataSource = new MatTableDataSource<Trabajo>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 

@@ -6,15 +6,17 @@ import { environment } from '../../environments/environment-dev';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { TarifaService } from './tarifas.service';
+import { Tarifa } from '../models/tarifa.model';
 
 export interface FacturacionCalculada {
   totalAlmacenaje: number;
   totalMovimientos: number;
-  totalTrabajos: number; // NUEVO
+  totalTrabajos: number;
   totalGeneral: number;
   detallesAlmacenaje: DetalleAlmacenaje[];
   detallesMovimientos: DetalleMovimiento[];
-  detallesTrabajos: DetalleTrabajoManipulacion[]; // NUEVO
+  detallesTrabajos: DetalleTrabajoManipulacion[];
   resumenMovimientos: ResumenMovimientos;
 }
 
@@ -78,14 +80,81 @@ export class FacturacionService {
   // URLs de API
   private apiUrlEntradas = environment.apiEntradas;
   private apiUrlSalidas = environment.apiSalidas;
+  
+  private tarifas: {
+    TARIFA_PALET_MES: number;
+    TARIFA_MOVIMIENTO_PALET: number;
+    TARIFA_MOVIMIENTO_BULTO: number;
+    TARIFA_MOVIMIENTO_UNIDAD: number;
+  } = {
+    TARIFA_PALET_MES: 5.4,
+    TARIFA_MOVIMIENTO_PALET: 2.4,
+    TARIFA_MOVIMIENTO_BULTO: 0.45,
+    TARIFA_MOVIMIENTO_UNIDAD: 0.25,
+  };
 
-  // Tarifas del sistema (configurables)
-  readonly TARIFA_PALET_MES = 5.4;           // €/palet/mes
-  readonly TARIFA_MOVIMIENTO_PALET = 2.4;    // €/palet movido
-  readonly TARIFA_MOVIMIENTO_BULTO = 0.45;   // €/bulto movido
-  readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;  // €/unidad movida
+  constructor(
+    private http: HttpClient,
+    private tarifaService: TarifaService) {
+      this.cargarTarifas(); 
+    }
 
-  constructor(private http: HttpClient) { }
+    private cargarTarifas(): void {
+    const nombresTarifas = [
+      'ALMACENAJE PALETS MENSUAL',
+      'MOVIMIENTO PALET',
+      'MOVIMIENTO BULTO',
+      'MOVIMIENTO UNIDAD'
+    ];
+
+    nombresTarifas.forEach(nombre => {
+      this.tarifaService.getTarifasByNombre(nombre).subscribe({
+        next: (tarifa: any) => {
+          switch(nombre) {
+            case 'ALMACENAJE PALETS MENSUAL':
+              this.tarifas.TARIFA_PALET_MES = tarifa.content[0].importe!;
+              console.log(this.tarifas.TARIFA_PALET_MES);
+              break;
+            case 'MOVIMIENTO PALET':
+              this.tarifas.TARIFA_MOVIMIENTO_PALET = tarifa.content[0].importe!;
+              console.log(this.tarifas.TARIFA_MOVIMIENTO_PALET);
+              break;
+            case 'MOVIMIENTO BULTO':
+              this.tarifas.TARIFA_MOVIMIENTO_BULTO = tarifa.content[0].importe!;
+              console.log(this.tarifas.TARIFA_MOVIMIENTO_BULTO);
+              break;
+            case 'MOVIMIENTO UNIDAD':
+              this.tarifas.TARIFA_MOVIMIENTO_UNIDAD = tarifa.content[0].importe!;
+              console.log(this.tarifas.TARIFA_MOVIMIENTO_UNIDAD);
+              break;
+          }
+        },
+        error: (error) => {
+          console.warn(`No se pudo cargar la tarifa ${nombre}, usando valor por defecto`, error);
+        }
+      });
+    });
+  }
+
+  recargarTarifas(): void {
+    this.cargarTarifas();
+  }
+
+  get TARIFA_PALET_MES(): number {
+    return this.tarifas.TARIFA_PALET_MES;
+  }
+
+  get TARIFA_MOVIMIENTO_PALET(): number {
+    return this.tarifas.TARIFA_MOVIMIENTO_PALET;
+  }
+
+  get TARIFA_MOVIMIENTO_BULTO(): number {
+    return this.tarifas.TARIFA_MOVIMIENTO_BULTO;
+  }
+
+  get TARIFA_MOVIMIENTO_UNIDAD(): number {
+    return this.tarifas.TARIFA_MOVIMIENTO_UNIDAD;
+  }
 
   /**
    * Calcula la facturación para un período específico
@@ -94,6 +163,10 @@ export class FacturacionService {
   fechaInicio: string,
   fechaFin: string
 ): Observable<FacturacionCalculada> {
+
+  // Recargar tarifas antes de calcular para asegurar valores actualizados
+    this.cargarTarifas();
+
   // Ajustar fechas para que siempre sean del 1 al último día del mes
   const fechaInicioAjustada = this.ajustarFechaInicioMes(fechaInicio);
   const fechaFinAjustada = this.ajustarFechaFinMes(fechaFin);
@@ -136,78 +209,68 @@ export class FacturacionService {
     }
   );
 
-  // NUEVO: Obtener trabajos del período
   const trabajos$ = this.http.get<any[]>(`${environment.apiTrabajos}/filtrar`, {
-    params: {
-      fechaInicio: fechaInicioAjustada,
-      fechaFin: fechaFinAjustada,
-      tipoBusqueda: 'fecha',
-    },
-  });
+      params: {
+        fechaInicio: fechaInicioAjustada,
+        fechaFin: fechaFinAjustada,
+        tipoBusqueda: 'fecha',
+      },
+    });
 
-  return forkJoin([
-    entradas$,
-    salidas$,
-    entradasAnteriores$,
-    salidasAnteriores$,
-    trabajos$, // NUEVO
-  ]).pipe(
-    map(([entradas, salidas, entradasAnteriores, salidasAnteriores, trabajos]) => {
-      // IMPORTANTE: Calcular movimientos ANTES que almacenaje para mantener orden
-      const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
-      const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
-        entradasAnteriores,
-        salidasAnteriores,
-        entradas,
-        salidas,
-        fechaInicioAjustada,
-        fechaFinAjustada
-      );
+    return forkJoin([
+      entradas$,
+      salidas$,
+      entradasAnteriores$,
+      salidasAnteriores$,
+      trabajos$,
+    ]).pipe(
+      map(([entradas, salidas, entradasAnteriores, salidasAnteriores, trabajos]) => {
+        const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
+        const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
+          entradasAnteriores,
+          salidasAnteriores,
+          entradas,
+          salidas,
+          fechaInicioAjustada,
+          fechaFinAjustada
+        );
 
-      // NUEVO: Calcular trabajos de manipulación
-      const detallesTrabajos = this.calcularTrabajosManipulacion(trabajos);
+        const detallesTrabajos = this.calcularTrabajosManipulacion(trabajos);
 
-      const resumenMovimientos = this.calcularResumenMovimientos(
-        entradasAnteriores,
-        salidasAnteriores,
-        entradas,
-        salidas,
-        fechaInicioAjustada
-      );
+        const resumenMovimientos = this.calcularResumenMovimientos(
+          entradasAnteriores,
+          salidasAnteriores,
+          entradas,
+          salidas,
+          fechaInicioAjustada
+        );
 
-      const totalMovimientos = detallesMovimientos.reduce(
-        (sum, d) => sum + d.costoTotal,
-        0
-      );
-      const totalAlmacenaje = detallesAlmacenaje.reduce(
-        (sum, d) => sum + d.costoTotal,
-        0
-      );
-      const totalTrabajos = detallesTrabajos.reduce(
-        (sum, d) => sum + d.costoTotal,
-        0
-      );
+        const totalMovimientos = detallesMovimientos.reduce(
+          (sum, d) => sum + d.costoTotal,
+          0
+        );
+        const totalAlmacenaje = detallesAlmacenaje.reduce(
+          (sum, d) => sum + d.costoTotal,
+          0
+        );
+        const totalTrabajos = detallesTrabajos.reduce(
+          (sum, d) => sum + d.costoTotal,
+          0
+        );
 
-      console.log('=== DEBUG MOVIMIENTOS ORDENADOS ===');
-      console.log('Detalles movimientos ordenados:', detallesMovimientos.map(d => ({
-        fecha: d.fechaMovimiento.toLocaleDateString(),
-        tipo: d.tipoOperacion,
-        referencia: d.referencia
-      })));
-
-      return {
-        totalAlmacenaje,
-        totalMovimientos,
-        totalTrabajos, // NUEVO
-        totalGeneral: totalAlmacenaje + totalMovimientos + totalTrabajos, // ACTUALIZADO
-        detallesAlmacenaje,
-        detallesMovimientos,
-        detallesTrabajos, // NUEVO
-        resumenMovimientos,
-      };
-    })
-  );
-}
+        return {
+          totalAlmacenaje,
+          totalMovimientos,
+          totalTrabajos,
+          totalGeneral: totalAlmacenaje + totalMovimientos + totalTrabajos,
+          detallesAlmacenaje,
+          detallesMovimientos,
+          detallesTrabajos,
+          resumenMovimientos,
+        };
+      })
+    );
+  }
 
   /**
    * ACTUALIZADO: Calcula el resumen incluyendo facturación de entradas y salidas
@@ -244,8 +307,6 @@ export class FacturacionService {
         });
       }
     });
-
-    console.log("Stock inicial de palets:", stockInicialPalets);
 
     // Calcular movimientos del mes - ENTRADAS
     let paletsEntrados = 0;
@@ -432,8 +493,8 @@ export class FacturacionService {
             const costoEntrada = (producto.palets * this.TARIFA_PALET_MES * diasDesdeEntrada) / diasEnElMes;
 
             detalles.push({
-              referencia: producto.ref || 'SIN_REF',
-              descripcion: producto.description || 'Sin descripción',
+              referencia: producto.ref || 'SIN REFERENCIA',
+              descripcion: producto.description || 'SIN DESCRIPCIÓN',
               palets: producto.palets,
               diasAlmacenaje: diasDesdeEntrada,
               costoTotal: costoEntrada,
@@ -445,14 +506,12 @@ export class FacturacionService {
       }
     });
 
-    console.log('--- ENTRADAS DEL MES ---');
     entradasDelMes.forEach((entrada) => {
       if (entrada.estado && entrada.productos && entrada.fechaRecepcion) {
         const fechaEntrada = new Date(entrada.fechaRecepcion);
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
             const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
-            console.log(`${producto.ref}: Entrada ${fechaEntrada.toLocaleDateString()}, facturado ${diasDesdeEntrada} días`);
           }
         });
       }
@@ -479,8 +538,8 @@ export class FacturacionService {
             // DETALLE INDIVIDUAL DEL DESCUENTO
             if (descuento > 0) {
               detalles.push({
-                referencia: producto.ref || 'SIN_REF',
-                descripcion: producto.description || 'Sin descripción',
+                referencia: producto.ref || 'SIN REFERENCIA',
+                descripcion: producto.description || 'SIN DESCRIPCIÓN',
                 palets: -producto.palets, // Negativo para mostrar que es salida
                 diasAlmacenaje: -diasNoFacturados, // Negativo para mostrar descuento
                 costoTotal: -descuento, // Negativo para mostrar descuento
@@ -489,17 +548,11 @@ export class FacturacionService {
               });
             }
 
-            console.log(`=== DEBUG SALIDA: ${producto.ref} ===`);
-            console.log(`Fecha salida: ${fechaSalida.toLocaleDateString()}`);
-            console.log(`Días facturados (hasta salida inclusive): ${diasFacturados}`);
-            console.log(`Días NO facturados (desde día siguiente): ${diasNoFacturados}`);
-            console.log(`Descuento aplicado: ${descuento.toFixed(2)}€`);
           }
         });
       }
     });
 
-    console.log('--- SALIDAS DEL MES ---');
     salidasDelMes.forEach((salida) => {
       if (salida.estado && salida.productos && salida.fechaEnvio) {
         const fechaSalida = new Date(salida.fechaEnvio);
@@ -507,7 +560,6 @@ export class FacturacionService {
           if (producto.palets && producto.palets > 0) {
             const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
             const diasNoFacturados = diasEnElMes - diasFacturados;
-            console.log(`${producto.ref}: Salida ${fechaSalida.toLocaleDateString()}, facturado ${diasFacturados} días, descontado ${diasNoFacturados} días`);
           }
         });
       }
@@ -521,13 +573,6 @@ export class FacturacionService {
     const totalDescuentos = detalles
       .filter(d => d.palets < 0)
       .reduce((sum, d) => sum + d.costoTotal, 0);
-
-    console.log('=== DEBUG ALMACENAJE DETALLADO ===');
-    console.log('Stock inicial:', stockInicialTotal, 'palets =', totalStockInicial, '€');
-    console.log('Entradas detalladas:', totalEntradas, '€');
-    console.log('Descuentos detallados:', totalDescuentos, '€');
-    console.log('Total almacenaje:', totalStockInicial + totalEntradas + totalDescuentos, '€');
-    console.log('Detalles generados:', detalles.length);
 
     return detalles;
   }
@@ -586,8 +631,8 @@ export class FacturacionService {
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
             detalles.push({
-              referencia: producto.ref || '',
-              descripcion: producto.description || '',
+              referencia: producto.ref || 'SIN REFERENCIA',
+              descripcion: producto.description || 'SIN DESCRIPCIÓN',
               tipo: 'palet',
               tipoOperacion: 'salida',
               cantidad: producto.palets,
@@ -602,11 +647,6 @@ export class FacturacionService {
 
     // ORDENAR TODO POR FECHA (CRÍTICO)
     detalles.sort((a, b) => a.fechaMovimiento.getTime() - b.fechaMovimiento.getTime());
-
-    console.log('=== MOVIMIENTOS ORDENADOS POR FECHA ===');
-    detalles.forEach((detalle, index) => {
-      console.log(`${index + 1}. ${detalle.fechaMovimiento.toLocaleDateString()} - ${detalle.tipoOperacion} - ${detalle.referencia}`);
-    });
 
     return detalles;
   }
@@ -666,8 +706,8 @@ private obtenerDireccionTrabajo(trabajo: any): string {
     // Jerarquía: palets > bultos > unidades
     if (producto.palets && producto.palets > 0) {
       return {
-        referencia: producto.ref || '',
-        descripcion: producto.description || '',
+        referencia: producto.ref || 'SIN REFERENCIA',
+        descripcion: producto.description || 'SIN DESCRIPCIÓN',
         tipo: 'palet',
         tipoOperacion, // NUEVO CAMPO
         cantidad: producto.palets,
@@ -677,8 +717,8 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       };
     } else if (producto.bultos && producto.bultos > 0) {
       return {
-        referencia: producto.ref || '',
-        descripcion: producto.description || '',
+        referencia: producto.ref || 'SIN REFERENCIA',
+        descripcion: producto.description || 'SIN DESCRIPCIÓN',
         tipo: 'bulto',
         tipoOperacion, // NUEVO CAMPO
         cantidad: producto.bultos,
@@ -688,8 +728,8 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       };
     } else if (producto.unidades && producto.unidades > 0) {
       return {
-        referencia: producto.ref || '',
-        descripcion: producto.description || '',
+        referencia: producto.ref || 'SIN REFERENCIA',
+        descripcion: producto.description || 'SIN DESCRIPCIÓN',
         tipo: 'unidad',
         tipoOperacion, // NUEVO CAMPO
         cantidad: producto.unidades,
@@ -951,7 +991,7 @@ private obtenerDireccionTrabajo(trabajo: any): string {
     // Título principal
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('FACTURACIÓN MENSUAL', pageWidth / 2, yPosition, {
+    doc.text('DETALLE MENSUAL', pageWidth / 2, yPosition, {
       align: 'center',
     });
 
@@ -970,7 +1010,7 @@ private obtenerDireccionTrabajo(trabajo: any): string {
     // Resumen de totales
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('RESUMEN DE FACTURACIÓN', 20, yPosition);
+    doc.text('DETALLE DE FACTURACIÓN DE ALMACENAJE', 20, yPosition);
 
     yPosition += 15;
 
@@ -978,7 +1018,8 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       ['Concepto', 'Importe'],
       ['Total Almacenaje', `${facturacion.totalAlmacenaje.toFixed(2)} €`],
       ['Total Movimientos', `${facturacion.totalMovimientos.toFixed(2)} €`],
-      ['Total Trabajos de Manipulación', `${facturacion.totalTrabajos.toFixed(2)} €`], // NUEVO
+      ['Total Trabajos de Manipulación', `${facturacion.totalTrabajos.toFixed(2)} €`],
+      ['', ``],
       ['TOTAL', `${facturacion.totalGeneral.toFixed(2)} €`],
     ];
 
@@ -1000,8 +1041,8 @@ private obtenerDireccionTrabajo(trabajo: any): string {
         if (data.row.index === 4) {
           // Fila del total
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [52, 152, 219];
-          data.cell.styles.textColor = [0, 0, 0];
+          // data.cell.styles.fillColor = [52, 152, 219];
+          // data.cell.styles.textColor = [0, 0, 0];
         }
       },
     });

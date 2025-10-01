@@ -18,7 +18,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 export class TrabajosRealizadosComponent implements OnInit {
   trabajos: Trabajo[] = [];
   trabajosExcel: Trabajo[] = [];
-  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'importe', 'observaciones'];
+  columnasPaginator: string[] = ['fecha', 'concepto', 'direccion', 'horas', 'observaciones'];
   dataSource = new MatTableDataSource<Trabajo>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 

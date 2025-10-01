@@ -15,8 +15,8 @@ export class TarifaService {
         return this.httpClient.get<any>(`${this.url}?page=${page}&size=${size}`);
     }
 
-    getTarifaByNombre(nombre: string): Observable<any> {
-        return this.httpClient.get<any>(`${this.url}/nombre/${nombre}`);
+    getTarifasByNombre(nombre: string): Observable<any> {
+        return this.httpClient.get<any>(`${this.url}/nombre/pageable/${nombre}`);
     }
 
     crearTarifa(tarifa: Tarifa): Observable<Tarifa> {
@@ -24,6 +24,10 @@ export class TarifaService {
     }
 
     updateTarifa(tarifa: Tarifa): Observable<Tarifa> {
-        return this.httpClient.put<Tarifa>(this.url, tarifa);
+        return this.httpClient.put<Tarifa>(`${this.url}/${tarifa.id}`, tarifa);
+    }
+
+    deleteTarifa(id: number): Observable<Tarifa> {
+        return this.httpClient.delete<Tarifa>(`${this.url}/${id}`);
     }
 }

@@ -1,4 +1,5 @@
 export class Tarifa {
-    nombre!: string;
-    importe!: number;
+    id?: number;
+    nombre?: string;
+    importe?: number;
 }

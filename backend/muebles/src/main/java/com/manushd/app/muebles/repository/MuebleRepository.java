@@ -46,6 +46,7 @@ public interface MuebleRepository extends PagingAndSortingRepository<Mueble, Lon
             "(:textoBusqueda IS NULL OR " +
             "LOWER(m.perfumeria) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.pdv) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
+            "LOWER(m.colaborador) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.otroDestino) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.direccion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.poblacion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
@@ -82,6 +83,7 @@ public interface MuebleRepository extends PagingAndSortingRepository<Mueble, Lon
             "(:textoBusqueda IS NULL OR " +
             "LOWER(m.perfumeria) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.pdv) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
+            "LOWER(m.colaborador) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.otroDestino) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.direccion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.poblacion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +

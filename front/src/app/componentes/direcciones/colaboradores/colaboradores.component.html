@@ -23,6 +23,9 @@
               [(ngModel)]="nuevaColaborador.telefono2"
               placeholder="Teléfono 2" />
             <input
+              [(ngModel)]="nuevaColaborador.email"
+              placeholder="Email" />
+            <input
               [(ngModel)]="nuevaColaborador.direccion"
               placeholder="Dirección" />
             <input
@@ -128,6 +131,19 @@
                     </ng-container>
                     <ng-template #editTelefono2>
                       <input [(ngModel)]="editandoColaborador.telefono2" placeholder="Teléfono" class="nombre-editando" />
+                    </ng-template>
+                  </td>
+                </ng-container>
+  
+                <!-- Columna Email-->
+                <ng-container matColumnDef="email">
+                  <th class="header-paginator" *matHeaderCellDef> Email</th>
+                  <td class="fila-paginator" mat-cell *matCellDef="let colaborador">
+                    <ng-container *ngIf="editandoId !== colaborador.id; else editEmail">
+                      {{ colaborador.email }}
+                    </ng-container>
+                    <ng-template #editEmail>
+                      <input [(ngModel)]="editandoColaborador.email" placeholder="Email" class="nombre-editando" />
                     </ng-template>
                   </td>
                 </ng-container>

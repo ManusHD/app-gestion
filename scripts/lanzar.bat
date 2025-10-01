@@ -12,6 +12,7 @@ set MICROSERVICIO_AUTH=..\backend\autenticacion
 set MICROSERVICIO_ESTADOS=..\backend\estados
 set MICROSERVICIO_TRABAJOS=..\backend\trabajos
 set MICROSERVICIO_MUEBLES=..\backend\muebles
+set MICROSERVICIO_TARIFAS=..\backend\tarifas
 
 :: Ejecutar entradas en una nueva ventana 8091
 start cmd /c "cd %MICROSERVICIO_ENTRADAS% && mvn spring-boot:run"
@@ -42,3 +43,6 @@ start cmd /c "cd %MICROSERVICIO_ESTADOS% && mvn spring-boot:run"
 
 :: Ejecutar muebles en una nueva ventana 8101
 start cmd /c "cd %MICROSERVICIO_MUEBLES% && mvn spring-boot:run"
+
+:: Ejecutar tarifas en una nueva ventana 8102
+start cmd /c "cd %MICROSERVICIO_TARIFAS% && mvn spring-boot:run"

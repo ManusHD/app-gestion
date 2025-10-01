@@ -39,7 +39,14 @@ export class DetallesMueblesComponent implements OnInit {
 
   obtenerDestino(): string {
     if (this.mueble.perfumeria) {
-      return this.mueble.perfumeria + (this.mueble.pdv ? ' - ' + this.mueble.pdv : '');
+      let destino = this.mueble.perfumeria;
+      if (this.mueble.pdv) {
+        destino += ' - ' + this.mueble.pdv;
+      }
+      if (this.mueble.colaborador) {
+        destino += ' (' + this.mueble.colaborador + ')';
+      }
+      return destino;
     } else if (this.mueble.otroDestino) {
       return this.mueble.otroDestino;
     }
@@ -50,11 +57,13 @@ export class DetallesMueblesComponent implements OnInit {
     return !!(
       this.mueble.fechaOrdenTrabajo &&
       this.mueble.fechaAsignacion &&
-      this.mueble.fechaRealizacion &&
       this.mueble.tipoAccion &&
+      this.mueble.presupuesto !== null &&
+      this.mueble.presupuesto !== undefined &&
       this.mueble.costeColaborador !== null &&
+      this.mueble.costeColaborador !== undefined &&
       this.mueble.costeEnvio !== null &&
-      this.mueble.importeFacturar !== null &&
+      this.mueble.costeEnvio !== undefined &&
       this.mueble.productos &&
       this.mueble.productos.length > 0 &&
       this.mueble.productos.every(p => p.ref && p.description && p.estado && p.unidades)

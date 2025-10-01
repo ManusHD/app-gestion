@@ -3,13 +3,17 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Producto } from 'src/app/models/producto.model';
 import { Tarifa } from 'src/app/models/tarifa.model';
+import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { TarifaService } from 'src/app/services/tarifas.service';
 
 @Component({
   selector: 'app-tarifas',
   templateUrl: './tarifas.component.html',
-  styleUrls: ['./tarifas.component.css']
+  styleUrls: [
+    '../../../assets/styles/paginator.css',
+    './tarifas.component.css'
+  ]
 })
 export class TarifasComponent implements OnInit {
   currentPath = window.location.pathname;
@@ -19,20 +23,22 @@ export class TarifasComponent implements OnInit {
   pageIndex = 0;
   totalElementos = 0;
   buscando: boolean = false;
+  editandoId: number | null = null;
+  editandoTarifa!: Tarifa;
+  tarifaSeleccionada: Tarifa | null = null;
+  tarifaEditar: Tarifa | null = null;
+  indexTarifaSeleccionada: number = -1;
+  existe: boolean = true;
+  nuevaTarifa: Tarifa = {};
 
-  // Para crear nueva tarifa
-  nuevaTarifa: Tarifa = {
-    nombre: '',
-    importe: 0
-  };
-
-  columnasStock: string[] = ['nombre', 'importe'];
+  columnasStock: string[] = ['nombre', 'importe', 'acciones'];
   dataSourceStock = new MatTableDataSource<Tarifa>();
   @ViewChild(MatPaginator) paginatorStock!: MatPaginator;
 
   constructor(
     private tarifaService: TarifaService,
-    private snackBar: SnackBar
+    private snackBar: SnackBar,
+    private carga: PantallaCargaService
   ) {}
 
   ngOnInit(): void {
@@ -59,7 +65,7 @@ export class TarifasComponent implements OnInit {
     }
     this.buscando = true;
     this.tarifaService
-      .getTarifaByNombre(this.buscador)
+      .getTarifasByNombre(this.buscador)
       .subscribe((data: any) => {
         this.tarifas = data.content;
         setTimeout(() => {
@@ -101,4 +107,68 @@ export class TarifasComponent implements OnInit {
       });
     }
   }
+  
+    seleccionarTarifa(tarifa: Tarifa, index: number): void {
+      this.tarifaSeleccionada = { ...tarifa };
+      this.tarifaEditar = this.tarifaSeleccionada;
+      this.indexTarifaSeleccionada = index;
+    }
+  
+    editarTarifa(tarifa: Tarifa): void {
+      this.editandoId = tarifa.id!;
+      this.editandoTarifa = { ...tarifa };
+    }
+  
+    guardarEdit(): void {
+      if (this.editandoId && this.editandoTarifa) {
+        if (!this.editandoTarifa.nombre || this.editandoTarifa.nombre.trim() === '') {
+          this.snackBar.snackBarError('El nombre no puede estar en blanco');
+          return;
+        }
+  
+        this.editandoTarifa.nombre = this.editandoTarifa.nombre.trim();
+        
+        this.tarifaService
+          .updateTarifa(this.editandoTarifa)
+          .subscribe(
+            (data: Tarifa) => {
+              const index = this.tarifas.findIndex((p) => p.id === data.id);
+              if (index !== -1) {
+                this.tarifas[index] = data;
+              }
+              this.cargarTarifas();
+              this.cancelarEdit();
+              this.snackBar.snackBarExito('Tarifa actualizada con éxito');
+            },
+            (error) => {
+              this.snackBar.snackBarError(error.error.message);
+              console.error('Error al actualizar la tarifa', error);
+            }
+          );
+      }
+    }
+  
+    cancelarEdit(): void {
+      this.editandoId = null;
+      this.editandoTarifa = {};
+    }
+
+    eliminarTarifa(id: number): void {
+      this.carga.show();
+      this.tarifaService.deleteTarifa(id).subscribe(
+        () => {
+          this.tarifas = this.tarifas.filter((p) => p.id !== id);
+          this.dataSourceStock.data = [...this.tarifas];
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        },
+        (error) => {
+          console.error('Error al eliminar la agencia de transporte', error);
+          setTimeout(() => {
+            this.carga.hide();
+          }); 
+        }
+      );
+    }
 }

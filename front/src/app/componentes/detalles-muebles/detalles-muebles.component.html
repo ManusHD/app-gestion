@@ -20,9 +20,17 @@
                         <label>Fecha Asignación:</label>
                         <span>{{mueble.fechaAsignacion | date: 'dd/MM/yyyy'}}</span>
                     </div>
+                    <div class="info-item" *ngIf="mueble.fechaPrevistaRealizacion">
+                        <label>Fecha Prevista Realización:</label>
+                        <span>{{mueble.fechaPrevistaRealizacion | date: 'dd/MM/yyyy'}}</span>
+                    </div>
                     <div class="info-item">
                         <label>Fecha Realización:</label>
                         <span>{{mueble.fechaRealizacion | date: 'dd/MM/yyyy'}}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Presupuesto:</label>
+                        <span>{{mueble.presupuesto | currency:'EUR':'symbol':'1.2-2'}}</span>
                     </div>
                     <div class="info-item">
                         <label>Coste Colaborador:</label>
@@ -36,13 +44,21 @@
                         <label>Coste Total:</label>
                         <span>{{mueble.costeTotal | currency:'EUR':'symbol':'1.2-2'}}</span>
                     </div>
-                    <div class="info-item">
+                    <div class="info-item" *ngIf="mueble.importeFacturar">
                         <label>Importe a Facturar:</label>
                         <span>{{mueble.importeFacturar | currency:'EUR':'symbol':'1.2-2'}}</span>
+                    </div>
+                    <div class="info-item" *ngIf="mueble.colaborador">
+                        <label>Colaborador:</label>
+                        <span>{{mueble.colaborador}}</span>
                     </div>
                     <div class="info-item" *ngIf="mueble.indicaciones">
                         <label>Indicaciones:</label>
                         <span>{{mueble.indicaciones}}</span>
+                    </div>
+                    <div class="info-item" *ngIf="mueble.incidencias">
+                        <label>Incidencias:</label>
+                        <span>{{mueble.incidencias}}</span>
                     </div>
                 </div>
 

@@ -158,6 +158,13 @@ app-exportar-excel {
     margin: 50px;
 }
 
+.obligatorio {
+    color: #ff4757;
+    font-weight: bold;
+    margin-left: 3px;
+}
+
+
 /* --------------------------------------
 --CSS para las Tablas y sus componentes--
 -----------------------------------------*/

@@ -1,4 +1,4 @@
-package com.manushd.app.estados.filters;
+package com.manushd.app.tarifas.filters;
 
 import java.util.ArrayList;
 import java.util.List;

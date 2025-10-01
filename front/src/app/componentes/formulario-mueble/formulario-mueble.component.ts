@@ -15,6 +15,7 @@ import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
 import { PDV } from 'src/app/models/pdv.model';
 import { OtraDireccion } from 'src/app/models/otraDireccion.model';
+import { Colaborador } from 'src/app/models/colaborador.model';
 import { Estado } from 'src/app/models/estado.model';
 import { Producto } from 'src/app/models/producto.model';
 
@@ -35,6 +36,7 @@ export class FormularioMuebleComponent implements OnInit {
   // Datos para dropdowns
   perfumerias: Perfumeria[] = [];
   pdvs: PDV[] = [];
+  colaboradores: Colaborador[] = [];
   otrasDirecciones: OtraDireccion[] = [];
   estados: Estado[] = [];
   visuales: Producto[] = [];
@@ -43,6 +45,7 @@ export class FormularioMuebleComponent implements OnInit {
   // Estados de selección
   perfumeriaSeleccionada: Perfumeria | null = null;
   pdvSeleccionado: PDV | null = null;
+  colaboradorSeleccionado: Colaborador | null = null;
   otraDireccionSeleccionada: OtraDireccion | null = null;
   activeCampoUnico: string | null = null;
   activeRowIndex: number | null = null;
@@ -74,24 +77,36 @@ export class FormularioMuebleComponent implements OnInit {
   }
 
   createForm(): FormGroup {
+    const esDetallePendiente = this.pestanaPadre === 'detallePrevisionMueble';
+
     return this.fb.group({
-      fechaOrdenTrabajo: ['', Validators.required],
-      fechaAsignacion: ['', Validators.required],
-      fechaRealizacion: ['', Validators.required],
-      perfumeria: [''],
-      pdv: [''],
-      otroDestino: [''],
-      direccion: [''],
-      poblacion: [''],
-      provincia: [''],
-      cp: [''],
-      telefono: [''],
-      tipoAccion: ['', Validators.required],
-      indicaciones: [''],
-      costeColaborador: [0],
-      costeEnvio: [0],
-      costeTotal: [0],
-      importeFacturar: [0],
+      fechaOrdenTrabajo: [
+        { value: '', disabled: esDetallePendiente },
+        Validators.required,
+      ],
+      fechaAsignacion: [{ value: '', disabled: esDetallePendiente }, Validators.required],
+      fechaPrevistaRealizacion: ['', Validators.required],
+      fechaRealizacion: [''],
+      perfumeria: [{ value: '', disabled: esDetallePendiente }],
+      pdv: [{ value: '', disabled: esDetallePendiente }],
+      colaborador: [{ value: '', disabled: esDetallePendiente }],
+      otroDestino: [{ value: '', disabled: esDetallePendiente }],
+      direccion: [{ value: '', disabled: true }],
+      poblacion: [{ value: '', disabled: true }],
+      provincia: [{ value: '', disabled: true }],
+      cp: [{ value: '', disabled: true }],
+      telefono: [{ value: '', disabled: true }],
+      tipoAccion: [
+        { value: '', disabled: esDetallePendiente },
+        Validators.required,
+      ],
+      presupuesto: ['', [Validators.required, Validators.min(0)]],
+      indicaciones: [{ value: '', disabled: esDetallePendiente }],
+      incidencias: [''],
+      costeColaborador: ['', Validators.min(0)],
+      costeEnvio: ['', Validators.min(0)],
+      costeTotal: [{ value: '', disabled: true }],
+      importeFacturar: ['', Validators.min(0)],
       productos: this.fb.array([]),
     });
   }
@@ -113,18 +128,17 @@ export class FormularioMuebleComponent implements OnInit {
     this.cargarEstados();
     this.cargarPerfumerias('a');
     this.cargarTodasOtrasDirecciones();
+    this.cargarColaboradores('a');
   }
 
   private inicializarFormulario() {
     if (!this.detallesMueble) {
-      // Nuevo trabajo
       this.mostrarFormulario = true;
       this.muebleForm.patchValue({
         fechaOrdenTrabajo: new Date().toISOString().split('T')[0],
       });
       this.agregarProducto();
     } else {
-      // Editar trabajo existente
       this.mostrarFormulario = true;
       this.cargarDatosExistentes();
     }
@@ -139,9 +153,12 @@ export class FormularioMuebleComponent implements OnInit {
         if (value == '' || value == null) {
           this.limpiarCamposDireccion();
           this.muebleForm.get('pdv')!.setValue('');
+          this.muebleForm.get('colaborador')!.setValue('');
           this.pdvs = [];
+          this.colaboradores = [];
           this.perfumeriaSeleccionada = null;
           this.pdvSeleccionado = null;
+          this.colaboradorSeleccionado = null;
           this.cargarPerfumerias('a');
         } else {
           this.cargarPerfumerias(value);
@@ -156,7 +173,9 @@ export class FormularioMuebleComponent implements OnInit {
         const perfumeria = this.muebleForm.get('perfumeria')?.value;
         if (value == '' || value == null) {
           this.limpiarCamposDireccion();
+          this.muebleForm.get('colaborador')!.setValue('');
           this.pdvSeleccionado = null;
+          this.colaboradorSeleccionado = null;
           if (perfumeria) {
             this.cargarPDVs();
           }
@@ -165,12 +184,24 @@ export class FormularioMuebleComponent implements OnInit {
         }
       });
 
-    // Rellenar dirección automáticamente
+    // Rellenar dirección automáticamente desde PDV o Colaborador
     this.muebleForm.get('pdv')?.valueChanges.subscribe((value) => {
       if (value) {
         this.rellenarDireccionPDV(value);
       }
     });
+
+    this.muebleForm
+      .get('colaborador')
+      ?.valueChanges.pipe(debounceTime(300))
+      .subscribe((value) => {
+        if (value == '' || value == null) {
+          this.colaboradorSeleccionado = null;
+          this.cargarColaboradores('a');
+        } else {
+          this.cargarColaboradores(value);
+        }
+      });
 
     // Evento para otros destinos
     this.muebleForm
@@ -178,7 +209,6 @@ export class FormularioMuebleComponent implements OnInit {
       ?.valueChanges.pipe(debounceTime(300))
       .subscribe((value) => {
         if (value == '' || value == null) {
-          this.limpiarCamposDireccion();
           this.otraDireccionSeleccionada = null;
           this.cargarTodasOtrasDirecciones();
         } else {
@@ -197,9 +227,11 @@ export class FormularioMuebleComponent implements OnInit {
     this.muebleForm.patchValue({
       fechaOrdenTrabajo: this.detallesMueble!.fechaOrdenTrabajo,
       fechaAsignacion: this.detallesMueble!.fechaAsignacion,
+      fechaPrevistaRealizacion: this.detallesMueble!.fechaPrevistaRealizacion,
       fechaRealizacion: this.detallesMueble!.fechaRealizacion,
       perfumeria: this.detallesMueble!.perfumeria || '',
       pdv: this.detallesMueble!.pdv || '',
+      colaborador: this.detallesMueble!.colaborador || '',
       otroDestino: this.detallesMueble!.otroDestino || '',
       direccion: this.detallesMueble!.direccion || '',
       poblacion: this.detallesMueble!.poblacion || '',
@@ -207,11 +239,13 @@ export class FormularioMuebleComponent implements OnInit {
       cp: this.detallesMueble!.cp || '',
       telefono: this.detallesMueble!.telefono || '',
       tipoAccion: this.detallesMueble!.tipoAccion,
+      presupuesto: this.detallesMueble!.presupuesto || '',
       indicaciones: this.detallesMueble!.indicaciones || '',
-      costeColaborador: this.detallesMueble!.costeColaborador || 0,
-      costeEnvio: this.detallesMueble!.costeEnvio || 0,
-      costeTotal: this.detallesMueble!.costeTotal || 0,
-      importeFacturar: this.detallesMueble!.importeFacturar || 0,
+      incidencias: this.detallesMueble!.incidencias || '',
+      costeColaborador: this.detallesMueble!.costeColaborador || '',
+      costeEnvio: this.detallesMueble!.costeEnvio || '',
+      costeTotal: this.detallesMueble!.costeTotal || '',
+      importeFacturar: this.detallesMueble!.importeFacturar || '',
     });
 
     // Rellenar productos
@@ -453,7 +487,6 @@ export class FormularioMuebleComponent implements OnInit {
             const key = `${index}-${referencia}-${estado}`;
             this.stockDisponiblePorProducto[key] = producto.stock || 0;
 
-            // Actualizar validadores
             if (unidadesControl) {
               unidadesControl.setValidators([
                 Validators.required,
@@ -577,6 +610,23 @@ export class FormularioMuebleComponent implements OnInit {
       });
   }
 
+  private cargarColaboradores(nombre: string) {
+    this.direccionesService
+      .getColaboradoresActivosByNombrePaginado(
+        nombre,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe({
+        next: (data) => {
+          this.colaboradores = data.content;
+        },
+        error: (error) => {
+          console.error('Error al obtener los colaboradores', error);
+        },
+      });
+  }
+
   private cargarTodasOtrasDirecciones() {
     this.direccionesService.getOtrasDirecciones().subscribe({
       next: (data) => {
@@ -670,6 +720,7 @@ export class FormularioMuebleComponent implements OnInit {
     this.muebleForm.patchValue({
       perfumeria: perfumeria.nombre,
       otroDestino: '',
+      colaborador: '',
     });
 
     this.perfumeriaSeleccionada = perfumeria;
@@ -687,13 +738,35 @@ export class FormularioMuebleComponent implements OnInit {
     this.pdvSeleccionado = pdv;
     this.activeCampoUnico = null;
     this.pdvs = [];
+
+    // Cargar el colaborador del PDV
+    if (pdv.colaborador) {
+      this.muebleForm.patchValue({
+        colaborador: pdv.colaborador.nombre,
+      });
+      this.colaboradorSeleccionado = pdv.colaborador;
+    }
+  }
+
+  selectColaborador(colaborador: Colaborador) {
+    this.muebleForm.patchValue({
+      colaborador: colaborador.nombre,
+      otroDestino: ''
+    });
+
+    this.colaboradorSeleccionado = colaborador;
+    this.activeCampoUnico = null;
+    this.colaboradores = [];
+
+    // Rellenar dirección del colaborador si no hay PDV seleccionado
+    const pdv = this.muebleForm.get('pdv')?.value;
+    this.rellenarDireccionColaborador(colaborador);
   }
 
   selectOtraDireccion(direccion: OtraDireccion) {
     this.muebleForm.patchValue({
       otroDestino: direccion.nombre,
-      perfumeria: '',
-      pdv: '',
+      colaborador: '',
     });
 
     this.muebleForm.patchValue({
@@ -728,6 +801,16 @@ export class FormularioMuebleComponent implements OnInit {
         telefono: pdvSeleccionado.telefono || '',
       });
     }
+  }
+
+  private rellenarDireccionColaborador(colaborador: Colaborador) {
+    this.muebleForm.patchValue({
+      direccion: colaborador.direccion || '',
+      poblacion: colaborador.poblacion || '',
+      provincia: colaborador.provincia || '',
+      cp: colaborador.cp || '',
+      telefono: colaborador.telefono || '',
+    });
   }
 
   private limpiarCamposDireccion() {
@@ -777,6 +860,14 @@ export class FormularioMuebleComponent implements OnInit {
       ) {
         event.preventDefault();
         this.selectPdv(this.pdvs[0]);
+        handled = true;
+      } else if (
+        this.activeCampoUnico === 'colaborador' &&
+        this.colaboradores.length > 0 &&
+        !this.colaboradorSeleccionado
+      ) {
+        event.preventDefault();
+        this.selectColaborador(this.colaboradores[0]);
         handled = true;
       } else if (
         this.activeCampoUnico === 'otroDestino' &&
@@ -836,6 +927,10 @@ export class FormularioMuebleComponent implements OnInit {
     return this.pestanaPadre === 'previsionMueble';
   }
 
+  esDetallePendiente(): boolean {
+    return this.pestanaPadre === 'detallePrevisionMueble';
+  }
+
   isProductoNuevo(index: number): boolean {
     const ref = this.productosControls.at(index).get('ref')!.value;
     if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
@@ -889,49 +984,105 @@ export class FormularioMuebleComponent implements OnInit {
 
   campoSimpleVacio(nombreCampo: string): boolean {
     const control = this.muebleForm.get(nombreCampo);
-    return !control!.valid && control!.touched;
+    
+    // Si el campo está deshabilitado, no mostrarlo como vacío
+    if (control?.disabled) {
+      return false;
+    }
+    
+    return !control!.valid;
   }
 
   perfumeriaValido(): boolean {
     const perfumeria = this.muebleForm.get('perfumeria')?.value;
     const pdv = this.muebleForm.get('pdv')?.value;
 
+    // Perfumería y PDV deben ir siempre juntos
     if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   pdvValido(): boolean {
     const perfumeria = this.muebleForm.get('perfumeria')?.value;
     const pdv = this.muebleForm.get('pdv')?.value;
 
+    // Perfumería y PDV deben ir siempre juntos
     if ((pdv && !perfumeria) || (!pdv && perfumeria)) {
-      return true;
+      return false;
     }
-    return false;
+    return true;
+  }
+
+  colaboradorValido(): boolean {
+    const perfumeria = this.muebleForm.get('perfumeria')?.value;
+    const pdv = this.muebleForm.get('pdv')?.value;
+    const colaborador = this.muebleForm.get('colaborador')?.value;
+    const otroDestino = this.muebleForm.get('otroDestino')?.value;
+
+    // Si hay colaborador, puede ir solo O con perfumería+PDV, pero NO con otro destino
+    if (colaborador && otroDestino) {
+      return false;
+    }
+
+    // Si hay colaborador sin perfumería+PDV, no debe haber ninguno de los dos
+    if (colaborador && (perfumeria || pdv)) {
+      // Verificar que si hay perfumería y PDV, estén ambos
+      return perfumeria && pdv;
+    }
+
+    return true;
   }
 
   otroDestinoValido(): boolean {
-    return this.muebleForm.get('otroDestino')?.valid || false;
+    const perfumeria = this.muebleForm.get('perfumeria')?.value;
+    const pdv = this.muebleForm.get('pdv')?.value;
+    const colaborador = this.muebleForm.get('colaborador')?.value;
+    const otroDestino = this.muebleForm.get('otroDestino')?.value;
+
+    // Si hay otro destino, puede ir solo O con perfumería+PDV, pero NO con colaborador
+    if (otroDestino && colaborador) {
+      return false;
+    }
+
+    // Si hay otro destino con perfumería+PDV, verificar que estén ambos
+    if (otroDestino && (perfumeria || pdv)) {
+      return perfumeria && pdv;
+    }
+
+    return true;
   }
 
   previsionEsValidaCampoSimple(): boolean {
     const perfumeria = this.muebleForm.get('perfumeria')?.value;
     const pdv = this.muebleForm.get('pdv')?.value;
+    const colaborador = this.muebleForm.get('colaborador')?.value;
     const otroDestino = this.muebleForm.get('otroDestino')?.value;
 
-    const perfumeriaPdvCompleto = (perfumeria && pdv) || (!perfumeria && !pdv);
-    if (!perfumeriaPdvCompleto) {
+    // Verificar que perfumería y PDV vayan siempre juntos
+    const perfumeriaPdvJuntos = (perfumeria && pdv) || (!perfumeria && !pdv);
+    if (!perfumeriaPdvJuntos) {
       return false;
     }
 
+    // Determinar qué campos están completos
     const tienePerfumeriaPdv = perfumeria && pdv;
+    const tieneColaborador = colaborador && colaborador.trim() !== '';
     const tieneOtroDestino = otroDestino && otroDestino.trim() !== '';
 
+    // Combinaciones válidas:
+    // 1. PDV + PERFUMERIA
+    // 2. COLABORADOR solo
+    // 3. OTRO DESTINO solo
+    // 4. PDV + PERFUMERIA + COLABORADOR
+    // 5. PDV + PERFUMERIA + OTRO DESTINO
     const combinacionesValidas = [
-      tienePerfumeriaPdv && !tieneOtroDestino,
-      !tienePerfumeriaPdv && tieneOtroDestino,
+      tienePerfumeriaPdv && !tieneColaborador && !tieneOtroDestino, // 1
+      !tienePerfumeriaPdv && tieneColaborador && !tieneOtroDestino, // 2
+      !tienePerfumeriaPdv && !tieneColaborador && tieneOtroDestino, // 3
+      tienePerfumeriaPdv && tieneColaborador && !tieneOtroDestino, // 4
+      tienePerfumeriaPdv && !tieneColaborador && tieneOtroDestino, // 5
     ];
 
     return combinacionesValidas.some((c) => c);
@@ -939,32 +1090,41 @@ export class FormularioMuebleComponent implements OnInit {
 
   private previsionEsValida(): boolean {
     const fechaOrdenTrabajo = this.muebleForm.get('fechaOrdenTrabajo')?.value;
+    const fechaAsignacion = this.muebleForm.get('fechaAsignacion')?.value;
     const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
+    const presupuesto = this.muebleForm.get('presupuesto')?.value;
     const hayProductos = this.productosControls.length > 0;
     const productosValidos = this.productosSonValidos();
     const destinosValidos = this.previsionEsValidaCampoSimple();
-
+  
     let esValida =
       fechaOrdenTrabajo &&
+      fechaAsignacion &&
       tipoAccion &&
+      presupuesto !== null &&
+      presupuesto !== '' &&
       hayProductos &&
       productosValidos &&
       destinosValidos;
-
+  
     if (!fechaOrdenTrabajo) {
       this.snackBarError('La fecha de orden de trabajo es obligatoria');
+    } else if (!fechaAsignacion) {
+      this.snackBarError('La fecha de asignación es obligatoria');
     } else if (!tipoAccion) {
       this.snackBarError('El tipo de acción es obligatorio');
+    } else if (presupuesto === null || presupuesto === '') {
+      this.snackBarError('El presupuesto es obligatorio');
     } else if (!destinosValidos) {
       this.snackBarError(
-        'Debe seleccionar un destino válido (Perfumería + PDV o Otros destinos)'
+        'Debe seleccionar un destino válido.'
       );
     } else if (!hayProductos) {
       this.snackBarError('Debe agregar al menos un producto');
     } else if (!productosValidos) {
       this.snackBarError('Todos los productos deben estar completos y válidos');
     }
-
+  
     return esValida;
   }
 
@@ -996,9 +1156,7 @@ export class FormularioMuebleComponent implements OnInit {
       this.muebleService.newMueble(nuevoMueble).subscribe({
         next: (muebleCreado) => {
           console.log('Trabajo de mueble creado:', muebleCreado);
-          this.snackBarExito(
-            'Previsión de trabajo creada correctamente.'
-          );
+          this.snackBarExito('Previsión de trabajo creada correctamente.');
           this.resetForm();
           this.carga.hide();
           this.btnSubmitActivado = true;
@@ -1041,7 +1199,7 @@ export class FormularioMuebleComponent implements OnInit {
   }
 
   private construirMueble(): Mueble {
-    const formValue = this.muebleForm.value;
+    const formValue = this.muebleForm.getRawValue();
 
     const productos: ProductoMueble[] = formValue.productos.map((p: any) => ({
       ref: p.ref,
@@ -1053,9 +1211,11 @@ export class FormularioMuebleComponent implements OnInit {
     return {
       fechaOrdenTrabajo: formValue.fechaOrdenTrabajo,
       fechaAsignacion: formValue.fechaAsignacion,
-      fechaRealizacion: formValue.fechaRealizacion,
+      fechaPrevistaRealizacion: formValue.fechaPrevistaRealizacion || null,
+      fechaRealizacion: formValue.fechaRealizacion || null,
       perfumeria: formValue.perfumeria || null,
       pdv: formValue.pdv || null,
+      colaborador: formValue.colaborador || null,
       otroDestino: formValue.otroDestino || null,
       direccion: formValue.direccion,
       poblacion: formValue.poblacion,
@@ -1063,11 +1223,13 @@ export class FormularioMuebleComponent implements OnInit {
       cp: formValue.cp,
       telefono: formValue.telefono,
       tipoAccion: formValue.tipoAccion,
+      presupuesto: formValue.presupuesto || 0,
       indicaciones: formValue.indicaciones,
-      costeColaborador: formValue.costeColaborador || 0,
-      costeEnvio: formValue.costeEnvio || 0,
-      costeTotal: formValue.costeTotal || 0,
-      importeFacturar: formValue.importeFacturar || 0,
+      incidencias: formValue.incidencias,
+      costeColaborador: formValue.costeColaborador || null,
+      costeEnvio: formValue.costeEnvio || null,
+      costeTotal: formValue.costeTotal || null,
+      importeFacturar: formValue.importeFacturar || null,
       estado: false,
       productos: productos,
     };
@@ -1082,10 +1244,6 @@ export class FormularioMuebleComponent implements OnInit {
     // Reinicializar con valores por defecto
     this.muebleForm.patchValue({
       fechaOrdenTrabajo: new Date().toISOString().split('T')[0],
-      costeColaborador: 0,
-      costeEnvio: 0,
-      costeTotal: 0,
-      importeFacturar: 0,
     });
 
     // Limpiar productos y agregar uno nuevo

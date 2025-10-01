@@ -46,11 +46,21 @@ export class FacturacionComponent implements OnInit {
   cargando = false;                      // Estado de carga durante cálculos
   resumenFacturacion: ResumenFacturacion | null = null; // Datos de facturación calculados
 
-  // === CONFIGURACIÓN DE TARIFAS (solo lectura) ===
-  readonly TARIFA_PALET_MES = 5.4;
-  readonly TARIFA_MOVIMIENTO_PALET = 2.4;
-  readonly TARIFA_MOVIMIENTO_BULTO = 0.45;
-  readonly TARIFA_MOVIMIENTO_UNIDAD = 0.25;
+  get TARIFA_PALET_MES(): number {
+    return this.facturacionService.TARIFA_PALET_MES;
+  }
+
+  get TARIFA_MOVIMIENTO_PALET(): number {
+    return this.facturacionService.TARIFA_MOVIMIENTO_PALET;
+  }
+
+  get TARIFA_MOVIMIENTO_BULTO(): number {
+    return this.facturacionService.TARIFA_MOVIMIENTO_BULTO;
+  }
+
+  get TARIFA_MOVIMIENTO_UNIDAD(): number {
+    return this.facturacionService.TARIFA_MOVIMIENTO_UNIDAD;
+  }
 
   // === CONFIGURACIÓN DE TABLA ===
   displayedColumns: string[] = ['tipo', 'concepto', 'cantidad', 'precio', 'total'];

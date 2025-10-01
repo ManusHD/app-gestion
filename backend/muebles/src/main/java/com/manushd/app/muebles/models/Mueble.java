@@ -21,9 +21,11 @@ public class Mueble {
     
     private LocalDate fechaOrdenTrabajo;
     private LocalDate fechaAsignacion;
+    private LocalDate fechaPrevistaRealizacion;
     private LocalDate fechaRealizacion;
     private String perfumeria;
     private String pdv;
+    private String colaborador;
     private String otroDestino;
     private String direccion;
     private String poblacion;
@@ -34,7 +36,9 @@ public class Mueble {
     @Enumerated(EnumType.STRING)
     private TipoAccion tipoAccion;
     
+    private BigDecimal presupuesto;
     private String indicaciones;
+    private String incidencias;
     private BigDecimal costeColaborador;
     private BigDecimal costeEnvio;
     private BigDecimal costeTotal;
@@ -46,6 +50,6 @@ public class Mueble {
     private Set<ProductoMueble> productos;
     
     public enum TipoAccion {
-        IMPLANTACION, RETIRADA
+        IMPLANTACION, RETIRADA, INTERCAMBIO
     }
 }
