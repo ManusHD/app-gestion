@@ -50,7 +50,7 @@ export class MueblesPendientesComponent implements OnInit {
   cargarMuebles() {
     this.carga.show();
     this.muebleService
-      .getMueblesByEstadoPaginado(false, this.pageIndex, this.pageSize)
+      .getMueblesPendientesPaginado(this.pageIndex, this.pageSize)
       .subscribe((data) => {
         this.muebles = data.content;
         setTimeout(() => {

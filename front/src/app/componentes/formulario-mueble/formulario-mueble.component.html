@@ -17,7 +17,7 @@
                             [ngClass]="{'campo-vacio': campoSimpleVacio('fechaAsignacion')}" />
                     </div>
 
-                    <div class="campo-form" *ngIf="!esPrevision()">
+                    <div class="campo-form">
                         <label>FECHA PREVISTA REALIZACIÓN <span class="obligatorio">*</span></label>
                         <input formControlName="fechaPrevistaRealizacion" type="date"
                             [ngClass]="{'campo-vacio': campoSimpleVacio('fechaPrevistaRealizacion')}" />
@@ -36,7 +36,7 @@
                         <label>PERFUMERÍA</label>
                         <input (focus)="setActiveCampoUnico('perfumeria')" formControlName="perfumeria" type="text"
                             [ngClass]="{'campo-vacio': !perfumeriaValido() && !previsionEsValidaCampoSimple()}" />
-                        <div class="autocomplete-container">
+                        <div class="autocomplete-container" *ngIf="!muebleForm.get('perfumeria')?.disabled">
                             <div class="autocomplete-dropdown"
                                 *ngIf="perfumerias.length > 0 && !perfumeriaSeleccionada && activeCampoUnico == 'perfumeria'">
                                 <div class="autocomplete-item" *ngFor="let perfumeria of perfumerias; let i = index"
@@ -52,7 +52,7 @@
                         <label>PDV</label>
                         <input (focus)="setActiveCampoUnico('pdv')" formControlName="pdv" type="text"
                             [ngClass]="{'campo-vacio': !pdvValido() && !previsionEsValidaCampoSimple()}" />
-                        <div class="autocomplete-container">
+                        <div class="autocomplete-container" *ngIf="!muebleForm.get('pdv')?.disabled">
                             <div class="autocomplete-dropdown"
                                 *ngIf="pdvs.length > 0 && !pdvSeleccionado && activeCampoUnico == 'pdv'">
                                 <div class="autocomplete-item" *ngFor="let pdv of pdvs; let i = index"
@@ -68,7 +68,7 @@
                         <label>COLABORADOR</label>
                         <input (focus)="setActiveCampoUnico('colaborador')" formControlName="colaborador" type="text"
                             [ngClass]="{'campo-vacio': !colaboradorValido() && !previsionEsValidaCampoSimple()}" />
-                        <div class="autocomplete-container">
+                        <div class="autocomplete-container" *ngIf="!muebleForm.get('colaborador')?.disabled">
                             <div class="autocomplete-dropdown"
                                 *ngIf="colaboradores.length > 0 && !colaboradorSeleccionado && activeCampoUnico == 'colaborador'">
                                 <div class="autocomplete-item" *ngFor="let colaborador of colaboradores; let i = index"
@@ -85,7 +85,7 @@
                         <input (focus)="setActiveCampoUnico('otroDestino')" (blur)="clearActiveCampoUnico()"
                             formControlName="otroDestino" type="text"
                             [ngClass]="{'campo-vacio': !otroDestinoValido() && !previsionEsValidaCampoSimple()}" />
-                        <div class="autocomplete-container">
+                        <div class="autocomplete-container" *ngIf="!muebleForm.get('otroDestino')?.disabled">
                             <div class="autocomplete-dropdown"
                                 *ngIf="otrasDirecciones.length > 0 && !otraDireccionSeleccionada && activeCampoUnico == 'otroDestino'">
                                 <div class="autocomplete-item" *ngFor="let direccion of otrasDirecciones; let i = index"
@@ -157,8 +157,8 @@
                     <div class="campo-form">
                         <label>COSTE ENVÍO (€)</label>
                         <input formControlName="costeEnvio" type="number" step="0.01" min="0"
-                            [ngClass]="{'campo-vacio': campoSimpleVacio('costeEnvio')}"
-                            (input)="calcularCosteTotal()" placeholder="" />
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('costeEnvio')}" (input)="calcularCosteTotal()"
+                            placeholder="" />
                     </div>
 
                     <div class="campo-form">
@@ -183,7 +183,7 @@
                             <th>DESCRIPCIÓN <span class="obligatorio">*</span></th>
                             <th>ESTADO <span class="obligatorio">*</span></th>
                             <th>UNIDADES <span class="obligatorio">*</span></th>
-                            <th>ACCIONES</th>
+                            <th *ngIf="esPrevision()">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody formArrayName="productosRetirada">
@@ -192,21 +192,21 @@
 
                             <td>
                                 <input formControlName="ref" (keyup)="buscarProductoRetiradaPorReferencia(i)"
-                                    type="text" maxlength="14"
-                                    [ngClass]="{'campo-vacio': !refValidaRetiradaIndex(i)}" />
+                                    type="text" maxlength="14" [ngClass]="{'campo-vacio': !refValidaRetiradaIndex(i)}"
+                                    [readonly]="!esPrevision()" />
                             </td>
 
                             <td>
                                 <textarea formControlName="description" (keyup)="buscarProductoRetiradaEspecial(i)"
                                     (focus)="setActiveRowRetirada(i)" (blur)="clearActiveRowRetirada()" type="text"
                                     [ngClass]="{'campo-vacio': !descriptionValidaRetirada(i)}"
-                                    [readOnly]="!isProductoRetiradaNuevo(i) && !esProductoEspecial(productosRetiradaControls.at(i).get('ref')!.value)"
+                                    [readOnly]="!esPrevision() || (!isProductoRetiradaNuevo(i) && !esProductoEspecial(productosRetiradaControls.at(i).get('ref')!.value))"
                                     class="description"></textarea>
 
                                 <!-- Dropdown para VISUAL -->
-                                <div *ngIf="productosRetiradaControls.at(i).get('ref')!.value === 'VISUAL' 
-                                   && visualesRetirada.length > 0 
-                                   && activeRowRetiradaIndex === i" class="autocomplete-container">
+                                <div *ngIf="esPrevision() && productosRetiradaControls.at(i).get('ref')!.value === 'VISUAL' 
+                       && visualesRetirada.length > 0 
+                       && activeRowRetiradaIndex === i" class="autocomplete-container">
                                     <div class="autocomplete-dropdown">
                                         <div class="autocomplete-item" *ngFor="let visual of visualesRetirada"
                                             (click)="selectVisualRetirada(i, visual)">
@@ -216,9 +216,9 @@
                                 </div>
 
                                 <!-- Dropdown para SIN REFERENCIA -->
-                                <div *ngIf="productosRetiradaControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
-                                       && productosSRRetirada.length > 0 
-                                       && activeRowRetiradaIndex === i" class="autocomplete-container">
+                                <div *ngIf="esPrevision() && productosRetiradaControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                           && productosSRRetirada.length > 0 
+                           && activeRowRetiradaIndex === i" class="autocomplete-container">
                                     <div class="autocomplete-dropdown">
                                         <div class="autocomplete-item" *ngFor="let sinReferencia of productosSRRetirada"
                                             (click)="selectProductosSRRetirada(i, sinReferencia)">
@@ -244,12 +244,12 @@
                             <td>
                                 <div class="centrar">
                                     <input formControlName="unidades" type="number" [ngClass]="{
-                                           'campo-vacio': campoVacioRetirada('unidades', i)
-                                       }" min="1" />
+                               'campo-vacio': campoVacioRetirada('unidades', i)
+                           }" min="1" [readonly]="!esPrevision()" />
                                 </div>
                             </td>
 
-                            <td>
+                            <td *ngIf="esPrevision()">
                                 <div class="centrar">
                                     <button type="button" (click)="eliminarProductoRetirada(i)" class="deleteButton">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59"
@@ -273,7 +273,7 @@
                     </tbody>
                 </table>
 
-                <div class="btns-tabla">
+                <div class="btns-tabla" *ngIf="esPrevision()">
                     <button type="button" (click)="agregarProductoRetirada()" class="add-producto">
                         <img src="../../../assets/icons/signo-mas.svg" alt="">
                         <span>AÑADIR PRODUCTO A RETIRAR</span>
@@ -292,7 +292,7 @@
                         <th>DESCRIPCIÓN <span class="obligatorio">*</span></th>
                         <th>ESTADO <span class="obligatorio">*</span></th>
                         <th>UNIDADES <span class="obligatorio">*</span></th>
-                        <th>ACCIONES</th>
+                        <th *ngIf="esPrevision()">ACCIONES</th>
                     </tr>
                 </thead>
                 <tbody formArrayName="productos">
@@ -301,20 +301,21 @@
 
                         <td>
                             <input formControlName="ref" (keyup)="buscarProductoPorReferencia(i)" type="text"
-                                maxlength="14" [ngClass]="{'campo-vacio': !refValidaIndex(i)}" />
+                                maxlength="14" [ngClass]="{'campo-vacio': !refValidaIndex(i)}"
+                                [readonly]="!esPrevision()" />
                         </td>
 
                         <td>
                             <textarea formControlName="description" (keyup)="buscarProductoEspecial(i)"
                                 (focus)="setActiveRow(i)" (blur)="clearActiveRow()" type="text"
                                 [ngClass]="{'campo-vacio': !descriptionValida(i)}"
-                                [readOnly]="!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value)"
+                                [readOnly]="!esPrevision() || (!isProductoNuevo(i) && !esProductoEspecial(productosControls.at(i).get('ref')!.value))"
                                 class="description"></textarea>
 
                             <!-- Dropdown para VISUAL -->
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'VISUAL' 
-                               && visuales.length > 0 
-                               && activeRowIndex === i" class="autocomplete-container">
+                            <div *ngIf="esPrevision() && productosControls.at(i).get('ref')!.value === 'VISUAL' 
+                   && visuales.length > 0 
+                   && activeRowIndex === i" class="autocomplete-container">
                                 <div class="autocomplete-dropdown">
                                     <div class="autocomplete-item" *ngFor="let visual of visuales"
                                         (click)="selectVisual(i, visual)">
@@ -324,9 +325,9 @@
                             </div>
 
                             <!-- Dropdown para SIN REFERENCIA -->
-                            <div *ngIf="productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
-                                   && productosSR.length > 0 
-                                   && activeRowIndex === i" class="autocomplete-container">
+                            <div *ngIf="esPrevision() && productosControls.at(i).get('ref')!.value === 'SIN REFERENCIA' 
+                       && productosSR.length > 0 
+                       && activeRowIndex === i" class="autocomplete-container">
                                 <div class="autocomplete-dropdown">
                                     <div class="autocomplete-item" *ngFor="let sinReferencia of productosSR"
                                         (click)="selectProductosSR(i, sinReferencia)">
@@ -351,9 +352,9 @@
                         <td>
                             <div class="centrar">
                                 <input formControlName="unidades" type="number" [ngClass]="{
-               'campo-vacio': campoVacio('unidades', i),
-               'stock-excedido': unidadesExcedenStock(i)
-           }" min="1" (blur)="onUnidadesBlur(i)" />
+       'campo-vacio': campoVacio('unidades', i),
+       'stock-excedido': unidadesExcedenStock(i)
+   }" min="1" (blur)="onUnidadesBlur(i)" [readonly]="!esPrevision()" />
 
                                 <!-- Mostrar stock disponible para implantaciones E INTERCAMBIOS -->
                                 <small
@@ -364,7 +365,7 @@
                             </div>
                         </td>
 
-                        <td>
+                        <td *ngIf="esPrevision()">
                             <div class="centrar">
                                 <button type="button" (click)="eliminarProducto(i)" class="deleteButton">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
@@ -387,7 +388,7 @@
                 </tbody>
             </table>
 
-            <div class="btns-tabla">
+            <div class="btns-tabla" *ngIf="esPrevision()">
                 <button type="button" (click)="agregarProducto()" class="add-producto">
                     <img src="../../../assets/icons/signo-mas.svg" alt="">
                     <span>{{ esIntercambio() ? 'AÑADIR PRODUCTO A IMPLANTAR' : 'AÑADIR PRODUCTO' }}</span>
@@ -424,7 +425,8 @@
 
         <div class="">
             <button [appConfirm]="'¿ESTÁS SEGURO DE GUARDAR LOS CAMBIOS?'" (confirmed)="modificarMueble()"
-                *ngIf="pestanaPadre == 'detallePrevisionMueble'" class="btn-actualizar">
+                *ngIf="pestanaPadre == 'detallePrevisionMueble' || pestanaPadre == 'detalleRealizadoMueble'"
+                class="btn-actualizar">
                 <span class="button__text">Guardar cambios</span>
                 <span class="button__icon"><svg class="svg" height="48" viewBox="0 0 48 48" width="48"
                         xmlns="http://www.w3.org/2000/svg">

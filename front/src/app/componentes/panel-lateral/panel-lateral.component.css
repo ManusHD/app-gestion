@@ -306,6 +306,7 @@ details li a.active {
 .login,
 .logout {
   margin-bottom: 10px;
+  z-index: 1000;
 }
 
 .login-button {

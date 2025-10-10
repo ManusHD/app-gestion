@@ -53,7 +53,7 @@ public class MuebleController {
 
     @GetMapping("/estado/{estado}")
     public Iterable<Mueble> getMueblesByEstado(@PathVariable boolean estado) {
-        return muebleRepository.findAllByEstadoOrderByFechaOrdenTrabajoDesc(estado);
+        return muebleRepository.findAllByEstadoOrderByFechaRealizacionDesc(estado);
     }
 
     @GetMapping("/estado/{estado}/paginado")
@@ -61,8 +61,15 @@ public class MuebleController {
             @PathVariable boolean estado,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return muebleRepository.findAllByEstadoOrderByFechaOrdenTrabajoDesc(
+        return muebleRepository.findAllByEstadoOrderByFechaRealizacionDesc(
                 estado, PageRequest.of(page, size));
+    }
+
+    @GetMapping("/estado/pendientes/paginado")
+    public Page<Mueble> getMueblesPendientesPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return muebleRepository.findAllByEstadoFalseOrderByFechaOrdenTrabajoDesc(PageRequest.of(page, size));
     }
 
     @GetMapping("/filtrar/paginado")
@@ -99,22 +106,22 @@ public class MuebleController {
             String textoBusqueda, Pageable pageable) {
 
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return muebleRepository.findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+            return muebleRepository.findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
                     fechaInicio, fechaFin, true, pageable);
         }
 
         switch (tipoBusqueda) {
             case "referencia":
-                return muebleRepository.findByFechaAndReferenciaOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndReferenciaOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "descripcion":
-                return muebleRepository.findByFechaAndDescripcionOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndDescripcionOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             case "destino":
-                return muebleRepository.findByFechaAndDestinoOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndDestinoOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda, pageable);
             default:
-                return muebleRepository.findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, true, pageable);
         }
     }
@@ -123,22 +130,22 @@ public class MuebleController {
             LocalDate fechaInicio, LocalDate fechaFin, String tipoBusqueda, String textoBusqueda) {
 
         if (textoBusqueda == null || textoBusqueda.trim().isEmpty()) {
-            return muebleRepository.findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+            return muebleRepository.findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
                     fechaInicio, fechaFin, true);
         }
 
         switch (tipoBusqueda) {
             case "referencia":
-                return muebleRepository.findByFechaAndReferenciaOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndReferenciaOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "descripcion":
-                return muebleRepository.findByFechaAndDescripcionOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndDescripcionOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             case "destino":
-                return muebleRepository.findByFechaAndDestinoOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaAndDestinoOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, textoBusqueda);
             default:
-                return muebleRepository.findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+                return muebleRepository.findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
                         fechaInicio, fechaFin, true);
         }
     }
@@ -154,6 +161,8 @@ public class MuebleController {
                 validarStockParaImplantacion(mueble, token);
             }
 
+            crearPrevisionAutomatica(mueble, token);
+
             // Guardar el mueble
             Mueble savedMueble = muebleRepository.save(mueble);
             System.out.println("✅ Trabajo de muebles guardado con ID: " + savedMueble.getId());
@@ -168,6 +177,25 @@ public class MuebleController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al procesar el trabajo de mueble: " + e.getMessage());
         }
+    }
+
+    private ResponseEntity<?> crearPrevisionAutomatica (Mueble mueble, String token) {
+        // Crear previsión automática según tipo de acción
+        try {
+            if (mueble.getTipoAccion() == Mueble.TipoAccion.IMPLANTACION) {
+                communicationService.crearPrevisionSalida(mueble, token);
+            } else if (mueble.getTipoAccion() == Mueble.TipoAccion.RETIRADA) {
+                communicationService.crearPrevisionEntrada(mueble, token);
+            } else if (mueble.getTipoAccion() == Mueble.TipoAccion.INTERCAMBIO) {
+                communicationService.crearPrevisionesIntercambio(mueble, token);
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️  Trabajo de muebles creado, pero error al crear previsión automática: " + e.getMessage());
+            return ResponseEntity.ok()
+                .header("Warning", "Trabajo creado pero error al generar previsión automática")
+                .body(mueble);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
@@ -201,21 +229,7 @@ public class MuebleController {
                 muebleAux.setFechaRealizacion(LocalDate.now());
             }
 
-            // Crear previsión automática según tipo de acción
-            try {
-                if (muebleAux.getTipoAccion() == Mueble.TipoAccion.IMPLANTACION) {
-                    communicationService.crearPrevisionSalida(muebleAux, token);
-                } else if (muebleAux.getTipoAccion() == Mueble.TipoAccion.RETIRADA) {
-                    communicationService.crearPrevisionEntrada(muebleAux, token);
-                } else if (muebleAux.getTipoAccion() == Mueble.TipoAccion.INTERCAMBIO) {
-                    communicationService.crearPrevisionesIntercambio(muebleAux, token);
-                }
-            } catch (Exception e) {
-                System.err.println("⚠️  Trabajo de muebles creado, pero error al crear previsión automática: " + e.getMessage());
-                return ResponseEntity.ok()
-                    .header("Warning", "Trabajo creado pero error al generar previsión automática")
-                    .body(muebleAux);
-            }
+            // crearPrevisionAutomatica(muebleAux, token);
 
             return ResponseEntity.ok(muebleRepository.save(muebleAux));
         }

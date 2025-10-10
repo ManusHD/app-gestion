@@ -20,6 +20,9 @@ import com.manushd.app.estados.models.Estado;
 @RestResource(path = "estados", rel = "estado")
 public interface EstadoRepository extends PagingAndSortingRepository<Estado, Long> {
 
+    @Query("SELECT e FROM Estado e ORDER BY e.nombre ASC")
+    Iterable<Estado> findAllOrderByNombreAsc();
+
     Page<Estado> findAllByNombre(String nombre, Pageable pageable);
 
     Iterable<Estado> findByNombreContainingIgnoreCaseOrderByNombreAsc(String nombre);

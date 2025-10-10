@@ -18,6 +18,10 @@ export class MuebleService {
     return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}/paginado?page=${page}&size=${size}`);
   }
 
+  getMueblesPendientesPaginado(page: number, size: number): Observable<any> {
+    return this.httpClient.get<any>(`${this.apiUrl}/estado/pendientes/paginado?page=${page}&size=${size}`);
+  }
+
   getMueblesByEstado(estado: boolean): Observable<any> {
     return this.httpClient.get<any>(`${this.apiUrl}/estado/${estado}`);
   }

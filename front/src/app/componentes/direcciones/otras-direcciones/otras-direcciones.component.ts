@@ -27,7 +27,7 @@ export class OtrasDireccionesComponent implements OnInit {
   totalElementos = 0;
   buscando: boolean = false;
 
-  columnasOtrasDirecciones: string[] = ['nombre', 'telefono', 'direccion', 'acciones'];
+  columnasOtrasDirecciones: string[] = ['nombre', 'telefono', 'direccion', 'distancia', 'tarifaExtra', 'acciones'];
   dataSourceOtrasDirecciones = new MatTableDataSource<OtraDireccion>();
 
   @ViewChild(MatPaginator) paginatorOtrasDirecciones!: MatPaginator;

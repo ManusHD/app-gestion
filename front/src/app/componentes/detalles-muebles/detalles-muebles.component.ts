@@ -1,7 +1,9 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Mueble } from 'src/app/models/mueble.model';
+import { ProductoMueble } from 'src/app/models/productoMueble.model';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { ProductoServices } from 'src/app/services/producto.service';
+import { RoleService } from 'src/app/services/role.service';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -19,13 +21,20 @@ export class DetallesMueblesComponent implements OnInit {
   @Input() mueble!: Mueble;
   @Output() muebleRelleno = new EventEmitter<boolean>();
   currentPath: String = window.location.pathname;
+  isAdmin: boolean = false;
+  modoEdicion: boolean = false;
   
   constructor(
     private carga: PantallaCargaService,
-    private productoService: ProductoServices
+    private productoService: ProductoServices,
+    private roleService: RoleService
   ) {}
 
   ngOnInit() {
+    this.roleService.hasRole('ROLE_ADMIN').subscribe(isAdmin => {
+      this.isAdmin = isAdmin;
+    });
+
     if (!this.enRealizados) {
       this.iniciarMuebles();
     }
@@ -36,11 +45,18 @@ export class DetallesMueblesComponent implements OnInit {
   }
 
   mostrarDetalles() {
+    this.modoEdicion = false;
+    this.mostrarModal = true;
+  }
+
+  mostrarEdicion() {
+    this.modoEdicion = true;
     this.mostrarModal = true;
   }
 
   cerrarModal() {
     this.mostrarModal = false;
+    this.modoEdicion = false;
   }
 
   obtenerDestino(): string {
@@ -56,6 +72,16 @@ export class DetallesMueblesComponent implements OnInit {
       return this.mueble.otroDestino;
     }
     return 'No especificado';
+  }
+
+  obtenerProductosRetirada(): ProductoMueble[] {
+    if (!this.mueble.productos) return [];
+    return this.mueble.productos.filter(p => p.esRetirada);
+  }
+
+  obtenerProductosImplantacion(): ProductoMueble[] {
+    if (!this.mueble.productos) return [];
+    return this.mueble.productos.filter(p => !p.esRetirada);
   }
 
   todosLosCamposRellenos(): boolean {
@@ -78,24 +104,20 @@ export class DetallesMueblesComponent implements OnInit {
   private validarYEmitirEstado() {
     const tipoAccion = this.mueble.tipoAccion;
     
-    // Si es RETIRADA, solo validar campos básicos
     if (tipoAccion === 'RETIRADA') {
       this.muebleRelleno.emit(this.todosLosCamposRellenos());
       return;
     }
 
-    // Si es IMPLANTACION o INTERCAMBIO, validar también el stock
     if (tipoAccion === 'IMPLANTACION' || tipoAccion === 'INTERCAMBIO') {
-      // Primero verificar campos básicos
       if (!this.todosLosCamposRellenos()) {
         this.muebleRelleno.emit(false);
         return;
       }
 
-      // Validar stock para productos de implantación
       const validacionesStock = this.mueble.productos
-        ?.filter(p => !p.esRetirada) // Solo productos de implantación
-        .filter(p => p.ref !== 'VISUAL' && p.ref !== 'SIN REFERENCIA') // Excluir especiales
+        ?.filter(p => !p.esRetirada)
+        .filter(p => p.ref !== 'VISUAL' && p.ref !== 'SIN REFERENCIA')
         .map(producto => 
           this.productoService.getProductoPorReferenciaYEstado(producto.ref!, producto.estado!)
             .pipe(
@@ -107,7 +129,6 @@ export class DetallesMueblesComponent implements OnInit {
         ) || [];
 
       if (validacionesStock.length === 0) {
-        // No hay productos que validar (todos son especiales o de retirada)
         this.muebleRelleno.emit(true);
         return;
       }
@@ -127,10 +148,8 @@ export class DetallesMueblesComponent implements OnInit {
           }
         });
 
-        // Emitir true solo si todos los campos están rellenos Y hay stock suficiente
         this.muebleRelleno.emit(stockSuficiente);
       });
     }
   }
-  
 }

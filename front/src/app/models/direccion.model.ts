@@ -5,4 +5,7 @@ export abstract class Direccion {
     poblacion?: string;
     provincia?: string;
     cp?: string;
+
+    distancia?: number = 0;
+    tarifaExtra?: number = 0;
 }

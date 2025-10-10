@@ -28,6 +28,9 @@
             <input
               [(ngModel)]="nuevaOtraDireccion.cp"
               placeholder="CP" />
+            <input
+              [(ngModel)]="nuevaOtraDireccion.distancia"
+              placeholder="distancia" />
             <button (click)="crearOtraDireccion()" class="btn-crear">CREAR</button>
           </div>
         </div>
@@ -90,6 +93,32 @@
                       <input [(ngModel)]="editandoOtraDireccion.poblacion" placeholder="Población" class="nombre-editando" /><br>
                       <input [(ngModel)]="editandoOtraDireccion.provincia" placeholder="Provincia" class="nombre-editando" /><br>
                       <input [(ngModel)]="editandoOtraDireccion.cp" placeholder="CP" class="nombre-editando" />
+                    </ng-template>
+                  </td>
+                </ng-container>
+
+                <!-- Columna Distancia -->
+                <ng-container matColumnDef="distancia">
+                  <th class="header-paginator" *matHeaderCellDef> Distancia </th>
+                  <td class="fila-paginator" mat-cell *matCellDef="let otraDireccion">
+                    <ng-container *ngIf="editandoId !== otraDireccion.id; else editDistancia">
+                      {{ otraDireccion.distancia || 0 }} km
+                    </ng-container>
+                    <ng-template #editDistancia>
+                      <input [(ngModel)]="editandoOtraDireccion.distancia" placeholder="Distancia" class="nombre-editando" /><br>
+                    </ng-template>
+                  </td>
+                </ng-container>
+
+                <!-- Columna Tarifa Extra -->
+                <ng-container matColumnDef="tarifaExtra">
+                  <th class="header-paginator" *matHeaderCellDef> Tarifa Extra </th>
+                  <td class="fila-paginator" mat-cell *matCellDef="let pdv">
+                    <ng-container *ngIf="editandoId !== pdv.id; else editTarifaExtra">
+                      {{ pdv.tarifaExtra || 0 }} €
+                    </ng-container>
+                    <ng-template #editTarifaExtra>
+                      <input [(ngModel)]="editandoOtraDireccion.tarifaExtra" placeholder="Tarifa Extra" class="nombre-editando" />
                     </ng-template>
                   </td>
                 </ng-container>

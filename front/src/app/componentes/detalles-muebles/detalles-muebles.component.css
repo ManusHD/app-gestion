@@ -1,7 +1,6 @@
 h2 {
     margin: 0;
     font-family: 'Nunito-ExtraBold';
-    color: #b6b6b6;
 }
 
 .titulo-modal {
@@ -104,4 +103,27 @@ h2 {
     .info-item span {
         text-align: left;
     }
+}
+
+.btn-editar {
+    background-color: var(--color-detalles);
+    border: none;
+    padding: 3.5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Nunito-Medium';
+}
+
+.btn-editar:hover {
+    background-color: #ffd875;
+}
+
+.titulo-tabla-productos {
+    color: var(--letter-color);
+    font-family: 'Nunito-Bold';
+    font-size: 18px;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }

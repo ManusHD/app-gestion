@@ -18,11 +18,10 @@
                 <div class="concepto">
                     <div class="campo-form">
                         <label>CONCEPTO</label>
-                        <input 
-                            formControlName="concepto" 
-                            type="text"
+                        <textarea 
+                            formControlName="concepto"
                             placeholder="Descripción del trabajo a realizar"
-                            [ngClass]="{'campo-vacio': campoSimpleVacio('concepto')}" />
+                            [ngClass]="{'campo-vacio': campoSimpleVacio('concepto')}"></textarea>
                     </div>
                 </div>
 
@@ -82,27 +81,27 @@
                 <div class="detalles-direcciones" (click)="clearActiveCampoUnico()">
                     <div class="campo-form">
                         <label>DIRECCIÓN</label>
-                        <input formControlName="direccion" type="text" />
+                        <input formControlName="direccion" type="text" readonly class="campo-readonly" />
                     </div>
 
                     <div class="campo-form">
                         <label>POBLACIÓN</label>
-                        <input formControlName="poblacion" type="text" />
+                        <input formControlName="poblacion" type="text" readonly class="campo-readonly" />
                     </div>
 
                     <div class="campo-form">
                         <label>PROVINCIA</label>
-                        <input formControlName="provincia" type="text" />
+                        <input formControlName="provincia" type="text" readonly class="campo-readonly" />
                     </div>
 
                     <div class="campo-form">
                         <label>CP</label>
-                        <input formControlName="cp" type="text" />
+                        <input formControlName="cp" type="text" readonly class="campo-readonly" />
                     </div>
 
                     <div class="campo-form">
                         <label>TELÉFONO</label>
-                        <input formControlName="telefono" type="text" />
+                        <input formControlName="telefono" type="text" readonly class="campo-readonly" />
                     </div>
                 </div>
 
@@ -127,9 +126,9 @@
                             type="number" 
                             step="0.01" 
                             min="0"
-                            placeholder="25.00"
+                            readonly
                             [ngClass]="{'campo-vacio': campoTieneError('importePorHora')}"
-                            (input)="calcularImporteTotal()" />
+                            />
                     </div>
 
                     <div class="campo-form">

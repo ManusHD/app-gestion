@@ -3,7 +3,6 @@
 h2 {
     margin: 0;
     font-family: 'Nunito-ExtraBold';
-    color: #b6b6b6;
 }
 
 .nombre-destino {
@@ -76,7 +75,7 @@ td {
 
 .productos-especiales-section h3,
 .productos-normales-section h3 {
-    color: var(--letter-color);
+    color: white;
     font-size: 20px;
     margin-bottom: 20px;
     padding: 10px 15px;
@@ -155,13 +154,8 @@ td {
     border-bottom: 1px solid var(--border-color);
 }
 
-.cabecera-grupo-modal:hover {
-    background: linear-gradient(90deg, var(--bg-color), var(--main-color));
-}
-
 .expand-icon {
     font-size: 16px;
-    color: var(--letter-color);
     transition: transform 0.3s ease;
     font-weight: bold;
 }
@@ -174,8 +168,8 @@ td {
 
 .total-unidades-modal {
     margin-left: auto;
-    color: var(--letter-color);
-    background-color: rgba(61, 126, 255, 0.2);
+    color: white;
+    background-color: rgb(22 47 129 / 85%);
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 12px;
@@ -441,4 +435,46 @@ td {
 
 .ubicacion-button.selected .button-text {
     color: white;
+}
+
+:root {
+  --detalle-accent2: #8d6eff; /* acento secundario violeta */
+  --detalle-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ------------------- GRUPOS ------------------- */
+.cabecera-grupo-modal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: black;
+  padding: 15px 20px;
+  background: #d6f9ff;
+  border: 1px solid var(--detalle-border);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+/* ------------------- BADGES ------------------- */
+.estado-badge-modal {
+  background: linear-gradient(135deg, #ffb347, #ffcc33);
+  color: #222;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.estado-badge-modal.sin-estado {
+  background: linear-gradient(135deg, #f85a40, #ff9a76);
+  color: white;
+}
+
+/* ------------------- SIN PRODUCTOS ------------------- */
+.sin-productos {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--detalle-accent2);
+  font-family: 'Nunito-Medium';
+  opacity: 0.8;
 }

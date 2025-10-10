@@ -179,16 +179,20 @@ public class DireccionesController {
     public PDV updatePdv(@PathVariable Long id, @RequestBody PDV pdvDetails) {
         PDV pdv = pdvRepository.findById(id).orElse(null);
         if (pdv != null) {
-            PDV existePDV = pdvRepository.findByNombre(pdvDetails.getNombre()).orElse(null);
-            if (existePDV != null) {
-                if (pdvDetails.getId() != existePDV.getId() &&
-                        pdvDetails.getNombre().equals(existePDV.getNombre())) {
+            // Verificar si el nombre es distinto al actual y ya existe en otro PDV
+            if (!pdv.getNombre().equals(pdvDetails.getNombre())) {
+                PDV existePDV = pdvRepository.findByNombre(pdvDetails.getNombre()).orElse(null);
+                if (existePDV != null && !existePDV.getId().equals(id)) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este PDV ya existe");
                 }
             }
+            // Verificar si la distancia es negativa
+            if (pdvDetails.getDistancia() != null && pdvDetails.getDistancia() < 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La distancia no puede ser negativa");
+            }
             return pdvRepository.save(pdvDetails);
         }
-        return null;
+        return pdvDetails;
     }
 
     @DeleteMapping("/pdvs/{id}")

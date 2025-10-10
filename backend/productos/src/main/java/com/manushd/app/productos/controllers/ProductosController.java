@@ -78,10 +78,9 @@ public class ProductosController {
     @GetMapping("/referencia/{referencia}")
     public ResponseEntity<?> obtenerProductoPorReferencia(@PathVariable String referencia) {
         try {
+            System.err.println("Buscando referencia: " + referencia);
 
-            System.err.println(referencia);
-
-            // Usar el nuevo método que devuelve una lista ordenada por estado
+            // Usar el método que devuelve una lista ordenada por estado
             List<Producto> productos = productosRepository.findByReferenciaOrderByEstadoAsc(referencia);
 
             System.err.println("================= Productos encontrados: =================");
@@ -92,27 +91,23 @@ public class ProductosController {
                 return ResponseEntity.ok(null);
             }
 
-            if (productos.size() == 1) {
-                // Si solo hay un producto, devolverlo directamente (comportamiento original)
-                System.err.println("================= Hay 1 =================");
-                return ResponseEntity.ok(productos.get(0));
-            }
-
-            // Si hay múltiples productos (diferentes estados), devolver información
-            // estructurada
+            // SIEMPRE devolver el formato con array de estados, independientemente de la cantidad
             ProductoMultipleEstadosDTO response = new ProductoMultipleEstadosDTO();
             response.setReferencia(referencia);
-            response.setDescription(productos.get(0).getDescription()); // Todos tendrán la misma descripción
+            response.setDescription(productos.get(0).getDescription()); // Todos tienen la misma descripción
             response.setEstados(productos.stream()
                     .map(p -> new EstadoStockDTO(p.getEstado(), p.getStock()))
                     .collect(Collectors.toList()));
 
-            System.err.println("================= Hay muchos =================");
+            System.err.println("================= Respuesta unificada =================");
+            System.err.println("Referencia: " + response.getReferencia());
+            System.err.println("Estados: " + response.getEstados().size());
+            
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             System.err.println("Error al buscar producto por referencia " + referencia + ": " + e.getMessage());
-            return ResponseEntity.ok(null); // Devolver null en caso de error para mantener compatibilidad
+            return ResponseEntity.ok(null);
         }
     }
 

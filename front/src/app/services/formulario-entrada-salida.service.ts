@@ -444,6 +444,7 @@ export class FormularioEntradaSalidaService {
         )
         .subscribe({
           next: (response) => {
+            console.log(response)
             this.procesarRespuestaProducto(response, index);
           },
           error: () => {
@@ -798,13 +799,24 @@ export class FormularioEntradaSalidaService {
     const ubicacionControl = this.productosControls.at(index).get('ubicacion');
 
     if (response) {
-      if (response.estados && response.estados.length > 1) {
-        // Producto con múltiples estados
+      // Ahora SIEMPRE viene con el formato de array de estados
+      if (response.estados && response.estados.length > 0) {
         descriptionControl!.setValue(response.description);
         this.productosNuevos.delete(index);
 
-        // Configurar estados disponibles
-        this.estadosDisponiblesPorProducto[index] = response.estados.map(
+        // FILTRAR solo los estados que tienen stock > 0
+        const estadosConStock = response.estados.filter((e: any) => e.stock > 0);
+
+        if (estadosConStock.length === 0) {
+          // Si no hay estados con stock, tratar como producto no disponible
+          this.productosNuevos.add(index);
+          this.limpiarCamposProducto(index);
+          this.snackBarError(`El producto ${response.referencia} no tiene stock disponible en ningún estado`);
+          return;
+        }
+
+        // Configurar SOLO los estados que tienen stock > 0
+        this.estadosDisponiblesPorProducto[index] = estadosConStock.map(
           (e: any) => e.estado
         );
 
@@ -812,59 +824,36 @@ export class FormularioEntradaSalidaService {
         estadoControl?.setValidators([Validators.required]);
         estadoControl?.updateValueAndValidity();
 
-        // Solo limpiar estado y ubicación si no tienen valores
-        if (!estadoControl?.value) {
-          estadoControl?.setValue(null);
-        }
-        if (!ubicacionControl?.value) {
-          ubicacionControl?.setValue('');
-        }
+        if (estadosConStock.length === 1) {
+          // Si solo hay un estado con stock, preseleccionarlo automáticamente
+          const unicoEstado = estadosConStock[0];
+          estadoControl?.setValue(unicoEstado.estado);
 
-        if (this.esSalida()) {
-          // Si ya hay estado seleccionado, cargar ubicaciones
-          if (estadoControl?.value) {
+          if (this.esSalida()) {
+            this.setMaxUnidades(index, unicoEstado.stock);
+            this.cargarUbicacionesPorReferenciaYEstado(
+              response.referencia,
+              unicoEstado.estado,
+              index
+            );
+          }
+        } else {
+          // Si hay múltiples estados con stock, solo limpiar si no tienen valores
+          if (!estadoControl?.value) {
+            estadoControl?.setValue(null);
+          }
+          if (!ubicacionControl?.value) {
+            ubicacionControl?.setValue('');
+          }
+
+          if (this.esSalida() && estadoControl?.value) {
+            // Si ya hay estado seleccionado, cargar ubicaciones
             this.cargarUbicacionesPorReferenciaYEstado(
               response.referencia,
               estadoControl.value,
               index
             );
           }
-        }
-      } else if (response.estados && response.estados.length === 1) {
-        // Producto con un solo estado
-        descriptionControl!.setValue(response.description);
-
-        // Solo establecer el estado si no está ya establecido
-        if (!estadoControl?.value) {
-          estadoControl?.setValue(response.estados[0].estado);
-        }
-
-        this.productosNuevos.delete(index);
-
-        // Hacer el estado obligatorio
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
-
-        if (this.esSalida()) {
-          this.setMaxUnidades(index, response.estados[0].stock);
-          this.cargarUbicacionesPorReferenciaYEstado(
-            response.referencia,
-            response.estados[0].estado,
-            index
-          );
-        }
-      } else if (response.referencia) {
-        // Producto tradicional (respuesta directa)
-        descriptionControl!.setValue(response.description);
-        this.productosNuevos.delete(index);
-
-        // Hacer el estado obligatorio
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
-
-        if (this.esSalida()) {
-          this.setMaxUnidades(index, response.stock);
-          this.obtenerUbicacionesProductoSalida(response.referencia);
         }
       }
     } else {

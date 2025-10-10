@@ -53,7 +53,7 @@ public class EstadoController {
 
     @GetMapping("")
     public Iterable<Estado> getEstados() {
-        return estadoRepository.findAll();
+        return estadoRepository.findAllOrderByNombreAsc();
     }
 
     @GetMapping("/pageable")

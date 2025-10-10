@@ -78,6 +78,14 @@ export class PanelLateralComponent implements OnInit, OnDestroy {
     }
   }
 
+  onMueblesClick(event: Event): void {
+    // Si el usuario no es admin, se redirige a /muebles/pendientes
+    if (!this.roles.isAdmin) {
+      event.preventDefault(); // Previene la navegación al routerLink genérico (/muebles)
+      this.router.navigate(['/muebles/pendientes']);
+    }
+  }
+
   @HostListener('window:resize', ['$event'])
   onResize(event: any) {
     this.checkScreenSize();

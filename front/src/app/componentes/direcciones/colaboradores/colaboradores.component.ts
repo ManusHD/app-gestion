@@ -34,7 +34,7 @@ export class ColaboradoresComponent implements OnInit {
   totalElementos = 0;
   buscando: boolean = false;
 
-  columnasColaboradores: string[] = ['nombre', 'estado', 'dni', 'telefono', 'telefono2', 'email', 'direccion', 'acciones'];
+  columnasColaboradores: string[] = ['nombre', 'estado', 'dni', 'telefono', 'telefono2', 'email', 'direccion', 'distancia', 'tarifaExtra', 'acciones'];
   dataSourceColaboradores = new MatTableDataSource<Colaborador>();
 
   @ViewChild(MatPaginator) paginatorColaboradores!: MatPaginator;

@@ -1,8 +1,8 @@
 import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { lastValueFrom, Observable, of } from 'rxjs';
 
 import { Mueble } from 'src/app/models/mueble.model';
 import { ProductoMueble } from 'src/app/models/productoMueble.model';
@@ -18,6 +18,8 @@ import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { Colaborador } from 'src/app/models/colaborador.model';
 import { Estado } from 'src/app/models/estado.model';
 import { Producto } from 'src/app/models/producto.model';
+import { TarifaService } from 'src/app/services/tarifas.service';
+import { Tarifa } from 'src/app/models/tarifa.model';
 
 @Component({
   selector: 'app-formulario-mueble',
@@ -73,7 +75,8 @@ export class FormularioMuebleComponent implements OnInit {
     private estadosService: EstadoService,
     private carga: PantallaCargaService,
     private cdr: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private tarifaService: TarifaService
   ) {}
 
   ngOnInit() {
@@ -85,38 +88,46 @@ export class FormularioMuebleComponent implements OnInit {
 
   createForm(): FormGroup {
     const esDetallePendiente = this.pestanaPadre === 'detallePrevisionMueble';
+    const esDetalleRealizado = this.pestanaPadre === 'detalleRealizadoMueble';
 
     return this.fb.group({
+      // Campos que solo se editan en previsión (bloqueados en pendientes y realizados)
       fechaOrdenTrabajo: [
-        { value: '', disabled: esDetallePendiente },
+        { value: '', disabled: esDetallePendiente || esDetalleRealizado },
         Validators.required,
       ],
       fechaAsignacion: [
-        { value: '', disabled: esDetallePendiente },
+        { value: '', disabled: esDetallePendiente || esDetalleRealizado },
         Validators.required,
       ],
+      tipoAccion: [
+        { value: '', disabled: esDetallePendiente || esDetalleRealizado },
+        Validators.required,
+      ],
+      perfumeria: [{ value: '', disabled: esDetallePendiente || esDetalleRealizado }],
+      pdv: [{ value: '', disabled: esDetallePendiente || esDetalleRealizado }],
+      colaborador: [{ value: '', disabled: esDetallePendiente || esDetalleRealizado }],
+      otroDestino: [{ value: '', disabled: esDetallePendiente || esDetalleRealizado }],
+      indicaciones: [{ value: '', disabled: esDetallePendiente || esDetalleRealizado }],
+      
+      // Campos que se pueden editar en pendientes y realizados
       fechaPrevistaRealizacion: ['', Validators.required],
       fechaRealizacion: [''],
-      perfumeria: [{ value: '', disabled: esDetallePendiente }],
-      pdv: [{ value: '', disabled: esDetallePendiente }],
-      colaborador: [{ value: '', disabled: esDetallePendiente }],
-      otroDestino: [{ value: '', disabled: esDetallePendiente }],
+      presupuesto: ['', [Validators.required, Validators.min(0)]],
+      costeColaborador: ['', Validators.required],
+      costeEnvio: ['', Validators.required],
+      importeFacturar: ['', Validators.min(0)],
+      incidencias: [''],
+      
+      // Campos siempre deshabilitados (calculados o de dirección)
       direccion: [{ value: '', disabled: true }],
       poblacion: [{ value: '', disabled: true }],
       provincia: [{ value: '', disabled: true }],
       cp: [{ value: '', disabled: true }],
       telefono: [{ value: '', disabled: true }],
-      tipoAccion: [
-        { value: '', disabled: esDetallePendiente },
-        Validators.required,
-      ],
-      presupuesto: ['', [Validators.required, Validators.min(0)]],
-      indicaciones: [{ value: '', disabled: esDetallePendiente }],
-      incidencias: [''],
-      costeColaborador: ['', Validators.required],
-      costeEnvio: ['', Validators.required],
       costeTotal: [{ value: '', disabled: true }],
-      importeFacturar: ['', Validators.min(0)],
+      
+      // Arrays de productos
       productos: this.fb.array([]),
       productosRetirada: this.fb.array([]),
     });
@@ -154,6 +165,7 @@ export class FormularioMuebleComponent implements OnInit {
       // Validar stock para productos de implantación existentes
       for (let i = 0; i < this.productosControls.length; i++) {
         this.validarStockProducto(i);
+        
       }
     } else if (tipoAccion === 'IMPLANTACION') {
       // Limpiar productos de retirada si no es intercambio
@@ -180,9 +192,19 @@ export class FormularioMuebleComponent implements OnInit {
   esIntercambio(): boolean {
     return this.muebleForm.get('tipoAccion')?.value === 'INTERCAMBIO';
   }
-
+  
   agregarProductoRetirada() {
-    this.productosRetiradaControls.push(this.createProductoGroup());
+    const newProduct = this.createProductoGroup();
+    
+    if (!this.esPrevision()) {
+      newProduct.get('ref')?.disable();
+      newProduct.get('description')?.disable();
+      newProduct.get('estado')?.disable();
+      newProduct.get('unidades')?.disable();
+    }
+    
+    this.productosRetiradaControls.push(newProduct);
+    
     setTimeout(() => {
       const inputsRef = Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -296,30 +318,22 @@ export class FormularioMuebleComponent implements OnInit {
       .get('estado');
 
     if (response) {
-      if (response.estados && response.estados.length > 1) {
+      // Ahora SIEMPRE viene con el formato de array de estados
+      if (response.estados && response.estados.length > 0) {
         descriptionControl!.setValue(response.description);
         this.productosRetiradaNuevos.delete(index);
-        this.estadosDisponiblesPorProductoRetirada[index] =
-          response.estados.map((e: any) => e.estado);
+
+        // Para productos de RETIRADA, NO establecer estadosDisponiblesPorProductoRetirada
+        // para que use todos los estados del sistema (this.estados)
+        // En lugar de filtrar por los estados del producto
+
         estadoControl?.setValidators([Validators.required]);
         estadoControl?.updateValueAndValidity();
 
+        // No preseleccionar ningún estado automáticamente para retiradas
         if (!estadoControl?.value) {
           estadoControl?.setValue(null);
         }
-      } else if (response.estados && response.estados.length === 1) {
-        descriptionControl!.setValue(response.description);
-        if (!estadoControl?.value) {
-          estadoControl?.setValue(response.estados[0].estado);
-        }
-        this.productosRetiradaNuevos.delete(index);
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
-      } else if (response.referencia) {
-        descriptionControl!.setValue(response.description);
-        this.productosRetiradaNuevos.delete(index);
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
       }
     } else {
       this.productosRetiradaNuevos.add(index);
@@ -457,10 +471,11 @@ export class FormularioMuebleComponent implements OnInit {
   }
 
   getEstadosDisponiblesRetirada(index: number): string[] {
-    return (
-      this.estadosDisponiblesPorProductoRetirada[index] ||
-      this.estados.map((e) => e.nombre!)
-    );
+    // Si no hay estados específicos para este índice, devolver TODOS los estados del sistema
+    if (!this.estadosDisponiblesPorProductoRetirada[index]) {
+      return this.estados.map((e) => e.nombre!);
+    }
+    return this.estadosDisponiblesPorProductoRetirada[index];
   }
 
   refValidaRetiradaIndex(i: number): boolean {
@@ -489,14 +504,19 @@ export class FormularioMuebleComponent implements OnInit {
   private construirMueble(): Mueble {
     const formValue = this.muebleForm.getRawValue();
 
+    // Determinar si los productos son de retirada según el tipo de acción
+    const esRetirada = formValue.tipoAccion === 'RETIRADA';
+
+    console.log(formValue.tipoAccion)
+  
     const productos: ProductoMueble[] = formValue.productos.map((p: any) => ({
       ref: p.ref,
       description: p.description,
       estado: p.estado,
       unidades: p.unidades,
-      esRetirada: false, // Productos de implantación
+      esRetirada: esRetirada, // true para RETIRADA, false para IMPLANTACION
     }));
-
+  
     // Si es intercambio, agregar productos de retirada
     if (formValue.tipoAccion === 'INTERCAMBIO') {
       const productosRetirada: ProductoMueble[] =
@@ -505,7 +525,7 @@ export class FormularioMuebleComponent implements OnInit {
           description: p.description,
           estado: p.estado,
           unidades: p.unidades,
-          esRetirada: true, // Productos de retirada
+          esRetirada: true, // Productos de retirada en intercambio
         }));
       productos.push(...productosRetirada);
     }
@@ -620,16 +640,97 @@ export class FormularioMuebleComponent implements OnInit {
     this.agregarProducto();
   }
 
-  private cargarDatosExistentes() {
-    // Cargar productos existentes
+  private async cargarDatosExistentes() {
+    const tipoAccion = this.detallesMueble!.tipoAccion;
+
+    // Cargar productos existentes según el tipo de acción
     this.detallesMueble!.productos?.forEach((producto) => {
-      if (producto.esRetirada) {
-        this.productosRetiradaControls.push(this.createProductoGroup());
+      if (tipoAccion === 'INTERCAMBIO') {
+        // Para INTERCAMBIO: separar por esRetirada
+        if (producto.esRetirada) {
+          this.productosRetiradaControls.push(this.createProductoGroup());
+        } else {
+          this.productosControls.push(this.createProductoGroup());
+        }
       } else {
+        // Para IMPLANTACIÓN y RETIRADA: todos van a productosControls
         this.productosControls.push(this.createProductoGroup());
       }
     });
 
+    // Cargar PDV si existe
+    if (this.detallesMueble!.pdv != null && this.detallesMueble!.pdv !== '') {
+      await new Promise<void>((resolve) => {
+        this.direccionesService
+          .getPdv(this.detallesMueble!.pdv!)
+          .subscribe((pdv) => {
+            this.selectPdv(pdv);
+            resolve();
+          });
+      });
+    }
+
+    // Cargar Colaborador si existe
+    if (this.detallesMueble!.colaborador != null && this.detallesMueble!.colaborador !== '') {
+      await new Promise<void>((resolve) => {
+        this.direccionesService
+          .getColaborador(this.detallesMueble!.colaborador!)
+          .subscribe((colaborador) => {
+            this.colaboradorSeleccionado = colaborador;
+            resolve();
+          });
+      });
+    }
+
+    // Cargar Otra Dirección si existe
+    if (this.detallesMueble!.otroDestino != null && this.detallesMueble!.otroDestino !== '') {
+      await new Promise<void>((resolve) => {
+        this.direccionesService
+          .getOtrasDireccionesByNombre(this.detallesMueble!.otroDestino!)
+          .subscribe((direcciones: OtraDireccion[]) => {
+            if (direcciones && direcciones.length > 0) {
+              this.otraDireccionSeleccionada = direcciones[0];
+            }
+            resolve();
+          });
+      });
+    }
+
+    // Cargar tarifa por kilómetro
+    let tarifaKms = 0;
+    await new Promise<void>((resolve) => {
+      this.tarifaService.getTarifasByNombre('KM').subscribe(
+        (data: any) => {
+          const tarifas: Tarifa[] = data.content;
+          tarifaKms = tarifas[0]?.importe || 0;
+          console.log("Tarifa/KM: ", tarifaKms);
+          resolve();
+      });
+    });
+    
+    const costeTipoAccion = await lastValueFrom(this.getCosteTipoAccion());
+
+    // Calcular coste de envío con PRIORIDAD: Colaborador > Otro Destino > PDV
+    let costeEnvio = costeTipoAccion;
+    let distancia = 0;
+    let tarifaExtra = 0;
+
+    if (this.colaboradorSeleccionado && this.colaboradorSeleccionado.distancia != null) {
+      distancia = this.colaboradorSeleccionado.distancia;
+      tarifaExtra = (this.colaboradorSeleccionado as any).tarifaExtra || 0;
+      console.log("Usando distancia del Colaborador:", distancia);
+    } else if (this.otraDireccionSeleccionada && this.otraDireccionSeleccionada.distancia != null) {
+      distancia = this.otraDireccionSeleccionada.distancia;
+      tarifaExtra = (this.otraDireccionSeleccionada as any).tarifaExtra || 0;
+      console.log("Usando distancia de Otra Dirección:", distancia);
+    } else if (this.pdvSeleccionado && this.pdvSeleccionado.distancia != null) {
+      distancia = this.pdvSeleccionado.distancia;
+      tarifaExtra = this.pdvSeleccionado.tarifaExtra || 0;
+      console.log("Usando distancia del PDV:", distancia);
+    }
+
+    costeEnvio += (distancia * 2 * tarifaKms) + tarifaExtra;
+    
     // Rellenar el formulario
     this.muebleForm.patchValue({
       fechaOrdenTrabajo: this.detallesMueble!.fechaOrdenTrabajo,
@@ -650,35 +751,104 @@ export class FormularioMuebleComponent implements OnInit {
       indicaciones: this.detallesMueble!.indicaciones || '',
       incidencias: this.detallesMueble!.incidencias || '',
       costeColaborador: this.detallesMueble!.costeColaborador,
-      costeEnvio: this.detallesMueble!.costeEnvio,
+      costeEnvio: costeEnvio,
       costeTotal: this.detallesMueble!.costeTotal || '',
       importeFacturar: this.detallesMueble!.importeFacturar || '',
     });
 
-    // Rellenar productos separando por tipo
-    let indexImplantacion = 0;
-    let indexRetirada = 0;
+    // Rellenar productos según el tipo de acción
+    if (tipoAccion === 'INTERCAMBIO') {
+      // Para INTERCAMBIO: separar por esRetirada
+      let indexImplantacion = 0;
+      let indexRetirada = 0;
 
-    this.detallesMueble!.productos?.forEach((producto) => {
-      if (producto.esRetirada) {
-        this.productosRetiradaControls.at(indexRetirada).patchValue({
+      this.detallesMueble!.productos?.forEach((producto) => {
+        if (producto.esRetirada) {
+          this.productosRetiradaControls.at(indexRetirada).patchValue({
+            ref: producto.ref,
+            description: producto.description,
+            estado: producto.estado,
+            unidades: producto.unidades,
+          });
+          indexRetirada++;
+        } else {
+          this.productosControls.at(indexImplantacion).patchValue({
+            ref: producto.ref,
+            description: producto.description,
+            estado: producto.estado,
+            unidades: producto.unidades,
+          });
+          this.validarStockProducto(indexImplantacion);
+          indexImplantacion++;
+        }
+      });
+    } else {
+      // Para IMPLANTACIÓN y RETIRADA: todos van a productosControls
+      this.detallesMueble!.productos?.forEach((producto, index) => {
+        this.productosControls.at(index).patchValue({
           ref: producto.ref,
           description: producto.description,
           estado: producto.estado,
           unidades: producto.unidades,
         });
-        indexRetirada++;
-      } else {
-        this.productosControls.at(indexImplantacion).patchValue({
-          ref: producto.ref,
-          description: producto.description,
-          estado: producto.estado,
-          unidades: producto.unidades,
-        });
-        this.validarStockProducto(indexImplantacion);
-        indexImplantacion++;
-      }
-    });
+        
+        // Solo validar stock para IMPLANTACIÓN
+        if (tipoAccion === 'IMPLANTACION') {
+          this.validarStockProducto(index);
+        }
+      });
+    }
+
+    // Al final del método, después de cargar todos los productos
+    this.configurarEstadoFormulario();
+  }
+
+  getCosteTipoAccion(): Observable<number> {
+    const tipoAccion = this.detallesMueble?.tipoAccion!;
+    
+    let nombreTarifa: string;
+    
+    switch (tipoAccion) {
+      case 'IMPLANTACION':
+      case 'RETIRADA':
+        nombreTarifa = 'RECOGIDA';
+        break;
+      case 'INTERCAMBIO':
+        nombreTarifa = 'INTERCAMBIO EN LA MISMA POBLACIÓN';
+        break;
+      default:
+        return of(0); // Devuelve Observable de 0
+    }
+    
+    return this.tarifaService.getTarifasByNombre(nombreTarifa).pipe(
+      map((data: any) => {
+        const tarifas: Tarifa[] = data.content;
+        return tarifas[0].importe || 0;
+      }),
+      catchError(() => of(0)) // En caso de error, devolver 0
+    );
+  }
+
+  private configurarEstadoFormulario() {
+    const esEditable = this.esPrevision();
+    
+    if (!esEditable) {
+      // Deshabilitar todos los productos de implantación
+      this.productosControls.controls.forEach((control) => {
+        control.get('ref')?.disable();
+        control.get('description')?.disable();
+        control.get('estado')?.disable();
+        control.get('unidades')?.disable();
+      });
+  
+      // Deshabilitar todos los productos de retirada
+      this.productosRetiradaControls.controls.forEach((control) => {
+        control.get('ref')?.disable();
+        control.get('description')?.disable();
+        control.get('estado')?.disable();
+        control.get('unidades')?.disable();
+      });
+    }
   }
 
   private marcarCamposInvalidos() {
@@ -731,15 +901,19 @@ export class FormularioMuebleComponent implements OnInit {
       ?.valueChanges.pipe(debounceTime(300))
       .subscribe((value) => {
         if (value == '' || value == null) {
-          this.limpiarCamposDireccion();
           this.muebleForm.get('pdv')!.setValue('');
-          this.muebleForm.get('colaborador')!.setValue('');
+          // Solo limpiar colaborador si estaba asociado a un PDV
+          if (this.pdvSeleccionado?.colaborador) {
+            this.muebleForm.get('colaborador')!.setValue('');
+            this.colaboradorSeleccionado = null;
+          }
           this.pdvs = [];
-          this.colaboradores = [];
           this.perfumeriaSeleccionada = null;
           this.pdvSeleccionado = null;
-          this.colaboradorSeleccionado = null;
           this.cargarPerfumerias('a');
+          
+          // Solo limpiar dirección si no hay otras fuentes
+          this.limpiarCamposDireccion();
         } else {
           this.cargarPerfumerias(value);
         }
@@ -752,10 +926,16 @@ export class FormularioMuebleComponent implements OnInit {
       .subscribe((value) => {
         const perfumeria = this.muebleForm.get('perfumeria')?.value;
         if (value == '' || value == null) {
-          this.limpiarCamposDireccion();
-          this.muebleForm.get('colaborador')!.setValue('');
+          // Solo limpiar colaborador si estaba asociado al PDV anterior
+          if (this.pdvSeleccionado?.colaborador) {
+            this.muebleForm.get('colaborador')!.setValue('');
+            this.colaboradorSeleccionado = null;
+          }
           this.pdvSeleccionado = null;
-          this.colaboradorSeleccionado = null;
+          
+          // Solo limpiar dirección si no hay otras fuentes
+          this.limpiarCamposDireccion();
+          
           if (perfumeria) {
             this.cargarPDVs();
           }
@@ -764,19 +944,24 @@ export class FormularioMuebleComponent implements OnInit {
         }
       });
 
-    // Rellenar dirección automáticamente desde PDV o Colaborador
+    // Rellenar dirección automáticamente desde PDV
     this.muebleForm.get('pdv')?.valueChanges.subscribe((value) => {
       if (value) {
         this.rellenarDireccionPDV(value);
       }
     });
 
+    // Evento para colaborador
     this.muebleForm
       .get('colaborador')
       ?.valueChanges.pipe(debounceTime(300))
       .subscribe((value) => {
         if (value == '' || value == null) {
           this.colaboradorSeleccionado = null;
+          
+          // Solo limpiar dirección si no hay otras fuentes
+          this.limpiarCamposDireccion();
+          
           this.cargarColaboradores('a');
         } else {
           this.cargarColaboradores(value);
@@ -790,6 +975,10 @@ export class FormularioMuebleComponent implements OnInit {
       .subscribe((value) => {
         if (value == '' || value == null) {
           this.otraDireccionSeleccionada = null;
+          
+          // Solo limpiar dirección si no hay otras fuentes
+          this.limpiarCamposDireccion();
+          
           this.cargarTodasOtrasDirecciones();
         } else {
           this.cargarOtrasDirecciones(value);
@@ -799,7 +988,17 @@ export class FormularioMuebleComponent implements OnInit {
 
   // Métodos para manejar productos
   agregarProducto() {
-    this.productosControls.push(this.createProductoGroup());
+    const newProduct = this.createProductoGroup();
+    
+    if (!this.esPrevision()) {
+      newProduct.get('ref')?.disable();
+      newProduct.get('description')?.disable();
+      newProduct.get('estado')?.disable();
+      newProduct.get('unidades')?.disable();
+    }
+    
+    this.productosControls.push(newProduct);
+    
     setTimeout(() => {
       const inputsRef = Array.from(
         document.querySelectorAll<HTMLElement>('input[formControlName="ref"]')
@@ -904,33 +1103,67 @@ export class FormularioMuebleComponent implements OnInit {
       .at(index)
       .get('description');
     const estadoControl = this.productosControls.at(index).get('estado');
+    const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
 
     if (response) {
-      if (response.estados && response.estados.length > 1) {
+      // Ahora SIEMPRE viene con el formato de array de estados
+      if (response.estados && response.estados.length > 0) {
         descriptionControl!.setValue(response.description);
         this.productosNuevos.delete(index);
-        this.estadosDisponiblesPorProducto[index] = response.estados.map(
-          (e: any) => e.estado
-        );
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
 
-        if (!estadoControl?.value) {
-          estadoControl?.setValue(null);
+        // Si es RETIRADA, mostrar TODOS los estados (no filtrar por stock)
+        // Si es IMPLANTACION o INTERCAMBIO, filtrar solo estados con stock > 0
+        if (tipoAccion === 'RETIRADA') {
+          // Para RETIRADA: NO establecer estadosDisponiblesPorProducto
+          // para que use todos los estados del sistema
+          estadoControl?.setValidators([Validators.required]);
+          estadoControl?.updateValueAndValidity();
+
+          if (!estadoControl?.value) {
+            estadoControl?.setValue(null);
+          }
+        } else {
+          // Para IMPLANTACION e INTERCAMBIO: filtrar por stock > 0
+          const estadosConStock = response.estados.filter(
+            (e: any) => e.stock > 0
+          );
+
+          if (estadosConStock.length === 0) {
+            // Si no hay estados con stock, tratar como producto no disponible
+            this.productosNuevos.add(index);
+            this.limpiarCamposProducto(index);
+            this.snackBarError(
+              `El producto ${response.referencia} no tiene stock disponible en ningún estado`
+            );
+            return;
+          }
+
+          // Configurar SOLO los estados que tienen stock > 0
+          this.estadosDisponiblesPorProducto[index] = estadosConStock.map(
+            (e: any) => e.estado
+          );
+
+          estadoControl?.setValidators([Validators.required]);
+          estadoControl?.updateValueAndValidity();
+
+          if (estadosConStock.length === 1) {
+            // Si solo hay un estado con stock, preseleccionarlo automáticamente
+            const unicoEstado = estadosConStock[0];
+            if (!estadoControl?.value) {
+              estadoControl?.setValue(unicoEstado.estado);
+            }
+          } else {
+            // Si hay múltiples estados con stock, solo limpiar si no tienen valores
+            if (!estadoControl?.value) {
+              estadoControl?.setValue(null);
+            }
+          }
+
+          // Validar stock después de procesar el producto
+          setTimeout(() => {
+            this.validarStockProducto(index);
+          }, 100);
         }
-      } else if (response.estados && response.estados.length === 1) {
-        descriptionControl!.setValue(response.description);
-        if (!estadoControl?.value) {
-          estadoControl?.setValue(response.estados[0].estado);
-        }
-        this.productosNuevos.delete(index);
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
-      } else if (response.referencia) {
-        descriptionControl!.setValue(response.description);
-        this.productosNuevos.delete(index);
-        estadoControl?.setValidators([Validators.required]);
-        estadoControl?.updateValueAndValidity();
       }
     } else {
       this.productosNuevos.add(index);
@@ -1359,19 +1592,21 @@ export class FormularioMuebleComponent implements OnInit {
   }
 
   private limpiarCamposDireccion() {
-    const otroDestino = this.muebleForm.get('otroDestino')?.value;
-    const pdv = this.muebleForm.get('pdv')?.value;
+  const otroDestino = this.muebleForm.get('otroDestino')?.value;
+  const pdv = this.muebleForm.get('pdv')?.value;
+  const colaborador = this.muebleForm.get('colaborador')?.value;
 
-    if (!otroDestino && !pdv) {
-      this.muebleForm.patchValue({
-        direccion: '',
-        poblacion: '',
-        provincia: '',
-        cp: '',
-        telefono: '',
-      });
-    }
+  // Solo limpiar si NO hay PDV, NI otro destino, NI colaborador
+  if (!otroDestino && !pdv && !colaborador) {
+    this.muebleForm.patchValue({
+      direccion: '',
+      poblacion: '',
+      provincia: '',
+      cp: '',
+      telefono: '',
+    });
   }
+}
 
   // Métodos de navegación y estados
   setActiveCampoUnico(campo: string): void {
@@ -1476,6 +1711,10 @@ export class FormularioMuebleComponent implements OnInit {
     return this.pestanaPadre === 'detallePrevisionMueble';
   }
 
+  esDetalleRealizado(): boolean {
+    return this.pestanaPadre === 'detalleRealizadoMueble';
+  }
+
   isProductoNuevo(index: number): boolean {
     const ref = this.productosControls.at(index).get('ref')!.value;
     if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
@@ -1496,6 +1735,17 @@ export class FormularioMuebleComponent implements OnInit {
   }
 
   getEstadosDisponibles(index: number): string[] {
+    const tipoAccion = this.muebleForm.get('tipoAccion')?.value;
+
+    // Si es RETIRADA y no hay estados específicos, devolver TODOS los estados del sistema
+    if (
+      tipoAccion === 'RETIRADA' &&
+      !this.estadosDisponiblesPorProducto[index]
+    ) {
+      return this.estados.map((e) => e.nombre!);
+    }
+
+    // Para IMPLANTACION e INTERCAMBIO, devolver solo los estados con stock
     return (
       this.estadosDisponiblesPorProducto[index] ||
       this.estados.map((e) => e.nombre!)
@@ -1702,6 +1952,11 @@ export class FormularioMuebleComponent implements OnInit {
     if (this.previsionEsValida()) {
       const muebleActualizado: Mueble = this.construirMueble();
       muebleActualizado.id = this.detallesMueble?.id;
+      
+      // Mantener el estado original si está en realizados
+      if (this.pestanaPadre === 'detalleRealizadoMueble') {
+        muebleActualizado.estado = true;
+      }
 
       this.muebleService.updateMueble(muebleActualizado).subscribe({
         next: (updatedMueble) => {

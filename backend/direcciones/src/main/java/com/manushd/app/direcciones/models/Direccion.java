@@ -28,4 +28,7 @@ public abstract class Direccion{
     private String provincia;
     private String telefono;
     private String cp;
+
+    private Integer distancia;
+    private Integer tarifaExtra;
 }

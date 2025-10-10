@@ -10,6 +10,8 @@ import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { TrabajoService } from 'src/app/services/trabajo.service';
 import { DireccionesService } from 'src/app/services/direcciones.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
+import { TarifaService } from 'src/app/services/tarifas.service';
+import { Tarifa } from 'src/app/models/tarifa.model';
 
 @Component({
   selector: 'app-formulario-trabajo',
@@ -37,6 +39,8 @@ export class FormularioTrabajoComponent implements OnInit {
   activeCampoUnico: string | null = null;
   pageSize = 10;
   pageIndex = 0;
+
+  importeHoraTrabajador?: number;
   
   private snackBar = inject(MatSnackBar);
 
@@ -44,11 +48,13 @@ export class FormularioTrabajoComponent implements OnInit {
     private fb: FormBuilder,
     private trabajoService: TrabajoService,
     private direccionesService: DireccionesService,
-    private carga: PantallaCargaService
+    private carga: PantallaCargaService,
+    private tarifaService: TarifaService,
   ) {}
 
   ngOnInit() {
     this.trabajoForm = this.createForm();
+    this.setImportePorHora();
     this.cargarDirecciones();
     
     if (!this.detallesTrabajo) {
@@ -77,10 +83,23 @@ export class FormularioTrabajoComponent implements OnInit {
       cp: [''],
       telefono: [''],
       horas: [''], // Sin validadores iniciales
-      importePorHora: [25, [Validators.required, Validators.min(0)]],
+      importePorHora: [this.importeHoraTrabajador, [Validators.required, Validators.min(0)]],
       importeTotal: [{ value: 0, disabled: true }],
       observaciones: ['']
     });
+  }
+
+  private async setImportePorHora(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.tarifaService.getTarifasByNombre('MANIPULACIÓN').subscribe(
+        (data: any) => {
+          const tarifas = data.content;
+          this.importeHoraTrabajador = tarifas[0].importe;
+          this.trabajoForm.get('importePorHora')?.setValue(this.importeHoraTrabajador);
+          resolve();
+        }
+      )
+    })
   }
 
   private validarFormulario(): boolean {
@@ -184,7 +203,7 @@ export class FormularioTrabajoComponent implements OnInit {
     this.mostrarFormulario = true;
     this.trabajoForm.patchValue({
       fecha: new Date().toISOString().split('T')[0],
-      importePorHora: 25
+      importePorHora: this.importeHoraTrabajador
     });
   }
 
@@ -192,7 +211,7 @@ export class FormularioTrabajoComponent implements OnInit {
     this.mostrarFormulario = true;
     this.trabajoForm.patchValue({
       fecha: new Date().toISOString().split('T')[0],
-      importePorHora: 25
+      importePorHora: this.importeHoraTrabajador
     });
   }
 
@@ -348,7 +367,7 @@ export class FormularioTrabajoComponent implements OnInit {
     this.trabajoForm.reset();
     this.trabajoForm.patchValue({
       fecha: new Date().toISOString().split('T')[0],
-      importePorHora: 25
+      importePorHora: this.importeHoraTrabajador
     });
   }
 

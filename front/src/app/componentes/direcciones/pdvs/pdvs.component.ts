@@ -50,6 +50,8 @@ export class PdvsComponent implements OnInit, OnDestroy {
     'colaborador',
     'telefono',
     'direccion',
+    'distancia',
+    'tarifaExtra',
     'acciones',
   ];
   dataSourcePdvs = new MatTableDataSource<PDV>();

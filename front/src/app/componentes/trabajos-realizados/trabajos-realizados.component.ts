@@ -6,6 +6,7 @@ import { Trabajo } from 'src/app/models/trabajo.model';
 import { TrabajoService } from 'src/app/services/trabajo.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
+import { RoleService } from 'src/app/services/role.service';
 
 @Component({
   selector: 'app-trabajos-realizados',
@@ -38,11 +39,21 @@ export class TrabajosRealizadosComponent implements OnInit {
   constructor(
     private trabajoService: TrabajoService,
     private carga: PantallaCargaService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private roleService: RoleService
   ) { }
 
   ngOnInit(): void {
     this.cargarTrabajos();
+    this.agregarColumnasRoles();
+  }
+
+  agregarColumnasRoles() {
+    this.roleService.getRoles().subscribe(roles => {
+      if(roles.isAdmin){
+        this.columnasPaginator.push('detalles')
+      }
+    });
   }
 
   onEnterKey(event: any) {

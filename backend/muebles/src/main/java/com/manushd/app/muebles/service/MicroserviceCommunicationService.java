@@ -143,20 +143,31 @@ public class MicroserviceCommunicationService {
     private SalidaDTO construirSalidaDTO(Mueble mueble) {
         SalidaDTO salidaDTO = new SalidaDTO();
 
-        // Determinar el destino principal
-        String destinoPrincipal = determinarDestino(mueble);
-        salidaDTO.setDestino(destinoPrincipal);
+        // NO establecer un campo destino genérico
+        // Solo rellenar los campos específicos según corresponda
 
-        // Solo rellenar perfumeria y pdv si están definidos
+        // Caso 1: Perfumería + PDV (+ opcionalmente Colaborador)
         if (mueble.getPerfumeria() != null && !mueble.getPerfumeria().isEmpty()) {
             salidaDTO.setPerfumeria(mueble.getPerfumeria());
             salidaDTO.setPdv(mueble.getPdv());
-        }
 
-        // Solo rellenar colaborador si está definido Y no hay perfumería
-        if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty() &&
-                (mueble.getPerfumeria() == null || mueble.getPerfumeria().isEmpty())) {
+            // Si además tiene colaborador, también incluirlo
+            if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
+                salidaDTO.setColaborador(mueble.getColaborador());
+            }
+        }
+        // Caso 2: Solo Colaborador (sin perfumería)
+        else if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
             salidaDTO.setColaborador(mueble.getColaborador());
+        }
+        // Caso 3: Otro Destino (sin perfumería ni colaborador)
+        else if (mueble.getOtroDestino() != null && !mueble.getOtroDestino().isEmpty()) {
+            salidaDTO.setDestino(mueble.getOtroDestino());
+        }
+        // Caso 4: Si no hay nada específico, usar el método determinarDestino para el
+        // campo genérico
+        else {
+            salidaDTO.setDestino(determinarDestino(mueble));
         }
 
         salidaDTO.setDireccion(mueble.getDireccion());
@@ -193,20 +204,31 @@ public class MicroserviceCommunicationService {
     private EntradaDTO construirEntradaDTO(Mueble mueble) {
         EntradaDTO entradaDTO = new EntradaDTO();
 
-        // Determinar el origen principal
-        String origenPrincipal = determinarDestino(mueble);
-        entradaDTO.setOrigen(origenPrincipal);
+        // NO establecer un campo origen genérico
+        // Solo rellenar los campos específicos según corresponda
 
-        // Solo rellenar perfumeria y pdv si están definidos
+        // Caso 1: Perfumería + PDV (+ opcionalmente Colaborador)
         if (mueble.getPerfumeria() != null && !mueble.getPerfumeria().isEmpty()) {
             entradaDTO.setPerfumeria(mueble.getPerfumeria());
             entradaDTO.setPdv(mueble.getPdv());
-        }
 
-        // Solo rellenar colaborador si está definido Y no hay perfumería
-        if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty() &&
-                (mueble.getPerfumeria() == null || mueble.getPerfumeria().isEmpty())) {
+            // Si además tiene colaborador, también incluirlo
+            if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
+                entradaDTO.setColaborador(mueble.getColaborador());
+            }
+        }
+        // Caso 2: Solo Colaborador (sin perfumería)
+        else if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
             entradaDTO.setColaborador(mueble.getColaborador());
+        }
+        // Caso 3: Otro Destino (sin perfumería ni colaborador)
+        else if (mueble.getOtroDestino() != null && !mueble.getOtroDestino().isEmpty()) {
+            entradaDTO.setOrigen(mueble.getOtroDestino());
+        }
+        // Caso 4: Si no hay nada específico, usar el método determinarDestino para el
+        // campo genérico
+        else {
+            entradaDTO.setOrigen(determinarDestino(mueble));
         }
 
         entradaDTO.setDcs(null);
@@ -238,20 +260,24 @@ public class MicroserviceCommunicationService {
     private EntradaDTO construirEntradaDTOIntercambio(Mueble mueble, boolean esRetirada) {
         EntradaDTO entradaDTO = new EntradaDTO();
 
-        // Determinar el origen principal
-        String origenPrincipal = determinarDestino(mueble);
-        entradaDTO.setOrigen(origenPrincipal);
-
-        // Solo rellenar perfumeria y pdv si están definidos
+        // Caso 1: Perfumería + PDV (+ opcionalmente Colaborador)
         if (mueble.getPerfumeria() != null && !mueble.getPerfumeria().isEmpty()) {
             entradaDTO.setPerfumeria(mueble.getPerfumeria());
             entradaDTO.setPdv(mueble.getPdv());
-        }
 
-        // Solo rellenar colaborador si está definido Y no hay perfumería
-        if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty() &&
-                (mueble.getPerfumeria() == null || mueble.getPerfumeria().isEmpty())) {
+            if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
+                entradaDTO.setColaborador(mueble.getColaborador());
+            }
+        }
+        // Caso 2: Solo Colaborador
+        else if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
             entradaDTO.setColaborador(mueble.getColaborador());
+        }
+        // Caso 3: Otro Destino
+        else if (mueble.getOtroDestino() != null && !mueble.getOtroDestino().isEmpty()) {
+            entradaDTO.setOrigen(mueble.getOtroDestino());
+        } else {
+            entradaDTO.setOrigen(determinarDestino(mueble));
         }
 
         entradaDTO.setDcs(null);
@@ -285,20 +311,24 @@ public class MicroserviceCommunicationService {
     private SalidaDTO construirSalidaDTOIntercambio(Mueble mueble, boolean esRetirada) {
         SalidaDTO salidaDTO = new SalidaDTO();
 
-        // Determinar el destino principal
-        String destinoPrincipal = determinarDestino(mueble);
-        salidaDTO.setDestino(destinoPrincipal);
-
-        // Solo rellenar perfumeria y pdv si están definidos
+        // Caso 1: Perfumería + PDV (+ opcionalmente Colaborador)
         if (mueble.getPerfumeria() != null && !mueble.getPerfumeria().isEmpty()) {
             salidaDTO.setPerfumeria(mueble.getPerfumeria());
             salidaDTO.setPdv(mueble.getPdv());
-        }
 
-        // Solo rellenar colaborador si está definido Y no hay perfumería
-        if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty() &&
-                (mueble.getPerfumeria() == null || mueble.getPerfumeria().isEmpty())) {
+            if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
+                salidaDTO.setColaborador(mueble.getColaborador());
+            }
+        }
+        // Caso 2: Solo Colaborador
+        else if (mueble.getColaborador() != null && !mueble.getColaborador().isEmpty()) {
             salidaDTO.setColaborador(mueble.getColaborador());
+        }
+        // Caso 3: Otro Destino
+        else if (mueble.getOtroDestino() != null && !mueble.getOtroDestino().isEmpty()) {
+            salidaDTO.setDestino(mueble.getOtroDestino());
+        } else {
+            salidaDTO.setDestino(determinarDestino(mueble));
         }
 
         salidaDTO.setDireccion(mueble.getDireccion());
@@ -333,4 +363,5 @@ public class MicroserviceCommunicationService {
 
         return salidaDTO;
     }
+
 }

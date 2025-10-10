@@ -13,36 +13,39 @@ import java.util.Optional;
 @RestResource(path = "muebles", rel = "mueble")
 public interface MuebleRepository extends PagingAndSortingRepository<Mueble, Long> {
 
-    Page<Mueble> findAllByEstadoOrderByFechaOrdenTrabajoDesc(boolean estado, Pageable pageable);
-    Iterable<Mueble> findAllByEstadoOrderByFechaOrdenTrabajoDesc(boolean estado);
+    Page<Mueble> findAllByEstadoOrderByFechaRealizacionDesc(boolean estado, Pageable pageable);
+    Iterable<Mueble> findAllByEstadoOrderByFechaRealizacionDesc(boolean estado);
     
+    // Encontrar todos los muebles con estado=false (pendientes) ordenador por fecha de orden de trabajo descendente
+    Page<Mueble> findAllByEstadoFalseOrderByFechaOrdenTrabajoDesc(Pageable pageable);
+
     Optional<Mueble> findById(Long id);
     Mueble save(Mueble mueble);
     void deleteById(Long id);
 
-    @Query("SELECT m FROM Mueble m WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND m.estado = :estado ORDER BY m.fechaOrdenTrabajo DESC")
-    Page<Mueble> findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT m FROM Mueble m WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND m.estado = :estado ORDER BY m.fechaRealizacion DESC")
+    Page<Mueble> findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("estado") boolean estado,
             Pageable pageable);
 
-    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND m.estado = true ORDER BY m.fechaOrdenTrabajo DESC")
-    Page<Mueble> findByFechaAndReferenciaOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND m.estado = true ORDER BY m.fechaRealizacion DESC")
+    Page<Mueble> findByFechaAndReferenciaOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("referencia") String referencia,
             Pageable pageable);
 
-    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND m.estado = true ORDER BY m.fechaOrdenTrabajo DESC")
-    Page<Mueble> findByFechaAndDescripcionOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND m.estado = true ORDER BY m.fechaRealizacion DESC")
+    Page<Mueble> findByFechaAndDescripcionOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("descripcion") String descripcion,
             Pageable pageable);
 
     @Query("SELECT m FROM Mueble m WHERE " +
-            "DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND " +
+            "DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND " +
             "(:textoBusqueda IS NULL OR " +
             "LOWER(m.perfumeria) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.pdv) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
@@ -52,34 +55,34 @@ public interface MuebleRepository extends PagingAndSortingRepository<Mueble, Lon
             "LOWER(m.poblacion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.provincia) LIKE LOWER(CONCAT('%', :textoBusqueda, '%'))) " +
             "AND m.estado = true " +
-            "ORDER BY m.fechaOrdenTrabajo DESC")
-    Page<Mueble> findByFechaAndDestinoOrderByFechaOrdenTrabajoDesc(
+            "ORDER BY m.fechaRealizacion DESC")
+    Page<Mueble> findByFechaAndDestinoOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("textoBusqueda") String textoBusqueda,
             Pageable pageable);
 
     // Métodos sin paginación para exportar
-    @Query("SELECT m FROM Mueble m WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND m.estado = :estado ORDER BY m.fechaOrdenTrabajo DESC")
-    Iterable<Mueble> findByFechaOrdenTrabajoBetweenAndEstadoOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT m FROM Mueble m WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND m.estado = :estado ORDER BY m.fechaRealizacion DESC")
+    Iterable<Mueble> findByFechaRealizacionBetweenAndEstadoOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("estado") boolean estado);
 
-    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND m.estado = true ORDER BY m.fechaOrdenTrabajo DESC")
-    Iterable<Mueble> findByFechaAndReferenciaOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.ref) LIKE LOWER(CONCAT('%', :referencia, '%')) AND m.estado = true ORDER BY m.fechaRealizacion DESC")
+    Iterable<Mueble> findByFechaAndReferenciaOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("referencia") String referencia);
 
-    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND m.estado = true ORDER BY m.fechaOrdenTrabajo DESC")
-    Iterable<Mueble> findByFechaAndDescripcionOrderByFechaOrdenTrabajoDesc(
+    @Query("SELECT DISTINCT m FROM Mueble m JOIN m.productos p WHERE DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND LOWER(p.description) LIKE LOWER(CONCAT('%', :descripcion, '%')) AND m.estado = true ORDER BY m.fechaRealizacion DESC")
+    Iterable<Mueble> findByFechaAndDescripcionOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("descripcion") String descripcion);
 
     @Query("SELECT m FROM Mueble m WHERE " +
-            "DATE(m.fechaOrdenTrabajo) BETWEEN :fechaInicio AND :fechaFin AND " +
+            "DATE(m.fechaRealizacion) BETWEEN :fechaInicio AND :fechaFin AND " +
             "(:textoBusqueda IS NULL OR " +
             "LOWER(m.perfumeria) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.pdv) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
@@ -89,8 +92,8 @@ public interface MuebleRepository extends PagingAndSortingRepository<Mueble, Lon
             "LOWER(m.poblacion) LIKE LOWER(CONCAT('%', :textoBusqueda, '%')) OR " +
             "LOWER(m.provincia) LIKE LOWER(CONCAT('%', :textoBusqueda, '%'))) " +
             "AND m.estado = true " +
-            "ORDER BY m.fechaOrdenTrabajo DESC")
-    Iterable<Mueble> findByFechaAndDestinoOrderByFechaOrdenTrabajoDesc(
+            "ORDER BY m.fechaRealizacion DESC")
+    Iterable<Mueble> findByFechaAndDestinoOrderByFechaRealizacionDesc(
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("textoBusqueda") String textoBusqueda);

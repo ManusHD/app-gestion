@@ -5,6 +5,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Mueble } from 'src/app/models/mueble.model';
 import { MuebleService } from 'src/app/services/mueble.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
+import { RoleService } from 'src/app/services/role.service';
 import { SnackBar } from 'src/app/services/snackBar.service';
 
 @Component({
@@ -17,7 +18,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 })
 export class MueblesRealizadosComponent implements OnInit {
   muebles: Mueble[] = [];
-  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'tipoAccion', 'detalles'];
+  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'tipoAccion'];
   dataSource = new MatTableDataSource<Mueble>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -37,11 +38,21 @@ export class MueblesRealizadosComponent implements OnInit {
   constructor(
     private muebleService: MuebleService,
     private carga: PantallaCargaService,
-    private snackbar: SnackBar
+    private snackbar: SnackBar,
+    private roleService: RoleService,
   ) {}
 
   ngOnInit(): void {
     this.cargarMuebles();
+    this.agregarColumnasRoles();
+  }
+
+  agregarColumnasRoles() {
+    this.roleService.getRoles().subscribe(roles => {
+      if(roles.isAdmin){
+        this.columnasPaginator.push('detalles')
+      }
+    });
   }
 
   onEnterKey(event: any) {

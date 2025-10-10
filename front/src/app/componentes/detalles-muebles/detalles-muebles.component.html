@@ -1,68 +1,82 @@
-<button *ngIf="currentPath == '/muebles/realizados'; else editar" class="btn-productos" (click)="mostrarDetalles()">VER DETALLES</button>
-<ng-template #editar>
-    <button class="btn-productos" (click)="mostrarDetalles()">EDITAR</button>
-</ng-template>
+<!-- Botones para trabajos pendientes -->
+<button *ngIf="currentPath != '/muebles/realizados'" class="btn-productos" (click)="mostrarEdicion()">EDITAR</button>
+
+<!-- Botones para trabajos realizados - Usuario normal -->
+<button *ngIf="currentPath == '/muebles/realizados' && !isAdmin" class="btn-productos" (click)="mostrarDetalles()">VER DETALLES</button>
+
+<!-- Botones para trabajos realizados - Administrador -->
+<div *ngIf="currentPath == '/muebles/realizados' && isAdmin" style="display: flex; gap: 5px;">
+    <button class="btn-editar" (click)="mostrarEdicion()">EDITAR</button>
+    <button class="btn-productos" (click)="mostrarDetalles()">VER DETALLES</button>
+</div>
 
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
-        <span *ngIf="!enRealizados" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" class="close">&times;</span>
-        <span *ngIf="enRealizados" (click)="cerrarModal()" class="close">&times;</span>
+        <!-- Close button con confirmación solo si está en modo edición -->
+        <span *ngIf="modoEdicion" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'" (confirmed)="cerrarModal()" class="close">&times;</span>
+        <span *ngIf="!modoEdicion" (click)="cerrarModal()" class="close">&times;</span>
         
-        <h2 *ngIf="enRealizados">DESTINO: <span class="titulo-modal">{{obtenerDestino()}}</span></h2>
-        <h2 *ngIf="enRealizados">FECHA ORDEN: <span class="titulo-modal">{{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}</span></h2>
-        <h2 *ngIf="enRealizados">TIPO ACCIÓN: <span class="titulo-modal">{{mueble.tipoAccion}}</span></h2>
+        <!-- Vista de solo lectura -->
+        <!-- Vista de solo lectura -->
+<div *ngIf="!modoEdicion && enRealizados">
+    <h2>DESTINO: <span class="titulo-modal">{{obtenerDestino()}}</span></h2>
+    <h2>FECHA ORDEN: <span class="titulo-modal">{{mueble.fechaOrdenTrabajo | date: 'dd/MM/yyyy'}}</span></h2>
+    <h2>TIPO ACCIÓN: <span class="titulo-modal">{{mueble.tipoAccion}}</span></h2>
 
-        <div class="flotar-medio">
-            <div *ngIf="enRealizados; else detallesEnPrevision" class="detalles-container">
-                <!-- Información general -->
-                <div class="info-general">
-                    <div class="info-item">
-                        <label>Fecha Asignación:</label>
-                        <span>{{mueble.fechaAsignacion | date: 'dd/MM/yyyy'}}</span>
-                    </div>
-                    <div class="info-item" *ngIf="mueble.fechaPrevistaRealizacion">
-                        <label>Fecha Prevista Realización:</label>
-                        <span>{{mueble.fechaPrevistaRealizacion | date: 'dd/MM/yyyy'}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Fecha Realización:</label>
-                        <span>{{mueble.fechaRealizacion | date: 'dd/MM/yyyy'}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Presupuesto:</label>
-                        <span>{{mueble.presupuesto | currency:'EUR':'symbol':'1.2-2'}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Coste Colaborador:</label>
-                        <span>{{mueble.costeColaborador | currency:'EUR':'symbol':'1.2-2'}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Coste Envío:</label>
-                        <span>{{mueble.costeEnvio | currency:'EUR':'symbol':'1.2-2'}}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Coste Total:</label>
-                        <span>{{mueble.costeTotal | currency:'EUR':'symbol':'1.2-2'}}</span>
-                    </div>
-                    <div class="info-item" *ngIf="mueble.importeFacturar">
-                        <label>Importe a Facturar:</label>
-                        <span>{{mueble.importeFacturar | currency:'EUR':'symbol':'1.2-2'}}</span>
-                    </div>
-                    <div class="info-item" *ngIf="mueble.colaborador">
-                        <label>Colaborador:</label>
-                        <span>{{mueble.colaborador}}</span>
-                    </div>
-                    <div class="info-item" *ngIf="mueble.indicaciones">
-                        <label>Indicaciones:</label>
-                        <span>{{mueble.indicaciones}}</span>
-                    </div>
-                    <div class="info-item" *ngIf="mueble.incidencias">
-                        <label>Incidencias:</label>
-                        <span>{{mueble.incidencias}}</span>
-                    </div>
+    <div class="flotar-medio">
+        <div class="detalles-container">
+            <!-- Información general -->
+            <div class="info-general">
+                <div class="info-item">
+                    <label>Fecha Asignación:</label>
+                    <span>{{mueble.fechaAsignacion | date: 'dd/MM/yyyy'}}</span>
                 </div>
+                <div class="info-item" *ngIf="mueble.fechaPrevistaRealizacion">
+                    <label>Fecha Prevista Realización:</label>
+                    <span>{{mueble.fechaPrevistaRealizacion | date: 'dd/MM/yyyy'}}</span>
+                </div>
+                <div class="info-item">
+                    <label>Fecha Realización:</label>
+                    <span>{{mueble.fechaRealizacion | date: 'dd/MM/yyyy'}}</span>
+                </div>
+                <div class="info-item">
+                    <label>Presupuesto:</label>
+                    <span>{{mueble.presupuesto | currency:'EUR':'symbol':'1.2-2'}}</span>
+                </div>
+                <div class="info-item">
+                    <label>Coste Colaborador:</label>
+                    <span>{{mueble.costeColaborador | currency:'EUR':'symbol':'1.2-2'}}</span>
+                </div>
+                <div class="info-item">
+                    <label>Coste Envío:</label>
+                    <span>{{mueble.costeEnvio | currency:'EUR':'symbol':'1.2-2'}}</span>
+                </div>
+                <div class="info-item">
+                    <label>Coste Total:</label>
+                    <span>{{mueble.costeTotal | currency:'EUR':'symbol':'1.2-2'}}</span>
+                </div>
+                <div class="info-item" *ngIf="mueble.importeFacturar">
+                    <label>Importe a Facturar:</label>
+                    <span>{{mueble.importeFacturar | currency:'EUR':'symbol':'1.2-2'}}</span>
+                </div>
+                <div class="info-item" *ngIf="mueble.colaborador">
+                    <label>Colaborador:</label>
+                    <span>{{mueble.colaborador}}</span>
+                </div>
+                <div class="info-item" *ngIf="mueble.indicaciones">
+                    <label>Indicaciones:</label>
+                    <span>{{mueble.indicaciones}}</span>
+                </div>
+                <div class="info-item" *ngIf="mueble.incidencias">
+                    <label>Incidencias:</label>
+                    <span>{{mueble.incidencias}}</span>
+                </div>
+            </div>
 
-                <!-- Tabla de productos -->
+            <!-- Si es INTERCAMBIO, mostrar dos tablas separadas -->
+            <div *ngIf="mueble.tipoAccion === 'INTERCAMBIO'">
+                <!-- Tabla de productos a RETIRAR -->
+                <h3 class="titulo-tabla-productos">PRODUCTOS A RETIRAR</h3>
                 <table class="productos-table">
                     <thead>
                         <tr>
@@ -73,7 +87,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let producto of mueble.productos">
+                        <tr *ngFor="let producto of obtenerProductosRetirada()">
+                            <td>{{producto.ref}}</td>
+                            <td>{{producto.description}}</td>
+                            <td>{{producto.estado}}</td>
+                            <td>{{producto.unidades}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Tabla de productos a IMPLANTAR -->
+                <h3 class="titulo-tabla-productos" style="margin-top: 30px;">PRODUCTOS A IMPLANTAR</h3>
+                <table class="productos-table">
+                    <thead>
+                        <tr>
+                            <th>REFERENCIA</th>
+                            <th>DESCRIPCIÓN</th>
+                            <th>ESTADO</th>
+                            <th>UNIDADES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let producto of obtenerProductosImplantacion()">
                             <td>{{producto.ref}}</td>
                             <td>{{producto.description}}</td>
                             <td>{{producto.estado}}</td>
@@ -82,12 +117,37 @@
                     </tbody>
                 </table>
             </div>
-        </div>
 
-        <ng-template #detallesEnPrevision>
-            <app-formulario-mueble [pestanaPadre]="'detallePrevisionMueble'" [detallesMueble]="mueble">
+            <!-- Si NO es INTERCAMBIO, mostrar tabla única -->
+            <table *ngIf="mueble.tipoAccion !== 'INTERCAMBIO'" class="productos-table">
+                <thead>
+                    <tr>
+                        <th>REFERENCIA</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th>ESTADO</th>
+                        <th>UNIDADES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let producto of mueble.productos">
+                        <td>{{producto.ref}}</td>
+                        <td>{{producto.description}}</td>
+                        <td>{{producto.estado}}</td>
+                        <td>{{producto.unidades}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+        <!-- Vista de edición (formulario) -->
+        <div *ngIf="modoEdicion || !enRealizados" class="flotar-medio">
+            <app-formulario-mueble 
+                [pestanaPadre]="enRealizados ? 'detalleRealizadoMueble' : 'detallePrevisionMueble'" 
+                [detallesMueble]="mueble">
             </app-formulario-mueble>
-        </ng-template>
+        </div>
     </div>
 </div>
 

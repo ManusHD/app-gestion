@@ -81,7 +81,7 @@
                     </td>
                 </ng-container> -->
 
-                <ng-container matColumnDef="detalles">
+                <ng-container *appHasRole="'ROLE_ADMIN'" matColumnDef="detalles">
                     <th class="header-paginator" *matHeaderCellDef>DETALLES</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let mueble">
                         <app-detalles-muebles [enRealizados]="true" [mueble]="mueble"></app-detalles-muebles>

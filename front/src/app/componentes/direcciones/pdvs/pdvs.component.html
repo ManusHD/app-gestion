@@ -104,6 +104,7 @@
                 </td>
               </ng-container>
 
+              <!-- Columna Colaborador -->
               <ng-container matColumnDef="colaborador">
                 <th class="header-paginator" *matHeaderCellDef> Colaborador </th>
                 <td class="fila-paginator" mat-cell *matCellDef="let pdv">
@@ -149,6 +150,32 @@
                     <input [(ngModel)]="editandoPdv.poblacion" placeholder="Población" class="nombre-editando" /><br>
                     <input [(ngModel)]="editandoPdv.provincia" placeholder="Provincia" class="nombre-editando" /><br>
                     <input [(ngModel)]="editandoPdv.cp" placeholder="CP" class="nombre-editando" />
+                  </ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Columna Distancia -->
+              <ng-container matColumnDef="distancia">
+                <th class="header-paginator" *matHeaderCellDef> Distancia </th>
+                <td class="fila-paginator" mat-cell *matCellDef="let pdv">
+                  <ng-container *ngIf="editandoId !== pdv.id; else editDistancia">
+                    {{ pdv.distancia || 0 }} km
+                  </ng-container>
+                  <ng-template #editDistancia>
+                    <input [(ngModel)]="editandoPdv.distancia" placeholder="Distancia" class="nombre-editando" />
+                  </ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Columna Tarifa Extra -->
+              <ng-container matColumnDef="tarifaExtra">
+                <th class="header-paginator" *matHeaderCellDef> Tarifa Extra </th>
+                <td class="fila-paginator" mat-cell *matCellDef="let pdv">
+                  <ng-container *ngIf="editandoId !== pdv.id; else editTarifaExtra">
+                    {{ pdv.tarifaExtra || 0 }} €
+                  </ng-container>
+                  <ng-template #editTarifaExtra>
+                    <input [(ngModel)]="editandoPdv.tarifaExtra" placeholder="Tarifa Extra" class="nombre-editando" />
                   </ng-template>
                 </td>
               </ng-container>

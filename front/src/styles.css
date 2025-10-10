@@ -265,6 +265,32 @@ textarea {
     justify-content: space-between;
 }
 
+/*----- readonly class="campo-readonly" -----*/
+.campo-readonly {
+  background-color: rgba(61, 126, 255, 0.15) !important;
+  cursor: not-allowed !important;
+  font-weight: bold !important;
+  color: var(--letter-color) !important;
+  border-color: var(--letter-color) !important;
+}
+
+.campo-readonly:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.campo-readonly {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.campo-readonly:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 /* ----------------------------------------
 -----------CSS para los Buscadores---------
 -----------------------------------------*/
