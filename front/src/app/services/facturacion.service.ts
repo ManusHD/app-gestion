@@ -80,7 +80,7 @@ export class FacturacionService {
   // URLs de API
   private apiUrlEntradas = environment.apiEntradas;
   private apiUrlSalidas = environment.apiSalidas;
-  
+
   private tarifas: {
     TARIFA_PALET_MES: number;
     TARIFA_MOVIMIENTO_PALET: number;
@@ -93,24 +93,22 @@ export class FacturacionService {
     TARIFA_MOVIMIENTO_UNIDAD: 0.25,
   };
 
-  constructor(
-    private http: HttpClient,
-    private tarifaService: TarifaService) {
-      this.cargarTarifas(); 
-    }
+  constructor(private http: HttpClient, private tarifaService: TarifaService) {
+    this.cargarTarifas();
+  }
 
-    private cargarTarifas(): void {
+  private cargarTarifas(): void {
     const nombresTarifas = [
       'ALMACENAJE PALETS MENSUAL',
       'MOVIMIENTO PALET',
       'MOVIMIENTO BULTO',
-      'MOVIMIENTO UNIDAD'
+      'MOVIMIENTO UNIDAD',
     ];
 
-    nombresTarifas.forEach(nombre => {
+    nombresTarifas.forEach((nombre) => {
       this.tarifaService.getTarifasByNombre(nombre).subscribe({
         next: (tarifa: any) => {
-          switch(nombre) {
+          switch (nombre) {
             case 'ALMACENAJE PALETS MENSUAL':
               this.tarifas.TARIFA_PALET_MES = tarifa.content[0].importe!;
               console.log(this.tarifas.TARIFA_PALET_MES);
@@ -124,14 +122,18 @@ export class FacturacionService {
               console.log(this.tarifas.TARIFA_MOVIMIENTO_BULTO);
               break;
             case 'MOVIMIENTO UNIDAD':
-              this.tarifas.TARIFA_MOVIMIENTO_UNIDAD = tarifa.content[0].importe!;
+              this.tarifas.TARIFA_MOVIMIENTO_UNIDAD =
+                tarifa.content[0].importe!;
               console.log(this.tarifas.TARIFA_MOVIMIENTO_UNIDAD);
               break;
           }
         },
         error: (error) => {
-          console.warn(`No se pudo cargar la tarifa ${nombre}, usando valor por defecto`, error);
-        }
+          console.warn(
+            `No se pudo cargar la tarifa ${nombre}, usando valor por defecto`,
+            error
+          );
+        },
       });
     });
   }
@@ -160,62 +162,64 @@ export class FacturacionService {
    * Calcula la facturación para un período específico
    */
   calcularFacturacion(
-  fechaInicio: string,
-  fechaFin: string
-): Observable<FacturacionCalculada> {
-
-  // Recargar tarifas antes de calcular para asegurar valores actualizados
+    fechaInicio: string,
+    fechaFin: string
+  ): Observable<FacturacionCalculada> {
+    // Recargar tarifas antes de calcular para asegurar valores actualizados
     this.cargarTarifas();
 
-  // Ajustar fechas para que siempre sean del 1 al último día del mes
-  const fechaInicioAjustada = this.ajustarFechaInicioMes(fechaInicio);
-  const fechaFinAjustada = this.ajustarFechaFinMes(fechaFin);
+    // Ajustar fechas para que siempre sean del 1 al último día del mes
+    const fechaInicioAjustada = this.ajustarFechaInicioMes(fechaInicio);
+    const fechaFinAjustada = this.ajustarFechaFinMes(fechaFin);
 
-  const entradas$ = this.http.get<any[]>(`${this.apiUrlEntradas}/filtrar`, {
-    params: {
-      fechaInicio: fechaInicioAjustada,
-      fechaFin: fechaFinAjustada,
-      tipoBusqueda: 'fecha',
-    },
-  });
-
-  const salidas$ = this.http.get<any[]>(`${this.apiUrlSalidas}/filtrar`, {
-    params: {
-      fechaInicio: fechaInicioAjustada,
-      fechaFin: fechaFinAjustada,
-      tipoBusqueda: 'fecha',
-    },
-  });
-
-  const entradasAnteriores$ = this.http.get<any[]>(
-    `${this.apiUrlEntradas}/filtrar`,
-    {
-      params: {
-        fechaInicio: '2020-01-01',
-        fechaFin: this.restarUnDia(fechaInicioAjustada),
-        tipoBusqueda: 'fecha',
-      },
-    }
-  );
-
-  const salidasAnteriores$ = this.http.get<any[]>(
-    `${this.apiUrlSalidas}/filtrar`,
-    {
-      params: {
-        fechaInicio: '2020-01-01',
-        fechaFin: this.restarUnDia(fechaInicioAjustada),
-        tipoBusqueda: 'fecha',
-      },
-    }
-  );
-
-  const trabajos$ = this.http.get<any[]>(`${environment.apiTrabajos}/filtrar`, {
+    const entradas$ = this.http.get<any[]>(`${this.apiUrlEntradas}/filtrar`, {
       params: {
         fechaInicio: fechaInicioAjustada,
         fechaFin: fechaFinAjustada,
         tipoBusqueda: 'fecha',
       },
     });
+
+    const salidas$ = this.http.get<any[]>(`${this.apiUrlSalidas}/filtrar`, {
+      params: {
+        fechaInicio: fechaInicioAjustada,
+        fechaFin: fechaFinAjustada,
+        tipoBusqueda: 'fecha',
+      },
+    });
+
+    const entradasAnteriores$ = this.http.get<any[]>(
+      `${this.apiUrlEntradas}/filtrar`,
+      {
+        params: {
+          fechaInicio: '2020-01-01',
+          fechaFin: this.restarUnDia(fechaInicioAjustada),
+          tipoBusqueda: 'fecha',
+        },
+      }
+    );
+
+    const salidasAnteriores$ = this.http.get<any[]>(
+      `${this.apiUrlSalidas}/filtrar`,
+      {
+        params: {
+          fechaInicio: '2020-01-01',
+          fechaFin: this.restarUnDia(fechaInicioAjustada),
+          tipoBusqueda: 'fecha',
+        },
+      }
+    );
+
+    const trabajos$ = this.http.get<any[]>(
+      `${environment.apiTrabajos}/filtrar`,
+      {
+        params: {
+          fechaInicio: fechaInicioAjustada,
+          fechaFin: fechaFinAjustada,
+          tipoBusqueda: 'fecha',
+        },
+      }
+    );
 
     return forkJoin([
       entradas$,
@@ -224,51 +228,62 @@ export class FacturacionService {
       salidasAnteriores$,
       trabajos$,
     ]).pipe(
-      map(([entradas, salidas, entradasAnteriores, salidasAnteriores, trabajos]) => {
-        const detallesMovimientos = this.calcularMovimientos(entradas, salidas);
-        const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
-          entradasAnteriores,
-          salidasAnteriores,
+      map(
+        ([
           entradas,
           salidas,
-          fechaInicioAjustada,
-          fechaFinAjustada
-        );
-
-        const detallesTrabajos = this.calcularTrabajosManipulacion(trabajos);
-
-        const resumenMovimientos = this.calcularResumenMovimientos(
           entradasAnteriores,
           salidasAnteriores,
-          entradas,
-          salidas,
-          fechaInicioAjustada
-        );
+          trabajos,
+        ]) => {
+          const detallesMovimientos = this.calcularMovimientos(
+            entradas,
+            salidas
+          );
+          const detallesAlmacenaje = this.calcularAlmacenajeCompleto(
+            entradasAnteriores,
+            salidasAnteriores,
+            entradas,
+            salidas,
+            fechaInicioAjustada,
+            fechaFinAjustada
+          );
 
-        const totalMovimientos = detallesMovimientos.reduce(
-          (sum, d) => sum + d.costoTotal,
-          0
-        );
-        const totalAlmacenaje = detallesAlmacenaje.reduce(
-          (sum, d) => sum + d.costoTotal,
-          0
-        );
-        const totalTrabajos = detallesTrabajos.reduce(
-          (sum, d) => sum + d.costoTotal,
-          0
-        );
+          const detallesTrabajos = this.calcularTrabajosManipulacion(trabajos);
 
-        return {
-          totalAlmacenaje,
-          totalMovimientos,
-          totalTrabajos,
-          totalGeneral: totalAlmacenaje + totalMovimientos + totalTrabajos,
-          detallesAlmacenaje,
-          detallesMovimientos,
-          detallesTrabajos,
-          resumenMovimientos,
-        };
-      })
+          const resumenMovimientos = this.calcularResumenMovimientos(
+            entradasAnteriores,
+            salidasAnteriores,
+            entradas,
+            salidas,
+            fechaInicioAjustada
+          );
+
+          const totalMovimientos = detallesMovimientos.reduce(
+            (sum, d) => sum + d.costoTotal,
+            0
+          );
+          const totalAlmacenaje = detallesAlmacenaje.reduce(
+            (sum, d) => sum + d.costoTotal,
+            0
+          );
+          const totalTrabajos = detallesTrabajos.reduce(
+            (sum, d) => sum + d.costoTotal,
+            0
+          );
+
+          return {
+            totalAlmacenaje,
+            totalMovimientos,
+            totalTrabajos,
+            totalGeneral: totalAlmacenaje + totalMovimientos + totalTrabajos,
+            detallesAlmacenaje,
+            detallesMovimientos,
+            detallesTrabajos,
+            resumenMovimientos,
+          };
+        }
+      )
     );
   }
 
@@ -296,7 +311,6 @@ export class FacturacionService {
         });
       }
     });
-
 
     salidasAnteriores.forEach((salida) => {
       if (salida.estado && salida.productos) {
@@ -489,8 +503,13 @@ export class FacturacionService {
 
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
-            const costoEntrada = (producto.palets * this.TARIFA_PALET_MES * diasDesdeEntrada) / diasEnElMes;
+            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(
+              fechaEntrada,
+              fechaFinDate
+            );
+            const costoEntrada =
+              (producto.palets * this.TARIFA_PALET_MES * diasDesdeEntrada) /
+              diasEnElMes;
 
             detalles.push({
               referencia: producto.ref || 'SIN REFERENCIA',
@@ -511,7 +530,10 @@ export class FacturacionService {
         const fechaEntrada = new Date(entrada.fechaRecepcion);
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(fechaEntrada, fechaFinDate);
+            const diasDesdeEntrada = this.calcularDiasDesdeEntrada(
+              fechaEntrada,
+              fechaFinDate
+            );
           }
         });
       }
@@ -525,15 +547,20 @@ export class FacturacionService {
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
             // Días que SÍ se facturan (hasta el día de salida inclusive)
-            const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
+            const diasFacturados = this.calcularDiasHastaSalida(
+              fechaInicioDate,
+              fechaSalida
+            );
 
             // Días que NO se facturan (desde el día siguiente a la salida)
             const diasNoFacturados = diasEnElMes - diasFacturados;
 
             // Solo aplicar descuento si hay días no facturados
-            const descuento = diasNoFacturados > 0
-              ? (producto.palets * this.TARIFA_PALET_MES * diasNoFacturados) / diasEnElMes
-              : 0;
+            const descuento =
+              diasNoFacturados > 0
+                ? (producto.palets * this.TARIFA_PALET_MES * diasNoFacturados) /
+                  diasEnElMes
+                : 0;
 
             // DETALLE INDIVIDUAL DEL DESCUENTO
             if (descuento > 0) {
@@ -547,7 +574,6 @@ export class FacturacionService {
                 fechaSalida: fechaSalida,
               });
             }
-
           }
         });
       }
@@ -558,7 +584,10 @@ export class FacturacionService {
         const fechaSalida = new Date(salida.fechaEnvio);
         salida.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const diasFacturados = this.calcularDiasHastaSalida(fechaInicioDate, fechaSalida);
+            const diasFacturados = this.calcularDiasHastaSalida(
+              fechaInicioDate,
+              fechaSalida
+            );
             const diasNoFacturados = diasEnElMes - diasFacturados;
           }
         });
@@ -568,10 +597,10 @@ export class FacturacionService {
     // Log para debugging
     const totalStockInicial = stockInicialTotal * this.TARIFA_PALET_MES;
     const totalEntradas = detalles
-      .filter(d => d.palets > 0 && d.referencia !== 'STOCK_INICIAL')
+      .filter((d) => d.palets > 0 && d.referencia !== 'STOCK_INICIAL')
       .reduce((sum, d) => sum + d.costoTotal, 0);
     const totalDescuentos = detalles
-      .filter(d => d.palets < 0)
+      .filter((d) => d.palets < 0)
       .reduce((sum, d) => sum + d.costoTotal, 0);
 
     return detalles;
@@ -646,50 +675,56 @@ export class FacturacionService {
     });
 
     // ORDENAR TODO POR FECHA (CRÍTICO)
-    detalles.sort((a, b) => a.fechaMovimiento.getTime() - b.fechaMovimiento.getTime());
+    detalles.sort(
+      (a, b) => a.fechaMovimiento.getTime() - b.fechaMovimiento.getTime()
+    );
 
     return detalles;
   }
 
   /**
- * Calcula los costos de trabajos de manipulación
- */
-private calcularTrabajosManipulacion(trabajos: any[]): DetalleTrabajoManipulacion[] {
-  const detalles: DetalleTrabajoManipulacion[] = [];
+   * Calcula los costos de trabajos de manipulación
+   */
+  private calcularTrabajosManipulacion(
+    trabajos: any[]
+  ): DetalleTrabajoManipulacion[] {
+    const detalles: DetalleTrabajoManipulacion[] = [];
 
-  trabajos.forEach((trabajo) => {
-    if (trabajo.estado && trabajo.horas && trabajo.horas > 0) {
-      const direccion = this.obtenerDireccionTrabajo(trabajo);
-      
-      detalles.push({
-        fecha: new Date(trabajo.fecha),
-        concepto: trabajo.concepto || 'Trabajo de manipulación',
-        horas: trabajo.horas,
-        importePorHora: trabajo.importePorHora || 25,
-        costoTotal: trabajo.importeTotal || (trabajo.horas * (trabajo.importePorHora || 25)),
-        direccion: direccion,
-        observaciones: trabajo.observaciones,
-      });
-    }
-  });
+    trabajos.forEach((trabajo) => {
+      if (trabajo.estado && trabajo.horas && trabajo.horas > 0) {
+        const direccion = this.obtenerDireccionTrabajo(trabajo);
 
-  // Ordenar por fecha
-  detalles.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+        detalles.push({
+          fecha: new Date(trabajo.fecha),
+          concepto: trabajo.concepto || 'Trabajo de manipulación',
+          horas: trabajo.horas,
+          importePorHora: trabajo.importePorHora || 25,
+          costoTotal:
+            trabajo.importeTotal ||
+            trabajo.horas * (trabajo.importePorHora || 25),
+          direccion: direccion,
+          observaciones: trabajo.observaciones,
+        });
+      }
+    });
 
-  return detalles;
-}
+    // Ordenar por fecha
+    detalles.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
-/**
- * Obtiene la dirección formateada de un trabajo
- */
-private obtenerDireccionTrabajo(trabajo: any): string {
-  if (trabajo.perfumeria && trabajo.pdv) {
-    return `${trabajo.perfumeria} - ${trabajo.pdv}`;
-  } else if (trabajo.otroOrigen) {
-    return trabajo.otroOrigen;
+    return detalles;
   }
-  return 'Sin dirección especificada';
-}
+
+  /**
+   * Obtiene la dirección formateada de un trabajo
+   */
+  private obtenerDireccionTrabajo(trabajo: any): string {
+    if (trabajo.perfumeria && trabajo.pdv) {
+      return `${trabajo.perfumeria} - ${trabajo.pdv}`;
+    } else if (trabajo.otroOrigen) {
+      return trabajo.otroOrigen;
+    }
+    return 'Sin dirección especificada';
+  }
 
   /**
    * Calcula el movimiento de un producto siguiendo la jerarquía palets > bultos > unidades
@@ -773,8 +808,9 @@ private obtenerDireccionTrabajo(trabajo: any): string {
 
         entrada.productos.forEach((producto: any) => {
           if (producto.palets && producto.palets > 0) {
-            const key = `${producto.ref}-${producto.description
-              }-${fechaEntrada.getTime()}`;
+            const key = `${producto.ref}-${
+              producto.description
+            }-${fechaEntrada.getTime()}`;
             paletsAlmacenaje.set(key, {
               palets: producto.palets,
               fechaEntrada,
@@ -877,124 +913,20 @@ private obtenerDireccionTrabajo(trabajo: any): string {
   }
 
   /**
-   * Exporta la facturación a CSV
-   */
-  exportarCSV(facturacion: FacturacionCalculada, periodo: string): void {
-    const headers = [
-      'Tipo',
-      'Referencia',
-      'Descripción',
-      'Concepto',
-      'Cantidad',
-      'Precio Unitario',
-      'Total',
-      'Días Almacenaje',
-      'Fecha',
-    ];
-
-    const rows: string[][] = [];
-
-    // Agregar movimientos
-    facturacion.detallesMovimientos.forEach((movimiento) => {
-      rows.push([
-        'Movimiento',
-        movimiento.referencia,
-        movimiento.descripcion,
-        `Movimiento por ${movimiento.tipo}`,
-        movimiento.cantidad.toString(),
-        movimiento.precioUnitario.toFixed(2),
-        movimiento.costoTotal.toFixed(2),
-        '',
-        movimiento.fechaMovimiento.toLocaleDateString(),
-      ]);
-    });
-
-    // Agregar almacenaje
-    facturacion.detallesAlmacenaje.forEach((almacenaje) => {
-      rows.push([
-        'Almacenaje',
-        almacenaje.referencia,
-        almacenaje.descripcion,
-        'Almacenaje de palets',
-        almacenaje.palets.toString(),
-        this.TARIFA_PALET_MES.toFixed(2),
-        almacenaje.costoTotal.toFixed(2),
-        almacenaje.diasAlmacenaje.toString(),
-        almacenaje.fechaEntrada.toLocaleDateString(),
-      ]);
-    });
-
-    // Agregar totales
-    rows.push([
-      '',
-      '',
-      '',
-      '',
-      '',
-      'TOTAL MOVIMIENTOS:',
-      facturacion.totalMovimientos.toFixed(2),
-      '',
-      '',
-    ]);
-    rows.push([
-      '',
-      '',
-      '',
-      '',
-      '',
-      'TOTAL ALMACENAJE:',
-      facturacion.totalAlmacenaje.toFixed(2),
-      '',
-      '',
-    ]);
-    rows.push([
-      '',
-      '',
-      '',
-      '',
-      '',
-      'TOTAL GENERAL:',
-      facturacion.totalGeneral.toFixed(2),
-      '',
-      '',
-    ]);
-
-    // Crear CSV
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
-
-    // Descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `facturacion_${periodo}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }
-
-  /**
    * Exporta la facturación a PDF (resumen)
    */
   exportarPDF(facturacion: FacturacionCalculada, periodo: string): void {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     let yPosition = 20;
-
+  
     // Título principal
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.text('DETALLE MENSUAL', pageWidth / 2, yPosition, {
       align: 'center',
     });
-
+  
     yPosition += 15;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
@@ -1004,16 +936,16 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       yPosition,
       { align: 'center' }
     );
-
+  
     yPosition += 20;
-
+  
     // Resumen de totales
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text('DETALLE DE FACTURACIÓN DE ALMACENAJE', 20, yPosition);
-
+  
     yPosition += 15;
-
+  
     const resumenData = [
       ['Concepto', 'Importe'],
       ['Total Almacenaje', `${facturacion.totalAlmacenaje.toFixed(2)} €`],
@@ -1022,7 +954,7 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       ['', ``],
       ['TOTAL', `${facturacion.totalGeneral.toFixed(2)} €`],
     ];
-
+  
     autoTable(doc, {
       startY: yPosition,
       head: [resumenData[0]],
@@ -1034,34 +966,44 @@ private obtenerDireccionTrabajo(trabajo: any): string {
       showHead: 'firstPage',
       didParseCell: (data) => {
         if (data.row.index === 3 && data.column.index === 0) {
-          // Línea separadora
           data.cell.styles.fillColor = [255, 255, 255];
           data.cell.text = [];
         }
         if (data.row.index === 4) {
-          // Fila del total
           data.cell.styles.fontStyle = 'bold';
-          // data.cell.styles.fillColor = [52, 152, 219];
-          // data.cell.styles.textColor = [0, 0, 0];
         }
       },
     });
-
+  
     yPosition = (doc as any).lastAutoTable.finalY + 20;
-
+  
     // Detalle de almacenaje
     if (facturacion.detallesAlmacenaje.length > 0) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.text('DETALLE DE ALMACENAJE', 20, yPosition);
-
+  
       yPosition += 10;
-
+  
       // Ordenar por fecha de entrada
       const almacenajeOrdenado = [...facturacion.detallesAlmacenaje].sort((a, b) =>
         new Date(a.fechaEntrada).getTime() - new Date(b.fechaEntrada).getTime()
       );
-
+  
+      // Calcular stock final
+      const stockInicial = almacenajeOrdenado.find(d => d.referencia === 'STOCK_INICIAL')?.palets || 0;
+      const paletsEntrados = almacenajeOrdenado
+        .filter(d => d.palets > 0 && d.referencia !== 'STOCK_INICIAL')
+        .reduce((sum, d) => sum + d.palets, 0);
+      const paletsSalidos = Math.abs(almacenajeOrdenado
+        .filter(d => d.palets < 0)
+        .reduce((sum, d) => sum + d.palets, 0));
+      const stockFinal = stockInicial + paletsEntrados - paletsSalidos;
+  
+      // Obtener último día del mes
+      const [year, month] = periodo.split('-');
+      const ultimoDiaMes = new Date(parseInt(year), parseInt(month), 0);
+  
       const almacenajeData = almacenajeOrdenado.map((detalle) => [
         detalle.fechaEntrada.toLocaleDateString('es-ES'),
         detalle.referencia,
@@ -1069,7 +1011,16 @@ private obtenerDireccionTrabajo(trabajo: any): string {
         detalle.palets.toString(),
         `${detalle.costoTotal.toFixed(2)} €`,
       ]);
-
+  
+      // Agregar fila de STOCK_FINAL
+      almacenajeData.push([
+        ultimoDiaMes.toLocaleDateString('es-ES'),
+        'STOCK_FINAL',
+        'Stock final de palets',
+        stockFinal.toString(),
+        '-'
+      ]);
+  
       autoTable(doc, {
         startY: yPosition,
         head: [['Fecha', 'Referencia', 'Descripción', 'Palets', 'Total']],
@@ -1084,51 +1035,60 @@ private obtenerDireccionTrabajo(trabajo: any): string {
         showHead: 'firstPage',
         didParseCell: (data) => {
           if (data.section === 'body') {
-            const detalle = almacenajeOrdenado[data.row.index];
-
-            // STOCK_INICIAL en negrita
-            if (detalle.referencia === 'STOCK_INICIAL') {
-              if (data.column.index === 1) { // Referencia
-                data.cell.styles.fontStyle = 'bold';
+            // Última fila es el STOCK_FINAL
+            if (data.row.index === almacenajeData.length - 1) {
+              // data.cell.styles.fontStyle = 'bold';
+              // data.cell.styles.fillColor = [235, 185, 52]; // Color dorado
+              if (data.column.index === 1) { // Columna Referencia
+                  data.cell.styles.fontStyle = 'bold';
               }
-            }
-
-            // Salidas en rojo (costos negativos)
-            if (detalle.costoTotal < 0) {
-              if ([0, 1, 2, 4].includes(data.column.index)) { // Fecha, Referencia, Descripción, Total
-                data.cell.styles.textColor = [255, 0, 0]; // Rojo
+            } else {
+              const detalle = almacenajeOrdenado[data.row.index];
+  
+              // STOCK_INICIAL en negrita
+              if (detalle.referencia === 'STOCK_INICIAL') {
+                if (data.column.index === 1) {
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+  
+              // Salidas en rojo (costos negativos)
+              if (detalle.costoTotal < 0) {
+                if ([0, 1, 2, 4].includes(data.column.index)) {
+                  data.cell.styles.textColor = [255, 0, 0];
+                }
               }
             }
           }
         },
       });
-
+  
       yPosition = (doc as any).lastAutoTable.finalY + 15;
     }
-
+  
     // Verificar si necesitamos nueva página
     if (yPosition > 250) {
       doc.addPage();
       yPosition = 20;
     }
-
+  
     // Detalle de movimientos
     if (facturacion.detallesMovimientos.length > 0) {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.text('DETALLE DE MOVIMIENTOS', 20, yPosition);
-
+  
       yPosition += 10;
-
+  
       const movimientosData = facturacion.detallesMovimientos.map((detalle) => [
-        detalle.fechaMovimiento.toLocaleDateString('es-ES'), // Fecha
+        detalle.fechaMovimiento.toLocaleDateString('es-ES'),
         detalle.referencia,
-        detalle.descripcion, // SIN recortar, se mostrará completa
+        detalle.descripcion,
         detalle.tipo.toUpperCase(),
         detalle.cantidad.toString(),
         `${detalle.costoTotal.toFixed(2)} €`
       ]);
-
+  
       autoTable(doc, {
         startY: yPosition,
         head: [
@@ -1152,19 +1112,17 @@ private obtenerDireccionTrabajo(trabajo: any): string {
         },
         showHead: 'firstPage',
         columnStyles: {
-          0: { halign: 'center' }, // Fecha
-          1: { halign: 'center' }, // Referencia
-          2: { cellWidth: 60, overflow: 'linebreak' }, // Descripción ajustable
-          3: { halign: 'center' }, // Tipo
-          4: { halign: 'center' }, // Cantidad
-          5: { halign: 'center' }, // Total
+          0: { halign: 'center' },
+          1: { halign: 'center' },
+          2: { cellWidth: 60, overflow: 'linebreak' },
+          3: { halign: 'center' },
+          4: { halign: 'center' },
+          5: { halign: 'center' },
         },
         didParseCell: (data) => {
           if (data.section === 'body') {
             const tipoOperacion = facturacion.detallesMovimientos[data.row.index].tipoOperacion.toUpperCase();
-            if (tipoOperacion === 'ENTRADA') {
-              // data.cell.styles.fillColor = [200, 230, 200]; // Verde claro
-            } else if (tipoOperacion === 'SALIDA') {
+            if (tipoOperacion === 'SALIDA') {
               if([0, 1, 2].includes(data.column.index)) {
                 data.cell.styles.textColor = [255, 0, 0];
               }
@@ -1172,80 +1130,293 @@ private obtenerDireccionTrabajo(trabajo: any): string {
           }
         }
       });
-
+  
       yPosition = (doc as any).lastAutoTable.finalY + 15;
     }
-
+  
     // Verificar si necesitamos nueva página
-if (yPosition > 250) {
-  doc.addPage();
-  yPosition = 20;
-}
-
-// Detalle de trabajos de manipulación
-if (facturacion.detallesTrabajos.length > 0) {
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('DETALLE DE TRABAJOS DE MANIPULACIÓN', 20, yPosition);
-
-  yPosition += 10;
-
-  const trabajosData = facturacion.detallesTrabajos.map((detalle) => [
-    detalle.fecha.toLocaleDateString('es-ES'),
-    detalle.concepto,
-    detalle.direccion,
-    detalle.horas.toString(),
-    `${detalle.importePorHora.toFixed(2)} €`,
-    `${detalle.costoTotal.toFixed(2)} €`
-  ]);
-
-  autoTable(doc, {
-    startY: yPosition,
-    head: [
-      [
-        'Fecha',
-        'Concepto',
-        'Dirección',
-        'Horas',
-        'Precio/Hora',
-        'Total'
-      ],
-    ],
-    body: trabajosData,
-    theme: 'striped',
-    styles: { fontSize: 9 },
-    headStyles: {
-      fillColor: [46, 204, 113],
-      textColor: 255,
-      fontSize: 10,
-      fontStyle: 'bold'
-    },
-    columnStyles: {
-      0: { halign: 'center' }, // Fecha
-      1: { cellWidth: 60, overflow: 'linebreak' }, // Concepto
-      2: { cellWidth: 50, overflow: 'linebreak' }, // Dirección  
-      3: { halign: 'center' }, // Horas
-      4: { halign: 'center' }, // Precio/Hora
-      5: { halign: 'center' }, // Total
-    },
-    showHead: 'firstPage',
-  });
-
-  yPosition = (doc as any).lastAutoTable.finalY + 15;
-}
-
+    if (yPosition > 250) {
+      doc.addPage();
+      yPosition = 20;
+    }
+  
+    // Detalle de trabajos de manipulación
+    if (facturacion.detallesTrabajos.length > 0) {
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DETALLE DE TRABAJOS DE MANIPULACIÓN', 20, yPosition);
+  
+      yPosition += 10;
+  
+      const trabajosData = facturacion.detallesTrabajos.map((detalle) => [
+        detalle.fecha.toLocaleDateString('es-ES'),
+        detalle.concepto,
+        detalle.direccion,
+        detalle.horas.toString(),
+        `${detalle.importePorHora.toFixed(2)} €`,
+        `${detalle.costoTotal.toFixed(2)} €`
+      ]);
+  
+      autoTable(doc, {
+        startY: yPosition,
+        head: [
+          [
+            'Fecha',
+            'Concepto',
+            'Dirección',
+            'Horas',
+            'Precio/Hora',
+            'Total'
+          ],
+        ],
+        body: trabajosData,
+        theme: 'striped',
+        styles: { fontSize: 9 },
+        headStyles: {
+          fillColor: [46, 204, 113],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold'
+        },
+        columnStyles: {
+          0: { halign: 'center' },
+          1: { cellWidth: 60, overflow: 'linebreak' },
+          2: { cellWidth: 50, overflow: 'linebreak' },
+          3: { halign: 'center' },
+          4: { halign: 'center' },
+          5: { halign: 'center' },
+        },
+        showHead: 'firstPage',
+      });
+  
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+    }
+  
     // Pie de página
-    const finalY = (doc as any).lastAutoTable.finalY + 20;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'italic');
-    doc.text(
-      `Documento generado el ${new Date().toLocaleDateString('es-ES')}`,
-      20,
-      finalY
-    );
-
+    // const finalY = (doc as any).lastAutoTable.finalY + 20;
+    // doc.setFontSize(10);
+    // doc.setFont('helvetica', 'italic');
+    // doc.text(
+    //   `Documento generado el ${new Date().toLocaleDateString('es-ES')}`,
+    //   20,
+    //   finalY
+    // );
+  
     // Descargar PDF
     doc.save(`facturacion_resumen_${periodo}.pdf`);
+  }
+  
+  /**
+   * Exporta la facturación a Excel con formato detallado
+   */
+  exportarExcel(facturacion: FacturacionCalculada, periodo: string): void {
+    const workbook = XLSX.utils.book_new();
+
+    // === HOJA 1: RESUMEN GENERAL ===
+    const resumenData = [
+      ['DETALLE MENSUAL DE FACTURACIÓN'],
+      [`Período: ${this.formatearPeriodo(periodo)}`],
+      [''],
+      ['Concepto', 'Importe'],
+      ['Total Almacenaje', `${facturacion.totalAlmacenaje.toFixed(2)} €`],
+      ['Total Movimientos', `${facturacion.totalMovimientos.toFixed(2)} €`],
+      [
+        'Total Trabajos de Manipulación',
+        `${facturacion.totalTrabajos.toFixed(2)} €`,
+      ],
+      [''],
+      ['TOTAL GENERAL', `${facturacion.totalGeneral.toFixed(2)} €`],
+    ];
+
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+
+    // Estilos para el resumen
+    wsResumen['!cols'] = [{ wch: 30 }, { wch: 20 }];
+
+    XLSX.utils.book_append_sheet(workbook, wsResumen, 'Resumen');
+
+    // === HOJA 2: DETALLE DE ALMACENAJE ===
+    if (facturacion.detallesAlmacenaje.length > 0) {
+      const almacenajeOrdenado = [...facturacion.detallesAlmacenaje].sort(
+        (a, b) => {
+          const fechaA =
+            a.fechaSalida && a.costoTotal < 0 ? a.fechaSalida : a.fechaEntrada;
+          const fechaB =
+            b.fechaSalida && b.costoTotal < 0 ? b.fechaSalida : b.fechaEntrada;
+          return new Date(fechaA).getTime() - new Date(fechaB).getTime();
+        }
+      );
+
+      const almacenajeHeaders = [
+        ['DETALLE DE ALMACENAJE'],
+        [''],
+        ['Fecha', 'Referencia', 'Descripción', 'Palets', 'Días', 'Total'],
+      ];
+
+      const almacenajeRows = almacenajeOrdenado.map((detalle) => [
+        (detalle.fechaSalida && detalle.costoTotal < 0
+          ? detalle.fechaSalida
+          : detalle.fechaEntrada
+        ).toLocaleDateString('es-ES'),
+        detalle.referencia,
+        detalle.descripcion,
+        detalle.palets,
+        detalle.diasAlmacenaje,
+        `${detalle.costoTotal.toFixed(2)} €`,
+      ]);
+
+      const almacenajeFooter = [
+        [''],
+        [
+          '',
+          '',
+          '',
+          '',
+          'TOTAL ALMACENAJE:',
+          `${facturacion.totalAlmacenaje.toFixed(2)} €`,
+        ],
+      ];
+
+      const wsAlmacenaje = XLSX.utils.aoa_to_sheet([
+        ...almacenajeHeaders,
+        ...almacenajeRows,
+        ...almacenajeFooter,
+      ]);
+
+      wsAlmacenaje['!cols'] = [
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 15 },
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, wsAlmacenaje, 'Almacenaje');
+    }
+
+    // === HOJA 3: DETALLE DE MOVIMIENTOS ===
+    if (facturacion.detallesMovimientos.length > 0) {
+      const movimientosHeaders = [
+        ['DETALLE DE MOVIMIENTOS'],
+        [''],
+        [
+          'Fecha',
+          'Referencia',
+          'Descripción',
+          'Tipo',
+          'Operación',
+          'Cantidad',
+          'Precio Unit.',
+          'Total',
+        ],
+      ];
+
+      const movimientosRows = facturacion.detallesMovimientos.map((detalle) => [
+        detalle.fechaMovimiento.toLocaleDateString('es-ES'),
+        detalle.referencia,
+        detalle.descripcion,
+        detalle.tipo.toUpperCase(),
+        detalle.tipoOperacion.toUpperCase(),
+        detalle.cantidad,
+        `${detalle.precioUnitario.toFixed(2)} €`,
+        `${detalle.costoTotal.toFixed(2)} €`,
+      ]);
+
+      const movimientosFooter = [
+        [''],
+        [
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          'TOTAL MOVIMIENTOS:',
+          `${facturacion.totalMovimientos.toFixed(2)} €`,
+        ],
+      ];
+
+      const wsMovimientos = XLSX.utils.aoa_to_sheet([
+        ...movimientosHeaders,
+        ...movimientosRows,
+        ...movimientosFooter,
+      ]);
+
+      wsMovimientos['!cols'] = [
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 15 },
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, wsMovimientos, 'Movimientos');
+    }
+
+    // === HOJA 4: DETALLE DE TRABAJOS ===
+    if (facturacion.detallesTrabajos.length > 0) {
+      const trabajosHeaders = [
+        ['DETALLE DE TRABAJOS DE MANIPULACIÓN'],
+        [''],
+        [
+          'Fecha',
+          'Concepto',
+          'Dirección',
+          'Horas',
+          'Precio/Hora',
+          'Observaciones',
+          'Total',
+        ],
+      ];
+
+      const trabajosRows = facturacion.detallesTrabajos.map((detalle) => [
+        detalle.fecha.toLocaleDateString('es-ES'),
+        detalle.concepto,
+        detalle.direccion,
+        detalle.horas,
+        `${detalle.importePorHora.toFixed(2)} €`,
+        detalle.observaciones || '',
+        `${detalle.costoTotal.toFixed(2)} €`,
+      ]);
+
+      const trabajosFooter = [
+        [''],
+        [
+          '',
+          '',
+          '',
+          '',
+          '',
+          'TOTAL TRABAJOS:',
+          `${facturacion.totalTrabajos.toFixed(2)} €`,
+        ],
+      ];
+
+      const wsTrabajos = XLSX.utils.aoa_to_sheet([
+        ...trabajosHeaders,
+        ...trabajosRows,
+        ...trabajosFooter,
+      ]);
+
+      wsTrabajos['!cols'] = [
+        { wch: 12 },
+        { wch: 30 },
+        { wch: 30 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 40 },
+        { wch: 15 },
+      ];
+
+      XLSX.utils.book_append_sheet(workbook, wsTrabajos, 'Trabajos');
+    }
+
+    // Descargar archivo
+    XLSX.writeFile(workbook, `facturacion_${periodo}.xlsx`);
   }
 
   /**
@@ -1269,6 +1440,4 @@ if (facturacion.detallesTrabajos.length > 0) {
     ];
     return `${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
   }
-
-
 }

@@ -114,10 +114,10 @@
             Exportar PDF
           </button>
 
-          <!-- <button mat-stroked-button color="accent" (click)="exportarExcel()">
+          <button mat-stroked-button color="accent" (click)="exportarExcel()">
             <mat-icon>table_chart</mat-icon>
             Exportar Excel
-          </button> -->
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
@@ -271,11 +271,11 @@
           <div class="almacenaje-seccion entradas-mes" *ngIf="getAlmacenajeEntradas() > 0">
             <h5>
               <mat-icon>input</mat-icon>
-              Palets Entrados en el Mes (Proporcional)
+              Entrada de Palets en el Mes (Proporcional)
             </h5>
             <div class="almacenaje-detalle">
               <div class="detalle-item">
-                <span class="etiqueta">Palets entrados:</span>
+                <span class="etiqueta">Cantidad</span>
                 <span class="valor positivo">{{ resumenFacturacion.resumenMovimientos.paletsEntrados }}</span>
               </div>
               <div class="detalle-item importe">
@@ -289,11 +289,11 @@
           <div class="almacenaje-seccion salidas-mes" *ngIf="getAlmacenajeSalidas() < 0">
             <h5>
               <mat-icon>output</mat-icon>
-              Palets Salidos en el Mes (Descuento)
+              Salidas de Palets en el Mes (Descuento)
             </h5>
             <div class="almacenaje-detalle">
               <div class="detalle-item">
-                <span class="etiqueta">Palets salidos:</span>
+                <span class="etiqueta">Cantidad</span>
                 <span class="valor negativo">{{ resumenFacturacion.resumenMovimientos.paletsSalidos }}</span>
               </div>
               <div class="detalle-item importe descuento">

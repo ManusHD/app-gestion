@@ -350,6 +350,7 @@ export class FormularioEntradaSalidaService {
           'fechaRecepcionEnvio',
           this.formatearFecha(new Date())
         );
+        location.reload();
       },
       error: (error) => {
         console.error('Error al crear la salida:', error);
@@ -373,6 +374,7 @@ export class FormularioEntradaSalidaService {
         );
         this.carga.hide();
         this.btnSubmitActivado = true;
+        location.reload();
       },
       error: (error) => {
         const mensaje = this.handleError(error) || error.error;

@@ -67,6 +67,20 @@
                     </td>
                 </ng-container>
 
+                <ng-container matColumnDef="facturado">
+                    <th class="header-paginator" *matHeaderCellDef>FACTURADO</th>
+                    <td class="fila-paginator" mat-cell *matCellDef="let mueble">
+                        <div class="flotar-medio">
+                            <div>
+                                <img [ngClass]="{'no-facturado': !estaFacturado(mueble)}"
+                                    src="../../../assets/icons/check-verde.svg" />
+                                <img [ngClass]="{'facturado': estaFacturado(mueble)}"
+                                    src="../../../assets/icons/no-check-gris.svg" />
+                            </div>
+                        </div>
+                    </td>
+                </ng-container>
+                
                 <!-- <ng-container matColumnDef="presupuesto">
                     <th class="header-paginator" *matHeaderCellDef>PRESUPUESTO</th>
                     <td class="fila-paginator" mat-cell *matCellDef="let mueble">

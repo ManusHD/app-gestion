@@ -18,7 +18,7 @@ import { SnackBar } from 'src/app/services/snackBar.service';
 })
 export class MueblesRealizadosComponent implements OnInit {
   muebles: Mueble[] = [];
-  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'tipoAccion'];
+  columnasPaginator: string[] = ['fechaOrden', 'fechaRealizacion', 'destino', 'facturado', 'tipoAccion'];
   dataSource = new MatTableDataSource<Mueble>();
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -191,5 +191,9 @@ export class MueblesRealizadosComponent implements OnInit {
       return mueble.otroDestino;
     }
     return 'No especificado';
+  }
+
+  estaFacturado(mueble: Mueble): boolean {
+    return !!(mueble.importeFacturar && mueble.importeFacturar > 0);
   }
 }

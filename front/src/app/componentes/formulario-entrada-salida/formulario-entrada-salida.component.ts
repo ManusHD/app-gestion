@@ -47,10 +47,7 @@ export class FormularioEntradaSalidaComponent
       this.cargarUbicaciones();
     }
 
-    this.cargarColaboradores();
-    this.cargarPerfumerias('a');
-    this.cargarTodasOtrasDirecciones();
-    this.cargarEstados();
+    this.cargarDatosIniciales();
 
     // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
     // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
@@ -80,6 +77,18 @@ export class FormularioEntradaSalidaComponent
       this.inicializarDetalleEntradaSalida();
     }
 
+    this.configurarEventos();
+    
+  }
+
+  private cargarDatosIniciales() {
+    this.cargarColaboradores();
+    this.cargarPerfumerias('a');
+    this.cargarTodasOtrasDirecciones();
+    this.cargarEstados();
+  }
+
+  private configurarEventos() {
     this.entradaSalidaForm
       .get('otroOrigenDestino')
       ?.valueChanges.pipe(
@@ -136,26 +145,38 @@ export class FormularioEntradaSalidaComponent
       });
 
 
-    if(this.hay('pdv') && !this.hay('colaborador')) {
-      console.log("NO HAY COLABORADOR Y HAY PDV");
-      this.entradaSalidaForm
-      .get('pdv')
-      ?.valueChanges.pipe(
-        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
-      )
-      .subscribe((value) => {
-        if (value == '' || value == null) {
-          this.limpiarCamposDireccion();
-          // this.perfumerias = [];
-          this.pdvSeleccionado = null;
-          if (nombrePerfumeria) {
-            this.cargarPDVs();
-          }
+    this.entradaSalidaForm
+    .get('pdv')
+    ?.valueChanges.pipe(
+      debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+    )
+    .subscribe((value) => {
+      if (value == '' || value == null) {
+          // Solo limpiar colaborador si estaba asociado al PDV anterior
+        if (this.pdvSeleccionado?.colaborador) {
+          this.entradaSalidaForm.get('colaborador')!.setValue('');
+          this.colaboradorSeleccionado = null;
+        }
+        this.limpiarCamposDireccion();
+        // this.perfumerias = [];
+        this.pdvSeleccionado = null;
+        if (nombrePerfumeria) {
+          this.cargarPDVs();
+        }
+      } else {
+        this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
+      }
+    });
+
+    this.entradaSalidaForm
+      .get('colaborador')
+      ?.valueChanges.subscribe((value) => {
+        if (value) {
+          this.rellenarDireccionColaborador(value);
         } else {
-          this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
+          this.limpiarCamposDireccion();
         }
       });
-    }
 
     if (this.currentPath.startsWith('/salidas')) {
       this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe((value) => {
@@ -167,16 +188,6 @@ export class FormularioEntradaSalidaComponent
           this.limpiarCamposDireccion();
         }
       });
-
-      this.entradaSalidaForm
-        .get('colaborador')
-        ?.valueChanges.subscribe((value) => {
-          if (value) {
-            this.rellenarDireccionColaborador(value);
-          } else {
-            this.limpiarCamposDireccion();
-          }
-        });
     }
   }
 
