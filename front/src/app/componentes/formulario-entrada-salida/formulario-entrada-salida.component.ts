@@ -1,103 +1,215 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { FormGroup, FormArray, Validators } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { Entrada } from 'src/app/models/entrada.model';
 import { Salida } from 'src/app/models/salida.model';
-import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
-import { ProductoEntrada } from 'src/app/models/productoEntrada.model';
-import { Colaborador } from 'src/app/models/colaborador.model';
-import { PDV } from 'src/app/models/pdv.model';
-import { OtraDireccion } from 'src/app/models/otraDireccion.model';
 import { Perfumeria } from 'src/app/models/perfumeria.model';
+import { PDV } from 'src/app/models/pdv.model';
+import { Colaborador } from 'src/app/models/colaborador.model';
+import { OtraDireccion } from 'src/app/models/otraDireccion.model';
+import { AgenciaTransporte } from 'src/app/models/agencia-transporte.model';
+import { Estado } from 'src/app/models/estado.model';
 import { Producto } from 'src/app/models/producto.model';
 import { Ubicacion } from 'src/app/models/ubicacion.model';
-import { debounceTime } from 'rxjs';
+import { FormularioBuilderService } from './services/formulario-builder.service';
+import { FormularioValidationService } from './services/formulario-validation.service';
+import { StockManagerService } from '../../services/stock-manager.service';
+import { PantallaCargaService } from '../../services/pantalla-carga.service';
+import { ImportarExcelService } from '../../services/importar-excel.service';
+import { SalidaUbicacionService } from '../../services/salida-ubicacion.service';
+import { UbicacionService } from '../../services/ubicacion.service';
+import { FormularioFacadeService } from './services/formulario-entrada-salida-facade.service';
 
 @Component({
   selector: 'app-formulario-entrada-salida',
   templateUrl: './formulario-entrada-salida.component.html',
   styleUrls: ['./formulario-entrada-salida.component.css'],
+  providers: [
+    FormularioBuilderService,
+    FormularioValidationService,
+    FormularioFacadeService,
+    StockManagerService
+  ]
 })
-export class FormularioEntradaSalidaComponent
-  extends FormularioEntradaSalidaService
-  implements OnInit
-{
-  @Input() pestanaPadre: String = ''; // Indica al componente donde se está abriendo y en función a ello mostrará unos botones u otros
+export class FormularioEntradaSalidaComponent implements OnInit, OnDestroy {
+  @Input() pestanaPadre: string = '';
   @Input() detallesES?: Entrada | Salida = undefined;
-  enDetalles: boolean = false;
-  agenciasTransporte: AgenciaTransporte[] = [];
+
+  // ============================================
+  // ESTADO LOCAL DEL COMPONENTE
+  // ============================================
+  
+  entradaSalidaForm!: FormGroup;
+  mostrarFormulario = false;
+  btnSubmitActivado = true;
+  pendiente = true;
+  enDetalles = false;
+  
+  // UI State
   activeRowIndex: number | null = null;
   activeCampoUnico: string | null = null;
+  productosNuevos = new Set<number>();
+  private isTabbing = false;
 
-  private isTabbing: boolean = false;
+  // Datos cargados
+  perfumerias: Perfumeria[] = [];
+  pdvs: PDV[] = [];
+  colaboradores: Colaborador[] = [];
+  otrasDirecciones: OtraDireccion[] = [];
+  agenciasTransporte: AgenciaTransporte[] = [];
+  estados: Estado[] = [];
+  ubicaciones: string[] = [];
+  visuales: Producto[] = [];
+  productosSR: Producto[] = [];
 
-  @ViewChild('observaciones', { static: false })
-  observacionesInput!: ElementRef;
+  // Selecciones actuales
+  perfumeriaSeleccionada: Perfumeria | null = null;
+  pdvSeleccionado: PDV | null = null;
+  colaboradorSeleccionado: Colaborador | null = null;
+  otraDireccionSeleccionada: OtraDireccion | null = null;
 
-  productosSalidaUbicacion: any[] = [];
+  // Paginación
+  pageSize = 10;
+  pageIndex = 0;
 
-  ngOnInit() {
-    // this.carga.show();
+  // Path actual
+  currentPath: string = window.location.pathname;
+
+  // ID de salida actual (para stock)
+  private salidaActualId: number | null = null;
+
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    public formBuilder: FormularioBuilderService,
+    public validationService: FormularioValidationService,
+    private facadeService: FormularioFacadeService,
+    public stockManager: StockManagerService,
+    private carga: PantallaCargaService,
+    private importarES: ImportarExcelService,
+    private salidaUbicacionService: SalidaUbicacionService,
+    private ubicacionService: UbicacionService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  // ============================================
+  // LIFECYCLE HOOKS
+  // ============================================
+
+  ngOnInit(): void {
+    this.inicializarFormulario();
+    this.cargarDatosIniciales();
+    this.configurarObservables();
+    
+    if (!this.detallesES) {
+      this.inicializarNuevoFormulario();
+    } else {
+      this.inicializarDetalleFormulario();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.stockManager.limpiarCache();
     this.importarES.resetExcel();
-    this.entradaSalidaForm = this.createForm();
+    
+    if (this.esSalida()) {
+      this.salidaActualId = null;
+    }
+  }
 
-    this.entradaSalidaForm.get('perfumeria')?.setValue('');
-    this.entradaSalidaForm.get('pdv')?.setValue('');
+  // ============================================
+  // INICIALIZACIÓN
+  // ============================================
+
+  private inicializarFormulario(): void {
+    this.entradaSalidaForm = this.formBuilder.createForm();
+  }
+
+  private cargarDatosIniciales(): void {
+    this.facadeService.cargarDatosIniciales(this.esEntrada(), this.esSalida())
+      .subscribe({
+        next: (datos) => {
+          this.estados = datos.estados;
+          if (datos.agencias) {
+            this.agenciasTransporte = datos.agencias;
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar datos iniciales:', error);
+        }
+      });
 
     if (this.esEntrada()) {
       this.cargarUbicaciones();
     }
 
-    this.cargarDatosIniciales();
-
-    // pestanaPadre es 'nuevaEntrada' cuando se crea una nueva Entrada
-    // pestanaPadre es 'previsionEntrada' cuando se importa una Entrada desde Excel
-    // pestanaPadre es 'detallePrevisionEntrada' cuando se visualizan los detalles de una Entrada
-    // pestanaPadre es 'nuevaSalida' cuando se crea una nueva Salida
-    // pestanaPadre es 'previsionSalida' cuando se importa una Salida desde Excel
-    // pestanaPadre es 'detallePrevisionSalida' cuando se visualizan los detalles de una Salida
-    // En el if entro cuando creo una nueva Entrada/Salida o la importo desde Excel
-    if (!this.detallesES) {
-      this.salidaUbicacionService.productos$.subscribe((productos) => {
-        if (productos.length > 0) {
-          this.productosSalidaUbicacion = productos;
-          this.actualizarProductos(productos); // función para mapear a tu formulario
-        }
-      });
-
-      this.cargarAgenciasTransporte();
-      if (
-        this.pestanaPadre !== 'nuevaEntrada' &&
-        this.pestanaPadre !== 'nuevaSalida'
-      ) {
-        this.inicializarPrevisionEntradaSalida();
-      } else {
-        this.inicializarNuevaEntradaSalida();
-      }
-    } else {
-      this.inicializarDetalleEntradaSalida();
-    }
-
-    this.configurarEventos();
-    
-  }
-
-  private cargarDatosIniciales() {
     this.cargarColaboradores();
     this.cargarPerfumerias('a');
     this.cargarTodasOtrasDirecciones();
-    this.cargarEstados();
   }
 
-  private configurarEventos() {
+  private inicializarNuevoFormulario(): void {
+    if (this.pestanaPadre === 'nuevaEntrada' || this.pestanaPadre === 'nuevaSalida') {
+      // NUEVA ENTRADA/SALIDA
+      this.pendiente = false;
+      this.mostrarFormulario = true;
+      this.entradaSalidaForm.patchValue({
+        fechaRecepcionEnvio: this.facadeService.formatearFecha(new Date())
+      });
+    } else if (this.pestanaPadre === 'previsionEntrada' || this.pestanaPadre === 'previsionSalida') {
+      // PREVISIÓN (importar desde Excel)
+      this.pendiente = true;
+      this.mostrarFormulario = true; // ⬅️ Mostrar siempre el formulario
+      
+      this.importarES.excelData$.subscribe((excelData) => {
+        if (excelData?.length) {
+          this.resetForm();
+          this.actualizarCamposUnicos(excelData[0]);
+          this.actualizarProductos(excelData);
+          this.carga.hide();
+        }
+        // No ocultar el formulario si no hay datos
+      });
+    }
+  
+    // Suscribirse a productos de salida si es necesario
+    if (this.esSalida()) {
+      this.salidaUbicacionService.productos$.subscribe((productos) => {
+        if (productos.length > 0) {
+          this.actualizarProductos(productos);
+        }
+      });
+    }
+  }
+
+  private inicializarDetalleFormulario(): void {
+    this.mostrarFormulario = true;
+    this.enDetalles = true;
+    this.actualizarCamposUnicos(this.detallesES);
+    this.actualizarProductos(this.detallesES!.productos!);
+    this.validationService.marcarCamposInvalidos(this.entradaSalidaForm);
+
+    if (this.esSalida()) {
+      this.salidaActualId = this.detallesES?.id || null;
+      this.cargarDatosParaDetalleSalida();
+    }
+  }
+
+  // ============================================
+  // CONFIGURACIÓN DE OBSERVABLES
+  // ============================================
+
+  private configurarObservables(): void {
+    // Observable para Otras Direcciones
     this.entradaSalidaForm
       .get('otroOrigenDestino')
-      ?.valueChanges.pipe(
-        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
-      )
+      ?.valueChanges.pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((value) => {
-        if (value == '' || value == null) {
+        if (!value) {
           this.limpiarCamposDireccion();
-          // this.otrasDirecciones = [];
           this.otraDireccionSeleccionada = null;
           this.cargarTodasOtrasDirecciones();
         } else {
@@ -105,18 +217,16 @@ export class FormularioEntradaSalidaComponent
         }
       });
 
+    // Observable para Perfumería
     let nombrePerfumeria = '';
     this.entradaSalidaForm
       .get('perfumeria')
-      ?.valueChanges.pipe(
-        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
-      )
+      ?.valueChanges.pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((value) => {
         nombrePerfumeria = value;
-        if (value == '' || value == null) {
+        if (!value) {
           this.limpiarCamposDireccion();
-          // this.perfumerias = [];
-          this.entradaSalidaForm.get('pdv')!.setValue('');
+          this.entradaSalidaForm.get('pdv')?.setValue('');
           this.pdvs = [];
           this.perfumeriaSeleccionada = null;
           this.pdvSeleccionado = null;
@@ -126,140 +236,603 @@ export class FormularioEntradaSalidaComponent
         }
       });
 
+    // Observable para Colaborador
     this.entradaSalidaForm
       .get('colaborador')
-      ?.valueChanges.pipe(
-        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
-      )
+      ?.valueChanges.pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((value) => {
-        if (value == '' || value == null) {
+        if (!value) {
           this.limpiarCamposDireccion();
-          // this.perfumerias = [];
           this.colaboradorSeleccionado = null;
           if (!nombrePerfumeria) {
             this.cargarColaboradores();
           }
         } else {
-          this.cargarColaboradoresActivosByNombre(value);
+          this.cargarColaboradoresPorNombre(value);
         }
       });
 
-
+    // Observable para PDV (si no hay colaborador)
     this.entradaSalidaForm
-    .get('pdv')
-    ?.valueChanges.pipe(
-      debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
-    )
-    .subscribe((value) => {
-      if (value == '' || value == null) {
-          // Solo limpiar colaborador si estaba asociado al PDV anterior
-        if (this.pdvSeleccionado?.colaborador) {
-          this.entradaSalidaForm.get('colaborador')!.setValue('');
-          this.colaboradorSeleccionado = null;
+      .get('pdv')
+      ?.valueChanges.pipe(
+        debounceTime(300) // Añadir un delay de 300ms entre la pulsación de tecla y la búsqueda
+      )
+      .subscribe((value) => {
+        if (value == '' || value == null) {
+            // Solo limpiar colaborador si estaba asociado al PDV anterior
+          if (this.pdvSeleccionado?.colaborador) {
+            this.entradaSalidaForm.get('colaborador')!.setValue('');
+            this.colaboradorSeleccionado = null;
+          }
+          this.limpiarCamposDireccion();
+          // this.perfumerias = [];
+          this.pdvSeleccionado = null;
+          if (nombrePerfumeria) {
+            this.cargarPDVs();
+          }
+        } else {
+          this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
         }
+      });
+
+    // Observables para campos de dirección en salidas
+    if (this.esSalida()) {
+      this.configurarObservablesDireccionSalida();
+    }
+  }
+
+  private configurarObservablesDireccionSalida(): void {
+    this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe((value) => {
+      if (value && this.hay('pdv') && !this.hay('colaborador')) {
+        this.rellenarDireccionPDV(value);
+      } else if (!value) {
         this.limpiarCamposDireccion();
-        // this.perfumerias = [];
-        this.pdvSeleccionado = null;
-        if (nombrePerfumeria) {
-          this.cargarPDVs();
-        }
-      } else {
-        this.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, value);
       }
     });
 
-    this.entradaSalidaForm
-      .get('colaborador')
-      ?.valueChanges.subscribe((value) => {
-        if (value) {
-          this.rellenarDireccionColaborador(value);
-        } else {
-          this.limpiarCamposDireccion();
+    this.entradaSalidaForm.get('colaborador')?.valueChanges.subscribe((value) => {
+      if (value) {
+        this.rellenarDireccionColaborador(value);
+      } else if (!this.hay('pdv')) {
+        this.limpiarCamposDireccion();
+      }
+    });
+  }
+
+  // ============================================
+  // GETTERS
+  // ============================================
+
+  get productosControls(): FormArray {
+    return this.formBuilder.getProductosArray(this.entradaSalidaForm);
+  }
+
+  // ============================================
+  // MÉTODOS DE CARGA DE DATOS
+  // ============================================
+
+  private cargarUbicaciones(): void {
+    this.ubicacionService.getUbicacionesOrderByNombre().subscribe({
+      next: (ubicaciones: Ubicacion[]) => {
+        this.ubicaciones = ubicaciones.map(ubi => ubi.nombre!);
+      },
+      error: (error) => {
+        console.error('Error al cargar ubicaciones:', error);
+      }
+    });
+  }
+
+  private cargarPerfumerias(nombre: string): void {
+    this.facadeService.cargarPerfumerias(nombre, this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (perfumerias) => {
+          this.perfumerias = perfumerias;
+        },
+        error: (error) => {
+          console.error('Error al cargar perfumerías:', error);
         }
       });
+  }
 
-    if (this.currentPath.startsWith('/salidas')) {
-      this.entradaSalidaForm.get('pdv')?.valueChanges.subscribe((value) => {
-        if (value) {
-          if(this.hay('pdv') && !this.hay('colaborador')) {
-            this.rellenarDireccionPDV(value);
+  private cargarPDVs(): void {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    if (perfumeria) {
+      this.facadeService.cargarPDVsPerfumeria(perfumeria)
+        .subscribe({
+          next: (pdvs) => {
+            this.pdvs = pdvs;
+          },
+          error: (error) => {
+            console.error('Error al cargar PDVs:', error);
           }
-        } else {
-          this.limpiarCamposDireccion();
+        });
+    }
+  }
+
+  private cargarPDVsPerfumeriaByNombre(nombrePerfumeria: string, nombrePdv: string): void {
+    this.facadeService.cargarPDVsPerfumeriaByNombre(nombrePerfumeria, nombrePdv)
+      .subscribe({
+        next: (pdvs) => {
+          this.pdvs = pdvs;
+        },
+        error: (error) => {
+          console.error('Error al cargar PDVs:', error);
         }
+      });
+  }
+
+  private cargarColaboradores(): void {
+    this.facadeService.cargarColaboradores()
+      .subscribe({
+        next: (colaboradores) => {
+          this.colaboradores = colaboradores;
+        },
+        error: (error) => {
+          console.error('Error al cargar colaboradores:', error);
+        }
+      });
+  }
+
+  private cargarColaboradoresPorNombre(nombre: string): void {
+    this.facadeService.cargarColaboradoresPorNombre(nombre, this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (colaboradores) => {
+          this.colaboradores = colaboradores;
+        },
+        error: (error) => {
+          console.error('Error al cargar colaboradores:', error);
+        }
+      });
+  }
+
+  private cargarTodasOtrasDirecciones(): void {
+    this.facadeService.cargarOtrasDirecciones()
+      .subscribe({
+        next: (direcciones) => {
+          this.otrasDirecciones = direcciones;
+        },
+        error: (error) => {
+          console.error('Error al cargar otras direcciones:', error);
+        }
+      });
+  }
+
+  private cargarOtrasDirecciones(nombre: string): void {
+    this.facadeService.cargarOtrasDireccionesPorNombre(nombre, this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (direcciones) => {
+          this.otrasDirecciones = direcciones;
+        },
+        error: (error) => {
+          console.error('Error al cargar otras direcciones:', error);
+        }
+      });
+  }
+
+  // ============================================
+  // MANEJO DE PRODUCTOS
+  // ============================================
+
+  agregarProducto(): void {
+    this.formBuilder.agregarProducto(this.entradaSalidaForm);
+
+    setTimeout(() => {
+      const inputsRef = Array.from(
+        document.querySelectorAll<HTMLElement>('input[formControlName="ref"]')
+      );
+      if (inputsRef.length > 0) {
+        inputsRef[inputsRef.length - 1].focus();
+      }
+    });
+  }
+
+  eliminarProducto(index: number): void {
+    // Deshacer división si existe
+    this.stockManager.actualizarIndicesDivision(index);
+    
+    // Eliminar del formulario
+    this.formBuilder.eliminarProducto(this.entradaSalidaForm, index);
+
+    // Actualizar indices en productosNuevos
+    const nuevosIndices = new Set<number>();
+    this.productosNuevos.forEach((idx) => {
+      if (idx < index) {
+        nuevosIndices.add(idx);
+      } else if (idx > index) {
+        nuevosIndices.add(idx - 1);
+      }
+    });
+    this.productosNuevos = nuevosIndices;
+  }
+
+  buscarProductoPorReferencia(index: number): void {
+    const producto = this.productosControls.at(index);
+    const refControl = producto.get('ref');
+    const ref = refControl?.value;
+
+    if (ref === 'VISUAL' && this.esSalida()) {
+      this.manejarProductoEspecial(index, 'VISUAL');
+    } else if (ref === 'SIN REFERENCIA' && this.esSalida()) {
+      this.manejarProductoEspecial(index, 'SIN REFERENCIA');
+    } else if (ref) {
+      refControl!.valueChanges
+        .pipe(
+          debounceTime(300),
+          distinctUntilChanged(),
+          switchMap((r) => {
+            if (r?.trim()) {
+              return this.facadeService.buscarProductoPorReferencia(r.trim());
+            }
+            return of(null);
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            this.procesarRespuestaProducto(response, index);
+          },
+          error: () => {
+            this.productosNuevos.add(index);
+            this.limpiarCamposProducto(index);
+          }
+        });
+    }
+  }
+
+  private manejarProductoEspecial(index: number, tipo: 'VISUAL' | 'SIN REFERENCIA'): void {
+    const producto = this.productosControls.at(index);
+    const estadoControl = producto.get('estado');
+    const descriptionControl = producto.get('description');
+
+    // Limpiar validadores de estado para productos especiales
+    estadoControl?.clearValidators();
+    estadoControl?.updateValueAndValidity();
+    this.stockManager.clearEstadosDisponibles(index);
+
+    if (this.esSalida()) {
+      if (!descriptionControl?.value) {
+        if (tipo === 'VISUAL') {
+          this.cargarVisuales();
+        } else {
+          this.cargarProductosSinReferencia();
+        }
+      } else {
+        if (tipo === 'VISUAL') {
+          this.cargarVisualesPorDescripcion(descriptionControl.value);
+        } else {
+          this.cargarProductosSinReferenciaPorDescripcion(descriptionControl.value);
+        }
+      }
+    }
+  }
+
+  private procesarRespuestaProducto(response: any, index: number): void {
+    const producto = this.productosControls.at(index);
+    const descriptionControl = producto.get('description');
+    const estadoControl = producto.get('estado');
+
+    if (response && response.estados && response.estados.length > 0) {
+      descriptionControl?.setValue(response.description);
+      this.productosNuevos.delete(index);
+
+      // Filtrar solo estados con stock > 0
+      const estadosConStock = response.estados.filter((e: any) => e.stock > 0);
+
+      if (estadosConStock.length === 0) {
+        this.productosNuevos.add(index);
+        this.limpiarCamposProducto(index);
+        this.validationService.mostrarError(
+          `El producto ${response.referencia} no tiene stock disponible`
+        );
+        return;
+      }
+
+      // Guardar estados disponibles
+      this.stockManager.setEstadosDisponibles(
+        index,
+        estadosConStock.map((e: any) => e.estado)
+      );
+
+      // Hacer estado obligatorio
+      estadoControl?.setValidators([Validators.required]);
+      estadoControl?.updateValueAndValidity();
+
+      if (estadosConStock.length === 1) {
+        // Auto-seleccionar si solo hay un estado
+        const unicoEstado = estadosConStock[0];
+        estadoControl?.setValue(unicoEstado.estado);
+
+        if (this.esSalida()) {
+          this.cargarUbicacionesYStock(response.referencia, unicoEstado.estado, index);
+        }
+      } else if (estadoControl?.value && this.esSalida()) {
+        // Si ya hay estado seleccionado, cargar ubicaciones
+        this.cargarUbicacionesYStock(response.referencia, estadoControl.value, index);
+      }
+    } else {
+      this.productosNuevos.add(index);
+      this.limpiarCamposProducto(index);
+    }
+  }
+
+  private cargarUbicacionesYStock(referencia: string, estado: string, index: number): void {
+    this.stockManager.cargarUbicacionesPorReferenciaYEstado(referencia, estado, index)
+      .subscribe({
+        next: () => {
+          const producto = this.productosControls.at(index);
+          const ubicacion = producto.get('ubicacion')?.value;
+          
+          if (ubicacion) {
+            this.validarStockEspecifico(index);
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar ubicaciones:', error);
+        }
+      });
+  }
+
+  private limpiarCamposProducto(index: number): void {
+    const producto = this.productosControls.at(index);
+    
+    producto.patchValue({
+      description: '',
+      estado: null,
+      ubicacion: '',
+      unidades: ''
+    });
+
+    this.stockManager.clearEstadosDisponibles(index);
+    this.stockManager.limpiarStockProducto(index, producto.get('ref')?.value);
+  }
+
+  // ============================================
+  // EVENTOS DE CAMBIO
+  // ============================================
+
+  onEstadoChange(index: number): void {
+    const producto = this.productosControls.at(index);
+    const referencia = producto.get('ref')?.value;
+    const estado = producto.get('estado')?.value;
+
+    if (referencia && estado && this.esSalida()) {
+      this.cargarUbicacionesYStock(referencia, estado, index);
+    }
+
+    // División automática si el estado cambió
+    if (producto.get('estado')?.dirty) {
+      setTimeout(() => {
+        this.dividirUnidadesAutomaticamente(index);
+      }, 100);
+    }
+  }
+
+  onUbicacionChange(index: number): void {
+    if (this.esSalida()) {
+      this.validarStockEspecifico(index);
+      this.stockManager.actualizarValidadoresUnidades(
+        this.productosControls,
+        index,
+        this.validationService.esProductoEspecial.bind(this.validationService)
+      );
+    }
+  }
+
+  onUnidadesBlur(index: number): void {
+    this.dividirUnidadesAutomaticamente(index);
+  }
+
+  private dividirUnidadesAutomaticamente(index: number): void {
+    this.stockManager.dividirUnidadesAutomaticamente(
+      this.productosControls,
+      index,
+      this.validationService.esProductoEspecial.bind(this.validationService),
+      this.validationService.mostrarExito.bind(this.validationService)
+    );
+  }
+
+  private validarStockEspecifico(index: number): void {
+    const producto = this.productosControls.at(index);
+    const referencia = producto.get('ref')?.value;
+    const estado = producto.get('estado')?.value;
+    const ubicacion = producto.get('ubicacion')?.value;
+
+    if (!referencia || !estado || !ubicacion) return;
+
+    this.stockManager.validarStockEspecifico(
+      index,
+      referencia,
+      estado,
+      ubicacion,
+      this.currentPath,
+      this.salidaActualId,
+      this.validationService.esProductoEspecial.bind(this.validationService)
+    ).subscribe({
+      next: () => {
+        this.stockManager.actualizarValidadoresUnidades(
+          this.productosControls,
+          index,
+          this.validationService.esProductoEspecial.bind(this.validationService)
+        );
+      },
+      error: (error) => {
+        console.error('Error al validar stock:', error);
+      }
+    });
+  }
+
+  // ============================================
+  // SINCRONIZACIÓN
+  // ============================================
+
+  sincronizarUbicaciones(index: number): void {
+    if (index === 0) {
+      const ubicacion = this.productosControls.at(0).get('ubicacion')?.value;
+      this.productosControls.controls.forEach((producto) => {
+        producto.get('ubicacion')?.setValue(ubicacion);
       });
     }
   }
 
-  hay(campo: string): boolean {
-    return this.entradaSalidaForm.get(campo)?.value != '' && this.entradaSalidaForm.get(campo)?.value != null;
-  }
-
-  ngOnDestroy() {
-    this.entradaSalidaForm.reset();
-    this.salidaUbicacionService.resetProductos();
-    
-    if (this.esSalida()) {
-      this.setSalidaActualId(null);
+  sincronizarFormasEnvio(index: number): void {
+    if (index === 0) {
+      const formaEnvio = this.productosControls.at(0).get('formaEnvio')?.value;
+      this.productosControls.controls.forEach((producto) => {
+        producto.get('formaEnvio')?.setValue(formaEnvio);
+      });
     }
   }
+
+  // ============================================
+  // SUBMIT
+  // ============================================
+
+  onSubmit(): void {
+    this.carga.show();
+    this.btnSubmitActivado = false;
+
+    const validacion = this.validationService.validarFormularioCompleto(
+      this.entradaSalidaForm,
+      this.esEntrada(),
+      this.esSalida(),
+      this.pendiente
+    );
+
+    if (!validacion.valido) {
+      this.validationService.marcarCamposInvalidos(this.entradaSalidaForm);
+      this.validationService.mostrarError(validacion.mensaje || 'Formulario inválido');
+      this.carga.hide();
+      this.btnSubmitActivado = true;
+      return;
+    }
+
+    if (this.esEntrada()) {
+      this.guardarEntrada();
+    } else if (this.esSalida()) {
+      this.guardarSalida();
+    }
+  }
+
+  private guardarEntrada(): void {
+    const entrada = this.facadeService.construirEntrada(this.entradaSalidaForm, this.pendiente);
+
+    this.facadeService.guardarEntrada(entrada).subscribe({
+      next: () => {
+        this.validationService.mostrarExito('Entrada guardada correctamente');
+        this.resetForm();
+        this.otraEntradaSalida();
+        this.entradaSalidaForm.patchValue({
+          fechaRecepcionEnvio: this.facadeService.formatearFecha(new Date())
+        });
+        this.carga.hide();
+        this.btnSubmitActivado = true;
+      },
+      error: (error) => {
+        this.validationService.mostrarError(error.error || 'Error al guardar entrada');
+        this.carga.hide();
+        this.btnSubmitActivado = true;
+      }
+    });
+  }
+
+  private guardarSalida(): void {
+    const salida = this.facadeService.construirSalida(this.entradaSalidaForm, this.pendiente);
+
+    this.facadeService.guardarSalida(salida).subscribe({
+      next: () => {
+        this.validationService.mostrarExito('Salida guardada correctamente');
+        this.resetForm();
+        this.otraEntradaSalida();
+        this.entradaSalidaForm.patchValue({
+          fechaRecepcionEnvio: this.facadeService.formatearFecha(new Date())
+        });
+        this.carga.hide();
+        this.btnSubmitActivado = true;
+      },
+      error: (error) => {
+        this.validationService.mostrarError(error.error || 'Error al guardar salida');
+        this.carga.hide();
+        this.btnSubmitActivado = true;
+      }
+    });
+  }
+
+  modificarEntrada(): void {
+    this.carga.show();
+
+    const entrada = this.facadeService.construirEntrada(this.entradaSalidaForm, this.pendiente);
+    entrada.id = this.detallesES?.id;
+
+    this.facadeService.actualizarEntrada(entrada).subscribe({
+      next: () => {
+        this.validationService.mostrarExito('Entrada actualizada correctamente');
+        location.reload();
+      },
+      error: (error) => {
+        this.validationService.mostrarError(error.error || 'Error al actualizar entrada');
+        this.carga.hide();
+      }
+    });
+  }
+
+  modificarSalida(): void {
+    this.carga.show();
+
+    const salida = this.facadeService.construirSalida(this.entradaSalidaForm, this.pendiente);
+    salida.id = this.detallesES?.id;
+
+    this.facadeService.actualizarSalida(salida).subscribe({
+      next: () => {
+        this.validationService.mostrarExito('Salida actualizada correctamente');
+        location.reload();
+      },
+      error: (error) => {
+        this.validationService.mostrarError(error.error || 'Error al actualizar salida');
+        this.carga.hide();
+      }
+    });
+  }
+
+  // ============================================
+  // NAVEGACIÓN CON TECLADO
+  // ============================================
 
   onEnterKey(event: KeyboardEvent): void {
     const target = event.target as HTMLElement;
 
-    // Detectar si se presionó Tab
     if (event.key === 'Tab') {
       this.isTabbing = true;
-      // No prevenir el comportamiento por defecto del Tab
       return;
     }
 
-    // Si estamos en un campo con dropdown y hay opciones, seleccionar la primera
     if (event.key === 'Enter') {
       let handled = false;
 
-      if (
-        this.activeCampoUnico === 'perfumeria' &&
-        this.perfumerias.length > 0 &&
-        !this.perfumeriaSeleccionada
-      ) {
+      // Verificar si estamos en un autocomplete
+      if (this.activeCampoUnico === 'perfumeria' && this.perfumerias.length > 0 && !this.perfumeriaSeleccionada) {
         event.preventDefault();
         this.selectPerfumeria(this.perfumerias[0]);
         handled = true;
-      } else if (
-        this.activeCampoUnico === 'pdv' &&
-        this.pdvs.length > 0 &&
-        !this.pdvSeleccionado
-      ) {
+      } else if (this.activeCampoUnico === 'pdv' && this.pdvs.length > 0 && !this.pdvSeleccionado) {
         event.preventDefault();
         this.selectPdv(this.pdvs[0]);
         handled = true;
-      } else if (
-        this.activeCampoUnico === 'colaborador' &&
-        this.colaboradores.length > 0 &&
-        !this.colaboradorSeleccionado
-      ) {
+      } else if (this.activeCampoUnico === 'colaborador' && this.colaboradores.length > 0 && !this.colaboradorSeleccionado) {
         event.preventDefault();
         this.selectColaborador(this.colaboradores[0]);
         handled = true;
-      } else if (
-        this.activeCampoUnico === 'otroOrigenDestino' &&
-        this.otrasDirecciones.length > 0 &&
-        !this.otraDireccionSeleccionada
-      ) {
+      } else if (this.activeCampoUnico === 'otroOrigenDestino' && this.otrasDirecciones.length > 0 && !this.otraDireccionSeleccionada) {
         event.preventDefault();
         this.selectOtraDireccion(this.otrasDirecciones[0]);
         handled = true;
       }
 
       if (handled) {
-        // Pasar al siguiente campo después de seleccionar
         setTimeout(() => {
           this.focusNextElement(target);
         }, 100);
         return;
       } else {
-        // Comportamiento normal del Enter
         event.preventDefault();
         this.focusNextElement(target);
       }
@@ -271,28 +844,6 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
-  // Agregar método específico para cuando se hace click en el campo
-  onFieldClick(campo: string): void {
-    this.activeCampoUnico = campo;
-    // Cargar opciones inmediatamente si hay texto
-    this.loadOptionsForActiveField();
-  }
-
-  // Método para limpiar cuando se pierde el foco por click fuera
-  onFieldBlur(event: FocusEvent): void {
-    // Verificar si el siguiente elemento enfocado es parte del dropdown
-    const relatedTarget = event.relatedTarget as HTMLElement;
-    if (
-      relatedTarget &&
-      relatedTarget.classList.contains('autocomplete-item')
-    ) {
-      return; // No limpiar si se hizo click en una opción del dropdown
-    }
-
-    this.clearActiveCampoUnico();
-  }
-
-  // Método auxiliar para enfocar el siguiente elemento
   private focusNextElement(currentElement: HTMLElement): void {
     const inputs = Array.from(
       document.querySelectorAll<HTMLElement>('input, select, textarea, button')
@@ -302,7 +853,6 @@ export class FormularioEntradaSalidaComponent
     if (index >= 0 && index < inputs.length - 1) {
       const nextElement = inputs[index + 1];
 
-      // Si el siguiente elemento es el botón de añadir línea, ejecuta la función
       if (nextElement.classList.contains('add-producto')) {
         this.agregarProducto();
       } else {
@@ -311,486 +861,101 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
-  cargarEstados() {
-    this.estadosService.getEstados().subscribe({
-      next: (data) => {
-        this.estados = data;
-      },
-      error: (error) => {
-        console.error('Error al obtener los estados', error);
-      },
+  // ============================================
+  // SELECCIÓN DE VALORES (AUTOCOMPLETE)
+  // ============================================
+
+  selectPerfumeria(perfumeria: Perfumeria): void {
+    this.entradaSalidaForm.patchValue({
+      perfumeria: perfumeria.nombre,
+      otroOrigenDestino: '',
+      colaborador: ''
     });
+
+    this.perfumeriaSeleccionada = perfumeria;
+    this.cargarPDVs();
+    this.activeCampoUnico = null;
+    this.perfumerias = [];
   }
 
-  cargarPerfumerias(perfumeria: string) {
-    this.direccionesService
-      .getPerfumeriasActivasByNombrePaginado(
-        perfumeria,
-        this.pageIndex,
-        this.pageSize
-      )
-      .subscribe({
-        next: (data) => {
-          this.perfumerias = data.content;
-        },
-        error: (error) => {
-          console.error('Error al obtener las Perfumerías', error);
-        },
-      });
-  }
-
-  cargarPDVs(): Promise<void> {
-    const perfumeria = this.getCampoValue('perfumeria');
-    if (perfumeria && perfumeria != '') {
-      return new Promise((resolve, reject) => {
-        this.direccionesService.getPdvsPerfumeria(perfumeria).subscribe(
-          (data: PDV[]) => {
-            this.pdvs = data;
-            resolve();
-          },
-          (error) => {
-            console.error('Error al obtener los PDVs', error);
-            reject(error);
-          }
-        );
-      });
-    } else {
-      return Promise.resolve();
-    }
-  }
-
-  cargarPDVPerfumeria(perfumeria: string) {
-    this.direccionesService
-      .getPdvsPerfumeria(perfumeria)
-      .subscribe((data: PDV[]) => {
-        this.pdvs = data;
-      });
-  }
-
-  cargarPDVsPerfumeriaByNombre(nombrePerfumeria: string, nombrePdv: string) {
-    this.direccionesService
-      .getPDVsDeUnaPerfumeriaByNombres(nombrePerfumeria, nombrePdv)
-      .subscribe((data: PDV[]) => {
-        this.pdvs = data;
-      });
-  }
-
-  cargarColaboradores() {
-    this.direccionesService.getColaboradoresActivos().subscribe({
-      next: (data) => {
-        this.colaboradores = data;
-      },
-      error: (error) => {
-        console.error('Error al obtener colaboradores', error);
-      },
+  selectPdv(pdv: PDV): void {
+    this.entradaSalidaForm.patchValue({
+      pdv: pdv.nombre,
+      otroOrigenDestino: '',
+      colaborador: ''
     });
+
+    this.pdvSeleccionado = pdv;
+    this.activeCampoUnico = null;
+    this.pdvs = [];
   }
 
-  cargarColaboradoresActivosByNombre(nombre: string) {
-    this.direccionesService
-      .getColaboradoresActivosByNombrePaginado(
-        nombre,
-        this.pageIndex,
-        this.pageSize
-      )
-      .subscribe({
-        next: (data) => {
-          this.colaboradores = data.content;
-        },
-        error: (error) => {
-          console.error('Error al obtener colaboradores', error);
-        },
-      });
-  }
-
-  cargarTodasOtrasDirecciones() {
-    this.direccionesService.getOtrasDirecciones().subscribe({
-      next: (data) => {
-        this.otrasDirecciones = data;
-      },
-      error: (error) => {
-        console.error('Error al obtener otras direcciones', error);
-      },
-    })
-  }
-
-  cargarOtrasDirecciones(direccion: string) {
-    this.direccionesService
-      .getOtrasDireccionesByNombrePaginado(
-        direccion,
-        this.pageIndex,
-        this.pageSize
-      )
-      .subscribe({
-        next: (data) => {
-          this.otrasDirecciones = data.content;
-        },
-        error: (error) => {
-          console.error('Error al obtener otras direcciones', error);
-        },
-      });
-  }
-
-  setProductoPendiente(index: number) {
-    const checked = this.productosControls.at(index).get('estado')?.value;
-  }
-
-  // Cuando voy a importar un Excel
-  private inicializarPrevisionEntradaSalida() {
-    this.pendiente = true;
-    this.importarES.excelData$.subscribe((excelData) => {
-      if (excelData?.length) {
-        this.resetForm();
-        this.mostrarFormulario = true;
-        this.actualizarCamposUnicos(excelData[0]);
-        this.actualizarProductos(excelData);
-        this.carga.hide();
-      } else {
-        this.mostrarFormulario = false;
-      }
-      this.mostrarFormulario = true;
+  selectColaborador(colaborador: Colaborador): void {
+    this.entradaSalidaForm.patchValue({
+      colaborador: colaborador.nombre,
+      otroOrigenDestino: ''
     });
+
+    this.colaboradorSeleccionado = colaborador;
+    this.activeCampoUnico = null;
+    this.colaboradores = [];
   }
 
-  private actualizarCamposUnicos(entradaSalidaFormulario: any) {
-    if (entradaSalidaFormulario && 'origen' in entradaSalidaFormulario) {
-      this.setCampoValue(
-        'fechaRecepcionEnvio',
-        this.formatearFecha(entradaSalidaFormulario.fechaRecepcion)
-      );
-      this.setCampoValue(
-        'perfumeria',
-        entradaSalidaFormulario.perfumeria || ''
-      );
-      if (entradaSalidaFormulario.perfumeria != '') {
-        this.cargarPDVs().then(() => {
-          this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
-        });
-      }
-      this.setCampoValue(
-        'colaborador',
-        entradaSalidaFormulario.colaborador || ''
-      );
-      this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.origen);
-      this.setCampoValue('dcs', entradaSalidaFormulario.dcs);
-    } else if (
-      entradaSalidaFormulario &&
-      'destino' in entradaSalidaFormulario
-    ) {
-      this.setCampoValue(
-        'fechaRecepcionEnvio',
-        this.formatearFecha(entradaSalidaFormulario.fechaEnvio)
-      );
-      this.setCampoValue(
-        'perfumeria',
-        entradaSalidaFormulario.perfumeria || ''
-      );
-      this.cargarPDVs().then(() => {
-        this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
+  selectOtraDireccion(direccion: OtraDireccion): void {
+    this.entradaSalidaForm.patchValue({
+      otroOrigenDestino: direccion.nombre,
+      colaborador: ''
+    });
+
+    if (this.esSalida()) {
+      this.entradaSalidaForm.patchValue({
+        direccion: direccion.direccion || '',
+        poblacion: direccion.poblacion || '',
+        provincia: direccion.provincia || '',
+        cp: direccion.cp || '',
+        telefono: direccion.telefono || ''
       });
-      this.setCampoValue('pdv', entradaSalidaFormulario.pdv);
-      this.setCampoValue(
-        'colaborador',
-        entradaSalidaFormulario.colaborador || ''
-      );
-      this.setCampoValue('otroOrigenDestino', entradaSalidaFormulario.destino);
-      this.setCampoValue('direccion', entradaSalidaFormulario.direccion);
-      this.setCampoValue('poblacion', entradaSalidaFormulario.poblacion);
-      this.setCampoValue('provincia', entradaSalidaFormulario.provincia);
-      this.setCampoValue('cp', entradaSalidaFormulario.cp);
-      this.setCampoValue('telefono', entradaSalidaFormulario.telefono);
-      this.setSalidaActualId(this.detallesES!.id || null);
-    }
-  }
-
-  private actualizarProductos(productos: any[]) {
-    // Limpiar el array existente
-    while (this.productosControls.length) {
-      this.productosControls.removeAt(0);
     }
 
-    productos.forEach((row, index) => {
-      const productoFormGroup = this.createProductoGroup();
+    this.otraDireccionSeleccionada = direccion;
+    this.activeCampoUnico = null;
+    this.otrasDirecciones = [];
+  }
 
-      // Establecer todos los valores de una vez
-      const valoresProducto = {
-        ref: row.referencia || row.ref,
-        description: row.descripcion || row.description,
-        unidades: row.unidades || row.unidadesPedidas,
-        unidadesPedidas: row.unidadesPedidas || row.unidades,
-        ubicacion: row.ubicacion, // Preservar la ubicación original
-        palets: row.palets || 0,
-        bultos: row.bultos || 0,
-        formaEnvio: row.formaEnvio,
-        observaciones: row.observaciones,
-        comprobado: row.comprobado || false,
-        estado: row.estado || null,
-      };
-
-      productoFormGroup.patchValue(valoresProducto);
-
-      // Solo buscar descripción si no está presente
-      if (row.ref && !valoresProducto.description) {
-        this.buscarDescripcionProducto(productoFormGroup, row.ref);
-      }
-
-      this.productosControls.push(productoFormGroup);
+  selectVisual(index: number, visual: Producto): void {
+    const producto = this.productosControls.at(index);
+    producto.patchValue({
+      description: visual.description,
+      unidades: visual.stock
     });
+
+    this.stockManager.cargarUbicacionesProductoEspecial(
+      visual.referencia as string,
+      visual.description as string
+    ).subscribe();
+
+    this.visuales = [];
   }
 
-  // Cuando voy a ver los Detalles de las Entradas/Salidas Pendientes
-  private inicializarDetalleEntradaSalida() {
-    this.mostrarFormulario = true;
-    this.enDetalles = true;
-    this.actualizarProductos(this.detallesES!.productos!);
-    this.actualizarCamposUnicos(this.detallesES);
-    this.marcarCamposInvalidos();
-
-    setTimeout(() => {
-      this.productosControls.controls.sort((a, b) => {
-        const refA = a.get('ref')?.value || '';
-        const refB = b.get('ref')?.value || '';
-        return refA.localeCompare(refB);
-      });
-
-      if (this.esSalida()) {
-        this.cargarAgenciasTransporte();
-
-        // Usar Promise.all para esperar a que todas las ubicaciones se carguen
-        const promesasCarga = this.productosControls.controls.map(
-          (control, index) => {
-            const ref = control.get('ref')?.value;
-            const estado = control.get('estado')?.value;
-            const descripcion = control.get('description')?.value;
-
-            return new Promise<void>((resolve) => {
-              if (ref && !this.esProductoEspecial(ref)) {
-                // Para productos normales, cargar estados disponibles
-                this.productoService
-                  .getEstadosDisponiblesPorReferencia(ref)
-                  .subscribe((estados) => {
-                    this.estadosDisponiblesPorProducto[index] = estados;
-
-                    // Si ya tiene estado, cargar ubicaciones
-                    if (estado) {
-                      this.cargarUbicacionesPorReferenciaYEstadoConCallback(
-                        ref,
-                        estado,
-                        index,
-                        resolve
-                      );
-                    } else {
-                      resolve();
-                    }
-                  });
-              } else if (this.esProductoEspecial(ref) && descripcion) {
-                // Para productos especiales, usar descripción
-                this.obtenerUbicacionesProductoEspecial(ref, descripcion);
-                resolve();
-              } else {
-                resolve();
-              }
-            });
-          }
-        );
-
-        // Cuando todas las ubicaciones estén cargadas, forzar actualización
-        Promise.all(promesasCarga).then(() => {
-          setTimeout(() => {
-            // Forzar la actualización de todos los controles de ubicación
-            this.productosControls.controls.forEach((control, index) => {
-              const ubicacionControl = control.get('ubicacion');
-              const ubicacionGuardada = ubicacionControl?.value;
-
-              if (ubicacionGuardada) {
-                // Mantener el valor y forzar actualización visual
-                ubicacionControl?.setValue(ubicacionGuardada);
-                ubicacionControl?.updateValueAndValidity();
-              }
-
-              // Validar stock si es necesario
-              if (this.esSalida()) {
-                this.validarStockEspecifico(index);
-                this.actualizarValidadoresUnidades(index);
-              }
-            });
-
-            // Forzar detección de cambios
-            this.cdr.detectChanges();
-          }, 100);
-        });
-      }
+  selectProductosSR(index: number, sinReferencia: Producto): void {
+    const producto = this.productosControls.at(index);
+    producto.patchValue({
+      description: sinReferencia.description
     });
+
+    this.stockManager.cargarUbicacionesProductoEspecial(
+      sinReferencia.referencia as string,
+      sinReferencia.description as string
+    ).subscribe();
+
+    this.productosSR = [];
   }
 
-  // Nuevo método auxiliar para cargar ubicaciones con callback
-  private cargarUbicacionesPorReferenciaYEstadoConCallback(
-    referencia: string,
-    estado: string,
-    index: number,
-    callback: () => void
-  ) {
-    const key = `${referencia}-${estado}`;
+  // ============================================
+  // MANEJO DE DIRECCIONES
+  // ============================================
 
-    if (this.ubicacionesPorProductoYEstado[key]) {
-      callback();
-      return;
-    }
-
-    this.ubicacionesService
-      .getUbicacionesByReferenciaAndEstado(referencia, estado)
-      .subscribe({
-        next: (data: Ubicacion[]) => {
-          this.ubicacionesPorProductoYEstado[key] = data;
-          callback();
-        },
-        error: (error) => {
-          console.error(
-            'Error al obtener ubicaciones por referencia y estado:',
-            error
-          );
-          this.ubicacionesPorProductoYEstado[key] = [];
-          callback();
-        },
-      });
-  }
-
-  modificarEntrada() {
-    this.carga.show();
-    if (this.previsionEsValida()) {
-      const productosEntrada: ProductoEntrada[] =
-        this.entradaSalidaForm.value.productos.map((producto: any) => {
-          // Crear un nuevo objeto ProductoEntrada
-          return {
-            ref: producto.ref,
-            description: producto.description,
-            unidades: producto.unidades,
-            ubicacion: producto.ubicacion,
-            palets: producto.palets,
-            bultos: producto.bultos,
-            observaciones: producto.observaciones,
-            comprobado: producto.comprobado,
-            estado: producto.estado || null,
-          };
-        });
-
-      // Crear el objeto Entrada
-      const entradaActualizada: Entrada = {
-        id: this.detallesES?.id,
-        origen: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
-        colaborador: this.entradaSalidaForm.get('colaborador')?.value,
-        perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
-        pdv: this.entradaSalidaForm.get('pdv')?.value,
-        dcs: this.entradaSalidaForm.get('dcs')!.value,
-        estado: !this.pendiente,
-        productos: productosEntrada,
-        rellena: false,
-        fechaRecepcion: this.entradaSalidaForm.get('fechaRecepcionEnvio')!
-          .value,
-      };
-
-      this.entradaService.updateEntrada(entradaActualizada).subscribe({
-        next: (updatedEntrada) => {
-          console.log('Entrada actualizada:', updatedEntrada);
-          location.reload();
-          this.snackBarExito('Entrada actualizada exitosamente');
-        },
-        error: (err) => console.error('Error al actualizar la entrada:', err),
-      });
-    } else {
-      this.carga.hide();
-    }
-  }
-
-  modificarSalida() {
-    this.carga.show();
-    if (this.previsionEsValida()) {
-      const productosSalida: ProductoEntrada[] =
-        this.entradaSalidaForm.value.productos.map((producto: any) => {
-          // Crear un nuevo objeto ProductoEntrada
-          return {
-            productoId: producto.productoId,
-            ref: producto.ref,
-            description: producto.description,
-            unidades: producto.unidades,
-            unidadesPedidas: producto.unidadesPedidas,
-            ubicacion: producto.ubicacion,
-            palets: producto.palets,
-            bultos: producto.bultos,
-            observaciones: producto.observaciones,
-            formaEnvio: producto.formaEnvio,
-            comprobado: producto.comprobado,
-            estado: producto.estado || null,
-          };
-        });
-
-      // Crear el objeto Salida
-      const salidaActualizada: Salida = {
-        id: this.detallesES?.id,
-        destino: this.entradaSalidaForm.get('otroOrigenDestino')?.value,
-        colaborador: this.entradaSalidaForm.get('colaborador')?.value,
-        perfumeria: this.entradaSalidaForm.get('perfumeria')?.value,
-        pdv: this.entradaSalidaForm.get('pdv')?.value,
-        direccion: this.entradaSalidaForm.get('direccion')!.value,
-        poblacion: this.entradaSalidaForm.get('poblacion')!.value,
-        provincia: this.entradaSalidaForm.get('provincia')!.value,
-        cp: this.entradaSalidaForm.get('cp')!.value,
-        telefono: this.entradaSalidaForm.get('telefono')!.value,
-        estado: !this.pendiente,
-        productos: productosSalida,
-        fechaEnvio: this.entradaSalidaForm.get('fechaRecepcionEnvio')!.value,
-        rellena: false,
-      };
-
-      salidaActualizada.rellena =
-        this.todosLosCamposRellenos(salidaActualizada);
-      console.log(salidaActualizada);
-
-      this.salidaService.updateSalida(salidaActualizada).subscribe({
-        next: (updatedSalida) => {
-          console.log('Salida actualizada:', updatedSalida);
-          location.reload();
-          this.snackBarExito('Salida actualizada exitosamente');
-        },
-        error: (err) => console.error('Error al actualizar la salida:', err),
-      });
-    }
-  }
-
-  todosLosCamposRellenos(salida: Salida): boolean {
-    return salida.productos!.every(
-      (producto) =>
-        producto.description &&
-        producto.unidades &&
-        producto.unidades > 0 &&
-        producto.ubicacion &&
-        producto.ubicacion != '' &&
-        producto.palets! >= 0 &&
-        producto.bultos! >= 0 &&
-        producto.formaEnvio &&
-        producto.formaEnvio.trim() !== '' &&
-        producto.comprobado &&
-        // Permitir estado null para productos especiales
-        (producto.estado != null || this.esProductoEspecial(producto.ref!))
-    );
-  }
-
-  cargarAgenciasTransporte() {
-    this.agenciasTransporteService.getAgenciasTransporteActivas().subscribe({
-      next: (agencias) => {
-        this.agenciasTransporte = agencias;
-      },
-      error: (error) => {
-        console.error('Error al obtener agencias de transporte', error);
-      },
-    });
-  }
-
-  esPrevision(): boolean {
-    return this.pestanaPadre.startsWith('prevision');
-  }
-
-  private rellenarDireccionPDV(nombrePDV: string) {
+  private rellenarDireccionPDV(nombrePDV: string): void {
     const pdvSeleccionado = this.pdvs.find((pdv) => pdv.nombre === nombrePDV);
     if (pdvSeleccionado) {
       this.entradaSalidaForm.patchValue({
@@ -798,20 +963,16 @@ export class FormularioEntradaSalidaComponent
         poblacion: pdvSeleccionado.poblacion || '',
         provincia: pdvSeleccionado.provincia || '',
         cp: pdvSeleccionado.cp || '',
-        telefono: pdvSeleccionado.telefono || '',
+        telefono: pdvSeleccionado.telefono || ''
       });
 
-      // Si el PDV tiene un colaborador asociado, rellenar también el campo colaborador
       if (pdvSeleccionado.colaborador) {
-        this.cargarColaboradoresActivosByNombre(
-          pdvSeleccionado.colaborador.nombre!
-        );
+        this.cargarColaboradoresPorNombre(pdvSeleccionado.colaborador.nombre!);
       }
     }
   }
 
-  // Método para rellenar la dirección desde un Colaborador
-  private rellenarDireccionColaborador(nombreColaborador: string) {
+  private rellenarDireccionColaborador(nombreColaborador: string): void {
     const colaboradorSeleccionado = this.colaboradores.find(
       (col) => col.nombre === nombreColaborador
     );
@@ -821,14 +982,12 @@ export class FormularioEntradaSalidaComponent
         poblacion: colaboradorSeleccionado.poblacion || '',
         provincia: colaboradorSeleccionado.provincia || '',
         cp: colaboradorSeleccionado.cp || '',
-        telefono: colaboradorSeleccionado.telefono || '',
+        telefono: colaboradorSeleccionado.telefono || ''
       });
     }
   }
 
-  // Método para limpiar los campos de dirección
-  private limpiarCamposDireccion() {
-    // Solo limpiamos si no hay ningún otro campo seleccionado que deba mantener la dirección
+  private limpiarCamposDireccion(): void {
     const otroOrigen = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
     const pdv = this.entradaSalidaForm.get('pdv')?.value;
     const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
@@ -839,128 +998,255 @@ export class FormularioEntradaSalidaComponent
         poblacion: '',
         provincia: '',
         cp: '',
-        telefono: '',
+        telefono: ''
       });
     }
   }
 
-  // Método para seleccionar una dirección
-  selectPerfumeria(perfumeria: Perfumeria) {
-    this.entradaSalidaForm.patchValue({
-      perfumeria: perfumeria.nombre,
-      otroOrigenDestino: '',
-      colaborador: '',
-    });
+  // ============================================
+  // VISUALES Y PRODUCTOS SIN REFERENCIA
+  // ============================================
 
-    this.perfumeriaSeleccionada = perfumeria;
-    this.cargarPDVPerfumeria(perfumeria.nombre!);
+  buscarProductoEspecial(index: number): void {
+    if (!this.esSalida()) return;
 
-    // Limpiar el dropdown inmediatamente
-    this.activeCampoUnico = null;
-    this.perfumerias = []; // Limpiar la lista para ocultar el dropdown
+    const producto = this.productosControls.at(index);
+    const ref = producto.get('ref')?.value;
+    const description = producto.get('description')?.value;
+
+    if (ref === 'VISUAL') {
+      if (!description) {
+        this.cargarVisuales();
+      } else {
+        this.cargarVisualesPorDescripcion(description);
+      }
+    } else if (ref === 'SIN REFERENCIA') {
+      if (!description) {
+        this.cargarProductosSinReferencia();
+      } else {
+        this.cargarProductosSinReferenciaPorDescripcion(description);
+      }
+    }
   }
 
-  selectPdv(pdv: PDV) {
-    this.entradaSalidaForm.patchValue({
-      pdv: pdv.nombre,
-      otroOrigenDestino: '',
-      colaborador: '',
-    });
-
-    this.pdvSeleccionado = pdv;
-    this.activeCampoUnico = null;
-    this.pdvs = []; // Limpiar la lista
+  private cargarVisuales(): void {
+    this.facadeService.cargarVisuales(this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (visuales) => {
+          this.visuales = visuales;
+        },
+        error: (error) => {
+          console.error('Error al cargar visuales:', error);
+        }
+      });
   }
 
-  selectColaborador(colaborador: Colaborador) {
-    this.entradaSalidaForm.patchValue({
-      colaborador: colaborador.nombre,
-      otroOrigenDestino: '',
-    });
-
-    this.colaboradorSeleccionado = colaborador;
-    this.activeCampoUnico = null;
-    this.colaboradores = []; // Limpiar la lista
+  private cargarVisualesPorDescripcion(descripcion: string): void {
+    this.facadeService.cargarVisualesPorDescripcion(descripcion, this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (visuales) => {
+          this.visuales = visuales;
+        },
+        error: (error) => {
+          console.error('Error al cargar visuales:', error);
+        }
+      });
   }
 
-  selectOtraDireccion(direccion: OtraDireccion) {
-    this.entradaSalidaForm.patchValue({
-      otroOrigenDestino: direccion.nombre,
-      colaborador: '',
-    });
+  private cargarProductosSinReferencia(): void {
+    this.facadeService.cargarProductosSinReferencia(this.pageIndex, this.pageSize)
+      .subscribe({
+        next: (productos) => {
+          this.productosSR = productos;
+        },
+        error: (error) => {
+          console.error('Error al cargar productos sin referencia:', error);
+        }
+      });
+  }
 
-    if (this.currentPath.startsWith('/salidas')) {
+  private cargarProductosSinReferenciaPorDescripcion(descripcion: string): void {
+    this.facadeService.cargarProductosSinReferenciaPorDescripcion(
+      descripcion,
+      this.pageIndex,
+      this.pageSize
+    ).subscribe({
+      next: (productos) => {
+        this.productosSR = productos;
+      },
+      error: (error) => {
+        console.error('Error al cargar productos sin referencia:', error);
+      }
+    });
+  }
+
+  // ============================================
+  // ACTUALIZACIÓN DE FORMULARIO
+  // ============================================
+
+  private actualizarCamposUnicos(datos: any): void {
+    if (!datos) return;
+
+    if ('origen' in datos) {
+      // Es entrada
       this.entradaSalidaForm.patchValue({
-        direccion: direccion.direccion || '',
-        poblacion: direccion.poblacion || '',
-        provincia: direccion.provincia || '',
-        cp: direccion.cp || '',
-        telefono: direccion.telefono || '',
+        fechaRecepcionEnvio: this.facadeService.formatearFecha(datos.fechaRecepcion),
+        perfumeria: datos.perfumeria || '',
+        pdv: datos.pdv || '',
+        colaborador: datos.colaborador || '',
+        otroOrigenDestino: datos.origen || '',
+        dcs: datos.dcs || ''
       });
+
+      if (datos.perfumeria) {
+        this.cargarPDVs();
+      }
+    } else if ('destino' in datos) {
+      // Es salida
+      this.entradaSalidaForm.patchValue({
+        fechaRecepcionEnvio: this.facadeService.formatearFecha(datos.fechaEnvio),
+        perfumeria: datos.perfumeria || '',
+        pdv: datos.pdv || '',
+        colaborador: datos.colaborador || '',
+        otroOrigenDestino: datos.destino || '',
+        direccion: datos.direccion || '',
+        poblacion: datos.poblacion || '',
+        provincia: datos.provincia || '',
+        cp: datos.cp || '',
+        telefono: datos.telefono || ''
+      });
+
+      if (datos.perfumeria) {
+        this.cargarPDVs();
+      }
+
+      if (datos.id) {
+        this.salidaActualId = datos.id;
+      }
+    }
+  }
+
+  private actualizarProductos(productos: any[]): void {
+    // Limpiar productos existentes
+    while (this.productosControls.length) {
+      this.productosControls.removeAt(0);
     }
 
-    this.otraDireccionSeleccionada = direccion;
-    this.activeCampoUnico = null;
-    this.otrasDirecciones = []; // Limpiar la lista
-  }
+    // Agregar nuevos productos
+    productos.forEach((prod) => {
+      const productoGroup = this.formBuilder.createProductoGroup();
 
-  selectVisual(i: number, visual: Producto) {
-    this.productosControls
-      .at(i)
-      .get('description')
-      ?.setValue(visual.description);
-    this.productosControls.at(i).get('unidades')?.setValue(visual.stock);
-    this.obtenerUbicacionesProductoEspecial(
-      visual.referencia as string,
-      visual.description as string
-    );
-    console.log('Visual seleccionado: ', visual);
-    this.visuales = [];
-  }
+      const valores = {
+        ref: prod.referencia || prod.ref,
+        description: prod.descripcion || prod.description,
+        unidades: prod.unidades || prod.unidadesPedidas,
+        unidadesPedidas: prod.unidadesPedidas || prod.unidades,
+        ubicacion: prod.ubicacion,
+        palets: prod.palets || 0,
+        bultos: prod.bultos || 0,
+        formaEnvio: prod.formaEnvio,
+        observaciones: prod.observaciones,
+        comprobado: prod.comprobado || false,
+        estado: prod.estado || null,
+        productoId: prod.id || prod.productoId
+      };
 
-  selectProductosSR(i: number, sinReferencia: Producto) {
-    this.productosControls
-      .at(i)
-      .get('description')
-      ?.setValue(sinReferencia.description);
-    this.obtenerUbicacionesProductoEspecial(
-      sinReferencia.referencia as string,
-      sinReferencia.description as string
-    );
-    console.log('Producto SR seleccionado: ', sinReferencia);
-    this.productosSR = [];
-  }
+      productoGroup.patchValue(valores);
 
-  obtenerUbicacionesProductoEspecial(ref: string, descripcion: string): void {
-    if (this.esProductoEspecial(ref)) {
-      // Producto especial: se obtienen las ubicaciones por descripción
-      if (!descripcion) {
-        console.error(
-          'No se proporcionó descripción para el producto especial'
-        );
-        return;
-      }
-      if (this.ubicacionesPorProducto[descripcion]) {
-        console.log('Ya existe producto especial');
-        return;
-      }
-      this.ubicacionesService
-        .getUbicacionesByDescripcionProducto(descripcion)
-        .subscribe({
-          next: (data: Ubicacion[]) => {
-            console.log('Producto especial obtenido!!');
-            this.ubicacionesPorProducto[descripcion] = data; // Se almacena usando la descripción como clave
-          },
-          error: (error) => {
-            console.error(
-              'Error al obtener ubicaciones por descripción:',
-              error
-            );
-            this.ubicacionesPorProducto[descripcion] = [];
-          },
+      // Solo buscar descripción si no está presente
+      if (valores.ref && !valores.description) {
+        this.facadeService.buscarProductoPorReferencia(valores.ref).subscribe({
+          next: (response) => {
+            if (response) {
+              productoGroup.get('description')?.setValue(response.description);
+            }
+          }
         });
-    }
+      }
+
+      this.productosControls.push(productoGroup);
+    });
+
+    this.cdr.detectChanges();
   }
+
+  private cargarDatosParaDetalleSalida(): void {
+    // Cargar ubicaciones y validar stock para cada producto
+    const promesas: Observable<void>[] = [];
+
+    this.productosControls.controls.forEach((control, index) => {
+      const ref = control.get('ref')?.value;
+      const estado = control.get('estado')?.value;
+      const descripcion = control.get('description')?.value;
+
+      if (ref && !this.validationService.esProductoEspecial(ref)) {
+        // Para productos normales
+        if (estado) {
+          const promesa = this.stockManager
+            .cargarUbicacionesPorReferenciaYEstado(ref, estado, index)
+            .pipe(
+              switchMap(() => {
+                const ubicacion = control.get('ubicacion')?.value;
+                if (ubicacion) {
+                  return this.stockManager.validarStockEspecifico(
+                    index,
+                    ref,
+                    estado,
+                    ubicacion,
+                    this.currentPath,
+                    this.salidaActualId,
+                    this.validationService.esProductoEspecial.bind(this.validationService)
+                  );
+                }
+                return of(void 0);
+              })
+            );
+          promesas.push(promesa);
+        }
+      } else if (this.validationService.esProductoEspecial(ref) && descripcion) {
+        // Para productos especiales
+        const promesa = this.stockManager
+          .cargarUbicacionesProductoEspecial(ref, descripcion)
+          .pipe(map(() => void 0));
+        promesas.push(promesa);
+      }
+    });
+
+    // Esperar a que todas las cargas terminen
+    forkJoin(promesas.length > 0 ? promesas : [of(void 0)]).subscribe({
+      next: () => {
+        // Forzar actualización de controles
+        setTimeout(() => {
+          this.productosControls.controls.forEach((control, index) => {
+            const ubicacionControl = control.get('ubicacion');
+            const ubicacionGuardada = ubicacionControl?.value;
+
+            if (ubicacionGuardada) {
+              ubicacionControl?.setValue(ubicacionGuardada);
+              ubicacionControl?.updateValueAndValidity();
+            }
+
+            if (this.esSalida()) {
+              this.stockManager.actualizarValidadoresUnidades(
+                this.productosControls,
+                index,
+                this.validationService.esProductoEspecial.bind(this.validationService)
+              );
+            }
+          });
+
+          this.cdr.detectChanges();
+        }, 100);
+      },
+      error: (error) => {
+        console.error('Error al cargar datos de detalle:', error);
+      }
+    });
+  }
+
+  // ============================================
+  // GESTIÓN DE ESTADO ACTIVO
+  // ============================================
 
   setActiveRow(index: number): void {
     this.activeRowIndex = index;
@@ -974,30 +1260,24 @@ export class FormularioEntradaSalidaComponent
 
   setActiveCampoUnico(campo: string): void {
     this.activeCampoUnico = campo;
-    // Si llegamos aquí por Tab y el campo tiene valor, cargar las opciones
     if (this.isTabbing) {
       setTimeout(() => {
-        console.log('Activamos campo único:', campo);
         this.loadOptionsForActiveField();
-        this.isTabbing = false; // Reset el flag
+        this.isTabbing = false;
       }, 200);
     }
   }
 
   clearActiveCampoUnico(): void {
     setTimeout(() => {
-      console.log('Desactivamos campo único');
       this.activeCampoUnico = null;
     }, 50);
   }
 
-  // Método para cargar opciones del campo activo
   private loadOptionsForActiveField(): void {
     if (!this.activeCampoUnico) return;
 
-    const valorActual = this.entradaSalidaForm.get(
-      this.activeCampoUnico
-    )?.value;
+    const valorActual = this.entradaSalidaForm.get(this.activeCampoUnico)?.value;
     if (!valorActual || valorActual.trim() === '') return;
 
     switch (this.activeCampoUnico) {
@@ -1016,7 +1296,7 @@ export class FormularioEntradaSalidaComponent
         break;
       case 'colaborador':
         if (!this.colaboradorSeleccionado) {
-          this.cargarColaboradoresActivosByNombre(valorActual);
+          this.cargarColaboradoresPorNombre(valorActual);
         }
         break;
       case 'otroOrigenDestino':
@@ -1027,384 +1307,239 @@ export class FormularioEntradaSalidaComponent
     }
   }
 
-  // Modificar el método onEstadoChange para incluir la división automática
-  override onEstadoChange(index: number) {
-    super.onEstadoChange(index);
+  // ============================================
+  // UTILIDADES Y HELPERS
+  // ============================================
 
-    // Solo ejecutar si el estado cambió realmente
-    const estadoControl = this.productosControls.at(index).get('estado');
-    if (estadoControl?.dirty) {
-      setTimeout(() => {
-        this.dividirUnidadesAutomaticamente(index);
-      }, 100);
+  resetForm(): void {
+    this.entradaSalidaForm.reset();
+    this.entradaSalidaForm = this.formBuilder.createForm();
+    this.productosNuevos.clear();
+    this.stockManager.limpiarCache();
+  }
+
+  otraEntradaSalida(): void {
+    this.inicializarFormulario();
+    this.cargarDatosIniciales();
+    this.configurarObservables();
+    
+    if (!this.detallesES) {
+      this.inicializarNuevoFormulario();
+    } else {
+      this.inicializarDetalleFormulario();
     }
   }
 
-  // Método que se ejecute cuando se cambian las unidades
-  onUnidadesBlur(index: number) {
-    // Ejecutar la división automática que ya incluye deshacer divisiones anteriores
-    this.dividirUnidadesAutomaticamente(index);
+  hay(campo: string): boolean {
+    const valor = this.entradaSalidaForm.get(campo)?.value;
+    return valor != null && valor !== '';
   }
 
-  // Método para verificar si hay líneas con la misma referencia y estado
-  private hayLineasConMismaReferenciaYEstado(index: number): boolean {
-    const productoActual = this.productosControls.at(index);
-    const refActual = productoActual.get('ref')?.value;
-    const estadoActual = productoActual.get('estado')?.value;
+  esEntrada(): boolean {
+    return this.currentPath.startsWith('/entradas');
+  }
 
-    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
+  esSalida(): boolean {
+    return this.currentPath.startsWith('/salidas');
+  }
+
+  isProductoNuevo(index: number): boolean {
+    const ref = this.productosControls.at(index).get('ref')?.value;
+    if (ref === 'VISUAL' || ref === 'SIN REFERENCIA') {
       return false;
     }
-
-    for (let i = 0; i < this.productosControls.length; i++) {
-      if (i === index) continue;
-
-      const control = this.productosControls.at(i);
-      const ref = control.get('ref')?.value;
-      const estado = control.get('estado')?.value;
-
-      if (ref === refActual && estado === estadoActual) {
-        return true;
-      }
-    }
-
-    return false;
+    return this.productosNuevos.has(index);
   }
 
-  // Método para obtener el total de unidades disponibles para dividir
-  private getTotalUnidadesDisponibles(
-    refActual: string,
-    estadoActual: string,
-    indexExcluir: number
-  ): number {
-    let total = 0;
-
-    for (let i = 0; i < this.productosControls.length; i++) {
-      if (i === indexExcluir) continue;
-
-      const control = this.productosControls.at(i);
-      const ref = control.get('ref')?.value;
-      const estado = control.get('estado')?.value;
-      const unidades = control.get('unidades')?.value || 0;
-
-      if (ref === refActual && estado === estadoActual) {
-        total += unidades;
-      }
-    }
-
-    return total;
+  campoVacio(nombreCampo: string, index: number): boolean {
+    const control = this.productosControls.at(index).get(nombreCampo);
+    return !control?.valid && control?.touched || false;
   }
 
-  // Método para mostrar información sobre la división en tiempo real
-  mostrarInfoDivision(index: number): string {
-    const productoActual = this.productosControls.at(index);
-    const refActual = productoActual.get('ref')?.value;
-    const estadoActual = productoActual.get('estado')?.value;
+  campoSimpleVacio(nombreCampo: string): boolean {
+    const control = this.entradaSalidaForm.get(nombreCampo);
+    return !control?.valid && control?.touched || false;
+  }
 
-    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
-      return '';
+  refValidaIndex(index: number): boolean {
+    const ref = this.productosControls.at(index).get('ref')?.value;
+    return this.validationService.refValida(ref);
+  }
+
+  descriptionValida(index: number): boolean {
+    const description = this.productosControls.at(index).get('description')?.value;
+    return description && description.trim().length > 0;
+  }
+
+  // ============================================
+  // MÉTODOS DE VALIDACIÓN PARA EL TEMPLATE
+  // ============================================
+  
+  /**
+   * Valida si perfumería y PDV están correctamente rellenados
+   */
+  perfumeriaValido(): boolean {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+  
+    // Ambos vacíos o ambos llenos es válido
+    return (!perfumeria && !pdv) || (perfumeria && pdv);
+  }
+  
+  /**
+   * Valida si PDV está correctamente rellenado (junto con perfumería)
+   */
+  pdvValido(): boolean {
+    return this.perfumeriaValido(); // La misma lógica
+  }
+  
+  /**
+   * Valida si el colaborador está correctamente rellenado
+   */
+  colaboradorValido(): boolean {
+    const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
+    return !!colaborador && colaborador.trim() !== '';
+  }
+  
+  /**
+   * Valida si otro origen/destino está correctamente rellenado
+   */
+  otroOrigenDestinoValido(): boolean {
+    const otroOrigenDestino = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    return !!otroOrigenDestino && otroOrigenDestino.trim() !== '';
+  }
+  
+  /**
+   * Valida si el DCS tiene el formato correcto
+   */
+  dcsValido(): boolean {
+    const dcs = this.entradaSalidaForm.get('dcs')?.value;
+    return this.validationService.dcsValido(dcs);
+  }
+  
+  /**
+   * Verifica si la previsión es válida solo para campos simples (para UI)
+   * Usado para determinar si mostrar campos en rojo o no
+   */
+  previsionEsValidaCampoSimple(): boolean {
+    const perfumeria = this.entradaSalidaForm.get('perfumeria')?.value;
+    const pdv = this.entradaSalidaForm.get('pdv')?.value;
+    const colaborador = this.entradaSalidaForm.get('colaborador')?.value;
+    const otroOrigenDestino = this.entradaSalidaForm.get('otroOrigenDestino')?.value;
+    const dcs = this.entradaSalidaForm.get('dcs')?.value;
+  
+    // Validar que perfumería y PDV vayan juntos
+    const perfumeriaPdvCompleto = (perfumeria && pdv) || (!perfumeria && !pdv);
+    if (!perfumeriaPdvCompleto) {
+      return false;
     }
+  
+    // Casos válidos de origen/destino
+    const tienePerfumeriaPdv = perfumeria && pdv;
+    const tieneColaborador = colaborador && colaborador.trim() !== '';
+    const tieneOtroOrigenDestino = otroOrigenDestino && otroOrigenDestino.trim() !== '';
+    const tieneDcs = dcs && dcs.trim() !== '';
+    const dcsEsValido = this.validationService.dcsValido(dcs);
+  
+    // Combinaciones válidas
+    const combinacionesValidas = [
+      tienePerfumeriaPdv && !tieneColaborador && !tieneOtroOrigenDestino,
+      !tienePerfumeriaPdv && tieneColaborador && !tieneOtroOrigenDestino,
+      !tienePerfumeriaPdv && !tieneColaborador && tieneOtroOrigenDestino,
+      tienePerfumeriaPdv && tieneColaborador && !tieneOtroOrigenDestino,
+      tienePerfumeriaPdv && !tieneColaborador && tieneOtroOrigenDestino,
+      !tienePerfumeriaPdv && !tieneColaborador && !tieneOtroOrigenDestino && tieneDcs && dcsEsValido,
+    ];
+  
+    return combinacionesValidas.some((c) => c);
+  }
+  
+  /**
+   * Verifica si una referencia es de producto especial
+   */
+  esProductoEspecial(referencia: string): boolean {
+    return this.validationService.esProductoEspecial(referencia);
+  }
 
-    const totalDisponible = this.getTotalUnidadesDisponibles(
-      refActual,
-      estadoActual,
-      index
+  // ============================================
+  // MÉTODOS PARA TEMPLATE
+  // ============================================
+
+  getEstadosDisponibles(index: number, esSalida: boolean): string[] {
+    if (esSalida) {
+      const estadosDisponibles = this.stockManager.getEstadosDisponibles(index);
+      return estadosDisponibles || this.estados.map(e => e.nombre!);
+    }
+    return this.estados.map(e => e.nombre!);
+  }
+
+  getUbicacionesPorIndice(index: number): Ubicacion[] {
+    return this.stockManager.getUbicacionesPorIndice(
+      this.productosControls,
+      index,
+      this.validationService.esProductoEspecial.bind(this.validationService)
     );
-
-    if (totalDisponible > 0 && this.hayLineasConMismaReferenciaYEstado(index)) {
-      return `${totalDisponible} unidades disponibles para dividir`;
-    }
-
-    return '';
   }
 
-  // Método para obtener estados disponibles (llamado desde template)
-  override getEstadosDisponibles(index: number, esSalida: boolean): string[] {
-    return super.getEstadosDisponibles(index, esSalida);
+  esEstadoRequerido(index: number): boolean {
+    const ref = this.productosControls.at(index).get('ref')?.value;
+    return !this.validationService.esProductoEspecial(ref);
   }
 
-  // Método para obtener ubicaciones por índice (llamado desde template)
-  override getUbicacionesPorIndice(index: number): Ubicacion[] {
-    return super.getUbicacionesPorIndice(index);
+  unidadesExcedenStock(index: number): boolean {
+    if (!this.esSalida()) return false;
+
+    return this.stockManager.unidadesExcedenStock(
+      this.productosControls,
+      index,
+      this.validationService.esProductoEspecial.bind(this.validationService)
+    );
   }
 
-  // Método para verificar si el estado es requerido (llamado desde template)
-  override esEstadoRequerido(index: number): boolean {
-    return super.esEstadoRequerido(index);
+  getStockDisponible(index: number): number {
+    const producto = this.productosControls.at(index);
+    const referencia = producto.get('ref')?.value;
+    const estado = producto.get('estado')?.value;
+    const ubicacion = producto.get('ubicacion')?.value;
+
+    if (!referencia || !estado || !ubicacion) return 0;
+
+    return this.stockManager.getStockDisponible(index, referencia, estado, ubicacion);
   }
 
-  // Método para manejar cambio de ubicación (llamado desde template)
-  override onUbicacionChange(index: number) {
-    super.onUbicacionChange(index);
+  getMensajeStock(index: number): string {
+    if (!this.esSalida()) return '';
+
+    const producto = this.productosControls.at(index);
+    const referencia = producto.get('ref')?.value;
+    const estado = producto.get('estado')?.value;
+    const ubicacion = producto.get('ubicacion')?.value;
+
+    if (!referencia || !estado || !ubicacion) return '';
+
+    return this.stockManager.getMensajeStock(
+      index,
+      referencia,
+      estado,
+      ubicacion,
+      this.currentPath,
+      this.validationService.esProductoEspecial.bind(this.validationService)
+    );
   }
 
-  // Método para verificar si las unidades exceden el stock (llamado desde template)
-  override unidadesExcedenStock(index: number): boolean {
-    return super.unidadesExcedenStock(index);
-  }
-
-  // Método para obtener stock disponible (llamado desde template)
-  override getStockDisponible(index: number): number {
-    return super.getStockDisponible(index);
-  }
-
-  // Método para mostrar mensaje de stock disponible
-
-  // Método para inicializar el formulario con datos existentes (en caso de edición)
-  inicializarFormularioConDatos(datosExistentes: any) {
-    // Cargar datos del formulario
-    this.entradaSalidaForm.patchValue(datosExistentes);
-
-    // Para cada producto, cargar las ubicaciones disponibles
-    datosExistentes.productos?.forEach((producto: any, index: number) => {
-      if (producto.ref && producto.estado && this.esSalida()) {
-        this.cargarUbicacionesPorReferenciaYEstado(
-          producto.ref,
-          producto.estado,
-          index
-        );
-      }
-    });
-
-    // Forzar actualización después de un delay para asegurar que las ubicaciones se carguen
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 500);
-  }
-
-  // Método para dividir unidades automáticamente
-  private dividirUnidadesAutomaticamente(index: number) {
-    const productoActual = this.productosControls.at(index);
-    const refActual = productoActual.get('ref')?.value;
-    const estadoActual = productoActual.get('estado')?.value;
-    const unidadesActuales = productoActual.get('unidades')?.value || 0;
-
-    // Solo procesar si es un producto normal (no especial) y tiene referencia y estado
-    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
-      return;
-    }
-
-    // Si hay una división previa para esta línea, deshacerla primero
-    this.deshacerDivisionAnterior(index);
-
-    // Si las unidades son 0 o menores, no hacer nada más
-    if (unidadesActuales <= 0) {
-      return;
-    }
-
-    // Verificar si ya se ha procesado esta división para evitar múltiples ejecuciones
-    if (this.yaSeProcesoLinea(index)) {
-      return;
-    }
-
-    // Buscar la primera línea con la misma referencia y estado que tenga más unidades
-    let lineaOrigenIndex = -1;
-    let maxUnidades = 0;
-
-    for (let i = 0; i < this.productosControls.length; i++) {
-      if (i === index) continue; // Saltar la línea actual
-
-      const control = this.productosControls.at(i);
-      const ref = control.get('ref')?.value;
-      const estado = control.get('estado')?.value;
-      const unidades = control.get('unidades')?.value || 0;
-
-      if (
-        ref === refActual &&
-        estado === estadoActual &&
-        unidades > maxUnidades
-      ) {
-        lineaOrigenIndex = i;
-        maxUnidades = unidades;
-      }
-    }
-
-    // Si encontramos una línea origen con suficientes unidades
-    if (lineaOrigenIndex !== -1 && maxUnidades >= unidadesActuales) {
-      const lineaOrigen = this.productosControls.at(lineaOrigenIndex);
-      const nuevasUnidadesOrigen = maxUnidades - unidadesActuales;
-
-      // Marcar como procesada antes de actualizar para evitar bucles
-      this.marcarLineaComoProcesada(index);
-
-      // Registrar la división para poder deshacerla después
-      this.divisionesRealizadas.set(index, {
-        lineaOrigen: lineaOrigenIndex,
-        unidadesDivididas: unidadesActuales,
-        refProducto: refActual,
-        estadoProducto: estadoActual,
-      });
-
-      // Actualizar las unidades de la línea origen
-      lineaOrigen.get('unidades')?.setValue(nuevasUnidadesOrigen);
-
-      // Mostrar mensaje informativo
-      this.snackBarExito(
-        `Se dividieron ${unidadesActuales} unidades de ${refActual} (${estadoActual}) desde la línea ${
-          lineaOrigenIndex + 1
-        }`
-      );
-
-      console.log(
-        `División automática: ${unidadesActuales} unidades movidas de línea ${
-          lineaOrigenIndex + 1
-        } a línea ${index + 1}`
-      );
-
-      // Limpiar la marca después de un breve delay
-      setTimeout(() => {
-        this.limpiarMarcaProcesada(index);
-      }, 1000);
-    }
-  }
-
-  private lineasProcesadas = new Set<number>();
-
-  private yaSeProcesoLinea(index: number): boolean {
-    return this.lineasProcesadas.has(index);
-  }
-
-  private marcarLineaComoProcesada(index: number) {
-    this.lineasProcesadas.add(index);
-  }
-
-  private limpiarMarcaProcesada(index: number) {
-    this.lineasProcesadas.delete(index);
-  }
-
-  // Limpiar las marcas al agregar o eliminar productos
-  override agregarProducto() {
-    super.agregarProducto();
-    // Limpiar marcas ya que los índices pueden haber cambiado
-    this.lineasProcesadas.clear();
-  }
-
-  override eliminarProducto(index: number) {
-    // Deshacer la división si existe antes de eliminar
-    this.deshacerDivisionAnterior(index);
-
-    // Actualizar los índices de las divisiones existentes
-    const divisionesActualizadas = new Map<number, any>();
-
-    this.divisionesRealizadas.forEach((division, lineaIndex) => {
-      if (lineaIndex > index) {
-        // Decrementar el índice de las líneas posteriores
-        divisionesActualizadas.set(lineaIndex - 1, {
-          ...division,
-          lineaOrigen:
-            division.lineaOrigen > index
-              ? division.lineaOrigen - 1
-              : division.lineaOrigen,
-        });
-      } else if (lineaIndex < index) {
-        // Mantener las líneas anteriores pero actualizar lineaOrigen si es necesario
-        divisionesActualizadas.set(lineaIndex, {
-          ...division,
-          lineaOrigen:
-            division.lineaOrigen > index
-              ? division.lineaOrigen - 1
-              : division.lineaOrigen,
-        });
-      }
-      // No agregar la línea que se está eliminando (lineaIndex === index)
-    });
-
-    this.divisionesRealizadas = divisionesActualizadas;
-
-    // Llamar al método padre
-    super.eliminarProducto(index);
-
-    // Limpiar marcas ya que los índices pueden haber cambiado
-    this.lineasProcesadas.clear();
-  }
-
-  private limpiarTodasLasDivisiones() {
-    this.divisionesRealizadas.clear();
-    this.lineasProcesadas.clear();
-  }
-
-  override resetForm() {
-    this.limpiarTodasLasDivisiones();
-    super.resetForm();
-  }
-
-  // Estructura para rastrear las divisiones realizadas
-  private divisionesRealizadas = new Map<
-    number,
-    {
-      lineaOrigen: number;
-      unidadesDivididas: number;
-      refProducto: string;
-      estadoProducto: string;
-    }
-  >();
-
-  // Nuevo método para deshacer divisiones anteriores
-  private deshacerDivisionAnterior(index: number) {
-    const divisionAnterior = this.divisionesRealizadas.get(index);
-
-    if (divisionAnterior) {
-      // Verificar que la línea origen aún existe
-      if (divisionAnterior.lineaOrigen < this.productosControls.length) {
-        const lineaOrigen = this.productosControls.at(
-          divisionAnterior.lineaOrigen
-        );
-        const refOrigen = lineaOrigen.get('ref')?.value;
-        const estadoOrigen = lineaOrigen.get('estado')?.value;
-
-        // Verificar que sigue siendo el mismo producto
-        if (
-          refOrigen === divisionAnterior.refProducto &&
-          estadoOrigen === divisionAnterior.estadoProducto
-        ) {
-          const unidadesActualesOrigen =
-            lineaOrigen.get('unidades')?.value || 0;
-          const nuevasUnidadesOrigen =
-            unidadesActualesOrigen + divisionAnterior.unidadesDivididas;
-
-          // Devolver las unidades a la línea origen
-          lineaOrigen.get('unidades')?.setValue(nuevasUnidadesOrigen);
-
-          console.log(
-            `División deshecha: ${
-              divisionAnterior.unidadesDivididas
-            } unidades devueltas a línea ${divisionAnterior.lineaOrigen + 1}`
-          );
-        }
-      }
-
-      // Eliminar el registro de la división
-      this.divisionesRealizadas.delete(index);
-    }
-  }
-
-  // Método para mostrar información más detallada sobre divisiones
   mostrarInfoDivisionDetallada(index: number): string {
-    const productoActual = this.productosControls.at(index);
-    const refActual = productoActual.get('ref')?.value;
-    const estadoActual = productoActual.get('estado')?.value;
-
-    if (!refActual || this.esProductoEspecial(refActual) || !estadoActual) {
-      return '';
-    }
-
-    const division = this.divisionesRealizadas.get(index);
-    if (division) {
-      return `${division.unidadesDivididas} unidades tomadas de línea ${
-        division.lineaOrigen + 1
-      }`;
-    }
-
-    const totalDisponible = this.getTotalUnidadesDisponibles(
-      refActual,
-      estadoActual,
-      index
+    return this.stockManager.mostrarInfoDivisionDetallada(
+      this.productosControls,
+      index,
+      this.validationService.esProductoEspecial.bind(this.validationService)
     );
+  }
 
-    if (totalDisponible > 0 && this.hayLineasConMismaReferenciaYEstado(index)) {
-      return `${totalDisponible} unidades disponibles para dividir`;
-    }
+  validarDuplicadosEnTiempoReal(index: number): boolean {
+    return this.validationService.validarDuplicadoEnTiempoReal(this.productosControls, index);
+  }
 
-    return '';
+  obtenerStockEspecifico(referencia: string, estado: string, ubicacion: string): number {
+    return this.stockManager.obtenerStockEspecifico(referencia, estado, ubicacion);
   }
 }

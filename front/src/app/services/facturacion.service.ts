@@ -986,9 +986,11 @@ export class FacturacionService {
       yPosition += 10;
   
       // Ordenar por fecha de entrada
-      const almacenajeOrdenado = [...facturacion.detallesAlmacenaje].sort((a, b) =>
-        new Date(a.fechaEntrada).getTime() - new Date(b.fechaEntrada).getTime()
-      );
+      const almacenajeOrdenado = [...facturacion.detallesAlmacenaje].sort((a, b) => {
+        const fechaA = a.fechaSalida && a.costoTotal < 0 ? a.fechaSalida : a.fechaEntrada;
+        const fechaB = b.fechaSalida && b.costoTotal < 0 ? b.fechaSalida : b.fechaEntrada;
+        return new Date(fechaA).getTime() - new Date(fechaB).getTime();
+      });
   
       // Calcular stock final
       const stockInicial = almacenajeOrdenado.find(d => d.referencia === 'STOCK_INICIAL')?.palets || 0;
@@ -1005,7 +1007,10 @@ export class FacturacionService {
       const ultimoDiaMes = new Date(parseInt(year), parseInt(month), 0);
   
       const almacenajeData = almacenajeOrdenado.map((detalle) => [
-        detalle.fechaEntrada.toLocaleDateString('es-ES'),
+        // Si es descuento (salida), usar fechaSalida, sino fechaEntrada
+        (detalle.fechaSalida && detalle.costoTotal < 0 
+          ? detalle.fechaSalida 
+          : detalle.fechaEntrada).toLocaleDateString('es-ES'),
         detalle.referencia,
         detalle.descripcion,
         detalle.palets.toString(),
@@ -1153,7 +1158,7 @@ export class FacturacionService {
         detalle.concepto,
         detalle.direccion,
         detalle.horas.toString(),
-        `${detalle.importePorHora.toFixed(2)} €`,
+        // `${detalle.importePorHora.toFixed(2)} €`,
         `${detalle.costoTotal.toFixed(2)} €`
       ]);
   
@@ -1165,7 +1170,7 @@ export class FacturacionService {
             'Concepto',
             'Dirección',
             'Horas',
-            'Precio/Hora',
+            // 'Precio/Hora',
             'Total'
           ],
         ],
@@ -1184,7 +1189,7 @@ export class FacturacionService {
           2: { cellWidth: 50, overflow: 'linebreak' },
           3: { halign: 'center' },
           4: { halign: 'center' },
-          5: { halign: 'center' },
+          // 5: { halign: 'center' },
         },
         showHead: 'firstPage',
       });

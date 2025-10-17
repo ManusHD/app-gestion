@@ -1,5 +1,8 @@
-import { NgModule } from '@angular/core';
+import { LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { registerLocaleData } from '@angular/common';
+import localeEs from '@angular/common/locales/es';
+registerLocaleData(localeEs, 'es-ES');
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -106,6 +109,10 @@ import { FormularioMuebleComponent } from './componentes/formulario-mueble/formu
 import { MuebleService } from './services/mueble.service';
 import { TarifasComponent } from './componentes/tarifas/tarifas.component';
 import { TarifaService } from './services/tarifas.service';
+import { StockManagerService } from './services/stock-manager.service';
+import { FormularioFacadeService } from './componentes/formulario-entrada-salida/services/formulario-entrada-salida-facade.service';
+import { FormularioBuilderService } from './componentes/formulario-entrada-salida/services/formulario-builder.service';
+
 
 @NgModule({
   declarations: [
@@ -210,15 +217,19 @@ import { TarifaService } from './services/tarifas.service';
     DireccionesService,
     EntradaServices,
     EstadoService,
+    FormularioBuilderService,
     FormularioEntradaSalidaService,
+    FormularioFacadeService,
     FacturacionService,
     ImportarExcelService,
     MuebleService,
     { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: LOCALE_ID, useValue: 'es-ES' },
     ProductoServices,
     ReubicarPaletsService,
     SalidaServices,
     SnackBar,
+    StockManagerService,
     TarifaService,
     TrabajoService,
     UbicacionService,
