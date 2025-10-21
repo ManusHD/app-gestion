@@ -32,6 +32,7 @@
                         <app-detalles-salidas [enRecibidas]="false" [salida]="salida"
                             (salidaRellena)="handleRellena(salida, $event)">
                         </app-detalles-salidas>
+                        
                         <button [appConfirm]="'¿ESTÁS SEGURO DE BORRAR LA SALIDA?'"
                             (confirmed)="deleteSalida(salida.id!)" *appHasRole="'ROLE_ADMIN'"
                             [disabled]="!btnSubmitActivado" class="btn-eliminar">
@@ -40,13 +41,17 @@
                                 <img src="../../../assets/icons/delete-bin.svg" />
                             </span>
                         </button>
+                        
                         <button [appConfirm]="'¿ESTÁS SEGURO QUE QUIERES REALIZAR EL ENVÍO?'"
                             (confirmed)="setEnviada(salida.id!)" [disabled]="!salida.rellena || !btnSubmitActivado"
                             class="btn-grabar">
                             GRABAR
                         </button>
+                        
                         <button class="btn-etiqueta" (click)="mostrarEtiquetaEnvio()">ETIQUETA</button>
-
+                        
+                        <app-modal-enviar-correo *ngIf="salida.colaborador" [salida]="salida"></app-modal-enviar-correo>
+                        
                         <div *ngIf="mostrarEtiqueta" class="modal">
                             <div class="modal-content etiqueta-modal">
                                 <span class="close" (click)="cerrarEtiqueta()">&times;</span>

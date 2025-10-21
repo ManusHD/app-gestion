@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, Input, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CorreoService } from 'src/app/services/correo.service';
@@ -7,41 +7,53 @@ import { EnviarCorreoRequest } from 'src/app/models/enviar-correo-request.model'
 import { Salida } from 'src/app/models/salida.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
+import { DireccionesService } from 'src/app/services/direcciones.service';
+import { Colaborador } from 'src/app/models/colaborador.model';
 
 @Component({
   selector: 'app-modal-enviar-correo',
   templateUrl: './modal-enviar-correo.component.html',
-  styleUrls: ['./modal-enviar-correo.component.css']
+  styleUrls: [
+    '../../../assets/styles/modal.css',
+    './modal-enviar-correo.component.css']
 })
 export class ModalEnviarCorreoComponent implements OnInit {
+  mostrarModal: boolean = false;
   formCorreo!: FormGroup;
   plantillas: PlantillaCorreo[] = [];
   plantillaSeleccionada: PlantillaCorreo | null = null;
   imagenesUrls: string[] = [];
   mostrarVistaPrevia = false;
+  @Input() salida! : Salida;
 
   constructor(
-    public dialogRef: MatDialogRef<ModalEnviarCorreoComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { salida: Salida; emailColaborador: string },
     private fb: FormBuilder,
     private correoService: CorreoService,
     private snackBar: SnackBar,
-    private carga: PantallaCargaService
+    private carga: PantallaCargaService,
+    private direccionesService: DireccionesService
   ) {}
 
   ngOnInit(): void {
-    this.initForm();
     this.cargarPlantillas();
+    this.initForm();
   }
 
   initForm(): void {
-    const destinoNombre = this.data.salida.colaborador || this.data.salida.pdv || this.data.salida.destino;
-    
-    this.formCorreo = this.fb.group({
-      plantillaId: [''],
-      destinatario: [this.data.emailColaborador, [Validators.required, Validators.email]],
-      asunto: [`Notificación de envío - ${destinoNombre}`, Validators.required],
-      cuerpo: [this.generarCuerpoDefault(), Validators.required]
+    const destinoNombre = this.salida.colaborador || this.salida.pdv || this.salida.destino;
+    this.direccionesService.getColaborador(this.salida.colaborador!).subscribe({
+      next: (colaborador: Colaborador) => {
+        if (!colaborador.email || colaborador.email.trim() === '') {
+          this.snackBar.snackBarError('El colaborador no tiene email registrado');
+          return;
+        }
+        this.formCorreo = this.fb.group({
+          plantillaId: [''],
+          destinatario: [colaborador.email, [Validators.required, Validators.email]],
+          asunto: [`Notificación de envío - ${destinoNombre}`, Validators.required],
+          cuerpo: [this.generarCuerpoDefault(), Validators.required]
+        });
+      }
     });
   }
 
@@ -59,9 +71,9 @@ export class ModalEnviarCorreoComponent implements OnInit {
   onPlantillaChange(): void {
     const plantillaId = this.formCorreo.get('plantillaId')?.value;
     if (!plantillaId) return;
-
-    this.plantillaSeleccionada = this.plantillas.find(p => p.id === plantillaId) || null;
     
+    this.plantillaSeleccionada = this.plantillas.find(p => p.id == plantillaId) || null;
+
     if (this.plantillaSeleccionada) {
       const cuerpoConVariables = this.reemplazarVariables(this.plantillaSeleccionada.cuerpo || '');
       const asuntoConVariables = this.reemplazarVariables(this.plantillaSeleccionada.asunto || '');
@@ -74,7 +86,7 @@ export class ModalEnviarCorreoComponent implements OnInit {
   }
 
   reemplazarVariables(texto: string): string {
-    const salida = this.data.salida;
+    const salida = this.salida;
     
     return texto
       .replace(/{nombreColaborador}/g, salida.colaborador || salida.pdv || salida.destino || '')
@@ -88,7 +100,7 @@ export class ModalEnviarCorreoComponent implements OnInit {
   }
 
   generarCuerpoDefault(): string {
-    const salida = this.data.salida;
+    const salida = this.salida;
     const destinoNombre = salida.colaborador || salida.pdv || salida.destino;
     
     return `
@@ -104,12 +116,12 @@ export class ModalEnviarCorreoComponent implements OnInit {
   }
 
   generarListaProductos(): string {
-    if (!this.data.salida.productos || this.data.salida.productos.length === 0) {
+    if (!this.salida.productos || this.salida.productos.length === 0) {
       return '<p>No hay productos en este envío.</p>';
     }
 
     let html = '<ul>';
-    this.data.salida.productos.forEach(producto => {
+    this.salida.productos.forEach(producto => {
       html += `<li>${producto.ref} - ${producto.description}: ${producto.unidades} unidades</li>`;
     });
     html += '</ul>';
@@ -144,8 +156,8 @@ export class ModalEnviarCorreoComponent implements OnInit {
       destinatario: this.formCorreo.get('destinatario')?.value,
       asunto: this.formCorreo.get('asunto')?.value,
       cuerpo: this.formCorreo.get('cuerpo')?.value,
-      salidaId: this.data.salida.id,
-      colaboradorNombre: this.data.salida.colaborador,
+      salidaId: this.salida.id,
+      colaboradorNombre: this.salida.colaborador,
       imagenesUrls: this.imagenesUrls
     };
 
@@ -153,7 +165,7 @@ export class ModalEnviarCorreoComponent implements OnInit {
       next: () => {
         this.carga.hide();
         this.snackBar.snackBarExito('Correo enviado exitosamente');
-        this.dialogRef.close(true);
+        this.cerrarModal();
       },
       error: (error) => {
         this.carga.hide();
@@ -162,7 +174,12 @@ export class ModalEnviarCorreoComponent implements OnInit {
     });
   }
 
-  cancelar(): void {
-    this.dialogRef.close(false);
+  mostrarDetalles() {
+    this.mostrarModal = true;
+    console.log(this.salida);
+  }
+
+  cerrarModal() {
+    this.mostrarModal = false;
   }
 }

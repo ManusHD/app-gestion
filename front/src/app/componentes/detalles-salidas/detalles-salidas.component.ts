@@ -21,7 +21,6 @@ export class DetallesSalidasComponent implements OnInit {
   @Input() enRecibidas: boolean = false;
   @Input() salida!: Salida;
   @Output() salidaRellena = new EventEmitter<boolean>();
-  @Output() salidaMovidaAEnvios = new EventEmitter<void>(); // ⬅️ NUEVO
   currentPath: string = window.location.pathname;
 
   mostrarEtiqueta: boolean = false;
@@ -93,78 +92,5 @@ export class DetallesSalidasComponent implements OnInit {
 
   cerrarEtiqueta() {
     this.mostrarEtiqueta = false;
-  }
-
-  // ⬇️⬇️⬇️ NUEVO MÉTODO ⬇️⬇️⬇️
-  abrirModalCorreo(): void {
-    console.log('📧 Abriendo modal de correo para salida:', this.salida.id);
-
-    if (!this.salida.colaborador) {
-      this.snackBar.snackBarError('Esta salida no tiene colaborador asignado');
-      return;
-    }
-
-    this.carga.show();
-    this.direccionesService.getColaborador(this.salida.colaborador).subscribe({
-      next: (colaborador) => {
-        this.carga.hide();
-        console.log('📧 Colaborador encontrado:', colaborador);
-
-        if (!colaborador.email || colaborador.email.trim() === '') {
-          this.snackBar.snackBarError('El colaborador no tiene email registrado');
-          
-          const moverSinCorreo = confirm(
-            '¿Desea mover la salida a envíos pendientes sin enviar correo?'
-          );
-          
-          if (moverSinCorreo) {
-            this.moverAEnviosPendientes();
-          }
-          return;
-        }
-
-        // Abrir modal de envío de correo
-        const dialogRef = this.dialog.open(ModalEnviarCorreoComponent, {
-          width: '800px',
-          maxHeight: '90vh',
-          disableClose: true,
-          data: {
-            salida: this.salida,
-            emailColaborador: colaborador.email
-          }
-        });
-
-        dialogRef.afterClosed().subscribe((resultado) => {
-          console.log('📧 Modal cerrado, resultado:', resultado);
-          
-          if (resultado === true) {
-            // Correo enviado exitosamente
-            this.snackBar.snackBarExito('Correo enviado correctamente');
-            this.moverAEnviosPendientes();
-          } else if (resultado === false) {
-            // Usuario canceló
-            const moverSinCorreo = confirm(
-              '¿Desea mover la salida a envíos pendientes sin enviar el correo?'
-            );
-            
-            if (moverSinCorreo) {
-              this.moverAEnviosPendientes();
-            }
-          }
-        });
-      },
-      error: (error) => {
-        this.carga.hide();
-        console.error('❌ Error al obtener colaborador:', error);
-        this.snackBar.snackBarError('Error al verificar el email del colaborador');
-      }
-    });
-  }
-
-  private moverAEnviosPendientes(): void {
-    console.log('✅ Moviendo salida a envíos pendientes');
-    this.salida.rellena = true;
-    this.cerrarModal();
-    this.salidaMovidaAEnvios.emit();
   }
 }

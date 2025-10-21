@@ -1,1 +1,18 @@
-<p>vista-previa-plantilla works!</p>
+<button class="btn-productos" (click)="mostrarDetalles()">VISTA PREVIA</button>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content">
+        <span (click)="cerrarModal()" class="close">&times;</span>
+        <div class="flotar-medio">
+            <h2 mat-dialog-title>Vista Previa - {{ data.alias }}</h2>
+            <mat-dialog-content>
+                <div class="preview-asunto">
+                    <strong>Asunto:</strong> {{ data.asunto }}
+                </div>
+                <div class="preview-cuerpo">{{ data.cuerpo }}</div>
+            </mat-dialog-content>
+        </div>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

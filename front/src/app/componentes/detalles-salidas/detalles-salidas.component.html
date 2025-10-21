@@ -30,20 +30,7 @@
         <h2 *ngIf="enRecibidas">DESTINO: <span class="titulo-modal">
                 {{salida.destino || salida.colaborador || salida.pdv}}
             </span></h2>
-        <h2 *ngIf="enRecibidas">FECHA ENVÍO: <span class="titulo-modal">{{salida.fechaEnvio | date:
-                'dd/MM/yyyy'}}</span></h2>
-
-        <div *ngIf="!enRecibidas && todosLosCamposRellenos() && salida.colaborador" 
-             class="seccion-correo">
-            <div class="info-correo">
-                <mat-icon class="icon-correo">info</mat-icon>
-                <span>Esta salida está lista para enviar. Puedes notificar al colaborador por correo electrónico.</span>
-            </div>
-            <button class="btn-enviar-correo" (click)="abrirModalCorreo()">
-                <mat-icon>email</mat-icon>
-                ENVIAR CORREO Y MOVER A ENVÍOS PENDIENTES
-            </button>
-        </div>
+        <h2 *ngIf="enRecibidas">FECHA ENVÍO: <span class="titulo-modal">{{salida.fechaEnvio | date: 'dd/MM/yyyy'}}</span></h2>
 
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">

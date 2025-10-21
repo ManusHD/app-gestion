@@ -121,7 +121,7 @@
                   <div class="centrar">
                     <ng-container *ngIf="editandoId !== plantilla.id; else editActions">
                       <button class="btn-editar" (click)="editarPlantilla(plantilla)">EDITAR</button>
-                      <button class="btn-preview" (click)="verVistaPrevia(plantilla)">VER</button>
+                      <app-vista-previa-plantilla style="margin-left: 5px;" [data]="plantilla"></app-vista-previa-plantilla>
                     </ng-container>
                     <ng-template #editActions>
                       <div class="btn-actualizar-gestor">

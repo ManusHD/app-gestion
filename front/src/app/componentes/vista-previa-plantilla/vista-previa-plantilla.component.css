@@ -1,0 +1,14 @@
+.preview-asunto {
+    padding: 10px;
+    background-color: rgba(61, 126, 255, 0.1);
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.preview-cuerpo {
+    padding: 20px;
+    background-color: white;
+    color: black;
+    border-radius: 5px;
+    min-height: 200px;
+}

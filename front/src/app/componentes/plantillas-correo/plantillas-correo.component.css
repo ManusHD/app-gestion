@@ -43,17 +43,6 @@
   font-size: 12px;
 }
 
-.btn-preview {
-  background-color: var(--letter-color);
-  color: white;
-  border: none;
-  padding: 3.5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-family: 'Nunito-Medium';
-  margin-left: 5px;
-}
-
 .btn-preview:hover {
   background-color: var(--table-primary);
 }

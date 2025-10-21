@@ -5,6 +5,7 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { Salida } from 'src/app/models/salida.model';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
+import { ModalEnviarCorreoComponent } from '../modal-enviar-correo/modal-enviar-correo.component';
 
 @Component({
   selector: 'app-salidas-pendientes',
