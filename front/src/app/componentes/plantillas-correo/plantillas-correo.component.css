@@ -1,0 +1,64 @@
+.info-variables {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(61, 126, 255, 0.1);
+  border-radius: 5px;
+  border-left: 3px solid var(--letter-color);
+}
+
+.info-variables p {
+  margin: 5px 0;
+  color: var(--letter-color-off);
+  font-size: 13px;
+}
+
+.info-variables code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: var(--letter-color);
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.checkbox-activa {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-activa input {
+  display: none;
+}
+
+.cuerpo-editando {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  color: white;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.btn-preview {
+  background-color: var(--letter-color);
+  color: white;
+  border: none;
+  padding: 3.5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Nunito-Medium';
+  margin-left: 5px;
+}
+
+.btn-preview:hover {
+  background-color: var(--table-primary);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}

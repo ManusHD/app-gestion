@@ -1316,6 +1316,7 @@ export class FormularioEntradaSalidaComponent implements OnInit, OnDestroy {
     this.entradaSalidaForm = this.formBuilder.createForm();
     this.productosNuevos.clear();
     this.stockManager.limpiarCache();
+    this.importarES.resetExcel();
   }
 
   otraEntradaSalida(): void {

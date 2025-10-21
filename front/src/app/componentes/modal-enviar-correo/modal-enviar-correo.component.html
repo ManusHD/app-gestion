@@ -1,0 +1,103 @@
+<!-- front/src/app/componentes/modal-enviar-correo/modal-enviar-correo.component.html -->
+<div class="modal-enviar-correo">
+  <h2 mat-dialog-title>
+    <mat-icon>email</mat-icon>
+    Enviar Correo de Notificación
+  </h2>
+
+  <div class="centrar-correo">
+    <mat-dialog-content>
+      <form [formGroup]="formCorreo">
+        <!-- Selector de Plantilla -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Plantilla (Opcional)</mat-label>
+          <mat-select formControlName="plantillaId" (selectionChange)="onPlantillaChange()">
+            <mat-option [value]="null">Sin plantilla</mat-option>
+            <mat-option *ngFor="let plantilla of plantillas" [value]="plantilla.id">
+              {{ plantilla.alias }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <!-- Destinatario -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Destinatario</mat-label>
+          <input matInput formControlName="destinatario" type="email" readonly>
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+        
+        <!-- Asunto -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Asunto</mat-label>
+        <input matInput formControlName="asunto">
+        <mat-icon matPrefix>subject</mat-icon>
+      </mat-form-field>
+      
+      <!-- Cuerpo del correo -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cuerpo del correo</mat-label>
+        <textarea matInput formControlName="cuerpo" rows="12" placeholder="Contenido del correo (puede usar HTML)"></textarea>
+      </mat-form-field>
+      
+      <!-- Gestión de imágenes -->
+      <div class="imagenes-section">
+        <h3>Imágenes adicionales</h3>
+        <button type="button" mat-raised-button color="accent" (click)="agregarImagenUrl()">
+          <mat-icon>add_photo_alternate</mat-icon>
+          Agregar Imagen (URL)
+        </button>
+        
+        <div class="lista-imagenes" *ngIf="imagenesUrls.length > 0">
+          <div class="imagen-item" *ngFor="let url of imagenesUrls; let i = index">
+            <img [src]="url" alt="Imagen" class="preview-img">
+            <span class="url-text">{{ url }}</span>
+            <button type="button" mat-icon-button color="warn" (click)="eliminarImagen(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Variables disponibles -->
+      <div class="variables-info">
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              Variables disponibles
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="variables-list">
+            <p><code>&#123;nombreColaborador&#125;</code> - Nombre del colaborador/destino</p>
+            <p><code>&#123;direccion&#125;</code> - Dirección de envío</p>
+            <p><code>&#123;poblacion&#125;</code> - Población</p>
+            <p><code>&#123;provincia&#125;</code> - Provincia</p>
+            <p><code>&#123;cp&#125;</code> - Código postal</p>
+            <p><code>&#123;telefono&#125;</code> - Teléfono</p>
+            <p><code>&#123;fechaEnvio&#125;</code> - Fecha de envío</p>
+            <p><code>&#123;productos&#125;</code> - Lista de productos</p>
+          </div>
+        </mat-expansion-panel>
+      </div>
+    </form>
+    
+    <!-- Vista previa -->
+    <div class="vista-previa-section" *ngIf="mostrarVistaPrevia">
+      <h3>Vista Previa</h3>
+      <div class="preview-container" [innerHTML]="formCorreo.get('cuerpo')?.value"></div>
+    </div>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="toggleVistaPrevia()">
+      <mat-icon>{{ mostrarVistaPrevia ? 'visibility_off' : 'visibility' }}</mat-icon>
+      {{ mostrarVistaPrevia ? 'Ocultar' : 'Ver' }} Vista Previa
+    </button>
+    <button mat-button (click)="cancelar()">Cancelar</button>
+    <button mat-raised-button color="primary" (click)="enviarCorreo()" 
+    [disabled]="formCorreo.invalid">
+    <mat-icon>send</mat-icon>
+    Enviar Correo
+  </button>
+</mat-dialog-actions>
+</div>
+</div>

@@ -112,6 +112,11 @@ import { TarifaService } from './services/tarifas.service';
 import { StockManagerService } from './services/stock-manager.service';
 import { FormularioFacadeService } from './componentes/formulario-entrada-salida/services/formulario-entrada-salida-facade.service';
 import { FormularioBuilderService } from './componentes/formulario-entrada-salida/services/formulario-builder.service';
+import { ModalEnviarCorreoComponent } from './componentes/modal-enviar-correo/modal-enviar-correo.component';
+import { PlantillasCorreoComponent } from './componentes/plantillas-correo/plantillas-correo.component';
+import { VistaPreviaPlantillaComponent } from './componentes/vista-previa-plantilla/vista-previa-plantilla.component';
+import { MatSelectModule } from '@angular/material/select';
+import { CorreoService } from './services/correo.service';
 
 
 @NgModule({
@@ -178,6 +183,9 @@ import { FormularioBuilderService } from './componentes/formulario-entrada-salid
     DetallesMueblesComponent,
     FormularioMuebleComponent,
     TarifasComponent,
+    ModalEnviarCorreoComponent,
+    PlantillasCorreoComponent,
+    VistaPreviaPlantillaComponent,
   ],
   imports: [
     AppRoutingModule,
@@ -187,25 +195,22 @@ import { FormularioBuilderService } from './componentes/formulario-entrada-salid
     FormsModule,
     HttpClientModule,
     MatButtonModule,
-    MatDialogModule,
+    MatCardModule,
+    MatChipsModule,
     MatDatepickerModule,
+    MatDialogModule,
+    MatDividerModule,
     MatExpansionModule,
+    MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatNativeDateModule,
     MatPaginatorModule,
+    MatSelectModule,
     MatSnackBarModule,
     MatSortModule,
     MatTableModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatIconModule,
-    MatButtonModule,
     MatProgressSpinnerModule,
-    MatTableModule,
-    MatChipsModule,
-    MatDividerModule,
     ReactiveFormsModule,
     ToastrModule.forRoot(),
   ],
@@ -213,6 +218,7 @@ import { FormularioBuilderService } from './componentes/formulario-entrada-salid
     AuthService,
     AgenciasTransporteService,
     ConfirmDialogService,
+    CorreoService,
     DCSService,
     DireccionesService,
     EntradaServices,

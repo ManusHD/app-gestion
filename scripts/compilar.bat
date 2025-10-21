@@ -13,6 +13,7 @@ set MICROSERVICIO_ESTADOS=..\backend\estados
 set MICROSERVICIO_TRABAJOS=..\backend\trabajos
 set MICROSERVICIO_MUEBLES=..\backend\muebles
 set MICROSERVICIO_TARIFAS=..\backend\tarifas
+set MICROSERVICIO_CORREOS=..\backend\correos
 
 :: Ejecutar productos en una nueva ventana   PORT = 8091
 start cmd /k "cd %MICROSERVICIO_PRODUCTOS% && mvn clean package"
@@ -46,3 +47,6 @@ start cmd /k "cd %MICROSERVICIO_MUEBLES% && mvn clean package"
 
 :: Ejecutar tarifas en una nueva ventana   PORT = 8102
 start cmd /k "cd %MICROSERVICIO_TARIFAS% && mvn clean package"
+
+:: Ejecutar correos en una nueva ventana   PORT = 8103
+start cmd /k "cd %MICROSERVICIO_CORREOS% && mvn clean package"

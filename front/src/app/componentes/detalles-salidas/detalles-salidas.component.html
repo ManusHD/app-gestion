@@ -1,7 +1,7 @@
 <div class="btns-alineados">
     <button *ngIf="currentPath == '/salidas/enviadas'; else editar" class="btn-productos"
-        (click)="mostrarDetalles()">VER
-        PRODUCTOS</button>
+        (click)="mostrarDetalles()">VER PRODUCTOS</button>
+    
     <button *ngIf="currentPath == '/salidas/enviadas'" class="btn-etiqueta"
         (click)="mostrarEtiquetaEnvio()">ETIQUETA</button>
 </div>
@@ -20,14 +20,31 @@
 
 <div *ngIf="mostrarModal" class="modal">
     <div class="modal-content">
-        <span *ngIf="enRecibidas" class="close" (click)="cerrarModal()">&times;</span>
-        <span *ngIf="!enRecibidas" class="close" [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'"
-            (confirmed)="cerrarModal()">&times;</span>
+        <div class="modal-header-custom">
+            <span *ngIf="enRecibidas" class="close" (click)="cerrarModal()">&times;</span>
+            <span *ngIf="!enRecibidas" class="close" 
+                  [appConfirm]="'VAS A SALIR SIN GUARDAR LOS CAMBIOS ¿ESTÁS SEGURO?'"
+                  (confirmed)="cerrarModal()">&times;</span>
+        </div>
+
         <h2 *ngIf="enRecibidas">DESTINO: <span class="titulo-modal">
                 {{salida.destino || salida.colaborador || salida.pdv}}
             </span></h2>
         <h2 *ngIf="enRecibidas">FECHA ENVÍO: <span class="titulo-modal">{{salida.fechaEnvio | date:
                 'dd/MM/yyyy'}}</span></h2>
+
+        <div *ngIf="!enRecibidas && todosLosCamposRellenos() && salida.colaborador" 
+             class="seccion-correo">
+            <div class="info-correo">
+                <mat-icon class="icon-correo">info</mat-icon>
+                <span>Esta salida está lista para enviar. Puedes notificar al colaborador por correo electrónico.</span>
+            </div>
+            <button class="btn-enviar-correo" (click)="abrirModalCorreo()">
+                <mat-icon>email</mat-icon>
+                ENVIAR CORREO Y MOVER A ENVÍOS PENDIENTES
+            </button>
+        </div>
+
         <div class="flotar-medio">
             <table *ngIf="enRecibidas; else detallesEnPrevision">
                 <thead>
@@ -66,5 +83,5 @@
         </ng-template>
     </div>
 
-
     <app-pantalla-carga></app-pantalla-carga>
+</div>

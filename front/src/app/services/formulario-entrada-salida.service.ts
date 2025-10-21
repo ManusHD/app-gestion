@@ -34,6 +34,8 @@ import { ImportarExcelService } from './importar-excel.service';
 import { SalidaUbicacionService } from './salida-ubicacion.service';
 import { Estado } from '../models/estado.model';
 import { EstadoService } from './estado.service';
+import { MatDialog } from '@angular/material/dialog';
+import { SnackBar } from './snackBar.service';
 
 @Injectable()
 export class FormularioEntradaSalidaService {
@@ -82,7 +84,7 @@ export class FormularioEntradaSalidaService {
     this.salidaActualId = salidaId;
   }
 
-  private snackBar = inject(MatSnackBar);
+  protected snackBar = inject(MatSnackBar);
 
   constructor(
     protected fb: FormBuilder,
@@ -96,7 +98,8 @@ export class FormularioEntradaSalidaService {
     protected importarES: ImportarExcelService,
     protected carga: PantallaCargaService,
     protected salidaUbicacionService: SalidaUbicacionService,
-    protected estadosService: EstadoService
+    protected estadosService: EstadoService,
+    protected dialog: MatDialog,
   ) {}
 
   createForm() {

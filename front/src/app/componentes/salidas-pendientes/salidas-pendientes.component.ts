@@ -1,7 +1,8 @@
+// front/src/app/componentes/salidas-pendientes/salidas-pendientes.component.ts
+
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { throwError, catchError } from 'rxjs';
 import { Salida } from 'src/app/models/salida.model';
 import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entrada-salida.service';
 
@@ -25,7 +26,7 @@ export class SalidasPendientesComponent
   ngOnInit() {
     this.cargarSalidas();
   }
-      
+
   cambiarPagina(event: PageEvent) {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
@@ -34,33 +35,44 @@ export class SalidasPendientesComponent
 
   cargarSalidas() {
     this.carga.show();
-    this.salidaService.getSalidasByEstadoRellenaPaginado(false, false, this.pageIndex, this.pageSize).subscribe((data) => {
-      this.salidas = data.content; // Filtra las salidas con rellena = false
-      setTimeout(() => {
-        this.totalElementos = data.totalElements; // Ajusta el total de elementos visibles
+    this.salidaService
+      .getSalidasByEstadoRellenaPaginado(
+        false,
+        false,
+        this.pageIndex,
+        this.pageSize
+      )
+      .subscribe((data) => {
+        this.salidas = data.content;
+        setTimeout(() => {
+          this.totalElementos = data.totalElements;
+        });
+        this.dataSource.data = this.salidas;
+        console.log(this.dataSource.data);
+        console.log(data);
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.carga.hide();
+        });
       });
-      this.dataSource.data = this.salidas;
-      console.log(this.dataSource.data);
-      console.log(data)
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        this.carga.hide();
-      });
-    });
   }
-  
+
   handleRellena(salida: Salida, isRellena: boolean): void {
-    // Actualizamos el valor de la propiedad en el objeto salida
     salida.rellena = isRellena;
-  
-    if (isRellena) {
-      this.salidas = this.salidas.filter(item => item.id !== salida.id);
-      this.dataSource.data = this.salidas;
-      this.totalElementos = this.salidas.length;
-      this.cdr.detectChanges();
-    }
+    console.log(`✅ Salida ${salida.id} - rellena: ${isRellena}`);
   }
-  
+
+  moverAEnviosPendientes(salida: Salida): void {
+    console.log('🚀 Moviendo salida a envíos pendientes:', salida.id);
+    this.snackBarExito('Salida movida a envíos pendientes');
+    
+    // Remover de la lista actual
+    this.salidas = this.salidas.filter(item => item.id !== salida.id);
+    this.dataSource.data = this.salidas;
+    this.totalElementos = this.salidas.length;
+    this.cdr.detectChanges();
+  }
+
   deleteSalida(idSalida: number) {
     this.carga.show();
     this.btnSubmitActivado = false;
@@ -76,7 +88,9 @@ export class SalidasPendientesComponent
         this.carga.hide();
         this.btnSubmitActivado = true;
         console.error(error);
-        this.snackBarError('No se puede borrar la salida por un conflicto en la BBDD');
+        this.snackBarError(
+          'No se puede borrar la salida por un conflicto en la BBDD'
+        );
       }
     );
   }

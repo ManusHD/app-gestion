@@ -1,0 +1,161 @@
+<div class="centrar">
+  <div class="contenedor-gestor">
+    <div class="centrar">
+      <h2 class="gestor-titulo">GESTIÓN DE PLANTILLAS DE CORREO</h2>
+    </div>
+
+    <!-- Formulario crear plantilla -->
+    <div class="centrar">
+      <div class="gestor-crear">
+        <h3>Crear NUEVA Plantilla</h3>
+        <div class="campos-gestor">
+          <input [(ngModel)]="nuevaPlantilla.alias" placeholder="Alias (identificador único)" />
+          <input [(ngModel)]="nuevaPlantilla.asunto" placeholder="Asunto del correo" />
+          <textarea [(ngModel)]="nuevaPlantilla.cuerpo" placeholder="Cuerpo del correo (puede usar HTML y variables)" 
+                    rows="6"></textarea>
+          <label class="checkbox-activa">
+            <input type="checkbox" [(ngModel)]="nuevaPlantilla.activa" />
+            <span [ngClass]="{'estado-activo': nuevaPlantilla.activa, 'estado-inactivo': !nuevaPlantilla.activa}">
+              {{nuevaPlantilla.activa ? 'ACTIVA' : 'INACTIVA'}}
+            </span>
+          </label>
+          <button (click)="crearPlantilla()" class="btn-crear">CREAR</button>
+        </div>
+        
+        <!-- Info de variables -->
+        <div class="info-variables">
+          <p><strong>Variables disponibles:</strong></p>
+          <p>
+            <code>&#123;nombreColaborador&#125;</code>, 
+            <code>&#123;direccion&#125;</code>, 
+            <code>&#123;poblacion&#125;</code>, 
+            <code>&#123;provincia&#125;</code>, 
+            <code>&#123;cp&#125;</code>, 
+            <code>&#123;telefono&#125;</code>, 
+            <code>&#123;fechaEnvio&#125;</code>, 
+            <code>&#123;productos&#125;</code>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección listado -->
+    <div class="gestor-listado-seleccion">
+      <div>
+        <!-- Buscador -->
+        <div class="buscador centrar" (keyup)="onEnterKey($event)">
+          <input type="text" placeholder="Buscar por alias..." [(ngModel)]="buscador" />
+          <button (click)="buscarPlantillas()" class="btn-buscar">
+            <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+            <span class="letra-buscador">Buscar</span>
+          </button>
+          <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="gestor-listado centrar">
+          <div style="width: fit-content">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+              <caption>PLANTILLAS DE CORREO</caption>
+
+              <!-- Columna Alias -->
+              <ng-container matColumnDef="alias">
+                <th class="header-paginator" *matHeaderCellDef>Alias</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let plantilla">
+                  <ng-container *ngIf="editandoId !== plantilla.id; else editAlias">
+                    {{ plantilla.alias }}
+                  </ng-container>
+                  <ng-template #editAlias>
+                    <input [(ngModel)]="editandoPlantilla.alias" placeholder="Alias" class="nombre-editando" />
+                  </ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Columna Asunto -->
+              <ng-container matColumnDef="asunto">
+                <th class="header-paginator" *matHeaderCellDef>Asunto</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let plantilla">
+                  <ng-container *ngIf="editandoId !== plantilla.id; else editAsunto">
+                    {{ plantilla.asunto }}
+                  </ng-container>
+                  <ng-template #editAsunto>
+                    <input [(ngModel)]="editandoPlantilla.asunto" placeholder="Asunto" class="nombre-editando" />
+                  </ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Columna Estado -->
+              <ng-container matColumnDef="estado">
+                <th class="header-paginator" *matHeaderCellDef>Estado</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let plantilla">
+                  <ng-container *ngIf="editandoId !== plantilla.id; else editEstado">
+                    <span class="estado centrar"
+                      [ngClass]="{'estado-activo': plantilla.activa, 'estado-inactivo': !plantilla.activa}">
+                      {{plantilla.activa ? 'ACTIVA' : 'INACTIVA'}}
+                    </span>
+                  </ng-container>
+                  <ng-template #editEstado>
+                    <label class="editando-label">
+                      <input type="checkbox" [(ngModel)]="editandoPlantilla.activa" />
+                      <span class="estado"
+                        [ngClass]="{'estado-activo': editandoPlantilla.activa, 'estado-inactivo': !editandoPlantilla.activa}">
+                        {{editandoPlantilla.activa ? 'ACTIVA' : 'INACTIVA'}}
+                      </span>
+                    </label>
+                  </ng-template>
+                </td>
+              </ng-container>
+
+              <!-- Columna Fecha Modificación -->
+              <ng-container matColumnDef="fechaModificacion">
+                <th class="header-paginator" *matHeaderCellDef>Última Modificación</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let plantilla">
+                  {{ plantilla.fechaModificacion | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+
+              <!-- Columna Acciones -->
+              <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let plantilla">
+                  <div class="centrar">
+                    <ng-container *ngIf="editandoId !== plantilla.id; else editActions">
+                      <button class="btn-editar" (click)="editarPlantilla(plantilla)">EDITAR</button>
+                      <button class="btn-preview" (click)="verVistaPrevia(plantilla)">VER</button>
+                    </ng-container>
+                    <ng-template #editActions>
+                      <div class="btn-actualizar-gestor">
+                        <button (click)="guardarEdit()">GUARDAR</button>
+                        <button (click)="cancelarEdit()">CANCELAR</button>
+                      </div>
+                      <textarea [(ngModel)]="editandoPlantilla.cuerpo" rows="4" class="cuerpo-editando"></textarea>
+                    </ng-template>
+                    <button type="button" 
+                            [appConfirm]="'¿ESTÁS SEGURO QUE QUIERES ELIMINAR LA PLANTILLA: ' + plantilla.alias + ' ?'" 
+                            (confirmed)="eliminarPlantilla(plantilla.id!)" 
+                            class="deleteButton">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 50 59" class="bin">
+                        <path fill="#B5BAC1" d="M0 7.5C0 5.01472 2.01472 3 4.5 3H45.5C47.9853 3 50 5.01472 50 7.5V7.5C50 8.32843 49.3284 9 48.5 9H1.5C0.671571 9 0 8.32843 0 7.5V7.5Z"></path>
+                        <path fill="#B5BAC1" d="M17 3C17 1.34315 18.3431 0 20 0H29.3125C30.9694 0 32.3125 1.34315 32.3125 3V3H17V3Z"></path>
+                        <path fill="#B5BAC1" d="M2.18565 18.0974C2.08466 15.821 3.903 13.9202 6.18172 13.9202H43.8189C46.0976 13.9202 47.916 15.821 47.815 18.0975L46.1699 55.1775C46.0751 57.3155 44.314 59.0002 42.1739 59.0002H7.8268C5.68661 59.0002 3.92559 57.3155 3.83073 55.1775L2.18565 18.0974ZM18.0003 49.5402C16.6196 49.5402 15.5003 48.4209 15.5003 47.0402V24.9602C15.5003 23.5795 16.6196 22.4602 18.0003 22.4602C19.381 22.4602 20.5003 23.5795 20.5003 24.9602V47.0402C20.5003 48.4209 19.381 49.5402 18.0003 49.5402ZM29.5003 47.0402C29.5003 48.4209 30.6196 49.5402 32.0003 49.5402C33.381 49.5402 34.5003 48.4209 34.5003 47.0402V24.9602C34.5003 23.5795 33.381 22.4602 32.0003 22.4602C30.6196 22.4602 29.5003 23.5795 29.5003 24.9602V47.0402Z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                        <path fill="#B5BAC1" d="M2 13H48L47.6742 21.28H2.32031L2 13Z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columnasPlantillas"></tr>
+              <tr mat-row *matRowDef="let row; columns: columnasPlantillas;"></tr>
+            </table>
+            <mat-paginator class="paginator" [pageSize]="pageSize" [pageIndex]="pageIndex" [length]="totalElementos"
+              [hidePageSize]="true" showFirstLastButtons (page)="cambiarPagina($event)">
+            </mat-paginator>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>
