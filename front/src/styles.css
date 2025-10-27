@@ -496,6 +496,28 @@ input::placeholder {
     border-radius: 3px;
 }
 
+/* Botón de Estado en las tablas */
+.estado {
+  padding: 6px 14px !important;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-block;
+}
+
+.estado-activo {
+  padding: 5px 10px;
+  background-color: var(--checked-color);
+  color: white;
+}
+
+.estado-inactivo {
+  padding: 5px 10px;
+  background-color: #ff4d4d;
+  color: white;
+}
+/* --------------------- */
+
 .btn-editar {
     background-color: var(--color-detalles);
     border: none;

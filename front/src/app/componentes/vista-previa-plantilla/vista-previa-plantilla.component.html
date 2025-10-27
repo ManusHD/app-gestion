@@ -4,12 +4,14 @@
     <div class="modal-content">
         <span (click)="cerrarModal()" class="close">&times;</span>
         <div class="flotar-medio">
-            <h2 mat-dialog-title>Vista Previa - {{ data.alias }}</h2>
+            <h2 mat-dialog-title> <p>Vista Previa</p> - {{ data.alias }}</h2>
             <mat-dialog-content>
                 <div class="preview-asunto">
-                    <strong>Asunto:</strong> {{ data.asunto }}
+                    <strong>ASUNTO:</strong> {{ data.asunto }}
                 </div>
-                <div class="preview-cuerpo">{{ data.cuerpo }}</div>
+                <div class="preview-cuerpo">
+                    <strong>CUERPO:</strong> {{ data.cuerpo }}
+                </div>
             </mat-dialog-content>
         </div>
     </div>

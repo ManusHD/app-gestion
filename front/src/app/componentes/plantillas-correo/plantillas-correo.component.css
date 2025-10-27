@@ -1,53 +1,335 @@
 .info-variables {
   margin-top: 15px;
-  padding: 10px;
-  background-color: rgba(61, 126, 255, 0.1);
-  border-radius: 5px;
-  border-left: 3px solid var(--letter-color);
+  padding: 16px;
+  background-color: rgba(61, 126, 255, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(61, 126, 255, 0.2);
 }
 
 .info-variables p {
-  margin: 5px 0;
-  color: var(--letter-color-off);
-  font-size: 13px;
+  margin: 8px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .info-variables code {
   background-color: rgba(255, 255, 255, 0.1);
-  padding: 2px 5px;
-  border-radius: 3px;
-  color: var(--letter-color);
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #ffd875;
   font-family: 'Courier New', monospace;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .checkbox-activa {
   display: flex;
   align-items: center;
   cursor: pointer;
+  padding: 4px 0;
 }
 
 .checkbox-activa input {
   display: none;
 }
 
+.checkbox-activa .estado {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.checkbox-activa:hover .estado {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Textarea para crear plantilla */
+.campos-gestor textarea {
+  width: 300px;
+  height: 50px;
+  text-align: left;
+  line-height: 1.6;
+  font-family: 'Nunito-Medium';
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  resize: vertical;
+  color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.campos-gestor textarea:focus {
+  outline: none;
+  border-color: var(--letter-color);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(61, 126, 255, 0.1);
+}
+
+.campos-gestor textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Textarea al editar */
 .cuerpo-editando {
   width: 100%;
-  margin-top: 10px;
-  padding: 10px;
+  min-height: 150px;
+  max-height: 300px;
+  margin-top: 12px;
+  padding: 12px;
   background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   color: white;
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-}
-
-.btn-preview:hover {
-  background-color: var(--table-primary);
-}
-
-textarea {
+  font-family: 'Nunito-Medium';
+  font-size: 13px;
+  line-height: 1.6;
   resize: vertical;
-  min-height: 80px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  transition: all 0.3s ease;
+}
+
+.cuerpo-editando:focus {
+  outline: none;
+  border-color: var(--letter-color);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(61, 126, 255, 0.1);
+}
+
+/* Ajustes para el gestor de plantillas */
+.gestor-crear {
+  background: var(--main-color);
+  padding: 30px;
+  border-radius: 12px;
+  border: 2px solid var(--letter-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.gestor-crear h3 {
+  color: white;
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gestor-crear h3::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background-color: var(--letter-color);
+  border-radius: 2px;
+}
+
+/* Inputs del gestor */
+.campos-gestor input:not([type="checkbox"]) {
+  padding: 12px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: 250px;
+}
+
+.campos-gestor input:not([type="checkbox"]):focus {
+  outline: none;
+  border-color: var(--letter-color);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 4px rgba(61, 126, 255, 0.1);
+}
+
+/* Botón crear */
+.btn-crear {
+  background: linear-gradient(135deg, var(--caption-color), var(--color-excel));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 114, 83, 0.3);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-crear:hover {
+  background: linear-gradient(135deg, var(--caption-color), var(--color-excel-hover));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 114, 83, 0.4);
+}
+
+/* Tabla de plantillas */
+.gestor-listado {
+  margin-top: 30px;
+}
+
+.fila-paginator {
+  vertical-align: middle;
+}
+
+.nombre-editando {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--letter-color);
+  color: white;
+  width: 100%;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.nombre-editando:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 4px rgba(61, 126, 255, 0.1);
+}
+
+.editando-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editando-label input[type="checkbox"] {
+  display: none;
+}
+
+.editando-label .estado {
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.editando-label .estado:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Botones de la tabla */
+.btn-editar {
+  background-color: var(--color-detalles);
+  color: var(--btn-color-b);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.btn-editar:hover {
+  background-color: #ffd875;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(235, 185, 52, 0.3);
+}
+
+.btn-actualizar-gestor {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-actualizar-gestor button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.btn-actualizar-gestor button:first-child {
+  background: linear-gradient(135deg, #00b712, #009d00);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 183, 18, 0.3);
+  height: 40px;
+}
+
+.btn-actualizar-gestor button:first-child:hover {
+  background: linear-gradient(135deg, #009d00, #007a00);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 183, 18, 0.4);
+}
+
+.btn-actualizar-gestor button:last-child {
+  height: 40px;
+  background: linear-gradient(135deg, #ff4d4d, #d81e1e);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+}
+
+.btn-actualizar-gestor button:last-child:hover {
+  background: linear-gradient(135deg, #d81e1e, #b01818);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 77, 77, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .campos-gestor {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .campos-gestor input:not([type="checkbox"]),
+  .campos-gestor textarea {
+    width: 100%;
+  }
+
+  .gestor-crear {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .btn-editar,
+  .btn-actualizar-gestor button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .btns-acciones {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Scrollbar personalizado para textareas */
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: var(--letter-color);
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--table-primary);
 }

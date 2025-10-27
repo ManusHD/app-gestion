@@ -12,7 +12,8 @@ import { FormularioEntradaSalidaService } from 'src/app/services/formulario-entr
     '../../../assets/styles/modal.css',
     '../../../assets/styles/paginator.css',
     './salidas-enviospendientes.component.css' , 
-    '../salidas-pendientes/salidas-pendientes.component.css']
+    '../salidas-pendientes/salidas-pendientes.component.css'
+  ]
 })
 export class SalidasEnviospendientesComponent extends FormularioEntradaSalidaService
   implements OnInit

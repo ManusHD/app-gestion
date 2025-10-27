@@ -13,7 +13,7 @@
           <input [(ngModel)]="nuevaPlantilla.asunto" placeholder="Asunto del correo" />
           <textarea [(ngModel)]="nuevaPlantilla.cuerpo" placeholder="Cuerpo del correo (puede usar HTML y variables)" 
                     rows="6"></textarea>
-          <label class="checkbox-activa">
+          <label class="checkbox-activa estado">
             <input type="checkbox" [(ngModel)]="nuevaPlantilla.activa" />
             <span [ngClass]="{'estado-activo': nuevaPlantilla.activa, 'estado-inactivo': !nuevaPlantilla.activa}">
               {{nuevaPlantilla.activa ? 'ACTIVA' : 'INACTIVA'}}
@@ -124,7 +124,7 @@
                       <app-vista-previa-plantilla style="margin-left: 5px;" [data]="plantilla"></app-vista-previa-plantilla>
                     </ng-container>
                     <ng-template #editActions>
-                      <div class="btn-actualizar-gestor">
+                      <div class="btn-actualizar-gestor flotar-medio">
                         <button (click)="guardarEdit()">GUARDAR</button>
                         <button (click)="cancelarEdit()">CANCELAR</button>
                       </div>

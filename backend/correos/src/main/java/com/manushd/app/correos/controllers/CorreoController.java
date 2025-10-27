@@ -4,11 +4,11 @@ import com.manushd.app.correos.models.EnviarCorreoRequest;
 import com.manushd.app.correos.models.HistorialCorreo;
 import com.manushd.app.correos.repository.HistorialCorreoRepository;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -17,7 +17,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
+
+import jakarta.activation.DataSource;
 
 @RestController
 @RequestMapping("/correos")
@@ -60,7 +63,6 @@ public class CorreoController {
         return historialRepository.findByFechaEnvioBetween(inicio, fin, PageRequest.of(page, size));
     }
 
-    // Modificar en CorreoController.java
     @PostMapping("/enviar")
     public ResponseEntity<?> enviarCorreo(@RequestBody EnviarCorreoRequest request) {
         HistorialCorreo historial = new HistorialCorreo();
@@ -77,14 +79,25 @@ public class CorreoController {
             helper.setTo(request.getDestinatario());
             helper.setSubject(request.getAsunto());
 
-            // Construir HTML con logo
-            String htmlContent = construirHtmlConImagenes(request.getCuerpo(), request.getImagenesUrls());
+            // Construir HTML preservando saltos de línea
+            String htmlContent = construirHtmlConImagenes(
+                request.getCuerpo(), 
+                request.getImagenesUrls(), 
+                request.getImagenesBase64()
+            );
             helper.setText(htmlContent, true);
 
-            // Adjuntar logo DELIM como inline (opcional, si tienes la imagen en el
-            // servidor)
-            // ClassPathResource logo = new ClassPathResource("static/images/delim.jpg");
-            // helper.addInline("logoDelim", logo);
+            // Adjuntar imágenes base64 como inline
+            if (request.getImagenesBase64() != null && !request.getImagenesBase64().isEmpty()) {
+                for (int i = 0; i < request.getImagenesBase64().size(); i++) {
+                    EnviarCorreoRequest.ImagenBase64 img = request.getImagenesBase64().get(i);
+                    byte[] imageBytes = Base64.getDecoder().decode(img.getContenidoBase64());
+                    
+                    // Crear DataSource inline
+                    DataSource dataSource = new ByteArrayDataSource(imageBytes, img.getContentType());
+                    helper.addInline("imagen_" + i, dataSource);
+                }
+            }
 
             mailSender.send(message);
 
@@ -101,7 +114,13 @@ public class CorreoController {
         }
     }
 
-    private String construirHtmlConImagenes(String cuerpo, List<String> imagenesUrls) {
+    private String construirHtmlConImagenes(String cuerpo, List<String> imagenesUrls, 
+                                           List<EnviarCorreoRequest.ImagenBase64> imagenesBase64) {
+        // Convertir saltos de línea a HTML
+        String cuerpoFormateado = cuerpo
+            .replace("\n", "<br>")
+            .replace("\r", "");
+        
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>");
         html.append("<html><head><meta charset='UTF-8'>");
@@ -110,28 +129,37 @@ public class CorreoController {
         html.append(".container { max-width: 600px; margin: 0 auto; background-color: white; }");
         html.append(".header { text-align: center; padding: 20px; background-color: #01081f; }");
         html.append(".header img { max-width: 200px; }");
-        html.append(".content { padding: 20px; color: #333; line-height: 1.6; }");
-        html.append(
-                ".footer { text-align: center; padding: 20px; background-color: #f5f5f5; font-size: 12px; color: #777; }");
+        html.append(".content { padding: 20px; color: #333; line-height: 1.6; white-space: pre-wrap; }");
+        html.append(".footer { text-align: center; padding: 20px; background-color: #f5f5f5; font-size: 12px; color: #777; }");
+        html.append(".imagen-adjunta { max-width: 100%; margin: 10px 0; border-radius: 8px; }");
         html.append("</style>");
         html.append("</head><body>");
         html.append("<div class='container'>");
 
         // Header con logo
         html.append("<div class='header'>");
-        html.append("<img src='https://tu-dominio.com/assets/imagenes/delim.jpg' alt='DELIM' />");
+        html.append("<img src='https://chanel.delim.es/assets/imagenes/delim.jpg' alt='DELIM' />");
         html.append("</div>");
 
-        // Cuerpo del correo
+        // Cuerpo del correo con formato preservado
         html.append("<div class='content'>");
-        html.append(cuerpo);
+        html.append(cuerpoFormateado);
         html.append("</div>");
 
-        // Imágenes adicionales
+        // Imágenes URLs
         if (imagenesUrls != null && !imagenesUrls.isEmpty()) {
             html.append("<div style='padding: 20px;'>");
             for (String url : imagenesUrls) {
-                html.append("<img src='").append(url).append("' style='max-width: 100%; margin: 10px 0;'/>");
+                html.append("<img src='").append(url).append("' class='imagen-adjunta'/>");
+            }
+            html.append("</div>");
+        }
+
+        // Imágenes Base64 adjuntas
+        if (imagenesBase64 != null && !imagenesBase64.isEmpty()) {
+            html.append("<div style='padding: 20px;'>");
+            for (int i = 0; i < imagenesBase64.size(); i++) {
+                html.append("<img src='cid:imagen_").append(i).append("' class='imagen-adjunta'/>");
             }
             html.append("</div>");
         }
@@ -144,5 +172,4 @@ public class CorreoController {
         html.append("</div></body></html>");
         return html.toString();
     }
-
 }

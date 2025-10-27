@@ -1,112 +1,143 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--table-color);
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--table-color);
+}
+
+#historial {
+  width: 100%;
+  max-width: 1200px;
+  background-color: var(--main-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  margin-top: 50px;
+}
+
+.no-relleno {
+  display: none;
+}
+
+.relleno {
+  display: none;
+}
+
+/* Mostrar solo el icono relevante */
+img:not(.no-relleno)[src*="check-verde"] {
+  display: inline-block;
+  filter: drop-shadow(0 0 3px rgba(0, 183, 18, 0.6));
+}
+
+img:not(.relleno)[src*="no-check-gris"] {
+  display: inline-block;
+  opacity: 0.7;
+}
+
+/* Estilos de botones */
+button {
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 8px 12px;
+  min-width: 90px;
+}
+
+.btn-grabar {
+  background-color: var(--color-excel);
+  color: white;
+}
+
+.btn-grabar:hover:not([disabled]) {
+  background-color: var(--color-excel-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+button[disabled] {
+  background-color: var(--btn-inactive);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Mejoras para componentes personalizados */
+app-detalles-salidas {
+  display: flex;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
   #historial {
+    max-width: 100%;
+    margin: 0 10px;
+  }
+
+  .fila-paginator {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+
+  .header-paginator {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+
+  [style*="display:flex; gap: 5px"] {
+    gap: 3px !important;
+  }
+}
+
+/* Mejoras visuales adicionales */
+.tabla-paginator th:nth-child(1) {
+  width: 30%;
+}
+
+.tabla-paginator th:nth-child(2) {
+  width: 20%;
+}
+
+.tabla-paginator th:nth-child(3) {
+  width: 15%;
+}
+
+.tabla-paginator th:nth-child(4) {
+  width: 35%;
+}
+
+/* Mejorar el espaciado de los botones de acción */
+.btns-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btns-acciones>* {
+  margin: 0;
+}
+
+/* Responsive para botones */
+@media (max-width: 992px) {
+  .btns-acciones {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .btns-acciones {
+    flex-direction: column;
     width: 100%;
-    max-width: 1200px;
-    background-color: var(--main-color);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    margin-top: 50px;
   }
-  
-  .no-relleno {
-    display: none;
+
+  .btns-acciones>* {
+    width: 100%;
   }
-  
-  .relleno {
-    display: none;
-  }
-  
-  /* Mostrar solo el icono relevante */
-  img:not(.no-relleno)[src*="check-verde"] {
-    display: inline-block;
-    filter: drop-shadow(0 0 3px rgba(0, 183, 18, 0.6));
-  }
-  
-  img:not(.relleno)[src*="no-check-gris"] {
-    display: inline-block;
-    opacity: 0.7;
-  }
-  
-  /* Estilos de botones */
-  button {
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 8px 12px;
-    min-width: 90px;
-  }
-  
-  .btn-grabar {
-    background-color: var(--color-excel);
-    color: white;
-  }
-  
-  .btn-grabar:hover:not([disabled]) {
-    background-color: var(--color-excel-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  button[disabled] {
-    background-color: var(--btn-inactive);
-    cursor: not-allowed;
-    opacity: 0.6;
-    transform: none !important;
-    box-shadow: none !important;
-  }
-  
-  /* Mejoras para componentes personalizados */
-  app-detalles-salidas {
-    display: flex;
-  }
-  
-  /* Estilos responsivos */
-  @media (max-width: 768px) {
-    #historial {
-      max-width: 100%;
-      margin: 0 10px;
-    }
-    
-    .fila-paginator {
-      padding: 10px 8px;
-      font-size: 13px;
-    }
-    
-    .header-paginator {
-      padding: 10px 8px;
-      font-size: 14px;
-    }
-    
-    [style*="display:flex; gap: 5px"] {
-      gap: 3px !important;
-    }
-  }
-  
-  /* Mejoras visuales adicionales */
-  .tabla-paginator th:nth-child(1) {
-    width: 30%;
-  }
-  
-  .tabla-paginator th:nth-child(2) {
-    width: 20%;
-  }
-  
-  .tabla-paginator th:nth-child(3) {
-    width: 15%;
-  }
-  
-  .tabla-paginator th:nth-child(4) {
-    width: 35%;
-  }
+}

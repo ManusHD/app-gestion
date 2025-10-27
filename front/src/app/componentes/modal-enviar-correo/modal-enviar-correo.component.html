@@ -1,23 +1,29 @@
-<button (click)="mostrarDetalles()" class="">
+<button *ngIf="colaborador.email" (click)="mostrarDetalles()" class="btn-correo">
   <span class="material-icons">email</span>
+  <span class="btn-correo-text">ENVIAR CORREO</span>
 </button>
 
 <div *ngIf="mostrarModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header-custom">
-      <span class="close"
-        [appConfirm]="'VAS A SALIR SIN ENVIAR EL CORREO ¿ESTÁS SEGURO?'"
-        (confirmed)="cerrarModal()">&times;
-      </span>
+  <div class="modal-content modal-correo">
+    <div class="modal-header-correo">
+      <h2>
+        <span class="material-icons">mail_outline</span>
+        Enviar Correo Electrónico
+      </h2>
+      <span class="close" [appConfirm]="'VAS A SALIR SIN ENVIAR EL CORREO ¿ESTÁS SEGURO?'"
+        (confirmed)="cerrarModal()">&times;</span>
     </div>
 
-    <div class="modal-body">
+    <div class="modal-body-correo">
       <form [formGroup]="formCorreo" class="correo-form">
 
         <!-- Selector de Plantilla -->
         <div class="form-group">
-          <label for="plantilla">Plantilla (Opcional)</label>
-          <select id="plantilla" formControlName="plantillaId" (change)="onPlantillaChange()">
+          <label for="plantilla">
+            <span class="material-icons">description</span>
+            Plantilla (Opcional)
+          </label>
+          <select id="plantilla" formControlName="plantillaId" (change)="onPlantillaChange()" class="form-select">
             <option [value]="null">Sin plantilla</option>
             <option *ngFor="let plantilla of plantillas" [value]="plantilla.id">
               {{ plantilla.alias }}
@@ -27,42 +33,74 @@
 
         <!-- Destinatario -->
         <div class="form-group">
-          <label for="destinatario">Destinatario</label>
-          <div class="input-icon">
+          <label for="destinatario">
             <span class="material-icons">person</span>
-            <input id="destinatario" type="email" formControlName="destinatario" readonly />
-          </div>
+            Destinatario
+          </label>
+          <input id="destinatario" type="email" formControlName="destinatario" readonly class="form-input readonly" />
         </div>
 
         <!-- Asunto -->
         <div class="form-group">
-          <label for="asunto">Asunto</label>
-          <div class="input-icon">
+          <label for="asunto">
             <span class="material-icons">subject</span>
-            <input id="asunto" type="text" formControlName="asunto" />
-          </div>
+            Asunto
+          </label>
+          <input id="asunto" type="text" formControlName="asunto" class="form-input" 
+                 placeholder="Asunto del correo" />
         </div>
 
         <!-- Cuerpo del correo -->
         <div class="form-group">
-          <label for="cuerpo">Cuerpo del correo</label>
-          <textarea id="cuerpo" rows="12" formControlName="cuerpo"
-            placeholder="Contenido del correo (puede usar HTML)"></textarea>
+          <label for="cuerpo">
+            <span class="material-icons">edit_note</span>
+            Cuerpo del correo
+          </label>
+          <textarea id="cuerpo" rows="12" formControlName="cuerpo" class="form-textarea"
+            placeholder="Escriba el contenido del correo aquí...&#10;&#10;Use Enter para saltos de línea.&#10;El texto se formateará automáticamente en el correo."></textarea>
         </div>
 
         <!-- Gestión de imágenes -->
         <div class="imagenes-section">
-          <h3>Imágenes adicionales</h3>
-          <button type="button" class="btn-secundario" (click)="agregarImagenUrl()">
-            <span class="material-icons">add_photo_alternate</span>
-            Agregar Imagen (URL)
-          </button>
+          <h3>
+            <span class="material-icons">photo_library</span>
+            Imágenes Adjuntas
+          </h3>
+          
+          <div class="botones-imagenes">
+            <button type="button" class="btn-secundario" (click)="fileInput.click()">
+              <span class="material-icons">upload_file</span>
+              Subir desde Ordenador
+            </button>
+            <input #fileInput type="file" accept="image/*" multiple style="display: none" 
+                   (change)="onFileSelected($event)" />
+            
+            <button type="button" class="btn-secundario" (click)="agregarImagenUrl()">
+              <span class="material-icons">link</span>
+              Agregar URL
+            </button>
+          </div>
 
+          <!-- Lista de imágenes del ordenador -->
+          <div class="lista-imagenes" *ngIf="imagenesBase64.length > 0">
+            <h4>Imágenes del ordenador:</h4>
+            <div class="imagen-item" *ngFor="let img of imagenesBase64; let i = index">
+              <img [src]="'data:' + img.contentType + ';base64,' + img.contenidoBase64" 
+                   alt="Imagen" class="preview-img" />
+              <span class="nombre-imagen">{{ img.nombre }}</span>
+              <button type="button" class="btn-icono-eliminar" (click)="eliminarImagenBase64(i)">
+                <span class="material-icons">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de imágenes por URL -->
           <div class="lista-imagenes" *ngIf="imagenesUrls.length > 0">
+            <h4>Imágenes por URL:</h4>
             <div class="imagen-item" *ngFor="let url of imagenesUrls; let i = index">
               <img [src]="url" alt="Imagen" class="preview-img" />
               <span class="url-text">{{ url }}</span>
-              <button type="button" class="btn-icono eliminar" (click)="eliminarImagen(i)">
+              <button type="button" class="btn-icono-eliminar" (click)="eliminarImagen(i)">
                 <span class="material-icons">delete</span>
               </button>
             </div>
@@ -72,7 +110,10 @@
         <!-- Variables disponibles -->
         <div class="variables-info">
           <details>
-            <summary>Variables disponibles</summary>
+            <summary>
+              <span class="material-icons">code</span>
+              Variables disponibles
+            </summary>
             <div class="variables-list">
               <p><code>&#123;nombreColaborador&#125;</code> - Nombre del colaborador/destino</p>
               <p><code>&#123;direccion&#125;</code> - Dirección de envío</p>
@@ -89,23 +130,28 @@
 
       <!-- Vista previa -->
       <div class="vista-previa-section" *ngIf="mostrarVistaPrevia">
-        <h3>Vista Previa</h3>
-        <div class="preview-container" [innerHTML]="formCorreo.get('cuerpo')?.value"></div>
+        <h3>
+          <span class="material-icons">visibility</span>
+          Vista Previa
+        </h3>
+        <div class="preview-container" [innerHTML]="getVistaPrevia()"></div>
       </div>
     </div>
 
     <div class="modal-actions">
-      <button class="btn-secundario" (click)="toggleVistaPrevia()">
+      <!-- <button class="btn-preview" (click)="toggleVistaPrevia()">
         <span class="material-icons">
           {{ mostrarVistaPrevia ? 'visibility_off' : 'visibility' }}
         </span>
         {{ mostrarVistaPrevia ? 'Ocultar' : 'Ver' }} Vista Previa
-      </button>
+      </button> -->
 
-      <button class="btn-principal" (click)="enviarCorreo()" [disabled]="formCorreo.invalid">
+      <button class="btn-enviar" (click)="enviarCorreo()" [disabled]="formCorreo.invalid">
         <span class="material-icons">send</span>
         Enviar Correo
       </button>
     </div>
   </div>
 </div>
+
+<app-pantalla-carga></app-pantalla-carga>

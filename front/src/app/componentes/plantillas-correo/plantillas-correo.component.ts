@@ -11,11 +11,14 @@ import { VistaPreviaPlantillaComponent } from '../vista-previa-plantilla/vista-p
 @Component({
   selector: 'app-plantillas-correo',
   templateUrl: './plantillas-correo.component.html',
-  styleUrls: ['./plantillas-correo.component.css']
+  styleUrls: [
+    '../../../assets/styles/paginator.css',
+    './plantillas-correo.component.css',
+  ]
 })
 export class PlantillasCorreoComponent implements OnInit {
   plantillas: PlantillaCorreo[] = [];
-  columnasPlantillas: string[] = ['alias', 'asunto', 'estado', 'fechaModificacion', 'acciones'];
+  columnasPlantillas: string[] = ['alias', 'asunto', 'estado', 'acciones'];
   dataSource = new MatTableDataSource<PlantillaCorreo>();
   
   pageSize = 10;

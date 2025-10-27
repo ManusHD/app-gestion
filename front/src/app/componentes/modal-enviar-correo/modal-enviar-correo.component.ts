@@ -3,7 +3,10 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CorreoService } from 'src/app/services/correo.service';
 import { PlantillaCorreo } from 'src/app/models/plantilla-correo.model';
-import { EnviarCorreoRequest } from 'src/app/models/enviar-correo-request.model';
+import {
+  EnviarCorreoRequest,
+  ImagenBase64,
+} from 'src/app/models/enviar-correo-request.model';
 import { Salida } from 'src/app/models/salida.model';
 import { SnackBar } from 'src/app/services/snackBar.service';
 import { PantallaCargaService } from 'src/app/services/pantalla-carga.service';
@@ -15,7 +18,8 @@ import { Colaborador } from 'src/app/models/colaborador.model';
   templateUrl: './modal-enviar-correo.component.html',
   styleUrls: [
     '../../../assets/styles/modal.css',
-    './modal-enviar-correo.component.css']
+    './modal-enviar-correo.component.css',
+  ],
 })
 export class ModalEnviarCorreoComponent implements OnInit {
   mostrarModal: boolean = false;
@@ -23,8 +27,10 @@ export class ModalEnviarCorreoComponent implements OnInit {
   plantillas: PlantillaCorreo[] = [];
   plantillaSeleccionada: PlantillaCorreo | null = null;
   imagenesUrls: string[] = [];
+  imagenesBase64: ImagenBase64[] = [];
   mostrarVistaPrevia = false;
-  @Input() salida! : Salida;
+  @Input() salida!: Salida;
+  colaborador: Colaborador = new Colaborador();
 
   constructor(
     private fb: FormBuilder,
@@ -40,20 +46,24 @@ export class ModalEnviarCorreoComponent implements OnInit {
   }
 
   initForm(): void {
-    const destinoNombre = this.salida.colaborador || this.salida.pdv || this.salida.destino;
+    const destinoNombre =
+      this.salida.colaborador || this.salida.pdv || this.salida.destino;
     this.direccionesService.getColaborador(this.salida.colaborador!).subscribe({
       next: (colaborador: Colaborador) => {
-        if (!colaborador.email || colaborador.email.trim() === '') {
-          this.snackBar.snackBarError('El colaborador no tiene email registrado');
-          return;
-        }
+        this.colaborador = colaborador;
         this.formCorreo = this.fb.group({
           plantillaId: [''],
-          destinatario: [colaborador.email, [Validators.required, Validators.email]],
-          asunto: [`Notificación de envío - ${destinoNombre}`, Validators.required],
-          cuerpo: [this.generarCuerpoDefault(), Validators.required]
+          destinatario: [
+            colaborador.email,
+            [Validators.required, Validators.email],
+          ],
+          asunto: [
+            `Notificación de envío - ${destinoNombre}`,
+            Validators.required,
+          ],
+          cuerpo: [this.generarCuerpoDefault(), Validators.required],
         });
-      }
+      },
     });
   }
 
@@ -64,37 +74,50 @@ export class ModalEnviarCorreoComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar plantillas:', error);
-      }
+      },
     });
   }
 
   onPlantillaChange(): void {
     const plantillaId = this.formCorreo.get('plantillaId')?.value;
     if (!plantillaId) return;
-    
-    this.plantillaSeleccionada = this.plantillas.find(p => p.id == plantillaId) || null;
+
+    this.plantillaSeleccionada =
+      this.plantillas.find((p) => p.id == plantillaId) || null;
 
     if (this.plantillaSeleccionada) {
-      const cuerpoConVariables = this.reemplazarVariables(this.plantillaSeleccionada.cuerpo || '');
-      const asuntoConVariables = this.reemplazarVariables(this.plantillaSeleccionada.asunto || '');
-      
+      const cuerpoConVariables = this.reemplazarVariables(
+        this.plantillaSeleccionada.cuerpo || ''
+      );
+      const asuntoConVariables = this.reemplazarVariables(
+        this.plantillaSeleccionada.asunto || ''
+      );
+
       this.formCorreo.patchValue({
         asunto: asuntoConVariables,
-        cuerpo: cuerpoConVariables
+        cuerpo: cuerpoConVariables,
       });
     }
   }
 
   reemplazarVariables(texto: string): string {
     const salida = this.salida;
-    
+
     return texto
-      .replace(/{nombreColaborador}/g, salida.colaborador || salida.pdv || salida.destino || '')
+      .replace(
+        /{nombreColaborador}/g,
+        salida.colaborador || salida.pdv || salida.destino || ''
+      )
       .replace(/{direccion}/g, salida.direccion || '')
       .replace(/{poblacion}/g, salida.poblacion || '')
       .replace(/{provincia}/g, salida.provincia || '')
       .replace(/{cp}/g, salida.cp || '')
-      .replace(/{fechaEnvio}/g, salida.fechaEnvio ? new Date(salida.fechaEnvio).toLocaleDateString('es-ES') : '')
+      .replace(
+        /{fechaEnvio}/g,
+        salida.fechaEnvio
+          ? new Date(salida.fechaEnvio).toLocaleDateString('es-ES')
+          : ''
+      )
       .replace(/{telefono}/g, salida.telefono || '')
       .replace(/{productos}/g, this.generarListaProductos());
   }
@@ -102,31 +125,46 @@ export class ModalEnviarCorreoComponent implements OnInit {
   generarCuerpoDefault(): string {
     const salida = this.salida;
     const destinoNombre = salida.colaborador || salida.pdv || salida.destino;
-    
-    return `
-      <p>Estimado/a ${destinoNombre},</p>
-      <p>Le informamos que su envío ha sido preparado y está listo para su despacho.</p>
-      <p><strong>Detalles del envío:</strong></p>
-      ${this.generarListaProductos()}
-      <p><strong>Dirección de envío:</strong></p>
-      <p>${salida.direccion || ''}<br>
-      ${salida.cp || ''} - ${salida.poblacion || ''} (${salida.provincia || ''})</p>
-      <p>Saludos cordiales,<br>Equipo DELIM</p>
-    `;
+
+    return `Estimado/a ${destinoNombre},
+
+Le informamos que su envío ha sido preparado y está listo para su despacho.
+
+Detalles del envío:
+${this.generarListaProductosTexto()}
+
+Dirección de envío:
+${salida.direccion || ''}
+${salida.cp || ''} - ${salida.poblacion || ''} (${salida.provincia || ''})
+
+Saludos cordiales,
+Equipo DELIM`;
   }
 
   generarListaProductos(): string {
     if (!this.salida.productos || this.salida.productos.length === 0) {
-      return '<p>No hay productos en este envío.</p>';
+      return 'No hay productos en este envío.';
     }
 
-    let html = '<ul>';
-    this.salida.productos.forEach(producto => {
-      html += `<li>${producto.ref} - ${producto.description}: ${producto.unidades} unidades</li>`;
+    let lista = '';
+    this.salida.productos.forEach((producto) => {
+      lista += `- ${producto.ref} - ${producto.description}: ${producto.unidades} unidades\n`;
     });
-    html += '</ul>';
-    
-    return html;
+
+    return lista;
+  }
+
+  generarListaProductosTexto(): string {
+    if (!this.salida.productos || this.salida.productos.length === 0) {
+      return 'No hay productos en este envío.';
+    }
+
+    let texto = '';
+    this.salida.productos.forEach((producto) => {
+      texto += `- ${producto.ref} - ${producto.description}: ${producto.unidades} unidades\n`;
+    });
+
+    return texto;
   }
 
   agregarImagenUrl(): void {
@@ -136,20 +174,55 @@ export class ModalEnviarCorreoComponent implements OnInit {
     }
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+
+    Array.from(input.files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        this.snackBar.snackBarError('Solo se permiten archivos de imagen');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        this.imagenesBase64.push({
+          nombre: file.name,
+          contenidoBase64: base64,
+          contentType: file.type,
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    input.value = '';
+  }
+
   eliminarImagen(index: number): void {
     this.imagenesUrls.splice(index, 1);
+  }
+
+  eliminarImagenBase64(index: number): void {
+    this.imagenesBase64.splice(index, 1);
   }
 
   toggleVistaPrevia(): void {
     this.mostrarVistaPrevia = !this.mostrarVistaPrevia;
   }
 
+  getVistaPrevia(): string {
+    return this.formCorreo.get('cuerpo')?.value.replace(/\n/g, '<br>') || '';
+  }
+
   enviarCorreo(): void {
     if (this.formCorreo.invalid) {
-      this.snackBar.snackBarError('Por favor complete todos los campos requeridos');
+      this.snackBar.snackBarError(
+        'Por favor complete todos los campos requeridos'
+      );
       return;
     }
-
     this.carga.show();
 
     const request: EnviarCorreoRequest = {
@@ -158,7 +231,8 @@ export class ModalEnviarCorreoComponent implements OnInit {
       cuerpo: this.formCorreo.get('cuerpo')?.value,
       salidaId: this.salida.id,
       colaboradorNombre: this.salida.colaborador,
-      imagenesUrls: this.imagenesUrls
+      imagenesUrls: this.imagenesUrls,
+      imagenesBase64: this.imagenesBase64,
     };
 
     this.correoService.enviarCorreo(request).subscribe({
@@ -170,16 +244,17 @@ export class ModalEnviarCorreoComponent implements OnInit {
       error: (error) => {
         this.carga.hide();
         this.snackBar.snackBarError(error.error || 'Error al enviar correo');
-      }
+      },
     });
   }
 
   mostrarDetalles() {
     this.mostrarModal = true;
-    console.log(this.salida);
   }
 
   cerrarModal() {
     this.mostrarModal = false;
+    this.imagenesUrls = [];
+    this.imagenesBase64 = [];
   }
 }

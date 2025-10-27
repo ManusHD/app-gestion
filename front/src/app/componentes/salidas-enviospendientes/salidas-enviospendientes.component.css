@@ -1,5 +1,4 @@
 
-
 .btn-etiqueta {
   background-color: var(--color-excel-hover);
   color: white;
@@ -7,7 +6,6 @@
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 10px;
   transition: background-color 0.3s ease;
 }
 
@@ -21,8 +19,18 @@
   overflow-y: auto;
 }
 
+.btn-acciones {
+  width: fit-content;
+}
+
 .etiqueta-modal h2 {
   text-align: center;
   margin-bottom: 20px;
   color: var(--letter-color);
+}
+
+.conjunto-btn-acciones{
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
 }
