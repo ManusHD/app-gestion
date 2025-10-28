@@ -14,4 +14,5 @@ export const environment = {
   apiMuebles: direccion + '/muebles',
   apiTarifas: direccion + '/tarifas',
   apiCorreos: direccion + '/correos',
+  apiPlantillasCorreos: direccion + '/plantillas-correo',
 };

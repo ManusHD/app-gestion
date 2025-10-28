@@ -10,8 +10,8 @@ import { EnviarCorreoRequest } from '../models/enviar-correo-request.model';
   providedIn: 'root'
 })
 export class CorreoService {
-  private apiUrlPlantillas = environment.apiCorreos + '/plantillas-correo';
-  private apiUrlCorreos = environment.apiCorreos + '/correos';
+  private apiUrlPlantillas = environment.apiPlantillasCorreos;
+  private apiUrlCorreos = environment.apiCorreos;
 
   constructor(private http: HttpClient) {}
 

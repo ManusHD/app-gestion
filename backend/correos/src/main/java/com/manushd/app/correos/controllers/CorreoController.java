@@ -3,6 +3,8 @@ package com.manushd.app.correos.controllers;
 import com.manushd.app.correos.models.EnviarCorreoRequest;
 import com.manushd.app.correos.models.HistorialCorreo;
 import com.manushd.app.correos.repository.HistorialCorreoRepository;
+import com.manushd.app.correos.services.ImapService;
+
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 
@@ -32,6 +34,9 @@ public class CorreoController {
 
     @Autowired
     private HistorialCorreoRepository historialRepository;
+    
+    @Autowired
+    private ImapService imapService;
 
     @GetMapping("/historial")
     public Page<HistorialCorreo> getHistorial(
@@ -76,6 +81,7 @@ public class CorreoController {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom("noreply@delim.es", "DELIM LOGÍSTICA");
             helper.setTo(request.getDestinatario());
             helper.setSubject(request.getAsunto());
 
@@ -100,6 +106,9 @@ public class CorreoController {
             }
 
             mailSender.send(message);
+
+            // Guardar copia en Enviados
+            imapService.guardarEnEnviados(message);
 
             historial.setEnviado(true);
             historialRepository.save(historial);

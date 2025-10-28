@@ -1,0 +1,94 @@
+<button class="btn-detalle" (click)="mostrarDetalles()">VER DETALLE</button>
+
+<div *ngIf="mostrarModal" class="modal">
+    <div class="modal-content modal-detalle-correo">
+        <span (click)="cerrarModal()" class="close">&times;</span>
+        
+        <div class="detalle-container">
+            <!-- Header con estado -->
+            <div class="detalle-header">
+                <h2>
+                    <span class="material-icons">email</span>
+                    Detalle del Correo
+                </h2>
+                <span class="estado-badge" [ngClass]="getEstadoClass()">
+                    <span class="material-icons">
+                        {{ data.enviado ? 'check_circle' : 'error' }}
+                    </span>
+                    {{ getEstadoTexto() }}
+                </span>
+            </div>
+
+            <!-- Información del correo -->
+            <div class="detalle-body">
+                <!-- Fecha de envío -->
+                <div class="detalle-seccion">
+                    <div class="detalle-label">
+                        <span class="material-icons">schedule</span>
+                        Fecha de Envío
+                    </div>
+                    <div class="detalle-valor">
+                        {{ data.fechaEnvio | date: 'dd/MM/yyyy HH:mm:ss' }}
+                    </div>
+                </div>
+
+                <!-- Destinatario -->
+                <div class="detalle-seccion">
+                    <div class="detalle-label">
+                        <span class="material-icons">person</span>
+                        Destinatario
+                    </div>
+                    <div class="detalle-valor">
+                        {{ data.destinatario }}
+                    </div>
+                </div>
+
+                <!-- Colaborador/Destino -->
+                <div class="detalle-seccion detalle-completo" *ngIf="data.colaboradorNombre">
+                    <div class="detalle-label">
+                        <span class="material-icons">business</span>
+                        Colaborador/Destino
+                    </div>
+                    <div class="detalle-valor">
+                        {{ data.colaboradorNombre }}
+                    </div>
+                </div>
+
+                <!-- Asunto -->
+                <div class="detalle-seccion detalle-completo">
+                    <div class="detalle-label">
+                        <span class="material-icons">subject</span>
+                        Asunto
+                    </div>
+                    <div class="detalle-valor detalle-asunto">
+                        {{ data.asunto }}
+                    </div>
+                </div>
+
+                <!-- Cuerpo del correo -->
+                <div class="detalle-seccion detalle-completo">
+                    <div class="detalle-label">
+                        <span class="material-icons">article</span>
+                        Contenido del Correo
+                    </div>
+                    <div class="detalle-valor detalle-cuerpo">
+                        {{ data.cuerpo }}
+                    </div>
+                </div>
+
+                <!-- Mensaje de error (si existe) -->
+                <div class="detalle-seccion detalle-completo detalle-error" *ngIf="!data.enviado && data.mensajeError">
+                    <div class="detalle-label">
+                        <span class="material-icons">error_outline</span>
+                        Mensaje de Error
+                    </div>
+                    <div class="detalle-valor detalle-mensaje-error">
+                        {{ data.mensajeError }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

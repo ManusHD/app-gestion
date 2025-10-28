@@ -13,7 +13,8 @@ export const environment = {
   apiEstados: direccion + '8099/estados',
   apiMuebles: direccion + '8101/muebles',
   apiTarifas: direccion + '8102/tarifas',
-  apiCorreos: direccion + '8103',
+  apiCorreos: direccion + '8103/correos',
+  apiPlantillasCorreos: direccion + '8103/plantillas-correo',
 };
 
 // const direccion = 'https://api.chanel.delim.es';

@@ -117,6 +117,8 @@ import { PlantillasCorreoComponent } from './componentes/plantillas-correo/plant
 import { VistaPreviaPlantillaComponent } from './componentes/vista-previa-plantilla/vista-previa-plantilla.component';
 import { MatSelectModule } from '@angular/material/select';
 import { CorreoService } from './services/correo.service';
+import { HistorialCorreosComponent } from './componentes/historial-correos/historial-correos.component';
+import { DetallesCorreosComponent } from './componentes/detalles-correos/detalles-correos.component';
 
 
 @NgModule({
@@ -186,6 +188,8 @@ import { CorreoService } from './services/correo.service';
     ModalEnviarCorreoComponent,
     PlantillasCorreoComponent,
     VistaPreviaPlantillaComponent,
+    HistorialCorreosComponent,
+    DetallesCorreosComponent,
   ],
   imports: [
     AppRoutingModule,

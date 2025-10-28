@@ -1,0 +1,81 @@
+<div class="centrar">
+  <div class="contenedor-gestor">
+    <div class="centrar">
+      <h2 class="gestor-titulo">HISTORIAL DE CORREOS ENVIADOS</h2>
+    </div>
+
+    <div class="gestor-listado-seleccion">
+      <div>
+        <!-- Buscador -->
+        <div class="buscador centrar" (keyup)="onEnterKey($event)">
+          <input type="text" placeholder="Buscar por destinatario..." [(ngModel)]="buscador" />
+          <button (click)="buscarHistorial()" class="btn-buscar">
+            <img src="../../../assets/icons/lupa-blanca.svg" alt="">
+            <span class="letra-buscador">Buscar</span>
+          </button>
+          <button (click)="resetearBuscador()" class="btn-resetear">Limpiar</button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="gestor-listado centrar">
+          <div style="width: fit-content">
+            <table [className]="'tabla-paginator'" mat-table [dataSource]="dataSource">
+              <caption>CORREOS ENVIADOS</caption>
+
+              <!-- Fecha -->
+              <ng-container matColumnDef="fechaEnvio">
+                <th class="header-paginator" *matHeaderCellDef>Fecha</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let correo">
+                  {{ correo.fechaEnvio | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+              </ng-container>
+
+              <!-- Destinatario -->
+              <ng-container matColumnDef="destinatario">
+                <th class="header-paginator" *matHeaderCellDef>Destinatario</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let correo">
+                  {{ correo.destinatario }}
+                </td>
+              </ng-container>
+
+              <!-- Asunto -->
+              <ng-container matColumnDef="asunto">
+                <th class="header-paginator" *matHeaderCellDef>Asunto</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let correo">
+                  {{ correo.asunto }}
+                </td>
+              </ng-container>
+
+              <!-- Estado -->
+              <ng-container matColumnDef="enviado">
+                <th class="header-paginator" *matHeaderCellDef>Estado</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let correo">
+                  <span class="estado centrar"
+                    [ngClass]="{'estado-activo': correo.enviado, 'estado-inactivo': !correo.enviado}">
+                    {{correo.enviado ? 'ENVIADO' : 'ERROR'}}
+                  </span>
+                </td>
+              </ng-container>
+
+              <!-- Columna Acciones -->
+              <ng-container matColumnDef="acciones">
+                <th class="header-paginator" *matHeaderCellDef>Acciones</th>
+                <td class="fila-paginator" mat-cell *matCellDef="let correo">
+                  <app-detalles-correos [data]="correo"></app-detalles-correos>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columnasHistorial"></tr>
+              <tr mat-row *matRowDef="let row; columns: columnasHistorial;"></tr>
+            </table>
+            <mat-paginator class="paginator" [pageSize]="pageSize" [pageIndex]="pageIndex" [length]="totalElementos"
+              [hidePageSize]="true" showFirstLastButtons (page)="cambiarPagina($event)">
+            </mat-paginator>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-pantalla-carga></app-pantalla-carga>

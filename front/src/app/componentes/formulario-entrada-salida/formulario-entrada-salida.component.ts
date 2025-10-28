@@ -518,7 +518,7 @@ export class FormularioEntradaSalidaComponent implements OnInit, OnDestroy {
       // Filtrar solo estados con stock > 0
       const estadosConStock = response.estados.filter((e: any) => e.stock > 0);
 
-      if (estadosConStock.length === 0) {
+      if (estadosConStock.length === 0 && this.esSalida()) {
         this.productosNuevos.add(index);
         this.limpiarCamposProducto(index);
         this.validationService.mostrarError(
