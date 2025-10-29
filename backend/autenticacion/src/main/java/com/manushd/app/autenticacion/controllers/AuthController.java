@@ -1,117 +1,92 @@
 package com.manushd.app.autenticacion.controllers;
 
-import com.manushd.app.autenticacion.models.LoginRequest;
-import com.manushd.app.autenticacion.models.LoginResponse;
 import com.manushd.app.autenticacion.models.RegisterRequest;
-import com.manushd.app.autenticacion.models.Role;
 import com.manushd.app.autenticacion.models.UpdateUserRequest;
-import com.manushd.app.autenticacion.models.User;
-import com.manushd.app.autenticacion.service.UserDetailsServiceImpl;
-import com.manushd.app.autenticacion.util.JwtUtil;
-import com.manushd.app.autenticacion.util.LoginAttemptService;
-import jakarta.validation.Valid;
+import com.manushd.app.autenticacion.service.KeycloakService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
-    private UserDetailsServiceImpl userService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private LoginAttemptService loginAttemptService;
+    private KeycloakService keycloakService;
 
     @GetMapping("/usuarios")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Iterable<User> getUsers() {
-        return userService.getUsers();
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Mono<ResponseEntity<List<Map<String, Object>>>> getUsers(Authentication authentication) {
+        System.out.println("Usuario autenticado: " + authentication.getName());
+        System.out.println("Authorities: " + authentication.getAuthorities());
+        
+        return keycloakService.getUsers()
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    System.err.println("Error al obtener usuarios: " + e.getMessage());
+                    e.printStackTrace();
+                    return Mono.just(ResponseEntity.internalServerError().build());
+                });
     }
-    
 
     @PostMapping("/registrar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.registerUser(request);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Usuario " + user.getUsername() + " registrado correctamente.");
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/login")
-    public LoginResponse login(@Valid @RequestBody LoginRequest loginRequest) {
-        String username = loginRequest.getUsername();
-        if (loginAttemptService.isBlocked(username)) {
-            throw new RuntimeException("Usuario bloqueado temporalmente por múltiples intentos fallidos");
-        }
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, loginRequest.getPassword())
-            );
-            // Si la autenticación es exitosa, se resetea el contador
-            loginAttemptService.loginSucceeded(username);
-
-            // Obtener roles
-            List<String> roles = authentication.getAuthorities().stream()
-                    .map(item -> item.getAuthority())
-                    .collect(Collectors.toList());
-
-            String token = jwtUtil.generateJwtToken(username, roles);
-            return new LoginResponse(token);
-        } catch (AuthenticationException e) {
-            loginAttemptService.loginFailed(username);
-            throw new RuntimeException("Credenciales inválidas");
-        }
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Mono<ResponseEntity<Map<String, String>>> registerUser(@RequestBody RegisterRequest request) {
+        return keycloakService.registerUser(request)
+                .map(user -> {
+                    Map<String, String> response = new HashMap<>();
+                    response.put("message", "Usuario " + request.getUsername() + " registrado correctamente.");
+                    return ResponseEntity.ok(response);
+                })
+                .onErrorResume(e -> {
+                    System.err.println("Error al registrar usuario: " + e.getMessage());
+                    e.printStackTrace();
+                    
+                    Map<String, String> errorResponse = new HashMap<>();
+                    errorResponse.put("error", e.getMessage());
+                    
+                    return Mono.just(ResponseEntity.badRequest().body(errorResponse));
+                });
     }
 
     @PutMapping("/actualizar/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable String username, @RequestBody UpdateUserRequest request) {
-        try {
-            User updatedUser = userService.updateUser(username, request);
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Usuario actualizado correctamente.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Mono<ResponseEntity<Map<String, String>>> updateUser(@PathVariable String username, @RequestBody UpdateUserRequest request) {
+        return keycloakService.updateUser(username, request)
+                .map(user -> {
+                    Map<String, String> response = new HashMap<>();
+                    response.put("message", "Usuario actualizado correctamente.");
+                    return ResponseEntity.ok(response);
+                })
+                .onErrorResume(e -> {
+                    System.err.println("Error al actualizar usuario: " + e.getMessage());
+                    Map<String, String> errorResponse = new HashMap<>();
+                    errorResponse.put("error", e.getMessage());
+                    return Mono.just(ResponseEntity.badRequest().body(errorResponse));
+                });
     }
 
     @DeleteMapping("/eliminar/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable String username) {
-        try {
-            userService.deleteUser(username);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Usuario eliminado correctamente."));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public Mono<ResponseEntity<Map<String, String>>> deleteUser(@PathVariable String username) {
+        return keycloakService.deleteUser(username)
+                .then(Mono.fromCallable(() -> {
+                    Map<String, String> response = new HashMap<>();
+                    response.put("message", "Usuario eliminado correctamente.");
+                    return ResponseEntity.ok(response);
+                }))
+                .onErrorResume(e -> {
+                    System.err.println("Error al eliminar usuario: " + e.getMessage());
+                    Map<String, String> errorResponse = new HashMap<>();
+                    errorResponse.put("error", e.getMessage());
+                    return Mono.just(ResponseEntity.badRequest().body(errorResponse));
+                });
     }
-    
 }

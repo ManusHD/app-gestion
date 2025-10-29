@@ -5,6 +5,20 @@ import { map, take } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../services/auth-service.service';
 
+interface JwtPayload {
+  sub: string;
+  realm_access?: {
+    roles: string[];
+  };
+  resource_access?: {
+    [key: string]: {
+      roles: string[];
+    };
+  };
+  exp: number;
+  preferred_username: string;
+}
+
 export const roleGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot
@@ -17,19 +31,32 @@ export const roleGuard: CanActivateFn = (
     take(1),
     map((token) => {
       if (!token || !authService.isTokenValid(token)) {
-        // Si no hay token, redirige a login.
         return router.parseUrl('/login');
       }
-      // Decodifica el token para obtener los roles del usuario.
-      const decoded = jwtDecode<any>(token);
-      const userRoles = decoded.roles as string[];
       
-      // Comprueba si el usuario tiene al menos uno de los roles requeridos.
-      if (requiredRoles && requiredRoles.some((role) => userRoles.includes(role))) {
-        return true;
+      try {
+        const decoded = jwtDecode<JwtPayload>(token);
+        
+        // Obtener roles desde realm_access (roles de realm)
+        const userRoles = decoded.realm_access?.roles || [];
+        
+        // Si no hay roles requeridos, permite el acceso
+        if (!requiredRoles || requiredRoles.length === 0) {
+          return true;
+        }
+        
+        // Comprueba si el usuario tiene al menos uno de los roles requeridos
+        if (requiredRoles.some((role) => userRoles.includes(role))) {
+          return true;
+        }
+        
+        // Si no cumple, redirige a la página principal
+        console.warn('Acceso denegado. Roles requeridos:', requiredRoles, 'Roles del usuario:', userRoles);
+        return router.parseUrl('/');
+      } catch (error) {
+        console.error('Error al decodificar token:', error);
+        return router.parseUrl('/login');
       }
-      // Si no cumple, redirige a una página de acceso denegado o a otra ruta.
-      return router.parseUrl('/');
     })
   );
 };

@@ -23,20 +23,39 @@ export class RegistrarComponent {
   onSubmit() {
     if (this.registerForm.invalid) {
       this.message = 'Por favor, completa todos los campos correctamente.';
+      this.messageType = 'error-result';
       return;
     }
 
-    this.authService.register(this.registerForm.value).subscribe(
-      (data) => {
+    this.authService.register(this.registerForm.value).subscribe({
+      next: (data: any) => {
         this.registerForm.reset();
-        this.message = 'Usuario registrado con éxito.'
+        this.registerForm.patchValue({ role: 'ROLE_OPERADOR' });
+        this.message = data.message || 'Usuario registrado con éxito.';
         this.messageType = 'success-message';
-        console.log('Usuario registrado con éxito.');
       },
-      (error) => {
-        this.message = error.error || error
+      error: (error: any) => {
+        console.error('Error completo:', error);
+        
+        // Intentar extraer el mensaje de error de diferentes posibles ubicaciones
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            this.message = error.error;
+          } else if (error.error.error) {
+            this.message = error.error.error;
+          } else if (error.error.message) {
+            this.message = error.error.message;
+          } else {
+            this.message = 'Error al registrar usuario';
+          }
+        } else if (error.message) {
+          this.message = error.message;
+        } else {
+          this.message = 'Error al registrar usuario';
+        }
+        
         this.messageType = 'error-result';
       }
-    );
+    });
   }
 }

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder } from '@angular/forms';
-import { User } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth-service.service';
 
 @Component({
@@ -12,7 +11,6 @@ export class UsuariosComponent implements OnInit {
   usuarios: any[] = [];
   selectedUser: any = null;
   userForm: FormGroup;
-  roles = ['USUARIO', 'ADMINISTRADOR']; // Opciones de roles disponibles
 
   constructor(private userService: AuthService, private fb: FormBuilder) {
     this.userForm = this.fb.group({
@@ -26,8 +24,14 @@ export class UsuariosComponent implements OnInit {
   }
 
   loadUsers() {
-    this.userService.getUsers().subscribe(users => {
-      this.usuarios = users;
+    this.userService.getUsers().subscribe({
+      next: (users: any[]) => {
+        this.usuarios = users;
+        console.log(this.usuarios);
+      },
+      error: (err: any) => {
+        console.error('Error al cargar usuarios:', err);
+      }
     });
   }
 
@@ -40,26 +44,34 @@ export class UsuariosComponent implements OnInit {
 
   cancelEdit() {
     this.selectedUser = null;
+    this.userForm.reset();
   }
 
   updateUser() {
     if (this.selectedUser) {
       const formData = this.userForm.value;
-      this.userService.updateUser(this.selectedUser.username, formData).subscribe(() => {
-        alert('Usuario actualizado correctamente');
-        this.loadUsers();
-        this.selectedUser = null;
-      }, err => {
-        alert('Error al actualizar usuario: ' + err.error);
+      this.userService.updateUser(this.selectedUser.username, formData).subscribe({
+        next: () => {
+          alert('Usuario actualizado correctamente');
+          this.loadUsers();
+          this.selectedUser = null;
+          this.userForm.reset();
+        },
+        error: (err: any) => {
+          alert('Error al actualizar usuario: ' + (err.error?.errorMessage || err.error || 'Error desconocido'));
+        }
       });
     }
   }
 
   deleteUser(username: string) {
-      this.userService.deleteUser(username).subscribe(() => {
+    this.userService.deleteUser(username).subscribe({
+      next: () => {
         this.loadUsers();
-      }, err => {
-        alert('Error al eliminar usuario: ' + err.error);
-      });
+      },
+      error: (err: any) => {
+        alert('Error al eliminar usuario: ' + (err.error?.errorMessage || err.error || 'Error desconocido'));
+      }
+    });
   }
 }

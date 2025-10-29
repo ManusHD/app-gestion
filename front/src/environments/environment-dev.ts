@@ -2,6 +2,10 @@ const direccion = 'http://localhost:';
 
 export const environment = {
   production: false,
+  keycloakUrl: direccion + '8080/realms/delim/protocol/openid-connect',
+  keycloakClientId: 'delim-app',
+  keycloakClientSecret: 'vlXWmhAry7IHqgkTFU4nUFlemosauGFN',
+  
   apiProductos: direccion + '8091/productos',
   apiEntradas: direccion + '8092/entradas',
   apiSalidas: direccion + '8093/salidas',
