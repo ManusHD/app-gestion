@@ -1,10 +1,10 @@
-const direccion = 'https://api.chanel.delim.es';
+const direccion = 'https://delim.duckdns.org';
 
 export const environment = {
   production: true,
-  keycloakUrl: 'https://keycloak.delim.es/realms/delim/protocol/openid-connect',
+  keycloakUrl: direccion + '/keycloak/realms/delim/protocol/openid-connect',
   keycloakClientId: 'delim-app',
-  keycloakClientSecret: 'vlXWmhAry7IHqgkTFU4nUFlemosauGFN',
+  keycloakClientSecret: 'lww5hYdRzFD0JUfPww7KDyymnsACBQ2r',
   
   apiAgenciasTransporte: direccion + '/agenciasEnvio',
   apiDirecciones: direccion + '/direcciones',

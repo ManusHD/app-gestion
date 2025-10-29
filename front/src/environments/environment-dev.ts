@@ -1,25 +1,25 @@
-const direccion = 'http://localhost:';
+// const direccion = 'http://localhost:';
 
-export const environment = {
-  production: false,
-  keycloakUrl: direccion + '8080/realms/delim/protocol/openid-connect',
-  keycloakClientId: 'delim-app',
-  keycloakClientSecret: 'vlXWmhAry7IHqgkTFU4nUFlemosauGFN',
+// export const environment = {
+//   production: false,
+//   keycloakUrl: direccion + '8080/realms/delim/protocol/openid-connect',
+//   keycloakClientId: 'delim-app',
+//   keycloakClientSecret: 'vlXWmhAry7IHqgkTFU4nUFlemosauGFN',
   
-  apiProductos: direccion + '8091/productos',
-  apiEntradas: direccion + '8092/entradas',
-  apiSalidas: direccion + '8093/salidas',
-  apiTrabajos: direccion + '8094/trabajos',
-  apiUbicaciones: direccion + '8095/ubicaciones',
-  apiAgenciasTransporte: direccion + '8096/agenciasEnvio',
-  apiDirecciones: direccion + '8097/direcciones',
-  apiAutenticacion: direccion + '8098/auth',
-  apiEstados: direccion + '8099/estados',
-  apiMuebles: direccion + '8101/muebles',
-  apiTarifas: direccion + '8102/tarifas',
-  apiCorreos: direccion + '8103/correos',
-  apiPlantillasCorreos: direccion + '8103/plantillas-correo',
-};
+//   apiProductos: direccion + '8091/productos',
+//   apiEntradas: direccion + '8092/entradas',
+//   apiSalidas: direccion + '8093/salidas',
+//   apiTrabajos: direccion + '8094/trabajos',
+//   apiUbicaciones: direccion + '8095/ubicaciones',
+//   apiAgenciasTransporte: direccion + '8096/agenciasEnvio',
+//   apiDirecciones: direccion + '8097/direcciones',
+//   apiAutenticacion: direccion + '8098/auth',
+//   apiEstados: direccion + '8099/estados',
+//   apiMuebles: direccion + '8101/muebles',
+//   apiTarifas: direccion + '8102/tarifas',
+//   apiCorreos: direccion + '8103/correos',
+//   apiPlantillasCorreos: direccion + '8103/plantillas-correo',
+// };
 
 // const direccion = 'https://api.chanel.delim.es';
 
@@ -38,20 +38,25 @@ export const environment = {
 //   apiTarifas: direccion + '/tarifas',
 // };
 
-// const direccion = 'https://delim.duckdns.org';
+const direccion = 'https://delim.duckdns.org';
 
-// export const environment = {
-//   production: true,
-//   apiAgenciasTransporte: direccion + '/agenciasEnvio',
-//   apiDirecciones: direccion + '/direcciones',
-//   apiEntradas: direccion + '/entradas',
-//   apiSalidas: direccion + '/salidas',
-//   apiUbicaciones: direccion + '/ubicaciones',
-//   apiProductos: direccion + '/productos',
-//   apiAutenticacion: direccion + '/auth',
-//   apiEstados: direccion + '/estados',
-//   apiTrabajos: direccion + '/trabajos',
-//   apiMuebles: direccion + '/muebles',
-//   apiTarifas: direccion + '/tarifas',
-//   apiCorreos: direccion + '/correos',
-// };
+export const environment = {
+  production: true,
+  keycloakUrl: direccion + '/keycloak/realms/delim/protocol/openid-connect',
+  keycloakClientId: 'delim-app',
+  keycloakClientSecret: 'lww5hYdRzFD0JUfPww7KDyymnsACBQ2r',
+  
+  apiAgenciasTransporte: direccion + '/agenciasEnvio',
+  apiDirecciones: direccion + '/direcciones',
+  apiEntradas: direccion + '/entradas',
+  apiSalidas: direccion + '/salidas',
+  apiUbicaciones: direccion + '/ubicaciones',
+  apiProductos: direccion + '/productos',
+  apiAutenticacion: direccion + '/auth',
+  apiEstados: direccion + '/estados',
+  apiTrabajos: direccion + '/trabajos',
+  apiMuebles: direccion + '/muebles',
+  apiTarifas: direccion + '/tarifas',
+  apiCorreos: direccion + '/correos',
+  apiPlantillasCorreos: direccion + '/plantillas-correo',
+};
