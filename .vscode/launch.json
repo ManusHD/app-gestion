@@ -1,0 +1,101 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot - Productos",
+      "request": "launch",
+      "mainClass": "com.manushd.app.productos.ProductosApplication",
+      "projectName": "productos",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Entradas",
+      "request": "launch",
+      "mainClass": "com.manushd.app.entradas.EntradasApplication",
+      "projectName": "entradas",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Salidas",
+      "request": "launch",
+      "mainClass": "com.manushd.app.salidas.SalidasApplication",
+      "projectName": "salidas",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Trabajos",
+      "request": "launch",
+      "mainClass": "com.manushd.app.trabajos.TrabajosApplication",
+      "projectName": "trabajos",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Ubicaciones",
+      "request": "launch",
+      "mainClass": "com.manushd.app.ubicaciones.UbicacionesApplication",
+      "projectName": "ubicaciones",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Agencias Envío",
+      "request": "launch",
+      "mainClass": "com.manushd.app.agenciasenvio.AgenciasenvioApplication",
+      "projectName": "agenciasenvio",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Direcciones",
+      "request": "launch",
+      "mainClass": "com.manushd.app.direcciones.DireccionesApplication",
+      "projectName": "direcciones",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Autenticación",
+      "request": "launch",
+      "mainClass": "com.manushd.app.autenticacion.AutenticacionApplication",
+      "projectName": "autenticacion",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Estados",
+      "request": "launch",
+      "mainClass": "com.manushd.app.estados.EstadosApplication",
+      "projectName": "estados",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Muebles",
+      "request": "launch",
+      "mainClass": "com.manushd.app.muebles.MueblesApplication",
+      "projectName": "muebles",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Tarifas",
+      "request": "launch",
+      "mainClass": "com.manushd.app.tarifas.TarifasApplication",
+      "projectName": "tarifas",
+      "envFile": "${workspaceFolder}/backend/.env"
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot - Correos",
+      "request": "launch",
+      "mainClass": "com.manushd.app.correos.CorreosApplication",
+      "projectName": "correos",
+      "envFile": "${workspaceFolder}/backend/.env"
+    }
+  ]
+}

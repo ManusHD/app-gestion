@@ -14,6 +14,8 @@ MYSQL 8
 
 GIT
 
+DOCKER
+
 ---- PONER EN EL PATH (el bin)
 
 JAVA 17
@@ -21,4 +23,13 @@ APACHE MAVEN
 NODE JS (automáticamente con el .msi installer)
 MYSQL (no necesario pero aconsejable)
 GIT (se agrega con el .msi installer)
+DOCKER (se agrega con el .msi installer)
+
+---- LAS RUTAS A LOS PATH SUELEN SER LAS SIGUIENTES
+JAVA 17 C:\Program Files\Java\jdk-17
+APACHE MAVEN C:\Program Files\Apache\apache-maven-3.9.11
+NODE JS C:\Program Files\nodejs\
+MYSQL C:\Program Files\MySQL\MySQL Server 8.0\bin
+GIT C:\Program Files\Git\cmd
+
 
